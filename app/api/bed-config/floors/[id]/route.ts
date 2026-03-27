@@ -169,6 +169,8 @@ export async function PUT(
   }
 }
 
+
+
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -193,10 +195,10 @@ export async function DELETE(
 
     // Check if floor has wards
     console.log('🔍 Checking if floor has wards, ID:', floorId);
-    const wards = await query(
-      'SELECT id FROM wards WHERE floor_id = $1 LIMIT 1',
-      [floorId]
-    );
+   const wards = await query(
+  'SELECT id FROM wards WHERE floor_id = $1 AND is_active = true LIMIT 1',
+  [floorId]
+);
     console.log('📊 Wards check result rows:', wards.rows.length);
 
     if (wards.rows.length > 0) {

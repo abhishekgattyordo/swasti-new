@@ -36,6 +36,8 @@ async function getAppointmentIdByDate(patientId: string, date: string): Promise<
 }
 
 // GET /api/ehr/[patientId]/current-visit?appointmentId=xxx&date=yyyy-mm-dd
+
+
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ patientId: string }> }
