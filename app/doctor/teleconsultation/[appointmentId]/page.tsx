@@ -548,7 +548,7 @@ export default function DoctorTeleconsultationPage() {
         </div>
       </div>
 
-      {/* Video Call Modal */}
+      {/* Videoooo  Call Modal */}
       {showVideoCall && appointment && isAgoraConfigured && (
         <VideoCall
           appId={agoraAppId!}
