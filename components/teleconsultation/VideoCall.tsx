@@ -10,7 +10,7 @@ interface VideoCallProps {
   appId: string;
   channel: string;
   token: string | null;
-  uid: number;
+  uid: number | null;
   onClose: () => void;
 }
 
@@ -21,12 +21,12 @@ export default function VideoCall({ appId, channel, token, uid, onClose }: Video
   const [isJoined, setIsJoined] = useState(false);
   const [isAudioMuted, setIsAudioMuted] = useState(false);
   const [isVideoMuted, setIsVideoMuted] = useState(false);
-  const [remoteUsers, setRemoteUsers] = useState<{ uid: number; videoTrack: any }[]>([]);
+  const [remoteUsers, setRemoteUsers] = useState<{ uid: string | number; videoTrack: any }[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState(true);
 
   const localVideoRef = useRef<HTMLDivElement>(null);
-  const remoteVideoRefs = useRef<{ [key: number]: HTMLDivElement }>({});
+  const remoteVideoRefs = useRef<{ [key: string]: HTMLDivElement }>({});
 
   useEffect(() => {
     let mounted = true;
@@ -49,9 +49,11 @@ export default function VideoCall({ appId, channel, token, uid, onClose }: Video
           await rtcClient.subscribe(user, mediaType);
           if (mediaType === 'video') {
             const remoteVideoTrack = user.videoTrack;
+            if (!remoteVideoTrack) return; // ✅ guard against undefined track
             setRemoteUsers(prev => [...prev, { uid: user.uid, videoTrack: remoteVideoTrack }]);
-            if (remoteVideoRefs.current[user.uid]) {
-              remoteVideoTrack.play(remoteVideoRefs.current[user.uid]);
+            const uidKey = String(user.uid);
+            if (remoteVideoRefs.current[uidKey]) {
+              remoteVideoTrack.play(remoteVideoRefs.current[uidKey]);
             }
           }
           if (mediaType === 'audio') {
@@ -61,7 +63,7 @@ export default function VideoCall({ appId, channel, token, uid, onClose }: Video
 
         rtcClient.on('user-unpublished', (user, mediaType) => {
           if (mediaType === 'video') {
-            setRemoteUsers(prev => prev.filter(u => u.uid !== user.uid));
+            setRemoteUsers(prev => prev.filter(u => String(u.uid) !== String(user.uid)));
           }
         });
 
@@ -160,10 +162,10 @@ export default function VideoCall({ appId, channel, token, uid, onClose }: Video
         </div>
 
         {remoteUsers.map(user => (
-          <div key={user.uid} className="relative bg-gray-900 rounded-lg overflow-hidden">
+          <div key={String(user.uid)} className="relative bg-gray-900 rounded-lg overflow-hidden">
             <div
               ref={el => {
-                if (el) remoteVideoRefs.current[user.uid] = el;
+                if (el) remoteVideoRefs.current[String(user.uid)] = el;
               }}
               className="w-full h-full"
             />
