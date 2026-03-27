@@ -1,6 +1,3 @@
-
-
-
 // "use client";
 
 // import { useState, useEffect, useRef } from "react";
@@ -475,7 +472,7 @@
 //                 No {activeTab} appointments
 //               </h3>
 //               <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-//                 {activeTab === "upcoming" 
+//                 {activeTab === "upcoming"
 //                   ? "You don't have any upcoming appointments."
 //                   : activeTab === "past"
 //                   ? "No past appointments found."
@@ -621,10 +618,6 @@
 //   );
 // }
 
-
-
-
-
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -635,6 +628,7 @@ import { Menu, X, Filter } from "lucide-react";
 import toast from "react-hot-toast";
 import { appointmentsApi } from "@/lib/api/appointments";
 import RescheduleModal from "@/components/patient/RescheduleModal";
+import { Video } from "lucide-react";
 
 interface Appointment {
   id: string;
@@ -651,14 +645,17 @@ interface Appointment {
 }
 
 export default function HomePage() {
-  const [activeTab, setActiveTab] = useState<"upcoming" | "past" | "canceled">("upcoming");
+  const [activeTab, setActiveTab] = useState<"upcoming" | "past" | "canceled">(
+    "upcoming",
+  );
   const [consultationType, setConsultationType] = useState("All Types");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState("Patient");
   const [selectedDate, setSelectedDate] = useState("");
-  const [rescheduleAppointment, setRescheduleAppointment] = useState<Appointment | null>(null);
+  const [rescheduleAppointment, setRescheduleAppointment] =
+    useState<Appointment | null>(null);
   const [showRescheduleModal, setShowRescheduleModal] = useState(false);
   const router = useRouter();
 
@@ -687,79 +684,99 @@ export default function HomePage() {
   }, [openFilter]);
 
   // Helper to get full datetime from appointment
-const getFullDateTime = (apt: Appointment): Date => {
-  const dateObj = new Date(apt.date);
+  const getFullDateTime = (apt: Appointment): Date => {
+    const dateObj = new Date(apt.date);
 
-  let hours = 0, minutes = 0;
+    let hours = 0,
+      minutes = 0;
 
-  if (apt.time.includes(" ")) {
-    const [time, modifier] = apt.time.split(" ");
-    let [h, m] = time.split(":").map(Number);
+    if (apt.time.includes(" ")) {
+      const [time, modifier] = apt.time.split(" ");
+      let [h, m] = time.split(":").map(Number);
 
-    if (modifier.toUpperCase() === "PM" && h !== 12) h += 12;
-    if (modifier.toUpperCase() === "AM" && h === 12) h = 0;
+      if (modifier.toUpperCase() === "PM" && h !== 12) h += 12;
+      if (modifier.toUpperCase() === "AM" && h === 12) h = 0;
 
-    hours = h;
-    minutes = m;
-  } else {
-    [hours, minutes] = apt.time.split(":").map(Number);
-  }
+      hours = h;
+      minutes = m;
+    } else {
+      [hours, minutes] = apt.time.split(":").map(Number);
+    }
 
-  dateObj.setHours(hours, minutes, 0, 0);
+    dateObj.setHours(hours, minutes, 0, 0);
 
-  return dateObj;
-};
+    return dateObj;
+  };
 
   const now = new Date();
 
-const upcoming = appointments.filter(apt => {
-  if (apt.status !== "BOOKED") return false;
-  const aptDateTime = getFullDateTime(apt);
-  return aptDateTime >= new Date();
-});
-
-const past = appointments.filter(apt => {
-  if (apt.status === "CANCELLED") return false;
-  if (apt.status === "COMPLETED") return true;
-
-  if (apt.status === "BOOKED") {
+  const upcoming = appointments.filter((apt) => {
+    if (apt.status !== "BOOKED") return false;
     const aptDateTime = getFullDateTime(apt);
-    return aptDateTime < new Date();
-  }
+    return aptDateTime >= new Date();
+  });
 
-  return false;
-});
+  const past = appointments.filter((apt) => {
+    if (apt.status === "CANCELLED") return false;
+    if (apt.status === "COMPLETED") return true;
 
-  const canceled = appointments.filter(apt => apt.status === "CANCELLED");
+    if (apt.status === "BOOKED") {
+      const aptDateTime = getFullDateTime(apt);
+      return aptDateTime < new Date();
+    }
+
+    return false;
+  });
+
+  const canceled = appointments.filter((apt) => apt.status === "CANCELLED");
 
   const filterByConsultationType = (list: Appointment[]) => {
     if (consultationType === "All Types") return list;
-    return list.filter(apt => apt.type?.toLowerCase() === consultationType.toLowerCase());
+    return list.filter(
+      (apt) => apt.type?.toLowerCase() === consultationType.toLowerCase(),
+    );
   };
 
   const baseDisplayed = (() => {
     switch (activeTab) {
-      case "upcoming": return filterByConsultationType(upcoming);
-      case "past": return filterByConsultationType(past);
-      case "canceled": return filterByConsultationType(canceled);
-      default: return [];
+      case "upcoming":
+        return filterByConsultationType(upcoming);
+      case "past":
+        return filterByConsultationType(past);
+      case "canceled":
+        return filterByConsultationType(canceled);
+      default:
+        return [];
     }
   })();
 
   // Apply column filters (date and status removed)
-  const displayedAppointments = baseDisplayed.filter(apt => {
-    const matchDoctor = !filters.doctor || apt.doctor_name.toLowerCase().includes(filters.doctor.toLowerCase());
-    const matchTime = !filters.time || apt.time.toLowerCase().includes(filters.time.toLowerCase());
-    const matchType = !filters.type || apt.type?.toLowerCase() === filters.type.toLowerCase();
+  const displayedAppointments = baseDisplayed.filter((apt) => {
+    const matchDoctor =
+      !filters.doctor ||
+      apt.doctor_name.toLowerCase().includes(filters.doctor.toLowerCase());
+    const matchTime =
+      !filters.time ||
+      apt.time.toLowerCase().includes(filters.time.toLowerCase());
+    const matchType =
+      !filters.type || apt.type?.toLowerCase() === filters.type.toLowerCase();
     return matchDoctor && matchTime && matchType;
   });
 
   const isEditable = (apt: Appointment): boolean => {
     if (apt.status !== "BOOKED") return false;
-   const aptDate = getFullDateTime(apt);
+    const aptDate = getFullDateTime(apt);
     const today = new Date();
-    const aptDay = new Date(aptDate.getFullYear(), aptDate.getMonth(), aptDate.getDate());
-    const todayDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const aptDay = new Date(
+      aptDate.getFullYear(),
+      aptDate.getMonth(),
+      aptDate.getDate(),
+    );
+    const todayDay = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+    );
     return aptDay >= todayDay;
   };
 
@@ -767,7 +784,7 @@ const past = appointments.filter(apt => {
     const fetchData = async () => {
       try {
         const user = JSON.parse(localStorage.getItem("user") || "null");
-        
+
         setUserName(user.full_name_en || user.name || "Patient");
         const patientId = user.patient_id || String(user.id);
         await fetchAppointments(patientId, selectedDate || undefined);
@@ -782,7 +799,10 @@ const past = appointments.filter(apt => {
   const fetchAppointments = async (patientId: string, date?: string) => {
     try {
       setLoading(true);
-      const response = await appointmentsApi.getPatientAppointmentsByDate(patientId, date);
+      const response = await appointmentsApi.getPatientAppointmentsByDate(
+        patientId,
+        date,
+      );
       const result = response.data;
 
       let apts: Appointment[] = [];
@@ -798,13 +818,13 @@ const past = appointments.filter(apt => {
 
       setAppointments(apts);
 
-      const upcomingCount = apts.filter(apt => {
+      const upcomingCount = apts.filter((apt) => {
         if (apt.status !== "BOOKED") return false;
         const aptDateTime = getFullDateTime(apt);
         return aptDateTime >= now;
       }).length;
 
-      const pastCount = apts.filter(apt => {
+      const pastCount = apts.filter((apt) => {
         if (apt.status === "CANCELLED") return false;
         if (apt.status === "COMPLETED") return true;
         if (apt.status === "BOOKED") {
@@ -814,15 +834,29 @@ const past = appointments.filter(apt => {
         return false;
       }).length;
 
-      const canceledCount = apts.filter(apt => apt.status === "CANCELLED").length;
+      const canceledCount = apts.filter(
+        (apt) => apt.status === "CANCELLED",
+      ).length;
 
-      if (activeTab === "upcoming" && upcomingCount === 0 && (pastCount > 0 || canceledCount > 0)) {
+      if (
+        activeTab === "upcoming" &&
+        upcomingCount === 0 &&
+        (pastCount > 0 || canceledCount > 0)
+      ) {
         if (pastCount > 0) setActiveTab("past");
         else if (canceledCount > 0) setActiveTab("canceled");
-      } else if (activeTab === "past" && pastCount === 0 && (upcomingCount > 0 || canceledCount > 0)) {
+      } else if (
+        activeTab === "past" &&
+        pastCount === 0 &&
+        (upcomingCount > 0 || canceledCount > 0)
+      ) {
         if (upcomingCount > 0) setActiveTab("upcoming");
         else if (canceledCount > 0) setActiveTab("canceled");
-      } else if (activeTab === "canceled" && canceledCount === 0 && (upcomingCount > 0 || pastCount > 0)) {
+      } else if (
+        activeTab === "canceled" &&
+        canceledCount === 0 &&
+        (upcomingCount > 0 || pastCount > 0)
+      ) {
         if (upcomingCount > 0) setActiveTab("upcoming");
         else if (pastCount > 0) setActiveTab("past");
       }
@@ -836,7 +870,9 @@ const past = appointments.filter(apt => {
   const handleCancel = async (appointmentId: string) => {
     if (!confirm("Are you sure you want to cancel this appointment?")) return;
     try {
-      await appointmentsApi.updateAppointment(appointmentId, { status: "CANCELLED" });
+      await appointmentsApi.updateAppointment(appointmentId, {
+        status: "CANCELLED",
+      });
       toast.success("Appointment cancelled successfully");
       const user = JSON.parse(localStorage.getItem("user") || "null");
       if (user) {
@@ -855,11 +891,17 @@ const past = appointments.filter(apt => {
   };
 
   const handleFilterChange = (column: keyof typeof filters, value: string) => {
-    setFilters(prev => ({ ...prev, [column]: value }));
+    setFilters((prev) => ({ ...prev, [column]: value }));
   };
 
   // FilterPopover with local state and Apply button
-  const FilterPopover = ({ column, placeholder }: { column: keyof typeof filters; placeholder: string }) => {
+  const FilterPopover = ({
+    column,
+    placeholder,
+  }: {
+    column: keyof typeof filters;
+    placeholder: string;
+  }) => {
     const isOpen = openFilter === column;
     const [localValue, setLocalValue] = useState(filters[column]);
 
@@ -881,7 +923,7 @@ const past = appointments.filter(apt => {
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
-      if (e.key === 'Enter') {
+      if (e.key === "Enter") {
         handleApply();
       }
     };
@@ -939,27 +981,39 @@ const past = appointments.filter(apt => {
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     return {
-      day: date.getDate().toString().padStart(2, '0'),
-      month: date.toLocaleDateString('en-US', { month: 'short' }),
-      full: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      day: date.getDate().toString().padStart(2, "0"),
+      month: date.toLocaleDateString("en-US", { month: "short" }),
+      full: date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }),
     };
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "BOOKED": return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300";
-      case "COMPLETED": return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300";
-      case "CANCELLED": return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300";
-      default: return "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300";
+      case "BOOKED":
+        return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300";
+      case "COMPLETED":
+        return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300";
+      case "CANCELLED":
+        return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300";
+      default:
+        return "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300";
     }
   };
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case "BOOKED": return "Confirmed";
-      case "COMPLETED": return "Completed";
-      case "CANCELLED": return "Cancelled";
-      default: return status;
+      case "BOOKED":
+        return "Confirmed";
+      case "COMPLETED":
+        return "Completed";
+      case "CANCELLED":
+        return "Cancelled";
+      default:
+        return status;
     }
   };
 
@@ -969,8 +1023,12 @@ const past = appointments.filter(apt => {
         @import url("https://fonts.googleapis.com/icon?family=Material+Icons");
         @import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap");
         @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
-        :root { --font-inter: "Inter", sans-serif; }
-        body { font-family: var(--font-inter); }
+        :root {
+          --font-inter: "Inter", sans-serif;
+        }
+        body {
+          font-family: var(--font-inter);
+        }
       `}</style>
 
       <button
@@ -978,7 +1036,11 @@ const past = appointments.filter(apt => {
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
         aria-label="Toggle menu"
       >
-        {isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        {isSidebarOpen ? (
+          <X className="w-5 h-5" />
+        ) : (
+          <Menu className="w-5 h-5" />
+        )}
       </button>
 
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
@@ -1020,9 +1082,21 @@ const past = appointments.filter(apt => {
           {/* Service Cards */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
             {[
-              { name: "Doctor Consultation", icon: "local_hospital", path: "/appointments" },
-              { name: "Medical Records", icon: "folder", path: "/patient/medical-records" },
-              { name: "History", icon: "history", path: "/patient/admission-summary" },
+              {
+                name: "Doctor Consultation",
+                icon: "local_hospital",
+                path: "/appointments",
+              },
+              {
+                name: "Medical Records",
+                icon: "folder",
+                path: "/patient/medical-records",
+              },
+              {
+                name: "History",
+                icon: "history",
+                path: "/patient/admission-summary",
+              },
               { name: "Diagnostics", icon: "biotech", path: "/diagnostics" },
             ].map((service) => (
               <div
@@ -1096,22 +1170,26 @@ const past = appointments.filter(apt => {
           {loading && (
             <div className="text-center py-12">
               <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-green-600 border-r-transparent"></div>
-              <p className="mt-4 text-gray-600 dark:text-gray-400">Loading your appointments...</p>
+              <p className="mt-4 text-gray-600 dark:text-gray-400">
+                Loading your appointments...
+              </p>
             </div>
           )}
 
           {!loading && displayedAppointments.length === 0 && (
             <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-xl border border-dashed border-gray-300 dark:border-gray-700">
-              <span className="material-icons text-5xl text-gray-400 mb-3">event_busy</span>
+              <span className="material-icons text-5xl text-gray-400 mb-3">
+                event_busy
+              </span>
               <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-1">
                 No {activeTab} appointments
               </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                {activeTab === "upcoming" 
+                {activeTab === "upcoming"
                   ? "You don't have any upcoming appointments."
                   : activeTab === "past"
-                  ? "No past appointments found."
-                  : "No canceled appointments."}
+                    ? "No past appointments found."
+                    : "No canceled appointments."}
               </p>
               {activeTab === "upcoming" && (
                 <Link href="/doctor-selection">
@@ -1132,7 +1210,10 @@ const past = appointments.filter(apt => {
                       <th className="px-6 py-4 border border-gray-200 dark:border-gray-700 font-medium">
                         <div className="flex items-center gap-2">
                           <span>Doctor</span>
-                          <FilterPopover column="doctor" placeholder="Filter by doctor..." />
+                          <FilterPopover
+                            column="doctor"
+                            placeholder="Filter by doctor..."
+                          />
                         </div>
                       </th>
                       <th className="px-6 py-4 border border-gray-200 dark:border-gray-700 font-medium">
@@ -1141,13 +1222,19 @@ const past = appointments.filter(apt => {
                       <th className="px-6 py-4 border border-gray-200 dark:border-gray-700 font-medium">
                         <div className="flex items-center gap-2">
                           <span>Time</span>
-                          <FilterPopover column="time" placeholder="Filter by time..." />
+                          <FilterPopover
+                            column="time"
+                            placeholder="Filter by time..."
+                          />
                         </div>
                       </th>
                       <th className="px-6 py-4 border border-gray-200 dark:border-gray-700 font-medium">
                         <div className="flex items-center gap-2">
                           <span>Type</span>
-                          <FilterPopover column="type" placeholder="Filter by type..." />
+                          <FilterPopover
+                            column="type"
+                            placeholder="Filter by type..."
+                          />
                         </div>
                       </th>
                       <th className="px-6 py-4 border border-gray-200 dark:border-gray-700 font-medium">
@@ -1162,7 +1249,10 @@ const past = appointments.filter(apt => {
                     {displayedAppointments.map((apt) => {
                       const formattedDate = formatDate(apt.date);
                       return (
-                        <tr key={apt.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                        <tr
+                          key={apt.id}
+                          className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+                        >
                           <td className="px-6 py-4 border border-gray-200 dark:border-gray-700">
                             <div className="flex items-center gap-3">
                               {apt.doctor_image ? (
@@ -1170,11 +1260,16 @@ const past = appointments.filter(apt => {
                                   src={apt.doctor_image}
                                   alt={apt.doctor_name}
                                   className="w-10 h-10 rounded-full object-cover"
-                                  onError={(e) => (e.currentTarget.src = "https://via.placeholder.com/40")}
+                                  onError={(e) =>
+                                    (e.currentTarget.src =
+                                      "https://via.placeholder.com/40")
+                                  }
                                 />
                               ) : (
                                 <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-500">
-                                  <span className="material-icons text-xl">medication</span>
+                                  <span className="material-icons text-xl">
+                                    medication
+                                  </span>
                                 </div>
                               )}
                               <div>
@@ -1193,11 +1288,29 @@ const past = appointments.filter(apt => {
                           <td className="px-6 py-4 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300">
                             {apt.time}
                           </td>
-                          <td className="px-6 py-4 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300">
-                            {apt.type === "teleconsultation" ? "Teleconsult" : "In-Person"}
+                          <td className="px-6 py-4 border border-gray-200 dark:border-gray-700 text-center">
+                            {apt.type === "teleconsultation" ? (
+                              <button
+                                onClick={() => {
+                                  // 👉 Replace with your meeting link logic
+                                  window.open(
+                                    `/patient/teleconsultation/${apt.id}`,
+                                    "_blank",
+                                  );
+                                }}
+                                className="p-2 rounded-full bg-green-100 hover:bg-green-200 text-green-600 transition-colors"
+                                title="Join Video Call"
+                              >
+                                <Video className="w-4 h-4" />
+                              </button>
+                            ) : (
+                              <span className="text-gray-400 text-xs">—</span>
+                            )}
                           </td>
                           <td className="px-6 py-4 border border-gray-200 dark:border-gray-700">
-                            <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${getStatusColor(apt.status)}`}>
+                            <span
+                              className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${getStatusColor(apt.status)}`}
+                            >
                               {getStatusText(apt.status)}
                             </span>
                           </td>
@@ -1209,14 +1322,18 @@ const past = appointments.filter(apt => {
                                   className="p-1.5 rounded-full hover:bg-green-50 dark:hover:bg-green-900/20 text-green-600 transition-colors"
                                   title="Reschedule"
                                 >
-                                  <span className="material-icons text-xl">edit_calendar</span>
+                                  <span className="material-icons text-xl">
+                                    edit_calendar
+                                  </span>
                                 </button>
                                 <button
                                   onClick={() => handleCancel(apt.id)}
                                   className="p-1.5 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 transition-colors"
                                   title="Cancel"
                                 >
-                                  <span className="material-icons text-xl">cancel</span>
+                                  <span className="material-icons text-xl">
+                                    cancel
+                                  </span>
                                 </button>
                               </div>
                             ) : apt.status === "COMPLETED" ? (
@@ -1225,7 +1342,9 @@ const past = appointments.filter(apt => {
                                 className="inline-flex p-1.5 rounded-full hover:bg-green-50 dark:hover:bg-green-900/20 text-green-600 transition-colors"
                                 title="View Summary"
                               >
-                                <span className="material-icons text-xl">description</span>
+                                <span className="material-icons text-xl">
+                                  description
+                                </span>
                               </Link>
                             ) : apt.status === "CANCELLED" ? (
                               <Link
@@ -1233,10 +1352,14 @@ const past = appointments.filter(apt => {
                                 className="inline-flex p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 transition-colors"
                                 title="View Details"
                               >
-                                <span className="material-icons text-xl">visibility</span>
+                                <span className="material-icons text-xl">
+                                  visibility
+                                </span>
                               </Link>
                             ) : (
-                              <span className="text-gray-400 text-xs">Not editable</span>
+                              <span className="text-gray-400 text-xs">
+                                Not editable
+                              </span>
                             )}
                           </td>
                         </tr>
