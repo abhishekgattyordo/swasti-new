@@ -550,13 +550,13 @@ export default function DoctorTeleconsultationPage() {
 
       {/* Videoooo  Call Modal */}
       {showVideoCall && appointment && isAgoraConfigured && (
-        <VideoCall
-          appId={agoraAppId!}
-          channel={`ordo-tele-${appointment.id}`}
-          token={null}               // Use null for App ID mode; if token required, generate and pass here
-          uid={null}                 // Let Agora assign a unique UID automatically
-          onClose={() => setShowVideoCall(false)}
-        />
+             <VideoCall
+  appId={agoraAppId!}
+  channel="test123"   // fixed channel for testing
+  token="007eJxTYHj+8FELX0HNm+/f/r5dueKNdwOfe7TrYqnlL/RvtqfWtV9UYDAxSzG3SDNMtEhKTDMxSU1JNDO3NDBONk1KTDIzsEhO0pU9ltkQyMgwmbWImZEBAkF8doaS1OISQyNjBgYA46cjGw=="
+  uid={null}          // let Agora assign a unique UID
+  onClose={() => setShowVideoCall(false)}
+/>
       )}
     </>
   );
