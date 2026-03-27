@@ -185,6 +185,7 @@ export default function VideoCall({ appId, channel, token, uid, onClose }: Video
         >
           {isAudioMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
         </Button>
+        
         <Button
           variant="outline"
           size="icon"
