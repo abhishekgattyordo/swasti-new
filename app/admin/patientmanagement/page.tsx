@@ -34,7 +34,7 @@ import { Label } from "@/components/ui/label";
 import { Menu, X } from "lucide-react";
 import { patientsApi } from "@/lib/api/registration";
 import { toast } from "sonner";
-
+import PatientImport from '@/components/admin/PatientImport';
 // ==================== Types & Interfaces ====================
 interface Patient {
   id: string;
@@ -277,8 +277,8 @@ const PatientManagementPage: React.FC = () => {
   };
 
   // Fetch patients and then their appointments
-  useEffect(() => {
-    const fetchPatientsAndAppointments = async () => {
+
+    const loadPatients = async () => {
       try {
         setLoading(true);
         // 1. Fetch patients list
@@ -443,8 +443,13 @@ const PatientManagementPage: React.FC = () => {
       }
     };
 
-    fetchPatientsAndAppointments();
-  }, []);
+    useEffect(() => {
+  loadPatients();
+}, []);
+
+const handleImportSuccess = () => {
+  loadPatients(); // refresh the list
+};
 
   // Update stats based on patients
   const updateStats = (patients: Patient[]) => {
@@ -653,6 +658,7 @@ if (response.success) {
                     </p>
                   </div>
                   <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+                      <PatientImport onSuccess={handleImportSuccess} />
                     <button
                       onClick={() => router.push("/admin/addnewpatient")}
                       className="flex items-center justify-center gap-1.5 rounded-lg h-9 md:h-10 px-3 md:px-4 bg-[#137fec] text-white text-sm font-semibold shadow-lg shadow-[#137fec]/20 hover:bg-[#137fec]/90 transition-all w-full md:w-auto"
