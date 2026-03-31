@@ -66,6 +66,23 @@ export default function LoginPage() {
     const trimmedEmail = email.trim();
     const trimmedPassword = password.trim();
 
+    if (trimmedEmail === "laboratory@gmail.com" && trimmedPassword === "password123") {
+      const dummyUser = {
+        id: 99,
+        email: "laboratory@gmail.com",
+        full_name_en: "Lab Technician",
+        role: "laboratory",
+        patient_id: null,
+        doctor_id: null,
+      };
+      localStorage.setItem("user", JSON.stringify(dummyUser));
+      localStorage.setItem("accessToken", "dummy-token");
+      console.log("✅ Dummy laboratory login successful");
+      router.push("/laboratory");
+      setIsLoading(false);
+      return;
+    }
+
     try {
       console.log("🔍 Attempting login with:", { email: trimmedEmail });
 
@@ -120,6 +137,9 @@ if (data.refreshToken) {
           break;
         case "helpdesk":
           router.push("/helpdesk/dashboard");
+          break;
+          case "laboratory":
+          router.push("/laboratory");
           break;
         default:
           router.push("/");
