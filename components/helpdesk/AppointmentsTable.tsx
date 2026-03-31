@@ -214,7 +214,7 @@ export default function AppointmentsTable({
                 </div>
               </th>
               <th className="p-2 sm:p-3 text-left text-xs font-medium text-gray-500 uppercase border border-gray-200">
-                ACTIONS
+                ACTIONSs
               </th>
             </tr>
           </thead>
@@ -290,15 +290,7 @@ export default function AppointmentsTable({
 
                       return (
                         <>
-                          {apt.status === "pending" && (
-                            <button
-                              onClick={() => onConfirm(apt.id)}
-                              className="p-1.5 rounded-md hover:bg-gray-100 text-blue-600 transition-colors"
-                              title="Confirm"
-                            >
-                              <CheckCircle2 className="w-4 h-4" />
-                            </button>
-                          )}
+                        
                           {apt.status === "confirmed" && (
                             <button
                               onClick={() => onComplete(apt.id)}

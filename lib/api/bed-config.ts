@@ -36,6 +36,7 @@ export const createWard = (data: {
   type: WardType;
   patient_category: PatientCategory;
   description?: string | null;
+  daily_rate?: number;  
 }) => api.post<ApiResponse<Ward>>('/api/bed-config/wards/', data);
 export const updateWard = (id: number, data: Partial<Ward>) => 
   api.put<ApiResponse<Ward>>(`/api/bed-config/wards/${id}/`, data);

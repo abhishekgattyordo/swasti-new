@@ -23,6 +23,12 @@ interface DeleteDoctorResponse {
   message: string;
 }
 
+interface BulkImportResponse {
+  success: boolean;
+  message: string;
+  data: { id: number; name: string }[];
+}
+
 
 export const doctorsApi = {
   getDoctors: (params?: any) => api.get('/api/doctors', { params }),
@@ -47,5 +53,6 @@ updateDoctor: async (id: number, data: any): Promise<UpdateDoctorResponse> => {
   getSlots: (doctorId: number, date: string): Promise<SlotsResponse> =>
     api.get(`/api/doctors-appoitment/${doctorId}/slots?date=${date}`),
 
-    
+     importDoctors: (doctors: any[]): Promise<BulkImportResponse> =>
+    api.post('/api/doctors/bulk', { doctors }),
 };

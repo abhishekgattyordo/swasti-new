@@ -5,6 +5,12 @@ interface DeletePatientResponse {
   message: string;
 }
 
+interface BulkImportResponse {
+  success: boolean;
+  message: string;
+  data: { patientId: string; name: string }[];
+}
+
 export const patientsApi = {
   // ========== Registration API ==========
   // Submit step 1 (personal details)
@@ -38,6 +44,9 @@ export const patientsApi = {
 
   // Update an existing patient – expects JSON object (must include patientId)
   adminUpdatePatient: (data: object) => api.put('/api/admin/patients', data),
+
+  bulkImport: (patients: any[]): Promise<BulkImportResponse> =>
+    api.post('/api/admin/bulk', { patients }),
 
   // Delete a patient
 adminDeletePatient: async (patientId: string): Promise<DeletePatientResponse> => {

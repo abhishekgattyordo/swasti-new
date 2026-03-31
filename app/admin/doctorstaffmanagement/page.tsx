@@ -43,7 +43,7 @@
 
   // Import API functions (adjust path as needed)
   import { doctorsApi } from "@/lib/api/doctors";
-
+import DoctorImport from "@/components/admin/DoctorImport";
 
   export interface Stat {
     title: string;
@@ -303,6 +303,10 @@
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
     // Fetch doctors from API
+const handleImportSuccess = () => {
+  fetchDoctors(); // your existing function that fetches the doctor list
+};
+
     const fetchDoctors = async () => {
     setLoading(true);
     try {
@@ -532,6 +536,7 @@
                       </p>
                     </div>
                     <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+                        <DoctorImport onSuccess={handleImportSuccess} />
                       <button
                         onClick={() => router.push("/admin/addnewdoctor")}
                         className="flex items-center justify-center gap-1.5 rounded-lg h-9 md:h-10 px-3 md:px-4 bg-[#137fec] text-white text-sm font-semibold shadow-lg shadow-[#137fec]/20 hover:bg-[#137fec]/90 transition-all w-full md:w-auto"

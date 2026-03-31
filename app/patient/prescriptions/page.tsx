@@ -1,22 +1,19 @@
+
+
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
 import Sidebar from "@/components/patient/Sidebar";
 import { useRouter } from "next/navigation";
 import {
   Menu,
   X,
   Pill,
-  Calendar,
   Download,
   ShoppingCart,
   User,
   FileText,
   Activity,
-  Thermometer,
-  Heart,
-  Gauge,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,6 +21,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { currentVisitApi } from "@/lib/api/ehr";
 import toast from "react-hot-toast";
+
+// or adjust the path to where the function is defined
 
 interface Vitals {
   id?: string;
@@ -75,56 +74,65 @@ export default function PrescriptionsPage() {
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
   const [selectedViewDate, setSelectedViewDate] = useState<string>("");
   const [prescriptionSearch, setPrescriptionSearch] = useState("");
+  const [availableDates, setAvailableDates] = useState<string[]>([]);
+  const [loadingDates, setLoadingDates] = useState(true);
 
-  // Which section to display: "vitals" or "prescriptions"
   const [activeSection, setActiveSection] = useState<"vitals" | "prescriptions">("vitals");
-
-
 
   const getPatientId = () => {
     const user = JSON.parse(localStorage.getItem("user") || "null");
     return user?.patient_id || String(user?.id);
   };
 
-  useEffect(() => {
-    const initialFetch = async () => {
-      const patientId = getPatientId();
-      if (!patientId) {
-        toast.error("Please login first");
-        router.push("/login");
-        return;
-      }
-      try {
-        const visitRes = await currentVisitApi.getCurrentVisit(patientId);
-        
-        let visitData = null;
-        if (visitRes?.success && visitRes.data) {
-          visitData = visitRes.data;
-        } else if (Array.isArray(visitRes)) {
-          visitData = visitRes[0];
-        } else {
-          visitData = visitRes;
-        }
-        if (visitData?.visit_date) {
-          const dateStr = new Date(visitData.visit_date)
-            .toISOString()
-            .split("T")[0];
-          setSelectedViewDate(dateStr);
-          await fetchDataForDate(patientId, dateStr);
-        } else {
-          const today = new Date().toISOString().split("T")[0];
-          setSelectedViewDate(today);
-          await fetchDataForDate(patientId, today);
-        }
-      } catch (error) {
-        console.error("Error fetching initial visit:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    initialFetch();
-  }, []);
+  // Fetch list of dates that have data (visits, vitals, prescriptions)
+ useEffect(() => {
+  const fetchDates = async () => {
+    const patientId = getPatientId();
 
+    if (!patientId) {
+      toast.error("Please login first");
+      router.push("/login");
+      return;
+    }
+
+    try {
+      setLoadingDates(true);
+
+      const visits = await currentVisitApi.getCompletedVisits(patientId);
+
+      if (Array.isArray(visits)) {
+        const dates = visits.map((visit) =>
+          String(visit.appointment_date)
+        );
+
+        const uniqueDates = [...new Set(dates)].sort(
+          (a, b) =>
+            new Date(b).getTime() - new Date(a).getTime()
+        );
+
+        setAvailableDates(uniqueDates);
+
+        if (uniqueDates.length > 0) {
+          setSelectedViewDate(uniqueDates[0]);
+        } else {
+          setLoading(false);
+        }
+      } else {
+        toast.error("Failed to load visits");
+      }
+    } catch (error) {
+      console.error("Error fetching visits:", error);
+      toast.error("Failed to load available dates");
+    } finally {
+      setLoadingDates(false);
+    }
+  };
+
+  fetchDates();
+}, [router]);
+
+
+  // Fetch data when selected date changes
   useEffect(() => {
     const patientId = getPatientId();
     if (!patientId || !selectedViewDate) return;
@@ -136,10 +144,8 @@ export default function PrescriptionsPage() {
 
   const fetchDataForDate = async (patientId: string, date: string) => {
     try {
-      const visitRes = await currentVisitApi.getCurrentVisitByDate(
-        patientId,
-        date
-      );
+      // 1. Visit details
+      const visitRes = await currentVisitApi.getCurrentVisitByDate(patientId, date);
       let visitData = null;
       if (visitRes?.success && visitRes.data) {
         visitData = visitRes.data;
@@ -150,11 +156,9 @@ export default function PrescriptionsPage() {
       }
       setVisit(visitData);
 
+      // 2. Vitals
       try {
-        const vitalsRes = await currentVisitApi.getVitalsByDate(
-          patientId,
-          date
-        );
+        const vitalsRes = await currentVisitApi.getVitalsByDate(patientId, date);
         let vitalsData = null;
         if (vitalsRes?.success && vitalsRes.data) {
           const apiVitals = vitalsRes.data;
@@ -187,11 +191,9 @@ export default function PrescriptionsPage() {
         setVitals(null);
       }
 
+      // 3. Prescriptions
       try {
-        const prescRes = await currentVisitApi.getPrescriptionsByDate(
-          patientId,
-          date
-        );
+        const prescRes = await currentVisitApi.getPrescriptionsByDate(patientId, date);
         let prescriptionsData: Prescription[] = [];
         if (prescRes?.success && Array.isArray(prescRes.data)) {
           prescriptionsData = prescRes.data.map((item: any) => ({
@@ -201,10 +203,8 @@ export default function PrescriptionsPage() {
             frequency: item.frequency,
             status: item.status || "active",
             prescribed_at: item.prescribed_at || new Date().toISOString(),
-            doctor_name:
-              item.doctor_name || visitData?.doctor_name || "Unknown",
-            doctor_specialty:
-              item.doctor_specialty || visitData?.doctor_specialty,
+            doctor_name: item.doctor_name || visitData?.doctor_name || "Unknown",
+            doctor_specialty: item.doctor_specialty || visitData?.doctor_specialty,
             doctor_image: item.doctor_image || visitData?.doctor_image,
             instructions: item.instructions,
             duration: item.duration,
@@ -219,10 +219,8 @@ export default function PrescriptionsPage() {
               frequency: item.frequency,
               status: item.status || "active",
               prescribed_at: item.prescribed_at || new Date().toISOString(),
-              doctor_name:
-                item.doctor_name || visitData?.doctor_name || "Unknown",
-              doctor_specialty:
-                item.doctor_specialty || visitData?.doctor_specialty,
+              doctor_name: item.doctor_name || visitData?.doctor_name || "Unknown",
+              doctor_specialty: item.doctor_specialty || visitData?.doctor_specialty,
               doctor_image: item.doctor_image || visitData?.doctor_image,
               instructions: item.instructions,
               duration: item.duration,
@@ -236,10 +234,8 @@ export default function PrescriptionsPage() {
             frequency: item.frequency,
             status: item.status || "active",
             prescribed_at: item.prescribed_at || new Date().toISOString(),
-            doctor_name:
-              item.doctor_name || visitData?.doctor_name || "Unknown",
-            doctor_specialty:
-              item.doctor_specialty || visitData?.doctor_specialty,
+            doctor_name: item.doctor_name || visitData?.doctor_name || "Unknown",
+            doctor_specialty: item.doctor_specialty || visitData?.doctor_specialty,
             doctor_image: item.doctor_image || visitData?.doctor_image,
             instructions: item.instructions,
             duration: item.duration,
@@ -252,17 +248,10 @@ export default function PrescriptionsPage() {
       }
     } catch (error) {
       console.error("Error fetching data for date:", error);
-    
     }
   };
 
-  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSelectedViewDate(e.target.value);
-  };
-
-  const activePrescriptions = prescriptions.filter(
-    (p) => p.status === "active"
-  );
+  const activePrescriptions = prescriptions.filter((p) => p.status === "active");
   const pastPrescriptions = prescriptions.filter(
     (p) => p.status === "completed" || p.status === "discontinued"
   );
@@ -300,30 +289,16 @@ export default function PrescriptionsPage() {
             <table className="w-full text-left text-sm border-collapse border border-gray-200 dark:border-gray-700">
               <thead className="bg-gray-50 dark:bg-black/20 text-gray-500 dark:text-gray-400 border-b border-green-200 dark:border-green-900">
                 <tr>
-                  <th className="px-4 py-2 border border-gray-200 dark:border-gray-700">
-                    BP (mmHg)
-                  </th>
-                  <th className="px-4 py-2 border border-gray-200 dark:border-gray-700">
-                    HR (bpm)
-                  </th>
-                  <th className="px-4 py-2 border border-gray-200 dark:border-gray-700">
-                    Temp (°C)
-                  </th>
-                  <th className="px-4 py-2 border border-gray-200 dark:border-gray-700">
-                    SpO₂ (%)
-                  </th>
-                  <th className="px-4 py-2 border border-gray-200 dark:border-gray-700">
-                    RR (breaths/min)
-                  </th>
+                  <th className="px-4 py-2 border border-gray-200 dark:border-gray-700">BP (mmHg)</th>
+                  <th className="px-4 py-2 border border-gray-200 dark:border-gray-700">HR (bpm)</th>
+                  <th className="px-4 py-2 border border-gray-200 dark:border-gray-700">Temp (°C)</th>
+                  <th className="px-4 py-2 border border-gray-200 dark:border-gray-700">SpO₂ (%)</th>
+                  <th className="px-4 py-2 border border-gray-200 dark:border-gray-700">RR (breaths/min)</th>
                   {vitals.weight !== undefined && (
-                    <th className="px-4 py-2 border border-gray-200 dark:border-gray-700">
-                      Weight (kg)
-                    </th>
+                    <th className="px-4 py-2 border border-gray-200 dark:border-gray-700">Weight (kg)</th>
                   )}
                   {vitals.height !== undefined && (
-                    <th className="px-4 py-2 border border-gray-200 dark:border-gray-700">
-                      Height (cm)
-                    </th>
+                    <th className="px-4 py-2 border border-gray-200 dark:border-gray-700">Height (cm)</th>
                   )}
                 </tr>
               </thead>
@@ -345,14 +320,10 @@ export default function PrescriptionsPage() {
                     {vitals.respiratory_rate || "-"}
                   </td>
                   {vitals.weight !== undefined && (
-                    <td className="px-4 py-2 border border-gray-200 dark:border-gray-700">
-                      {vitals.weight}
-                    </td>
+                    <td className="px-4 py-2 border border-gray-200 dark:border-gray-700">{vitals.weight}</td>
                   )}
                   {vitals.height !== undefined && (
-                    <td className="px-4 py-2 border border-gray-200 dark:border-gray-700">
-                      {vitals.height}
-                    </td>
+                    <td className="px-4 py-2 border border-gray-200 dark:border-gray-700">{vitals.height}</td>
                   )}
                 </tr>
               </tbody>
@@ -396,12 +367,27 @@ export default function PrescriptionsPage() {
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <input
-                type="date"
-                value={selectedViewDate}
-                onChange={handleDateChange}
-                className="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-800"
-              />
+              {loadingDates ? (
+                <div className="text-sm text-gray-500">Loading dates...</div>
+              ) : availableDates.length === 0 ? (
+                <div className="text-sm text-gray-500">No records found</div>
+              ) : (
+                <select
+                  value={selectedViewDate}
+                  onChange={(e) => setSelectedViewDate(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-800"
+                >
+                  {availableDates.map((date) => (
+                    <option key={date} value={date}>
+                      {new Date(date).toLocaleDateString(undefined, {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
           </div>
 
@@ -440,18 +426,19 @@ export default function PrescriptionsPage() {
             <div className="space-y-6">
               {/* Visit Summary (always visible) */}
               {visit && (
-  <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg text-sm flex flex-wrap items-center gap-x-4 gap-y-2">
-    <div>
-      <span className="font-semibold">Diagnosis:</span> {visit.diagnosis || "N/A"}
-    </div>
-    <div>
-      <span className="font-semibold">Doctor:</span> {visit.doctor_name}
-      {visit.doctor_specialty && <span className="text-gray-500"> ({visit.doctor_specialty})</span>}
-    </div>
-  
-  </div>
-)}
-              {/* Conditional rendering based on selected section */}
+                <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg text-sm flex flex-wrap items-center gap-x-4 gap-y-2">
+                  <div>
+                    <span className="font-semibold">Diagnosis:</span> {visit.diagnosis || "N/A"}
+                  </div>
+                  <div>
+                    <span className="font-semibold">Doctor:</span> {visit.doctor_name}
+                    {visit.doctor_specialty && (
+                      <span className="text-gray-500"> ({visit.doctor_specialty})</span>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {activeSection === "vitals" && <VitalsCard />}
 
               {activeSection === "prescriptions" && (
@@ -464,7 +451,6 @@ export default function PrescriptionsPage() {
                     </Card>
                   ) : (
                     <div className="space-y-4">
-                      {/* Tabs and Search in one row */}
                       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                           <TabsList className="grid grid-cols-2 w-fit">
@@ -602,10 +588,7 @@ export default function PrescriptionsPage() {
 
                         <TabsContent value="past" className="mt-4 space-y-2">
                           {displayedPast.map((presc) => (
-                            <Card
-                              key={presc.id}
-                              className="hover:shadow-md transition-shadow"
-                            >
+                            <Card key={presc.id} className="hover:shadow-md transition-shadow">
                               <CardContent className="p-4">
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                   <div className="flex items-start gap-3">
@@ -620,10 +603,7 @@ export default function PrescriptionsPage() {
                                         {presc.dosage} • {presc.frequency}
                                       </p>
                                       <div className="flex items-center gap-2 mt-1">
-                                        <Badge
-                                          variant="outline"
-                                          className="text-xs px-2 py-0"
-                                        >
+                                        <Badge variant="outline" className="text-xs px-2 py-0">
                                           {presc.status}
                                         </Badge>
                                         <span className="text-xs text-gray-500 dark:text-gray-400">
@@ -633,16 +613,11 @@ export default function PrescriptionsPage() {
                                     </div>
                                   </div>
                                   <div className="flex items-center gap-2 ml-11 sm:ml-0">
-                                    <Button
-                                      variant="outline"
-                                      size="icon"
-                                      className="h-7 w-7"
-                                    >
+                                    <Button variant="outline" size="icon" className="h-7 w-7">
                                       <Download className="h-3 w-3" />
                                     </Button>
                                   </div>
                                 </div>
-
                                 <div className="mt-2 pt-2 border-t border-gray-100 dark:border-gray-800">
                                   <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400">
                                     <User className="h-3 w-3" />

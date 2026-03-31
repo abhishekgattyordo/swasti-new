@@ -32,6 +32,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import Sidebar from "@/components/pharmacy/Sidebar";
 import { medicinesApi } from '@/lib/api/medicinesApi';
 import { toast } from 'sonner';
+import MedicineImport from '@/components/pharmacy/MedicineImport';
 
 // Categories
 const categories = [
@@ -232,6 +233,7 @@ export default function MedicineListPage() {
                 <Button variant="outline" onClick={fetchMedicines} disabled={loading}>
                   {loading ? "Loading..." : "Refresh"}
                 </Button>
+                  <MedicineImport onSuccess={fetchMedicines} />
                 <Button
                   onClick={() => router.push("/pharmacy/medicines/add")}
                   className="w-full sm:w-auto"
