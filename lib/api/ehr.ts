@@ -23,12 +23,32 @@ export interface Visit<T = any>  {
   success: boolean;
 }
 
+
+export interface ApiVisit {
+  appointment_id: string;
+  appointment_date: string;
+  appointment_time: string;
+  consultation_type: string;
+  status: string;
+  notes: string;
+  doctor_name: string;
+  doctor_specialty: string;
+  diagnosis: string | null;
+  icd10_code: string | null;
+  clinical_notes: string | null;
+  follow_up_date: string | null;
+  patient_instructions: string | null;
+}
+
 // API response wrapper
 export interface ApiResponse<T> {
   success: boolean;
   data: T;
   message?: string;
 }
+
+
+export type GetVisitsResponse = ApiVisit[];
 
  
 export const currentVisitApi = {
@@ -53,10 +73,12 @@ export const currentVisitApi = {
     const res = await api.get(`/api/ehr/${patientId}/current-visit?date=${date}`);
     return res.data;
   },
-
-    getCompletedVisits: (patientId: string) => 
-    api.get(`/api/ehr/${patientId}/visits`),
-
+getCompletedVisits: async (patientId: string): Promise<GetVisitsResponse> => {
+  const res = await api.get<GetVisitsResponse>(
+    `/api/ehr/${patientId}/visits`
+  );
+  return res.data;
+},
 // ------------------vitals-----------------
        getVitalsByDate: async (patientId: string, date: string) => {
     const response = await api.get(`/api/ehr/${patientId}/vitals?date=${date}`);

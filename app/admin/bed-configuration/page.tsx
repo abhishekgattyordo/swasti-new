@@ -213,7 +213,7 @@ export default function BedConfigurationPage() {
     }
     try {
       setIsLoading(true);
-      const res = await createFloor({ floor_number: parseInt(newFloorNumber), name: newFloorName || null });
+      const res = await createFloor({ floor_number: parseInt(newFloorNumber), name: newFloorName || undefined });
       const data = getResponseData(res);
       if (data?.id) {
         setFloors([...floors, data]);

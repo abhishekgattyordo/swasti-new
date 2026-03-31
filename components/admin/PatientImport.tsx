@@ -5,7 +5,7 @@ import { Upload, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
-import { patientsApi } from '@/lib/api/registration'; // adjust import
+import { patientsApi } from '@/lib/api/registration';
 
 interface PatientImportProps {
   onSuccess?: () => void;
@@ -21,14 +21,19 @@ export default function PatientImport({ onSuccess }: PatientImportProps) {
       'Allergies (comma separated)', 'Chronic Conditions (comma separated)',
       'Current Medications', 'Insurance Provider', 'Policy Number', 'Valid Until (YYYY-MM-DD)', 'Group ID'
     ];
-    const sampleRow = [
-      'Rajesh Kumar', 'राजेश कुमार', '1990-01-01', 'Male',
-      '123 Main St', 'Mumbai', 'Maharashtra', 'India', '400001',
-      '9876543210', 'rajesh@gmail.com', 'O+',
-      'Pollen, Dust', 'Diabetes Type 2', 'Metformin 500mg daily',
-      'LIC', 'POL12345', '2025-12-31', 'GRP001'
+
+    const sampleRows = [
+      [
+        'Rajesh Kumar', 'राजेश कुमार', '1990-01-01', 'Male',
+        '123 Main St', 'Mumbai', 'Maharashtra', 'India', '400001',
+        '9876543210', 'rajesh.kumar@example.com', 'O+',
+        'Pollen, Dust', 'Diabetes Type 2', 'Metformin 500mg daily',
+        'LIC', 'POL12345', '2025-12-31', 'GRP001'
+      ],
     ];
-    const wsData = [headers, sampleRow];
+
+    // Combine headers and all sample rows
+    const wsData = [headers, ...sampleRows];
     const ws = XLSX.utils.aoa_to_sheet(wsData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Patients');
@@ -52,34 +57,66 @@ export default function PatientImport({ onSuccess }: PatientImportProps) {
       const patients = [];
       for (let i = 1; i < rows.length; i++) {
         const row = rows[i];
-        if (!row[0]) continue; // skip empty rows
+        if (!row || row.length === 0 || !row[0]) continue; // skip empty rows
+
+        // Helper to safely get cell value as string
+        const getString = (index: number) => row[index]?.toString().trim() || '';
 
         const patient = {
-          fullNameEn: row[0]?.toString().trim(),
-          fullNameHi: row[1]?.toString().trim() || undefined,
+          fullNameEn: getString(0),
+          fullNameHi: getString(1) || undefined,
           dob: row[2] ? new Date(row[2]).toISOString().split('T')[0] : '',
-          gender: row[3]?.toString().trim().toLowerCase(),
-          address: row[4]?.toString().trim(),
-          city: row[5]?.toString().trim(),
-          state: row[6]?.toString().trim(),
-          country: row[7]?.toString().trim() || 'India',
-          pincode: row[8]?.toString().trim(),
-          phone: row[9]?.toString().trim(),
-          email: row[10]?.toString().trim(),
-          blood_group: row[11]?.toString().trim() || undefined,
-          allergies: row[12] ? row[12].toString().split(',').map((s: string) => s.trim()).filter(Boolean) : [],
-          chronicConditions: row[13] ? row[13].toString().split(',').map((s: string) => s.trim()).filter(Boolean) : [],
-          medications: row[14]?.toString().trim() || undefined,
-          insuranceProvider: row[15]?.toString().trim() || undefined,
-          policyNumber: row[16]?.toString().trim() || undefined,
+          gender: getString(3).toLowerCase(),
+          address: getString(4),
+          city: getString(5),
+          state: getString(6),
+          country: getString(7) || 'India',
+          pincode: getString(8),
+          phone: getString(9),
+          email: getString(10),
+          blood_group: getString(11) || undefined,
+          allergies: row[12] ? String(row[12]).split(',').map(s => s.trim()).filter(Boolean) : [],
+          chronicConditions: row[13] ? String(row[13]).split(',').map(s => s.trim()).filter(Boolean) : [],
+          medications: getString(14) || undefined,
+          insuranceProvider: getString(15) || undefined,
+          policyNumber: getString(16) || undefined,
           validUntil: row[17] ? new Date(row[17]).toISOString().split('T')[0] : undefined,
-          groupId: row[18]?.toString().trim() || undefined,
+          groupId: getString(18) || undefined,
         };
 
-        // Basic validation
+        // Validate required fields
         if (!patient.fullNameEn || !patient.dob || !patient.gender || !patient.address ||
             !patient.city || !patient.state || !patient.pincode || !patient.phone || !patient.email) {
-          throw new Error(`Row ${i+1} missing required fields (name, DOB, gender, address, city, state, pincode, phone, email)`);
+          throw new Error(`Row ${i+1} missing required fields (full name, DOB, gender, address, city, state, pincode, phone, email)`);
+        }
+
+        // Validate gender
+        if (!['male', 'female', 'other'].includes(patient.gender)) {
+          throw new Error(`Row ${i+1} has invalid gender: ${patient.gender}. Must be Male/Female/Other`);
+        }
+
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(patient.email)) {
+          throw new Error(`Row ${i+1} has invalid email: ${patient.email}`);
+        }
+
+        // Validate date formats
+        if (isNaN(new Date(patient.dob).getTime())) {
+          throw new Error(`Row ${i+1} has invalid date of birth: ${patient.dob}`);
+        }
+        if (patient.validUntil && isNaN(new Date(patient.validUntil).getTime())) {
+          throw new Error(`Row ${i+1} has invalid valid-until date: ${patient.validUntil}`);
+        }
+
+        // Validate pincode (simple length check)
+        if (!/^\d{6}$/.test(patient.pincode)) {
+          throw new Error(`Row ${i+1} has invalid pincode: ${patient.pincode} (should be 6 digits)`);
+        }
+
+        // Validate phone (basic: 10 digits)
+        if (!/^\d{10}$/.test(patient.phone)) {
+          throw new Error(`Row ${i+1} has invalid phone number: ${patient.phone} (should be 10 digits)`);
         }
 
         patients.push(patient);
@@ -87,7 +124,7 @@ export default function PatientImport({ onSuccess }: PatientImportProps) {
 
       if (patients.length === 0) throw new Error('No valid patient data found');
 
-      const response = await patientsApi.bulkImport(patients); // we'll add this method
+      const response = await patientsApi.bulkImport(patients);
       if (!response.success) throw new Error(response.message || 'Import failed');
       toast.success(response.message);
       if (onSuccess) onSuccess();

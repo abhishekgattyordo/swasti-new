@@ -22,13 +22,19 @@ export default function DoctorImport({ onSuccess }: DoctorImportProps) {
       'Address', 'City', 'State', 'Zip Code', 'Country',
       'Qualifications (comma separated)', 'Experience (years)', 'Bio', 'Status (active/on-leave)'
     ];
-    const sampleRow = [
-      'John', 'Doe', 'john.doe@gmail.com', '+1234567890', 'Cardiology',
-      'Cardiology Department', 'MED12345', '1980-05-15', '2023-01-10',
-      '123 Main St', 'Springfield', 'IL', '62701', 'USA',
-      'MD, FACC', '15', 'Experienced cardiologist.', 'active'
+
+    const sampleRows = [
+      [
+        'John', 'Doe', 'john.doe@example.com', '+1234567890', 'Cardiology',
+        'Cardiology Department', 'MED123456', '1980-05-15', '2023-01-10',
+        '123 Main St', 'Springfield', 'IL', '62701', 'USA',
+        'MD, FACC', '15', 'Experienced cardiologist with focus on interventional cardiology.', 'active'
+      ],
+    
     ];
-    const wsData = [headers, sampleRow];
+
+    // Combine headers and all sample rows correctly
+    const wsData = [headers, ...sampleRows];
     const ws = XLSX.utils.aoa_to_sheet(wsData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Doctors');
@@ -55,34 +61,50 @@ export default function DoctorImport({ onSuccess }: DoctorImportProps) {
       const doctors = [];
       for (let i = 1; i < rows.length; i++) {
         const row = rows[i];
-        if (!row[0]) continue; // skip empty rows
+        if (!row || row.length === 0 || !row[0]) continue; // skip empty rows
 
-        // Map columns according to template order
+        // Helper to safely get cell value as string
+        const getString = (index: number) => row[index]?.toString().trim() || '';
+
         const doctor = {
-          firstName: row[0]?.toString().trim(),
-          lastName: row[1]?.toString().trim(),
-          email: row[2]?.toString().trim(),
-          phone: row[3]?.toString().trim(),
-          specialty: row[4]?.toString().trim(),
-          department: row[5]?.toString().trim(),
-          licenseNumber: row[6]?.toString().trim(),
+          firstName: getString(0),
+          lastName: getString(1),
+          email: getString(2),
+          phone: getString(3),
+          specialty: getString(4),
+          department: getString(5),
+          licenseNumber: getString(6),
           dateOfBirth: row[7] ? new Date(row[7]).toISOString().split('T')[0] : undefined,
           dateJoined: row[8] ? new Date(row[8]).toISOString().split('T')[0] : undefined,
-          address: row[9]?.toString().trim() || undefined,
-          city: row[10]?.toString().trim() || undefined,
-          state: row[11]?.toString().trim() || undefined,
-          zipCode: row[12]?.toString().trim() || undefined,
-          country: row[13]?.toString().trim() || undefined,
-          qualifications: row[14] ? row[14].toString().split(',').map((s: string) => s.trim()).filter(Boolean) : [],
-          experience: row[15] ? parseInt(row[15]) : undefined,
-          bio: row[16]?.toString().trim() || undefined,
-          status: row[17]?.toString().trim() === 'on-leave' ? 'on-leave' : 'active',
+          address: getString(9) || undefined,
+          city: getString(10) || undefined,
+          state: getString(11) || undefined,
+          zipCode: getString(12) || undefined,
+          country: getString(13) || undefined,
+          qualifications: row[14] ? String(row[14]).split(',').map(s => s.trim()).filter(Boolean) : [],
+          experience: row[15] ? parseInt(String(row[15]), 10) : undefined,
+          bio: getString(16) || undefined,
+          status: getString(17).toLowerCase() === 'on-leave' ? 'on-leave' : 'active',
         };
 
         // Validate required fields
         if (!doctor.firstName || !doctor.lastName || !doctor.email || !doctor.phone ||
             !doctor.specialty || !doctor.department || !doctor.licenseNumber || !doctor.dateJoined) {
-          throw new Error(`Row ${i+1} missing required fields: first name, last name, email, phone, specialty, department, license number, date joined`);
+          throw new Error(`Row ${i + 1} missing required fields: first name, last name, email, phone, specialty, department, license number, date joined`);
+        }
+
+        // Validate email format (basic)
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(doctor.email)) {
+          throw new Error(`Row ${i + 1} has invalid email: ${doctor.email}`);
+        }
+
+        // Validate date formats
+        if (doctor.dateOfBirth && isNaN(new Date(doctor.dateOfBirth).getTime())) {
+          throw new Error(`Row ${i + 1} has invalid date of birth: ${doctor.dateOfBirth}`);
+        }
+        if (doctor.dateJoined && isNaN(new Date(doctor.dateJoined).getTime())) {
+          throw new Error(`Row ${i + 1} has invalid date joined: ${doctor.dateJoined}`);
         }
 
         doctors.push(doctor);
@@ -92,13 +114,13 @@ export default function DoctorImport({ onSuccess }: DoctorImportProps) {
         throw new Error('No valid doctor data found');
       }
 
-      // Use the API method
+      // Call the bulk import API
       const result = await doctorsApi.importDoctors(doctors);
       if (!result.success) {
         throw new Error(result.message || 'Import failed');
       }
       toast.success(result.message);
-      if (onSuccess) onSuccess(); // refresh the parent list
+      if (onSuccess) onSuccess();
     } catch (err: any) {
       console.error(err);
       toast.error(err.message || 'Import failed');

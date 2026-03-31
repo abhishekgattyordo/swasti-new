@@ -1,7 +1,6 @@
 // app/api/patients/bulk/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { supabaseAdmin } from '@/lib/supabaseServer';
 import { z } from 'zod';
 
 // Validation schema matching the fields sent from the PatientImport component
@@ -52,7 +51,7 @@ export async function POST(req: NextRequest) {
     for (let i = 0; i < patients.length; i++) {
       const result = BulkPatientSchema.safeParse(patients[i]);
       if (!result.success) {
-        const errors = result.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ');
+        const errors = result.error.issues.map(e => `${e.path.join('.')}: ${e.message}`).join(', ');
         return NextResponse.json(
           {
             success: false,
@@ -138,34 +137,11 @@ export async function POST(req: NextRequest) {
           );
         }
 
-        // 4. Create placeholder user record in `users` table
+        // 4. Create user record (no auth_user_id or invitation)
         await query(
           `INSERT INTO users (email, full_name_en, role, patient_id, created_at, updated_at)
            VALUES ($1, $2, $3, $4, NOW(), NOW())`,
           [data.email, data.fullNameEn, 'patient', patientId]
-        );
-
-        // 5. Send Supabase invitation
-        const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
-          data.email,
-          {
-            redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/set-password`,
-            data: {
-              full_name: data.fullNameEn,
-              patient_id: patientId,
-              role: 'patient',
-            },
-          }
-        );
-
-        if (inviteError) {
-          throw new Error(`Invitation failed for ${data.email}: ${inviteError.message}`);
-        }
-
-        // 6. Update user record with auth_user_id
-        await query(
-          `UPDATE users SET auth_user_id = $1 WHERE email = $2`,
-          [inviteData.user.id, data.email]
         );
 
         inserted.push({ patientId, name: data.fullNameEn });

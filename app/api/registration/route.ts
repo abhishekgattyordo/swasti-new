@@ -1,3 +1,6 @@
+
+
+
 // import { NextRequest, NextResponse } from 'next/server';
 // import { query, transaction } from '../../../lib/db';
 // import { 
@@ -11,6 +14,7 @@
 // import bcrypt from 'bcrypt';
 // import { randomBytes } from 'crypto';
 // import { sendPasswordEmail } from '@/lib/api/email';
+// import { supabaseAdmin } from '@/lib/supabaseServer';
 
 // // ==================== HELPER FUNCTIONS ====================
 
@@ -316,10 +320,7 @@
 
 //   if (patientResult.rows.length === 0) {
 //     return NextResponse.json(
-//       { 
-//         success: false, 
-//         message: `Patient with ID ${patientId} not found. Please complete steps 1 and 2 first.` 
-//       },
+//       { success: false, message: `Patient with ID ${patientId} not found. Please complete steps 1 and 2 first.` },
 //       { status: 404 }
 //     );
 //   }
@@ -328,19 +329,12 @@
 
 //   if (patient.registration_step < 2) {
 //     return NextResponse.json(
-//       { 
-//         success: false, 
-//         message: "Please complete steps 1 (Personal Details) and 2 (Medical History) first" 
-//       },
+//       { success: false, message: "Please complete steps 1 (Personal Details) and 2 (Medical History) first" },
 //       { status: 400 }
 //     );
 //   }
 
 //   const registrationId = generateRegistrationId();
-
-//   // 👇 Generate a random password
-//   const plainPassword = generateRandomPassword(12);
-//   const hashedPassword = await bcrypt.hash(plainPassword, 10);
 
 //   // Use transaction for final registration
 //   await transaction(async (client) => {
@@ -377,33 +371,65 @@
 //       [patientId, registrationId, 'ACTIVE']
 //     );
 
-//     // 👇 Create/update user account for the patient
+//     // --- Supabase Auth: Create/update user via invite ---
+//     // First, check if a user already exists in our `users` table (maybe from a previous attempt)
 //     const existingUser = await client.query(
-//       'SELECT id FROM users WHERE email = $1',
+//       'SELECT id, auth_user_id FROM users WHERE email = $1',
 //       [patient.email]
 //     );
 
+//     let authUserId: string | null = null;
+
 //     if (existingUser.rows.length > 0) {
-//       // Update existing user with the new password and link to patient
+//       // If user exists, we may need to re‑send invite if they haven't set a password yet.
+//       // We'll just update the record and send a new invite.
+//       authUserId = existingUser.rows[0].auth_user_id;
+//       // We'll update the user's full name and link to patient.
 //       await client.query(
 //         `UPDATE users 
-//          SET password = $1, patient_id = $2, full_name_en = $3, role = 'patient', updated_at = NOW()
-//          WHERE email = $4`,
-//         [hashedPassword, patientId, patient.full_name_en, patient.email]
+//          SET full_name_en = $1, patient_id = $2, role = 'patient', updated_at = NOW()
+//          WHERE email = $3`,
+//         [patient.full_name_en, patientId, patient.email]
 //       );
 //     } else {
+//       // Create a placeholder record in our users table with auth_user_id NULL for now.
 //       await client.query(
-//         `INSERT INTO users (email, password, full_name_en, role, patient_id, created_at, updated_at)
-//          VALUES ($1, $2, $3, $4, $5, NOW(), NOW())`,
-//         [patient.email, hashedPassword, patient.full_name_en, 'patient', patientId]
+//         `INSERT INTO users (email, full_name_en, role, patient_id, created_at, updated_at)
+//          VALUES ($1, $2, $3, $4, NOW(), NOW())`,
+//         [patient.email, patient.full_name_en, 'patient', patientId]
 //       );
 //     }
+
+//     // Now, send an invitation via Supabase Auth
+//     // This will send an email to the user with a link to set a password.
+//   const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
+//   patient.email,
+//   {
+//     redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
+//     data: {
+//       full_name: patient.full_name_en,
+//       patient_id: patientId,
+//     },
+//   }
+// );
+
+//     if (inviteError) {
+//       console.error('Supabase invite error:', inviteError);
+//       throw new Error(`Failed to send invitation: ${inviteError.message}`);
+//     }
+
+//     // The invite returns the user object with the auth user id.
+//     const invitedUser = inviteData.user;
+//     authUserId = invitedUser.id;
+
+//     // Update our users table with the auth_user_id
+//     await client.query(
+//       `UPDATE users SET auth_user_id = $1 WHERE email = $2`,
+//       [authUserId, patient.email]
+//     );
 //   });
 
-//   // Send the password to the patient's email
-//   await sendPasswordEmail(patient.email, plainPassword, patient.full_name_en);
-
-//   // Get complete registration data
+//   // Fetch complete registration data (same as before)
 //   const registrationResult = await query(
 //     `SELECT 
 //       p.patient_id,
@@ -438,29 +464,23 @@
   
 //   const registration = registrationResult.rows[0];
 
-//   // Optional: include the plain password in the response (only for development)
 //   const responseData = {
 //     ...registration,
 //     registrationStep: 3,
 //     completed: true,
 //     nextSteps: [
-//       "Check your email for login credentials",
+//       "Check your email for a magic link to set your password.",
+//       "After setting your password, log in to access your account.",
 //       "Download your digital health card",
 //       "Schedule your first appointment",
 //       "Access your health records",
 //     ],
 //   };
 
-//   // In production, do not send the plain password back.
-//   // For development, you might include it for testing.
-//   if (process.env.NODE_ENV !== 'production') {
-//     responseData.generatedPassword = plainPassword;
-//   }
-
 //   return NextResponse.json(
 //     {
 //       success: true,
-//       message: "Registration completed successfully! A password has been sent to your email.",
+//       message: "Registration completed successfully! A magic link has been sent to your email to set your password.",
 //       data: responseData,
 //     },
 //     { status: 200 }
@@ -747,6 +767,8 @@
 //     );
 //   }
 // }
+
+
 
 
 
@@ -1085,6 +1107,13 @@ async function handleStep3(data: Step3Input) {
 
   const registrationId = generateRegistrationId();
 
+  // Generate a random password
+  const plainPassword = generateRandomPassword(12);
+  const hashedPassword = await bcrypt.hash(plainPassword, 10);
+
+  // Log the password to the terminal (for testing)
+  console.log('🔑 Generated password for', patient.email, ':', plainPassword);
+
   // Use transaction for final registration
   await transaction(async (client) => {
     // Delete existing insurance details for this patient (if any)
@@ -1120,62 +1149,27 @@ async function handleStep3(data: Step3Input) {
       [patientId, registrationId, 'ACTIVE']
     );
 
-    // --- Supabase Auth: Create/update user via invite ---
-    // First, check if a user already exists in our `users` table (maybe from a previous attempt)
+    // Create/update user account for the patient with the generated password
     const existingUser = await client.query(
-      'SELECT id, auth_user_id FROM users WHERE email = $1',
+      'SELECT id FROM users WHERE email = $1',
       [patient.email]
     );
 
-    let authUserId: string | null = null;
-
     if (existingUser.rows.length > 0) {
-      // If user exists, we may need to re‑send invite if they haven't set a password yet.
-      // We'll just update the record and send a new invite.
-      authUserId = existingUser.rows[0].auth_user_id;
-      // We'll update the user's full name and link to patient.
+      // Update existing user with the new password and link to patient
       await client.query(
         `UPDATE users 
-         SET full_name_en = $1, patient_id = $2, role = 'patient', updated_at = NOW()
-         WHERE email = $3`,
-        [patient.full_name_en, patientId, patient.email]
+         SET password = $1, patient_id = $2, full_name_en = $3, role = 'patient', updated_at = NOW()
+         WHERE email = $4`,
+        [hashedPassword, patientId, patient.full_name_en, patient.email]
       );
     } else {
-      // Create a placeholder record in our users table with auth_user_id NULL for now.
       await client.query(
-        `INSERT INTO users (email, full_name_en, role, patient_id, created_at, updated_at)
-         VALUES ($1, $2, $3, $4, NOW(), NOW())`,
-        [patient.email, patient.full_name_en, 'patient', patientId]
+        `INSERT INTO users (email, password, full_name_en, role, patient_id, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, NOW(), NOW())`,
+        [patient.email, hashedPassword, patient.full_name_en, 'patient', patientId]
       );
     }
-
-    // Now, send an invitation via Supabase Auth
-    // This will send an email to the user with a link to set a password.
-  const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
-  patient.email,
-  {
-    redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
-    data: {
-      full_name: patient.full_name_en,
-      patient_id: patientId,
-    },
-  }
-);
-
-    if (inviteError) {
-      console.error('Supabase invite error:', inviteError);
-      throw new Error(`Failed to send invitation: ${inviteError.message}`);
-    }
-
-    // The invite returns the user object with the auth user id.
-    const invitedUser = inviteData.user;
-    authUserId = invitedUser.id;
-
-    // Update our users table with the auth_user_id
-    await client.query(
-      `UPDATE users SET auth_user_id = $1 WHERE email = $2`,
-      [authUserId, patient.email]
-    );
   });
 
   // Fetch complete registration data (same as before)
@@ -1218,18 +1212,23 @@ async function handleStep3(data: Step3Input) {
     registrationStep: 3,
     completed: true,
     nextSteps: [
-      "Check your email for a magic link to set your password.",
-      "After setting your password, log in to access your account.",
+      "Check the terminal for your password.",
+      "Log in using your email and the password shown in the console.",
       "Download your digital health card",
       "Schedule your first appointment",
       "Access your health records",
     ],
   };
 
+  // In development, include the plain password in the response
+  if (process.env.NODE_ENV !== 'production') {
+    responseData.generatedPassword = plainPassword;
+  }
+
   return NextResponse.json(
     {
       success: true,
-      message: "Registration completed successfully! A magic link has been sent to your email to set your password.",
+      message: "Registration completed successfully! A password has been generated. Check the terminal or response.",
       data: responseData,
     },
     { status: 200 }

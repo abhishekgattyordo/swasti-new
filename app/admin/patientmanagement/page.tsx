@@ -13,8 +13,6 @@ import {
   Calendar as CalendarIcon,
 } from "lucide-react";
 import { Users, Activity, HeartPulse, TrendingUp } from "lucide-react";
-
-// shadcn/ui components
 import {
   Popover,
   PopoverContent,
@@ -59,7 +57,7 @@ interface Appointment {
   id: number;
   appointment_date: string; // e.g., "2026-03-10T10:00:00Z"
   status: string; // e.g., "completed", "scheduled", "cancelled"
-  // ... other fields if needed
+
 }
 
 interface ColumnFilterProps {

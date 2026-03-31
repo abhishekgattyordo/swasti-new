@@ -780,7 +780,7 @@ if (token) {
 
   const handleViewEHR = (e: React.MouseEvent, patientId: string) => {
     e.stopPropagation();
-    router.push(`/doctor/ehr/${patientId}/current-visit`);
+    router.push(`/doctor/ehr/${patientId}/vitals`);
   };
 
   useEffect(() => {

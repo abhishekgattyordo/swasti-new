@@ -1,25 +1,21 @@
-// components/Sidebar.tsx
 'use client';
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   HealthAndSafety,
   Dashboard,
   CalendarMonth,
   FolderShared,
   Medication,
-  Chat,
   ReceiptLong,
   Settings,
   Person,
-  CreditCard,
   ChevronLeft,
   ChevronRight,
   Logout,
   EventNote,
-  QuestionAnswer,
 } from '@mui/icons-material';
 
 interface SidebarProps {
@@ -29,101 +25,65 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [isCollapsed, setIsCollapsed] = useState(false);
 
-  const toggleCollapse = () => {
-    setIsCollapsed(!isCollapsed);
-  };
+  // Lazy initialization to read from localStorage without an effect
+  const [userName] = useState(() => {
+    if (typeof window === 'undefined') return 'Patient';
+    const userStr = localStorage.getItem('user');
+    if (!userStr) return 'Patient';
+    try {
+      const user = JSON.parse(userStr);
+      return user.full_name_en || user.name || 'Patient';
+    } catch {
+      return 'Patient';
+    }
+  });
 
-  // ✅ CORRECT PATIENT NAVIGATION – based on your actual pages
+  const [patientId] = useState(() => {
+    if (typeof window === 'undefined') return '';
+    const userStr = localStorage.getItem('user');
+    if (!userStr) return '';
+    try {
+      const user = JSON.parse(userStr);
+      return user.patient_id || user.id || '';
+    } catch {
+      return '';
+    }
+  });
+
+  const toggleCollapse = () => setIsCollapsed(!isCollapsed);
+
   const navItems = [
-    {
-      icon: Dashboard,
-      label: 'Dashboard',
-      href: '/patient/dashboard',
-      color: 'from-green-500 to-green-700',
-      iconColor: 'text-green-600',
-    },
-    // {
-    //   icon: CalendarMonth,
-    //   label: 'Appointments',
-    //   href: '/patient/appointments',
-    //   badge: 2,
-    //   color: 'from-emerald-500 to-emerald-700',
-    //   iconColor: 'text-emerald-600',
-    // },
-    {
-      icon: FolderShared,
-      label: 'Medical Records',
-      href: '/patient/medical-records',
-      badge: 3,
-      color: 'from-green-500 to-green-700',
-      iconColor: 'text-green-600',
-    },
-    {
-      icon: Medication,
-      label: 'Prescriptions',
-      href: '/patient/prescriptions',
-      color: 'from-emerald-500 to-emerald-700',
-      iconColor: 'text-emerald-600',
-    },
-    {
-      icon: ReceiptLong,
-      label: 'Billing',
-      href: '/patient/billing',
-      color: 'from-green-500 to-green-700',
-      iconColor: 'text-green-600',
-    },
-    {
-      icon: EventNote,
-      label: 'Admission Summary',
-      href: '/patient/admission-summary',
-      color: 'from-green-500 to-green-700',
-      iconColor: 'text-green-600',
-    },
+    { icon: Dashboard, label: 'Dashboard', href: '/patient/dashboard', color: 'from-green-500 to-green-700' },
+    { icon: FolderShared, label: 'Medical Records', href: '/patient/medical-records', badge: 3, color: 'from-green-500 to-green-700' },
+    { icon: Medication, label: 'Prescriptions', href: '/patient/prescriptions', color: 'from-emerald-500 to-emerald-700' },
+    { icon: ReceiptLong, label: 'Billing', href: '/patient/billing', color: 'from-green-500 to-green-700' },
+    { icon: EventNote, label: 'Admission Summary', href: '/patient/admission-summary', color: 'from-green-500 to-green-700' },
   ];
 
   const settingsItems = [
-    // {
-    //   icon: Settings,
-    //   label: 'Settings',
-    //   href: '/patient/settings',
-    //   color: 'from-gray-500 to-gray-700',
-    //   iconColor: 'text-gray-600',
-    // },
-    {
-      icon: Person,
-      label: 'Profile',
-      href: '/patient/patient-profile',
-      color: 'from-gray-500 to-gray-700',
-      iconColor: 'text-gray-600',
-    },
+    { icon: Person, label: 'Profile', href: '/patient/patient-profile', color: 'from-gray-500 to-gray-700' },
   ];
 
-  // ✅ PATIENT‑FRIENDLY QUICK ACTIONS
   const quickAccessItems = [
-    {
-      icon: CalendarMonth,
-      label: 'Book Appointment',
-      href: '/appointments',
-      iconBg: 'bg-green-50 dark:bg-green-900/30',
-      iconColor: 'text-green-600 dark:text-green-400',
-    },
-   
+    { icon: CalendarMonth, label: 'Book Appointment', href: '/appointments', iconBg: 'bg-green-50', iconColor: 'text-green-600' },
   ];
 
   const handleLinkClick = () => {
     if (window.innerWidth < 1024) onClose();
   };
 
-  const isActive = (href: string) => {
-    return pathname === href || pathname?.startsWith(href + '/');
+  const handleLogout = () => {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
+    if (window.innerWidth < 1024) onClose();
+    router.push('/login');
   };
 
-  const handleLogout = () => {
-    console.log('Logout clicked');
-    // Add your logout logic here
-  };
+  const isActive = (href: string) => pathname === href || pathname?.startsWith(href + '/');
 
   return (
     <aside
@@ -143,12 +103,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         </svg>
       </button>
 
-      {/* Logo Section – now "Patient Portal" with green gradient */}
-      <div
-        className={`p-6 flex items-center ${
-          isCollapsed ? 'justify-center' : 'justify-between'
-        } border-b border-green-200 dark:border-green-900 relative`}
-      >
+      {/* Logo Section */}
+      <div className={`p-6 flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} border-b border-green-200 dark:border-green-900 relative`}>
         {!isCollapsed ? (
           <Link href="/patient/dashboard" className="flex items-center gap-4" onClick={handleLinkClick}>
             <div className="w-12 h-12 bg-gradient-to-br from-green-600 to-green-800 rounded-xl flex items-center justify-center text-white shadow-lg">
@@ -156,7 +112,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             </div>
             <div>
               <h1 className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">Patient Portal</h1>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 tracking-wide">Your Health Partner</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Your Health Partner</p>
             </div>
           </Link>
         ) : (
@@ -167,41 +123,24 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           </Link>
         )}
 
-        {/* Collapse button – green theme */}
-<button
-  onClick={toggleCollapse}
-  className={`hidden lg:flex items-center justify-center w-8 h-8 rounded-lg 
-    border border-green-500 dark:border-green-400
-    hover:bg-green-50 dark:hover:bg-green-900/20 
-    transition-colors
-    z-40
-    ${
-      isCollapsed
-        ? "absolute -right-4 top-1/2 transform -translate-y-1/2 bg-white dark:bg-gray-900 shadow-sm"
-        : ""
-    }`}
-  title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
->
-  {isCollapsed ? (
-    <ChevronRight className="text-green-600 dark:text-green-400 text-lg" />
-  ) : (
-    <ChevronLeft className="text-green-600 dark:text-green-400 text-lg" />
-  )}
-</button>
-
-
+        {/* Collapse button */}
+        <button
+          onClick={toggleCollapse}
+          className={`hidden lg:flex items-center justify-center w-8 h-8 rounded-lg border border-green-500 dark:border-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors z-40 ${
+            isCollapsed ? 'absolute -right-4 top-1/2 transform -translate-y-1/2 bg-white dark:bg-gray-900 shadow-sm' : ''
+          }`}
+          title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {isCollapsed ? <ChevronRight className="text-green-600 dark:text-green-400 text-lg" /> : <ChevronLeft className="text-green-600 dark:text-green-400 text-lg" />}
+        </button>
       </div>
 
-      {/* Scrollable navigation */}
+      {/* Navigation */}
       <div className="flex-1 flex flex-col min-h-0">
         <nav className="flex-1 overflow-y-auto px-4 py-8">
           {/* Main Navigation */}
           <div className="mb-6">
-            {!isCollapsed && (
-              <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider px-4 mb-3">
-                Patient Menu
-              </p>
-            )}
+            {!isCollapsed && <p className="text-xs font-medium text-gray-400 uppercase tracking-wider px-4 mb-3">Patient Menu</p>}
             <div className="space-y-1">
               {navItems.map((item) => {
                 const active = isActive(item.href);
@@ -220,25 +159,17 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                     title={isCollapsed ? item.label : ''}
                   >
                     <div className={`flex items-center ${isCollapsed ? '' : 'gap-4'}`}>
-                      <div
-                        className={`w-8 h-8 flex items-center justify-center rounded-lg ${
-                          active
-                            ? 'bg-green-600 text-white'
-                            : `bg-gradient-to-br ${item.color} text-white`
-                        }`}
-                      >
+                      <div className={`w-8 h-8 flex items-center justify-center rounded-lg ${
+                        active ? 'bg-green-600 text-white' : `bg-gradient-to-br ${item.color} text-white`
+                      }`}>
                         <item.icon className="text-lg" />
                       </div>
                       {!isCollapsed && <span className="text-sm font-medium">{item.label}</span>}
                     </div>
                     {!isCollapsed && item.badge && (
-                      <span
-                        className={`text-xs font-bold px-2 py-1 rounded-full ${
-                          active
-                            ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300'
-                            : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
-                        }`}
-                      >
+                      <span className={`text-xs font-bold px-2 py-1 rounded-full ${
+                        active ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
+                      }`}>
                         {item.badge}
                       </span>
                     )}
@@ -253,11 +184,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
           {/* Account Settings */}
           <div className="mb-6">
-            {!isCollapsed && (
-              <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider px-4 mb-3">
-                Account
-              </p>
-            )}
+            {!isCollapsed && <p className="text-xs font-medium text-gray-400 uppercase tracking-wider px-4 mb-3">Account</p>}
             <div className="space-y-1">
               {settingsItems.map((item) => {
                 const active = isActive(item.href);
@@ -276,11 +203,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                     title={isCollapsed ? item.label : ''}
                   >
                     <div className={`flex items-center ${isCollapsed ? '' : 'gap-4'}`}>
-                      <div
-                        className={`w-8 h-8 flex items-center justify-center rounded-lg ${
-                          active ? 'bg-gray-500 text-white' : `bg-gradient-to-br ${item.color} text-white`
-                        }`}
-                      >
+                      <div className={`w-8 h-8 flex items-center justify-center rounded-lg ${
+                        active ? 'bg-gray-500 text-white' : `bg-gradient-to-br ${item.color} text-white`
+                      }`}>
                         <item.icon className="text-lg" />
                       </div>
                       {!isCollapsed && <span className="text-sm font-medium">{item.label}</span>}
@@ -294,9 +219,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           {/* Quick Actions */}
           {!isCollapsed && (
             <div className="pt-4">
-              <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider px-4 mb-3">
-                Quick Actions
-              </p>
+              <p className="text-xs font-medium text-gray-400 uppercase tracking-wider px-4 mb-3">Quick Actions</p>
               <div className="space-y-1">
                 {quickAccessItems.map((item) => (
                   <Link
@@ -305,9 +228,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                     onClick={handleLinkClick}
                     className="flex items-center gap-4 px-4 py-3 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors group"
                   >
-                    <div
-                      className={`w-8 h-8 flex items-center justify-center rounded-lg ${item.iconBg} ${item.iconColor} group-hover:scale-105 transition-transform`}
-                    >
+                    <div className={`w-8 h-8 flex items-center justify-center rounded-lg ${item.iconBg} ${item.iconColor} group-hover:scale-105 transition-transform`}>
                       <item.icon className="text-lg" />
                     </div>
                     <span className="text-sm font-medium">{item.label}</span>
@@ -327,9 +248,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                   className="flex items-center justify-center px-4 py-3 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors group relative"
                   title={item.label}
                 >
-                  <div
-                    className={`w-8 h-8 flex items-center justify-center rounded-lg ${item.iconBg} ${item.iconColor} group-hover:scale-105 transition-transform`}
-                  >
+                  <div className={`w-8 h-8 flex items-center justify-center rounded-lg ${item.iconBg} ${item.iconColor} group-hover:scale-105 transition-transform`}>
                     <item.icon className="text-lg" />
                   </div>
                 </Link>
@@ -338,41 +257,47 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           )}
         </nav>
 
-        {/* User Profile – patient information */}
+        {/* User Profile & Logout */}
         <div className="mt-auto border-t border-green-200 dark:border-green-900 bg-white dark:bg-gray-900">
           <div className="p-4">
-            <div
-              className={`flex items-center ${
-                isCollapsed ? 'justify-center' : 'gap-3'
-              } p-3 bg-green-50 dark:bg-green-900/20 rounded-xl hover:bg-green-100 dark:hover:bg-green-800/30 transition-colors cursor-pointer group`}
-              onClick={handleLinkClick}
-              title={isCollapsed ? 'John Doe - Patient' : ''}
-            >
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-green-700 flex items-center justify-center text-white font-semibold text-sm">
-                JD
-              </div>
-              {!isCollapsed && (
-                <>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">John Doe</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">Patient ID: #P-12345</p>
+            {!isCollapsed ? (
+              <div className="flex items-center justify-between gap-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-green-700 flex items-center justify-center text-white font-semibold text-sm">
+                    {userName.charAt(0).toUpperCase()}
                   </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleLogout();
-                    }}
-                    className="p-1.5 rounded-lg bg-white dark:bg-gray-700 hover:bg-red-50 dark:hover:bg-red-900/30 group-hover:bg-green-100 dark:group-hover:bg-green-800/30 transition-colors"
-                    title="Logout"
-                  >
-                    <Logout className="text-gray-400 text-sm hover:text-red-500 dark:hover:text-red-400" />
-                  </button>
-                </>
-              )}
-            </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{userName}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                      Patient ID: {patientId || 'N/A'}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="p-1.5 rounded-lg bg-white dark:bg-gray-700 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
+                  title="Logout"
+                >
+                  <Logout className="text-gray-400 text-sm hover:text-red-500 dark:hover:text-red-400" />
+                </button>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center gap-2">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-green-700 flex items-center justify-center text-white font-semibold text-sm">
+                  {userName.charAt(0).toUpperCase()}
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="p-1.5 rounded-lg bg-white dark:bg-gray-700 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
+                  title="Logout"
+                >
+                  <Logout className="text-gray-400 text-sm hover:text-red-500 dark:hover:text-red-400" />
+                </button>
+              </div>
+            )}
             {!isCollapsed && (
               <div className="mt-3 px-3">
-                <p className="text-xs text-gray-400 dark:text-gray-500">Patient Portal v1.0.0</p>
+                <p className="text-xs text-gray-400">Patient Portal v1.0.0</p>
               </div>
             )}
           </div>
