@@ -405,7 +405,7 @@ export default function DoctorTeleconsultationPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <Header />
+  
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
             <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
@@ -419,7 +419,7 @@ export default function DoctorTeleconsultationPage() {
   if (error || !appointment) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <Header />
+     
         <div className="flex items-center justify-center min-h-[60vh]">
           <Card className="w-full max-w-md">
             <CardHeader>
@@ -449,7 +449,7 @@ export default function DoctorTeleconsultationPage() {
   return (
     <>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <Header />
+ 
         <div className="container mx-auto px-4 sm:px-6 py-8 max-w-3xl">
           <Card>
             <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-t-xl">
