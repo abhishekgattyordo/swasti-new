@@ -454,15 +454,9 @@ export default function DoctorTeleconsultationPage() {
   if (error || !appointment) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-<<<<<<< HEAD
-        <Header />
-        <div className="container mx-auto px-4 sm:px-6 py-8 max-w-3xl">
-          <Card>
-=======
      
         <div className="flex items-center justify-center min-h-[60vh]">
           <Card className="w-full max-w-md">
->>>>>>> e62759276373c4ee9c99a6756e037caa645a8342
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-red-600">
                 <AlertCircle className="h-6 w-6" />
@@ -503,12 +497,7 @@ export default function DoctorTeleconsultationPage() {
   return (
     <>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-<<<<<<< HEAD
-        <Header />
-        
-=======
  
->>>>>>> e62759276373c4ee9c99a6756e037caa645a8342
         <div className="container mx-auto px-4 sm:px-6 py-8 max-w-3xl">
           {/* Back Button */}
           <Button
