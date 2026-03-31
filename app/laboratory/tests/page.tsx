@@ -2,7 +2,7 @@
 
 // "use client";
 
-// import { useState } from "react";
+// import { useState, useEffect } from "react";
 // import Card from "@/components/laboratory/Card";
 
 // interface LabTest {
@@ -12,17 +12,11 @@
 //   category: "Blood" | "Urine" | "Other";
 //   price: number;
 //   active: boolean;
+//   created_at: string;
 // }
 
 // export default function LabTestsPage() {
-//   const [tests, setTests] = useState<LabTest[]>([
-//     { id: "1", test_name: "Complete Blood Count", test_code: "CBC001", category: "Blood", price: 500, active: true },
-//     { id: "2", test_name: "Blood Glucose", test_code: "GLU002", category: "Blood", price: 150, active: true },
-//     { id: "3", test_name: "Urine Routine", test_code: "UR003", category: "Urine", price: 200, active: true },
-//     { id: "4", test_name: "Lipid Profile", test_code: "LIP004", category: "Blood", price: 400, active: true },
-//     { id: "5", test_name: "Thyroid Profile", test_code: "THY005", category: "Blood", price: 600, active: false },
-//   ]);
-
+//   const [tests, setTests] = useState<LabTest[]>([]);
 //   const [showModal, setShowModal] = useState(false);
 //   const [editingTest, setEditingTest] = useState<LabTest | null>(null);
 //   const [formData, setFormData] = useState({
@@ -33,21 +27,47 @@
 //     active: true,
 //   });
 
+//   // Load tests from localStorage on mount
+//   useEffect(() => {
+//     const savedTests = localStorage.getItem('lab_tests');
+//     if (savedTests) {
+//       setTests(JSON.parse(savedTests));
+//     } else {
+//       // Default tests
+//       const defaultTests = [
+//         { id: "1", test_name: "Complete Blood Count", test_code: "CBC001", category: "Blood" as const, price: 500, active: true, created_at: new Date().toISOString() },
+//         { id: "2", test_name: "Blood Glucose", test_code: "GLU002", category: "Blood" as const, price: 150, active: true, created_at: new Date().toISOString() },
+//         { id: "3", test_name: "Urine Routine", test_code: "UR003", category: "Urine" as const, price: 200, active: true, created_at: new Date().toISOString() },
+//       ];
+//       setTests(defaultTests);
+//       localStorage.setItem('lab_tests', JSON.stringify(defaultTests));
+//     }
+//   }, []);
+
 //   const handleSave = () => {
-//     if (!formData.test_name || !formData.test_code || !formData.price) return;
+//     if (!formData.test_name || !formData.test_code || !formData.price) {
+//       alert('Please fill all required fields');
+//       return;
+//     }
 
 //     if (editingTest) {
-//       setTests(tests.map(test => 
+//       const updatedTests = tests.map(test => 
 //         test.id === editingTest.id 
 //           ? { ...test, ...formData, price: parseFloat(formData.price) }
 //           : test
-//       ));
+//       );
+//       setTests(updatedTests);
+//       localStorage.setItem('lab_tests', JSON.stringify(updatedTests));
 //     } else {
-//       setTests([{
+//       const newTest = {
 //         id: Date.now().toString(),
 //         ...formData,
 //         price: parseFloat(formData.price),
-//       }, ...tests]);
+//         created_at: new Date().toISOString(),
+//       };
+//       const updatedTests = [newTest, ...tests];
+//       setTests(updatedTests);
+//       localStorage.setItem('lab_tests', JSON.stringify(updatedTests));
 //     }
     
 //     setShowModal(false);
@@ -56,9 +76,19 @@
 //   };
 
 //   const toggleActive = (id: string) => {
-//     setTests(tests.map(test => 
+//     const updatedTests = tests.map(test => 
 //       test.id === id ? { ...test, active: !test.active } : test
-//     ));
+//     );
+//     setTests(updatedTests);
+//     localStorage.setItem('lab_tests', JSON.stringify(updatedTests));
+//   };
+
+//   const deleteTest = (id: string) => {
+//     if (confirm('Are you sure you want to delete this test?')) {
+//       const updatedTests = tests.filter(test => test.id !== id);
+//       setTests(updatedTests);
+//       localStorage.setItem('lab_tests', JSON.stringify(updatedTests));
+//     }
 //   };
 
 //   const openModal = (test?: LabTest) => {
@@ -142,6 +172,12 @@
 //                     >
 //                       Edit
 //                     </button>
+//                     <button
+//                       onClick={() => deleteTest(test.id)}
+//                       className="px-3 py-1 rounded-lg text-sm text-red-600 hover:bg-red-50 transition-colors"
+//                     >
+//                       Delete
+//                     </button>
 //                   </div>
 //                 </div>
 //               </div>
@@ -150,7 +186,7 @@
 //         </div>
 //       </div>
 
-//       {/* Modal */}
+//       {/* Add/Edit Modal */}
 //       {showModal && (
 //         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
 //           <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4">
@@ -270,14 +306,22 @@ interface LabTest {
   created_at: string;
 }
 
+interface FormData {
+  test_name: string;
+  test_code: string;
+  category: "Blood" | "Urine" | "Other";
+  price: string;
+  active: boolean;
+}
+
 export default function LabTestsPage() {
   const [tests, setTests] = useState<LabTest[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [editingTest, setEditingTest] = useState<LabTest | null>(null);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     test_name: "",
     test_code: "",
-    category: "Blood" as const,
+    category: "Blood",
     price: "",
     active: true,
   });
@@ -289,10 +333,10 @@ export default function LabTestsPage() {
       setTests(JSON.parse(savedTests));
     } else {
       // Default tests
-      const defaultTests = [
-        { id: "1", test_name: "Complete Blood Count", test_code: "CBC001", category: "Blood" as const, price: 500, active: true, created_at: new Date().toISOString() },
-        { id: "2", test_name: "Blood Glucose", test_code: "GLU002", category: "Blood" as const, price: 150, active: true, created_at: new Date().toISOString() },
-        { id: "3", test_name: "Urine Routine", test_code: "UR003", category: "Urine" as const, price: 200, active: true, created_at: new Date().toISOString() },
+      const defaultTests: LabTest[] = [
+        { id: "1", test_name: "Complete Blood Count", test_code: "CBC001", category: "Blood", price: 500, active: true, created_at: new Date().toISOString() },
+        { id: "2", test_name: "Blood Glucose", test_code: "GLU002", category: "Blood", price: 150, active: true, created_at: new Date().toISOString() },
+        { id: "3", test_name: "Urine Routine", test_code: "UR003", category: "Urine", price: 200, active: true, created_at: new Date().toISOString() },
       ];
       setTests(defaultTests);
       localStorage.setItem('lab_tests', JSON.stringify(defaultTests));
@@ -305,19 +349,35 @@ export default function LabTestsPage() {
       return;
     }
 
+    const priceNum = parseFloat(formData.price);
+    if (isNaN(priceNum) || priceNum <= 0) {
+      alert('Please enter a valid price');
+      return;
+    }
+
     if (editingTest) {
       const updatedTests = tests.map(test => 
         test.id === editingTest.id 
-          ? { ...test, ...formData, price: parseFloat(formData.price) }
+          ? { 
+              ...test, 
+              test_name: formData.test_name,
+              test_code: formData.test_code,
+              category: formData.category,
+              price: priceNum,
+              active: formData.active,
+            }
           : test
       );
       setTests(updatedTests);
       localStorage.setItem('lab_tests', JSON.stringify(updatedTests));
     } else {
-      const newTest = {
+      const newTest: LabTest = {
         id: Date.now().toString(),
-        ...formData,
-        price: parseFloat(formData.price),
+        test_name: formData.test_name,
+        test_code: formData.test_code,
+        category: formData.category,
+        price: priceNum,
+        active: formData.active,
         created_at: new Date().toISOString(),
       };
       const updatedTests = [newTest, ...tests];
@@ -491,7 +551,7 @@ export default function LabTestsPage() {
                   </label>
                   <select
                     value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value as any })}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value as "Blood" | "Urine" | "Other" })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                   >
                     <option value="Blood">Blood</option>
@@ -506,6 +566,8 @@ export default function LabTestsPage() {
                   </label>
                   <input
                     type="number"
+                    step="0.01"
+                    min="0"
                     value={formData.price}
                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
