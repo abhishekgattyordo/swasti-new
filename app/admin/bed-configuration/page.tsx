@@ -76,6 +76,7 @@ type Ward = {
   type: WardType;
   patient_category: PatientCategory;
   description: string | null;
+  daily_rate: number;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -100,8 +101,10 @@ type Bed = {
 const safeExtractData = (response: any) => {
   if (!response?.data) return [];
   if (Array.isArray(response.data)) return response.data;
-  if (response.data.data && Array.isArray(response.data.data)) return response.data.data;
-  if (response.data.success && Array.isArray(response.data.data)) return response.data.data;
+  if (response.data.data && Array.isArray(response.data.data))
+    return response.data.data;
+  if (response.data.success && Array.isArray(response.data.data))
+    return response.data.data;
   console.warn("Unexpected API response format:", response.data);
   return [];
 };
@@ -123,10 +126,12 @@ export default function BedConfigurationPage() {
   const [floors, setFloors] = useState<Floor[]>([]);
   const [wards, setWards] = useState<Ward[]>([]);
   const [beds, setBeds] = useState<Bed[]>([]);
+  const [editWardRate, setEditWardRate] = useState<number>(0);
 
   // Selection
   const [selectedFloor, setSelectedFloor] = useState<Floor | null>(null);
   const [selectedWard, setSelectedWard] = useState<Ward | null>(null);
+  const [newWardRate, setNewWardRate] = useState<number>(0);
 
   // Inline forms
   const [newFloorNumber, setNewFloorNumber] = useState("");
@@ -137,18 +142,22 @@ export default function BedConfigurationPage() {
 
   const [newWardName, setNewWardName] = useState("");
   const [newWardType, setNewWardType] = useState<WardType>("General");
-  const [newWardCategory, setNewWardCategory] = useState<PatientCategory>("Mixed");
+  const [newWardCategory, setNewWardCategory] =
+    useState<PatientCategory>("Mixed");
   const [newWardDesc, setNewWardDesc] = useState("");
   const [editWardId, setEditWardId] = useState<number | null>(null);
   const [editWardName, setEditWardName] = useState("");
   const [editWardType, setEditWardType] = useState<WardType>("General");
-  const [editWardCategory, setEditWardCategory] = useState<PatientCategory>("Mixed");
+  const [editWardCategory, setEditWardCategory] =
+    useState<PatientCategory>("Mixed");
   const [editWardDesc, setEditWardDesc] = useState("");
 
   const [newBedCount, setNewBedCount] = useState(5);
   const [newBedPrefix, setNewBedPrefix] = useState("");
   const [newRoomNumber, setNewRoomNumber] = useState("");
-  const [newBedCategory, setNewBedCategory] = useState<PatientCategory | "">("");
+  const [newBedCategory, setNewBedCategory] = useState<PatientCategory | "">(
+    "",
+  );
 
   // Load floors on mount
   useEffect(() => {
@@ -213,7 +222,10 @@ export default function BedConfigurationPage() {
     }
     try {
       setIsLoading(true);
-      const res = await createFloor({ floor_number: parseInt(newFloorNumber), name: newFloorName || undefined });
+      const res = await createFloor({
+        floor_number: parseInt(newFloorNumber),
+        name: newFloorName || undefined,
+      });
       const data = getResponseData(res);
       if (data?.id) {
         setFloors([...floors, data]);
@@ -240,7 +252,7 @@ export default function BedConfigurationPage() {
       });
       const data = getResponseData(res);
       if (data?.id) {
-        setFloors(floors.map(f => f.id === editFloorId ? data : f));
+        setFloors(floors.map((f) => (f.id === editFloorId ? data : f)));
         if (selectedFloor?.id === editFloorId) setSelectedFloor(data);
         setEditFloorId(null);
         toast.success("Floor updated");
@@ -254,47 +266,56 @@ export default function BedConfigurationPage() {
     }
   };
 
-const handleDeleteFloor = async (floorId: number) => {
-  // 🔄 First, make sure we have the latest wards for this floor
-  if (selectedFloor?.id === floorId) {
-    await loadWards(floorId);
-  } else {
-    // If the floor isn't currently selected, load its wards separately
-    try {
-      const res = await getWards(floorId);
-      const freshWards = safeExtractData(res);
-      if (freshWards.length > 0) {
-        toast.error("Cannot delete floor. Please delete all wards in this floor first.");
-        return;
-      }
-    } catch (err) {
-      // ignore – we'll rely on the API's own check
-    }
-  }
-
-  // Now check if any wards exist (using the fresh state)
-  const wardsInFloor = wards.filter(w => w.floor_id === floorId);
-  if (wardsInFloor.length > 0) {
-    toast.error("Cannot delete floor. Please delete all wards in this floor first.");
-    return;
-  }
-
-  if (!confirm("Delete this floor? This will also delete all wards and beds in this floor.")) return;
-  try {
-    setIsLoading(true);
-    await deleteFloor(floorId);
-    setFloors(floors.filter(f => f.id !== floorId));
+  const handleDeleteFloor = async (floorId: number) => {
+    // 🔄 First, make sure we have the latest wards for this floor
     if (selectedFloor?.id === floorId) {
-      setSelectedFloor(null);
-      setSelectedWard(null);
+      await loadWards(floorId);
+    } else {
+      // If the floor isn't currently selected, load its wards separately
+      try {
+        const res = await getWards(floorId);
+        const freshWards = safeExtractData(res);
+        if (freshWards.length > 0) {
+          toast.error(
+            "Cannot delete floor. Please delete all wards in this floor first.",
+          );
+          return;
+        }
+      } catch (err) {
+        // ignore – we'll rely on the API's own check
+      }
     }
-    toast.success("Floor deleted");
-  } catch (error: any) {
-    toast.error(error.response?.data?.message || "Failed to delete floor");
-  } finally {
-    setIsLoading(false);
-  }
-};
+
+    // Now check if any wards exist (using the fresh state)
+    const wardsInFloor = wards.filter((w) => w.floor_id === floorId);
+    if (wardsInFloor.length > 0) {
+      toast.error(
+        "Cannot delete floor. Please delete all wards in this floor first.",
+      );
+      return;
+    }
+
+    if (
+      !confirm(
+        "Delete this floor? This will also delete all wards and beds in this floor.",
+      )
+    )
+      return;
+    try {
+      setIsLoading(true);
+      await deleteFloor(floorId);
+      setFloors(floors.filter((f) => f.id !== floorId));
+      if (selectedFloor?.id === floorId) {
+        setSelectedFloor(null);
+        setSelectedWard(null);
+      }
+      toast.success("Floor deleted");
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to delete floor");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Ward handlers
   const handleAddWard = async () => {
@@ -314,6 +335,7 @@ const handleDeleteFloor = async (floorId: number) => {
         type: newWardType,
         patient_category: newWardCategory,
         description: newWardDesc || null,
+        daily_rate: newWardRate,
       });
       const data = getResponseData(res);
       if (data?.id) {
@@ -342,10 +364,11 @@ const handleDeleteFloor = async (floorId: number) => {
         type: editWardType,
         patient_category: editWardCategory,
         description: editWardDesc || null,
+        daily_rate: editWardRate,
       });
       const data = getResponseData(res);
       if (data?.id) {
-        setWards(wards.map(w => w.id === editWardId ? data : w));
+        setWards(wards.map((w) => (w.id === editWardId ? data : w)));
         if (selectedWard?.id === editWardId) setSelectedWard(data);
         setEditWardId(null);
         toast.success("Ward updated");
@@ -359,26 +382,26 @@ const handleDeleteFloor = async (floorId: number) => {
     }
   };
 
-const handleDeleteWard = async (wardId: number) => {
-  if (!confirm("Delete this ward and all its beds?")) return;
-  try {
-    setIsLoading(true);
-    await deleteWard(wardId);
-    // Reload wards to ensure consistency
-    if (selectedFloor) {
-      await loadWards(selectedFloor.id);
-    } else {
-      // If no floor selected, just filter locally
-      setWards(wards.filter(w => w.id !== wardId));
+  const handleDeleteWard = async (wardId: number) => {
+    if (!confirm("Delete this ward and all its beds?")) return;
+    try {
+      setIsLoading(true);
+      await deleteWard(wardId);
+      // Reload wards to ensure consistency
+      if (selectedFloor) {
+        await loadWards(selectedFloor.id);
+      } else {
+        // If no floor selected, just filter locally
+        setWards(wards.filter((w) => w.id !== wardId));
+      }
+      if (selectedWard?.id === wardId) setSelectedWard(null);
+      toast.success("Ward deleted");
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to delete ward");
+    } finally {
+      setIsLoading(false);
     }
-    if (selectedWard?.id === wardId) setSelectedWard(null);
-    toast.success("Ward deleted");
-  } catch (error: any) {
-    toast.error(error.response?.data?.message || "Failed to delete ward");
-  } finally {
-    setIsLoading(false);
-  }
-};
+  };
 
   // Bed handlers
   const handleAddBeds = async () => {
@@ -418,7 +441,7 @@ const handleDeleteWard = async (wardId: number) => {
   };
 
   const handleUpdateBedStatus = async (bedId: number, status: BedStatus) => {
-    const bed = beds.find(b => b.id === bedId);
+    const bed = beds.find((b) => b.id === bedId);
     if (bed?.status === "occupied") {
       toast.error("Cannot change status of an occupied bed");
       return;
@@ -427,7 +450,7 @@ const handleDeleteWard = async (wardId: number) => {
       const res = await patchBed(bedId, { status });
       const data = getResponseData(res);
       if (data?.id) {
-        setBeds(beds.map(b => (b.id === bedId ? data : b)));
+        setBeds(beds.map((b) => (b.id === bedId ? data : b)));
         toast.success(`Bed status updated to ${status}`);
       } else {
         toast.error("Failed to update bed status");
@@ -441,7 +464,7 @@ const handleDeleteWard = async (wardId: number) => {
     if (!confirm("Delete this bed?")) return;
     try {
       await deleteBed(bedId);
-      setBeds(beds.filter(b => b.id !== bedId));
+      setBeds(beds.filter((b) => b.id !== bedId));
       toast.success("Bed deleted");
     } catch (error) {
       toast.error("Failed to delete bed");
@@ -449,8 +472,12 @@ const handleDeleteWard = async (wardId: number) => {
   };
 
   // Filter wards for selected floor
-  const filteredWards = wards.filter(w => w.floor_id === selectedFloor?.id && w.is_active);
-  const filteredBeds = beds.filter(b => b.ward_id === selectedWard?.id && b.is_active);
+  const filteredWards = wards.filter(
+    (w) => w.floor_id === selectedFloor?.id && w.is_active,
+  );
+  const filteredBeds = beds.filter(
+    (b) => b.ward_id === selectedWard?.id && b.is_active,
+  );
 
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -459,7 +486,11 @@ const handleDeleteWard = async (wardId: number) => {
         className="lg:hidden fixed bottom-20 right-6 z-50 p-3 bg-primary hover:bg-primary-dark text-white rounded-full shadow-lg"
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
       >
-        {isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        {isSidebarOpen ? (
+          <X className="w-5 h-5" />
+        ) : (
+          <Menu className="w-5 h-5" />
+        )}
       </button>
 
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
@@ -482,14 +513,7 @@ const handleDeleteWard = async (wardId: number) => {
                 Define floors, wards, and beds
               </p>
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={loadFloors}>
-                <RefreshCw className="h-4 w-4 mr-1" /> Refresh
-              </Button>
-              <Button variant="outline" size="sm">
-                <Download className="h-4 w-4 mr-1" /> Export
-              </Button>
-            </div>
+        
           </div>
 
           {/* Loading indicator */}
@@ -526,28 +550,42 @@ const handleDeleteWard = async (wardId: number) => {
                       onChange={(e) => setNewFloorName(e.target.value)}
                       className="flex-1"
                     />
-                    <Button size="icon" onClick={handleAddFloor} disabled={isLoading}>
+                    <Button
+                      size="icon"
+                      onClick={handleAddFloor}
+                      disabled={isLoading}
+                    >
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
                 <div className="space-y-2">
                   {floors.length === 0 ? (
-                    <p className="text-sm text-muted-foreground text-center">No floors yet</p>
+                    <p className="text-sm text-muted-foreground text-center">
+                      No floors yet
+                    </p>
                   ) : (
                     floors.map((floor) => (
                       <div
                         key={floor.id}
                         className={`flex items-center justify-between p-2 rounded-md border ${
-                          selectedFloor?.id === floor.id ? "bg-muted border-primary" : "bg-card"
+                          selectedFloor?.id === floor.id
+                            ? "bg-muted border-primary"
+                            : "bg-card"
                         }`}
                       >
                         <div
                           className="flex-1 cursor-pointer"
                           onClick={() => setSelectedFloor(floor)}
                         >
-                          <p className="font-medium">Floor {floor.floor_number}</p>
-                          {floor.name && <p className="text-xs text-muted-foreground">{floor.name}</p>}
+                          <p className="font-medium">
+                            Floor {floor.floor_number}
+                          </p>
+                          {floor.name && (
+                            <p className="text-xs text-muted-foreground">
+                              {floor.name}
+                            </p>
+                          )}
                         </div>
                         <div className="flex items-center gap-1">
                           <Button
@@ -593,57 +631,68 @@ const handleDeleteWard = async (wardId: number) => {
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <div className="flex flex-wrap gap-2">
-                        <Input
-                          placeholder="Ward name"
-                          value={newWardName}
-                          onChange={(e) => setNewWardName(e.target.value)}
-                          className="w-48"
-                        />
-                        <Select value={newWardType} onValueChange={(v) => setNewWardType(v as WardType)}>
-                          <SelectTrigger className="w-32">
-                            <SelectValue placeholder="Type" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="General">General</SelectItem>
-                            <SelectItem value="Semi-Special">Semi-Special</SelectItem>
-                            <SelectItem value="Special">Special</SelectItem>
-                            <SelectItem value="VIP">VIP</SelectItem>
-                            <SelectItem value="ICU">ICU</SelectItem>
-                            <SelectItem value="Pediatric">Pediatric</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <Select value={newWardCategory} onValueChange={(v) => setNewWardCategory(v as PatientCategory)}>
-                          <SelectTrigger className="w-32">
-                            <SelectValue placeholder="Category" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Male">Male</SelectItem>
-                            <SelectItem value="Female">Female</SelectItem>
-                            <SelectItem value="Children">Children</SelectItem>
-                            <SelectItem value="Mixed">Mixed</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <Input
-                          placeholder="Description"
-                          value={newWardDesc}
-                          onChange={(e) => setNewWardDesc(e.target.value)}
-                          className="w-48"
-                        />
-                        <Button onClick={handleAddWard} disabled={isLoading}>
-                          <Plus className="h-4 w-4 mr-1" /> Add
-                        </Button>
-                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-2">
+  <Input
+    placeholder="Ward name"
+    value={newWardName}
+    onChange={(e) => setNewWardName(e.target.value)}
+    className="w-full"
+  />
+  <Select value={newWardType} onValueChange={(v) => setNewWardType(v as WardType)}>
+    <SelectTrigger className="w-full">
+      <SelectValue placeholder="Type" />
+    </SelectTrigger>
+    <SelectContent>
+      <SelectItem value="General">General</SelectItem>
+      <SelectItem value="Semi-Special">Semi-Special</SelectItem>
+      <SelectItem value="Special">Special</SelectItem>
+      <SelectItem value="VIP">VIP</SelectItem>
+      <SelectItem value="ICU">ICU</SelectItem>
+      <SelectItem value="Pediatric">Pediatric</SelectItem>
+    </SelectContent>
+  </Select>
+  <Select value={newWardCategory} onValueChange={(v) => setNewWardCategory(v as PatientCategory)}>
+    <SelectTrigger className="w-full">
+      <SelectValue placeholder="Category" />
+    </SelectTrigger>
+    <SelectContent>
+      <SelectItem value="Male">Male</SelectItem>
+      <SelectItem value="Female">Female</SelectItem>
+      <SelectItem value="Children">Children</SelectItem>
+      <SelectItem value="Mixed">Mixed</SelectItem>
+    </SelectContent>
+  </Select>
+  <Input
+    placeholder="Description"
+    value={newWardDesc}
+    onChange={(e) => setNewWardDesc(e.target.value)}
+    className="w-full"
+  />
+  <Input
+    type="number"
+    placeholder="Rate (₹/day)"
+    value={newWardRate}
+    onChange={(e) => setNewWardRate(parseFloat(e.target.value) || 0)}
+    className="w-full"
+  />
+  <Button onClick={handleAddWard} disabled={isLoading} className="w-full">
+    <Plus className="h-4 w-4 mr-1" /> Add
+  </Button>
+</div>
 
                       {filteredWards.length === 0 ? (
-                        <p className="text-sm text-muted-foreground text-center">No wards. Add one above.</p>
+                        <p className="text-sm text-muted-foreground text-center">
+                          No wards. Add one above.
+                        </p>
                       ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                           {filteredWards.map((ward) => (
                             <div
                               key={ward.id}
                               className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer hover:bg-muted/50 ${
-                                selectedWard?.id === ward.id ? "border-primary bg-muted" : ""
+                                selectedWard?.id === ward.id
+                                  ? "border-primary bg-muted"
+                                  : ""
                               }`}
                               onClick={() => setSelectedWard(ward)}
                             >
@@ -655,7 +704,9 @@ const handleDeleteWard = async (wardId: number) => {
                                   <span>{ward.patient_category}</span>
                                 </div>
                                 {ward.description && (
-                                  <p className="text-xs text-muted-foreground mt-1">{ward.description}</p>
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    {ward.description}
+                                  </p>
                                 )}
                               </div>
                               <div className="flex items-center gap-1">
@@ -670,6 +721,7 @@ const handleDeleteWard = async (wardId: number) => {
                                     setEditWardType(ward.type);
                                     setEditWardCategory(ward.patient_category);
                                     setEditWardDesc(ward.description || "");
+                                    setEditWardRate(ward.daily_rate);
                                   }}
                                 >
                                   <Edit className="h-3.5 w-3.5" />
@@ -710,7 +762,9 @@ const handleDeleteWard = async (wardId: number) => {
                             type="number"
                             placeholder="Count"
                             value={newBedCount}
-                            onChange={(e) => setNewBedCount(parseInt(e.target.value) || 1)}
+                            onChange={(e) =>
+                              setNewBedCount(parseInt(e.target.value) || 1)
+                            }
                           />
                           <Input
                             placeholder="Prefix (e.g., ICU-)"
@@ -722,7 +776,12 @@ const handleDeleteWard = async (wardId: number) => {
                             value={newRoomNumber}
                             onChange={(e) => setNewRoomNumber(e.target.value)}
                           />
-                          <Select value={newBedCategory} onValueChange={(v) => setNewBedCategory(v as PatientCategory)}>
+                          <Select
+                            value={newBedCategory}
+                            onValueChange={(v) =>
+                              setNewBedCategory(v as PatientCategory)
+                            }
+                          >
                             <SelectTrigger>
                               <SelectValue placeholder="Category (optional)" />
                             </SelectTrigger>
@@ -733,13 +792,19 @@ const handleDeleteWard = async (wardId: number) => {
                               <SelectItem value="Mixed">Mixed</SelectItem>
                             </SelectContent>
                           </Select>
-                          <Button onClick={handleAddBeds} className="sm:col-span-4">
-                            <Plus className="h-4 w-4 mr-1" /> Add {newBedCount} bed(s)
+                          <Button
+                            onClick={handleAddBeds}
+                            className="sm:col-span-4"
+                          >
+                            <Plus className="h-4 w-4 mr-1" /> Add {newBedCount}{" "}
+                            bed(s)
                           </Button>
                         </div>
 
                         {filteredBeds.length === 0 ? (
-                          <p className="text-sm text-muted-foreground text-center">No beds. Add some above.</p>
+                          <p className="text-sm text-muted-foreground text-center">
+                            No beds. Add some above.
+                          </p>
                         ) : (
                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                             {filteredBeds.map((bed) => (
@@ -749,17 +814,19 @@ const handleDeleteWard = async (wardId: number) => {
                                   bed.status === "occupied"
                                     ? "border-blue-300 bg-blue-50/50"
                                     : bed.status === "cleaning"
-                                    ? "border-yellow-300 bg-yellow-50/50"
-                                    : bed.status === "maintenance"
-                                    ? "border-red-300 bg-red-50/50"
-                                    : bed.status === "reserved"
-                                    ? "border-purple-300 bg-purple-50/50"
-                                    : "border-green-300 bg-green-50/50"
+                                      ? "border-yellow-300 bg-yellow-50/50"
+                                      : bed.status === "maintenance"
+                                        ? "border-red-300 bg-red-50/50"
+                                        : bed.status === "reserved"
+                                          ? "border-purple-300 bg-purple-50/50"
+                                          : "border-green-300 bg-green-50/50"
                                 }`}
                               >
                                 <div className="flex justify-between items-start">
                                   <div>
-                                    <p className="font-bold">{bed.bed_number}</p>
+                                    <p className="font-bold">
+                                      {bed.bed_number}
+                                    </p>
                                     {bed.attributes?.room_number && (
                                       <p className="text-xs text-muted-foreground">
                                         Room {bed.attributes.room_number}
@@ -779,39 +846,67 @@ const handleDeleteWard = async (wardId: number) => {
                                 {bed.status !== "occupied" && (
                                   <Select
                                     value={bed.status}
-                                    onValueChange={(v) => handleUpdateBedStatus(bed.id, v as BedStatus)}
+                                    onValueChange={(v) =>
+                                      handleUpdateBedStatus(
+                                        bed.id,
+                                        v as BedStatus,
+                                      )
+                                    }
                                   >
                                     <SelectTrigger className="h-8 text-xs">
                                       <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                      <SelectItem value="available">Available</SelectItem>
-                                      <SelectItem value="occupied">Occupied</SelectItem>
-                                      <SelectItem value="cleaning">Cleaning</SelectItem>
-                                      <SelectItem value="maintenance">Maintenance</SelectItem>
-                                      <SelectItem value="reserved">Reserved</SelectItem>
+                                      <SelectItem value="available">
+                                        Available
+                                      </SelectItem>
+                                      <SelectItem value="occupied">
+                                        Occupied
+                                      </SelectItem>
+                                      <SelectItem value="cleaning">
+                                        Cleaning
+                                      </SelectItem>
+                                      <SelectItem value="maintenance">
+                                        Maintenance
+                                      </SelectItem>
+                                      <SelectItem value="reserved">
+                                        Reserved
+                                      </SelectItem>
                                     </SelectContent>
                                   </Select>
                                 )}
-                                {bed.status === "occupied" && bed.attributes?.currentPatient && (
-                                  <div className="text-xs bg-blue-100 dark:bg-blue-900/30 p-2 rounded">
-                                    <p className="font-semibold">👤 Patient Info</p>
-                                    <div className="grid grid-cols-2 gap-1 mt-1">
-                                      <span>Name:</span>
-                                      <span className="font-medium">
-                                        {bed.attributes.currentPatient.name || "N/A"}
-                                      </span>
-                                      <span>MRN:</span>
-                                      <span>{bed.attributes.currentPatient.mrn || "N/A"}</span>
-                                      {bed.attributes.currentPatient.diagnosis && (
-                                        <>
-                                          <span>Diagnosis:</span>
-                                          <span>{bed.attributes.currentPatient.diagnosis}</span>
-                                        </>
-                                      )}
+                                {bed.status === "occupied" &&
+                                  bed.attributes?.currentPatient && (
+                                    <div className="text-xs bg-blue-100 dark:bg-blue-900/30 p-2 rounded">
+                                      <p className="font-semibold">
+                                        👤 Patient Info
+                                      </p>
+                                      <div className="grid grid-cols-2 gap-1 mt-1">
+                                        <span>Name:</span>
+                                        <span className="font-medium">
+                                          {bed.attributes.currentPatient.name ||
+                                            "N/A"}
+                                        </span>
+                                        <span>MRN:</span>
+                                        <span>
+                                          {bed.attributes.currentPatient.mrn ||
+                                            "N/A"}
+                                        </span>
+                                        {bed.attributes.currentPatient
+                                          .diagnosis && (
+                                          <>
+                                            <span>Diagnosis:</span>
+                                            <span>
+                                              {
+                                                bed.attributes.currentPatient
+                                                  .diagnosis
+                                              }
+                                            </span>
+                                          </>
+                                        )}
+                                      </div>
                                     </div>
-                                  </div>
-                                )}
+                                  )}
                               </div>
                             ))}
                           </div>
@@ -873,11 +968,17 @@ const handleDeleteWard = async (wardId: number) => {
             <div className="space-y-4">
               <div>
                 <Label>Ward Name *</Label>
-                <Input value={editWardName} onChange={(e) => setEditWardName(e.target.value)} />
+                <Input
+                  value={editWardName}
+                  onChange={(e) => setEditWardName(e.target.value)}
+                />
               </div>
               <div>
                 <Label>Ward Type</Label>
-                <Select value={editWardType} onValueChange={(v) => setEditWardType(v as WardType)}>
+                <Select
+                  value={editWardType}
+                  onValueChange={(v) => setEditWardType(v as WardType)}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -893,7 +994,12 @@ const handleDeleteWard = async (wardId: number) => {
               </div>
               <div>
                 <Label>Patient Category</Label>
-                <Select value={editWardCategory} onValueChange={(v) => setEditWardCategory(v as PatientCategory)}>
+                <Select
+                  value={editWardCategory}
+                  onValueChange={(v) =>
+                    setEditWardCategory(v as PatientCategory)
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -907,7 +1013,20 @@ const handleDeleteWard = async (wardId: number) => {
               </div>
               <div>
                 <Label>Description (optional)</Label>
-                <Input value={editWardDesc} onChange={(e) => setEditWardDesc(e.target.value)} />
+                <Input
+                  value={editWardDesc}
+                  onChange={(e) => setEditWardDesc(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label>Daily Rate (₹)</Label>
+                <Input
+                  type="number"
+                  value={editWardRate}
+                  onChange={(e) =>
+                    setEditWardRate(parseFloat(e.target.value) || 0)
+                  }
+                />
               </div>
             </div>
             <div className="flex justify-end gap-2 mt-6">

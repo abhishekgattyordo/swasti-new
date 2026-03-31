@@ -37,6 +37,7 @@ export interface Ward {
   type: WardType;
   patient_category: PatientCategory;
   description: string | null;
+  daily_rate: number;  
   is_active: boolean;
   created_at: string;
   updated_at: string;
