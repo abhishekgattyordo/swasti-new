@@ -155,8 +155,6 @@
 //   }
 // }
 
-
-
 import { NextRequest, NextResponse } from 'next/server';
 import { query, transaction } from '@/lib/db';
 import { z } from 'zod';
@@ -173,7 +171,6 @@ const DeliverSchema = z.object({
   items: z.array(DeliverItemSchema),
 });
 
-// Deduct stock using FIFO – returns allocations with batch_no, quantity, and mrp
 async function deductStockFIFO(
   medicineId: number,
   requiredQty: number,
@@ -205,7 +202,7 @@ async function deductStockFIFO(
   }
 
   if (remaining > 0) {
-    throw new Error(`Insufficient stock for medicine ID ${medicineId}. Needed ${requiredQty}, available ${requiredQty - remaining}`);
+    throw new Error(`Insufficient stock for medicine ID ${medicineId}.`);
   }
   return allocations;
 }
@@ -233,7 +230,7 @@ export async function POST(req: NextRequest) {
       if (saleCheck.rows[0].stock_updated) throw new Error('Sale already delivered');
       const sale = saleCheck.rows[0];
 
-      // 2. Get active admission ID for registered patients (walk‑ins have no patient_id)
+      // 2. Get active admission ID for registered patients
       let admissionId = null;
       if (sale.patient_id) {
         const admissionRes = await client.query(
@@ -254,9 +251,8 @@ export async function POST(req: NextRequest) {
         saleItemId: number;
       }[] = [];
 
-      // 3. Process each item
+      // 3. Process each item (stock deduction, sale_items update)
       for (const item of items) {
-        // Get medicine name
         const medRes = await client.query(
           `SELECT name FROM medicines WHERE id = $1`,
           [item.medicineId]
@@ -267,7 +263,6 @@ export async function POST(req: NextRequest) {
         let allocations: { batchNo: string; quantity: number; mrp: number }[];
 
         if (item.batchNo) {
-          // Deduct from specified batch
           const batch = await client.query(
             `SELECT quantity, mrp FROM stock WHERE medicine_id = $1 AND batch_no = $2`,
             [item.medicineId, item.batchNo]
@@ -288,7 +283,6 @@ export async function POST(req: NextRequest) {
           allocations = await deductStockFIFO(item.medicineId, item.quantity, client);
         }
 
-        // --- Update sale_items (split if multiple batches) ---
         const existingItems = await client.query(
           `SELECT id, quantity, unit_price, tax_percent FROM sale_items 
            WHERE sale_id = $1 AND medicine_id = $2`,
@@ -304,7 +298,7 @@ export async function POST(req: NextRequest) {
         );
 
         for (const alloc of allocations) {
-          const unitPrice = existingItems.rows[0].unit_price; // original sale price (may differ from mrp)
+          const unitPrice = existingItems.rows[0].unit_price;
           const taxPercent = existingItems.rows[0].tax_percent;
           const total = alloc.quantity * unitPrice * (1 + taxPercent / 100);
           const insertRes = await client.query(
@@ -315,7 +309,6 @@ export async function POST(req: NextRequest) {
           );
           const newSaleItemId = insertRes.rows[0].id;
 
-          // --- Billing: use the actual batch mrp (not the sale price) ---
           const batchUnitPrice = alloc.mrp;
           const billItemTotal = alloc.quantity * batchUnitPrice;
           totalBillAmount += billItemTotal;
@@ -330,25 +323,38 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // 4. Create or update the bill header (ip_bills)
+      // 4. Create or update the bill header (ip_bills) – FIXED
       let billId: number;
-      const existingBill = await client.query(
-        `SELECT id FROM ip_bills WHERE sale_id = $1`,
-        [saleId]
-      );
-      if (existingBill.rows.length > 0) {
-        billId = existingBill.rows[0].id;
-        await client.query(
-          `UPDATE ip_bills SET total_amount = total_amount + $1, updated_at = NOW() WHERE id = $2`,
-          [totalBillAmount, billId]
+      if (admissionId) {
+        // Registered patient: find bill by admission_id
+        const existingBill = await client.query(
+          `SELECT id FROM ip_bills WHERE admission_id = $1`,
+          [admissionId]
         );
+        if (existingBill.rows.length > 0) {
+          billId = existingBill.rows[0].id;
+          await client.query(
+            `UPDATE ip_bills SET total_amount = total_amount + $1, updated_at = NOW() WHERE id = $2`,
+            [totalBillAmount, billId]
+          );
+        } else {
+          const billNumber = `IP-${Date.now()}-${saleId}`;
+          const insertBill = await client.query(
+            `INSERT INTO ip_bills (sale_id, patient_id, admission_id, bill_number, total_amount, status)
+             VALUES ($1, $2, $3, $4, $5, 'UNPAID')
+             RETURNING id`,
+            [saleId, sale.patient_id, admissionId, billNumber, totalBillAmount]
+          );
+          billId = insertBill.rows[0].id;
+        }
       } else {
-        const billNumber = `IP-${Date.now()}-${saleId}`;
+        // Walk‑in patient: create a bill without admission_id (no unique constraint violation)
+        const billNumber = `OP-${Date.now()}-${saleId}`;
         const insertBill = await client.query(
           `INSERT INTO ip_bills (sale_id, patient_id, admission_id, bill_number, total_amount, status)
-           VALUES ($1, $2, $3, $4, $5, 'UNPAID')
+           VALUES ($1, $2, NULL, $3, $4, 'UNPAID')
            RETURNING id`,
-          [saleId, sale.patient_id, admissionId, billNumber, totalBillAmount]
+          [saleId, sale.patient_id, billNumber, totalBillAmount]
         );
         billId = insertBill.rows[0].id;
       }

@@ -163,7 +163,7 @@ export function BedCard({
 
             {/* Action buttons - no top margin */}
             <div className="py-1 flex flex-wrap gap-1">
-              {bed.status === "available" && (
+              {/* {bed.status === "available" && (
                 <Button
                   size="sm"
                   variant="default"
@@ -175,7 +175,7 @@ export function BedCard({
                 >
                   Assign
                 </Button>
-              )}
+              )} */}
 
               {bed.status === "occupied" && (
                 <div className="flex w-full gap-1">

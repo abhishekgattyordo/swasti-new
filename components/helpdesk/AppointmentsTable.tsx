@@ -214,7 +214,7 @@ export default function AppointmentsTable({
                 </div>
               </th>
               <th className="p-2 sm:p-3 text-left text-xs font-medium text-gray-500 uppercase border border-gray-200">
-                ACTIONSs
+                ACTIONS
               </th>
             </tr>
           </thead>

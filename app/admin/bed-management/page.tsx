@@ -363,61 +363,68 @@
 //                 <TabsTrigger value="analytics"><TrendingUp className="h-4 w-4 mr-1" /> Analytics</TabsTrigger>
 //               </TabsList>
 
-//               <div className="flex items-center gap-2">
-//                 <div className="relative">
-//                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-//                   <Input
-//                     placeholder="Search bed, patient, MRN…"
-//                     className="pl-9 h-9 w-56"
-//                     value={search}
-//                     onChange={(e) => setSearch(e.target.value)}
-//                   />
-//                 </div>
-//                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-//                   <SelectTrigger className="h-9 w-32">
-//                     <SelectValue placeholder="Status" />
-//                   </SelectTrigger>
-//                   <SelectContent>
-//                     <SelectItem value="all">All Status</SelectItem>
-//                     <SelectItem value="available">Available</SelectItem>
-//                     <SelectItem value="occupied">Occupied</SelectItem>
-//                     <SelectItem value="cleaning">Cleaning</SelectItem>
-//                     <SelectItem value="maintenance">Maintenance</SelectItem>
-//                     <SelectItem value="reserved">Reserved</SelectItem>
-//                   </SelectContent>
-//                 </Select>
-//                 <Select value={typeFilter} onValueChange={setTypeFilter}>
-//                   <SelectTrigger className="h-9 w-32">
-//                     <SelectValue placeholder="Type" />
-//                   </SelectTrigger>
-//                   <SelectContent>
-//                     <SelectItem value="all">All Types</SelectItem>
-//                     <SelectItem value="General">General</SelectItem>
-//                     <SelectItem value="ICU">ICU</SelectItem>
-//                     <SelectItem value="Pediatric">Pediatric</SelectItem>
-//                     <SelectItem value="Emergency">Emergency</SelectItem>
-//                     <SelectItem value="Maternity">Maternity</SelectItem>
-//                   </SelectContent>
-//                 </Select>
-//                 <div className="flex rounded-md border">
-//                   <Button
-//                     variant={viewMode === "grid" ? "default" : "ghost"}
-//                     size="icon"
-//                     className="h-9 w-9 rounded-r-none"
-//                     onClick={() => setViewMode("grid")}
-//                   >
-//                     <LayoutGrid className="h-4 w-4" />
-//                   </Button>
-//                   <Button
-//                     variant={viewMode === "floor" ? "default" : "ghost"}
-//                     size="icon"
-//                     className="h-9 w-9 rounded-l-none"
-//                     onClick={() => setViewMode("floor")}
-//                   >
-//                     <Map className="h-4 w-4" />
-//                   </Button>
-//                 </div>
-//               </div>
+//               <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+//   {/* Search */}
+//   <div className="relative flex-1">
+//     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+//     <Input
+//       placeholder="Search bed, patient, MRN…"
+//       className="pl-9 h-9 w-full"
+//       value={search}
+//       onChange={(e) => setSearch(e.target.value)}
+//     />
+//   </div>
+
+//   {/* Status Select */}
+//   <Select value={statusFilter} onValueChange={setStatusFilter}>
+//     <SelectTrigger className="h-9 w-full sm:w-32">
+//       <SelectValue placeholder="Status" />
+//     </SelectTrigger>
+//     <SelectContent>
+//       <SelectItem value="all">All Status</SelectItem>
+//       <SelectItem value="available">Available</SelectItem>
+//       <SelectItem value="occupied">Occupied</SelectItem>
+//       <SelectItem value="cleaning">Cleaning</SelectItem>
+//       <SelectItem value="maintenance">Maintenance</SelectItem>
+//       <SelectItem value="reserved">Reserved</SelectItem>
+//     </SelectContent>
+//   </Select>
+
+//   {/* Type Select */}
+//   <Select value={typeFilter} onValueChange={setTypeFilter}>
+//     <SelectTrigger className="h-9 w-full sm:w-32">
+//       <SelectValue placeholder="Type" />
+//     </SelectTrigger>
+//     <SelectContent>
+//       <SelectItem value="all">All Types</SelectItem>
+//       <SelectItem value="General">General</SelectItem>
+//       <SelectItem value="ICU">ICU</SelectItem>
+//       <SelectItem value="Pediatric">Pediatric</SelectItem>
+//       <SelectItem value="Emergency">Emergency</SelectItem>
+//       <SelectItem value="Maternity">Maternity</SelectItem>
+//     </SelectContent>
+//   </Select>
+
+//   {/* View Mode Toggle */}
+//   <div className="flex rounded-md border self-start sm:self-auto">
+//     <Button
+//       variant={viewMode === "grid" ? "default" : "ghost"}
+//       size="icon"
+//       className="h-9 w-9 rounded-r-none"
+//       onClick={() => setViewMode("grid")}
+//     >
+//       <LayoutGrid className="h-4 w-4" />
+//     </Button>
+//     <Button
+//       variant={viewMode === "floor" ? "default" : "ghost"}
+//       size="icon"
+//       className="h-9 w-9 rounded-l-none"
+//       onClick={() => setViewMode("floor")}
+//     >
+//       <Map className="h-4 w-4" />
+//     </Button>
+//   </div>
+// </div>
 //             </div>
 
 //             <TabsContent value="beds">
@@ -490,9 +497,6 @@
 // }
 
 
-
-
-
 'use client';
 
 import { useState, useMemo, useEffect } from "react";
@@ -501,7 +505,7 @@ import { useWardData, Bed, BedStatus } from "../../../data/wardData";
 import { BedCard } from "../../../data/BedCard";
 import { FloorPlan } from "../../../data/FloorPlan";
 import { BedDetailPanel } from "../../../data/BedDetailPanel";
-import { AdmissionDialog, DischargeDialog, TransferDialog } from "../../../data/ADTDialogs";
+import { TransferDialog } from "../../../data/ADTDialogs";
 import { OccupancyHeatmap } from "../../../data/OccupancyHeatmap";
 import { ShiftHandover } from "../../../data/ShiftHandover";
 import { PredictiveChart } from "../../../data/PredictiveChart";
@@ -511,14 +515,22 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   BedDouble, Activity, Search, LayoutGrid, Map, BarChart3,
-  ClipboardList, TrendingUp, RefreshCw, Loader2
+  ClipboardList, TrendingUp, RefreshCw, Loader2, Menu, X
 } from "lucide-react";
 import { patchBed } from "@/lib/api/bed-config";
 import AdminSidebar from "@/components/admin/Sidebar";
 import HelpDeskSidebar from "@/components/helpdesk/HelpDeskSidebar";
 import Header from "@/components/admin/Header";
-import { Menu, X } from 'lucide-react';
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 
 type ViewMode = "grid" | "floor";
 
@@ -531,9 +543,13 @@ export default function WardPage() {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [selectedBed, setSelectedBed] = useState<Bed | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
-  const [admitBed, setAdmitBed] = useState<Bed | null>(null);
-  const [dischargeBed, setDischargeBed] = useState<Bed | null>(null);
   const [transferBed, setTransferBed] = useState<Bed | null>(null);
+  
+  // Manual discharge modal state
+  const [manualDischargeBed, setManualDischargeBed] = useState<Bed | null>(null);
+  const [dischargeIdInput, setDischargeIdInput] = useState('');
+  const [dischargeNotesInput, setDischargeNotesInput] = useState('');
+  const [discharging, setDischarging] = useState(false);
 
   // Get user role from localStorage
   const [userRole, setUserRole] = useState<string | null>(null);
@@ -559,7 +575,7 @@ export default function WardPage() {
 
   // Handlers for HelpDeskSidebar props
   const handleBillingClick = () => router.push('/helpdesk/billing');
-  const handleRoomAvailabilityClick = () => router.push('/admin/bed-management'); // already here
+  const handleRoomAvailabilityClick = () => router.push('/admin/bed-management');
   const handleDoctorSlotsClick = () => router.push('/helpdesk/doctor-slots');
 
   const stats = useMemo(() => {
@@ -600,128 +616,107 @@ export default function WardPage() {
     setDetailOpen(true); 
   };
 
-  const handleAdmit = async (bed: Bed, name: string, mrn: string) => {
-    try {
-      setLocalBeds(prev => prev.map(b => b.id === bed.id ? {
-        ...b, status: "occupied" as BedStatus, recentlyChanged: true,
-        patient: { 
-          name, 
-          initials: name.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2), 
-          gender: "M", age: 30, mrn, 
-          admissionDate: new Date().toISOString().split('T')[0], 
-          estimatedDischarge: new Date(Date.now() + 7*24*60*60*1000).toISOString().split('T')[0],
-          diagnosis: "Pending evaluation", 
-          contact: "", 
-          specialRequirements: "" 
-        }
-      } : b));
-
-      const bedId = parseInt(bed.id);
-      await patchBed(bedId, {
-        status: "occupied",
-        attributes: {
-          patient_name: name,
-          patient_initials: name.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2),
-          mrn,
-          admission_date: new Date().toISOString().split('T')[0],
-        }
-      });
-
-      toast.success("Patient admitted", {
-        description: `${name} assigned to Bed ${bed.number}`
-      });
-    } catch (error) {
-      setLocalBeds(beds);
-      toast.error("Failed to admit patient");
-    }
+  // Discharge flow
+  const handleDischarge = (bed: Bed) => {
+    setManualDischargeBed(bed);
+    setDischargeIdInput('');
+    setDischargeNotesInput('');
   };
 
-  const handleDischarge = async (bed: Bed) => {
-    try {
-      setLocalBeds(prev => prev.map(b => b.id === bed.id ? { 
-        ...b, 
-        status: "cleaning" as BedStatus, 
-        patient: undefined, 
-        vitals: undefined, 
-        notes: [], 
-        recentlyChanged: true 
-      } : b));
-      
-      setDetailOpen(false);
-
-      const bedId = parseInt(bed.id);
-      await patchBed(bedId, {
-        status: "cleaning",
-        attributes: {
-          patient_name: undefined,
-          patient_initials: undefined,
-          mrn: undefined,
-          admission_date: undefined,
-        }
-      });
-
-      toast.success("Patient discharged", {
-        description: `Bed ${bed.number} moved to cleaning`
-      });
-    } catch (error) {
-      setLocalBeds(beds);
-      toast.error("Failed to discharge patient");
+  const performDischarge = async () => {
+    if (!manualDischargeBed) return;
+    if (!dischargeIdInput.trim()) {
+      toast.error('Please enter a discharge ID');
+      return;
     }
-  };
 
-  const handleTransfer = async (bed: Bed, destId: string) => {
+    setDischarging(true);
     try {
-      setLocalBeds(prev => {
-        const updated = [...prev];
-        const srcIdx = updated.findIndex(b => b.id === bed.id);
-        const dstIdx = updated.findIndex(b => b.id === destId);
-        
-        if (srcIdx >= 0 && dstIdx >= 0) {
-          updated[dstIdx] = { 
-            ...updated[dstIdx], 
-            status: "occupied", 
-            patient: updated[srcIdx].patient, 
-            vitals: updated[srcIdx].vitals, 
-            notes: updated[srcIdx].notes, 
-            recentlyChanged: true 
-          };
-          updated[srcIdx] = { 
-            ...updated[srcIdx], 
-            status: "cleaning", 
-            patient: undefined, 
-            vitals: undefined, 
-            notes: [], 
-            recentlyChanged: true 
-          };
-        }
-        return updated;
-      });
-
-      const srcId = parseInt(bed.id);
-      const dstId = parseInt(destId);
-      
-      await patchBed(srcId, { status: "cleaning" });
-      
-      if (bed.patient) {
-        await patchBed(dstId, {
-          status: "occupied",
-          attributes: {
-            patient_name: bed.patient.name,
-            patient_initials: bed.patient.initials,
-            mrn: bed.patient.mrn,
-            admission_date: bed.patient.admissionDate,
-          }
-        });
+      const bedId = manualDischargeBed.id;
+      const admRes = await fetch(`/api/helpdesk/admissions?bedId=${bedId}&status=active`);
+      const admData = await admRes.json();
+      if (!admData.success || admData.data.length === 0) {
+        throw new Error('No active admission found for this bed');
       }
+      const admissionId = admData.data[0].id;
 
-      toast.success("Patient transferred", {
-        description: `Transfer from Bed ${bed.number} complete`
+      const res = await fetch('/api/helpdesk/admissions/discharge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          admissionId,
+          dischargeId: dischargeIdInput,
+          dischargeNotes: dischargeNotesInput,
+        }),
       });
-    } catch (error) {
-      setLocalBeds(beds);
-      toast.error("Failed to transfer patient");
+      const result = await res.json();
+      if (!result.success) throw new Error(result.message);
+
+      toast.success('Patient discharged successfully');
+      refresh(); // refresh bed data
+      setManualDischargeBed(null);
+    } catch (err: any) {
+      toast.error(err.message || 'Discharge failed');
+    } finally {
+      setDischarging(false);
     }
   };
+
+  // Transfer flow
+  const handleTransfer = async (bed: Bed, destId: string) => {
+  try {
+    setLocalBeds(prev => {
+      const updated = [...prev];
+      const srcIdx = updated.findIndex(b => b.id === bed.id);
+      const dstIdx = updated.findIndex(b => b.id === destId);
+      
+      if (srcIdx >= 0 && dstIdx >= 0) {
+        updated[dstIdx] = { 
+          ...updated[dstIdx], 
+          status: "occupied", 
+          patient: updated[srcIdx].patient, 
+          vitals: updated[srcIdx].vitals, 
+          notes: updated[srcIdx].notes, 
+          recentlyChanged: true 
+        };
+        updated[srcIdx] = { 
+          ...updated[srcIdx], 
+          status: "cleaning", 
+          patient: undefined, 
+          vitals: undefined, 
+          notes: [], 
+          recentlyChanged: true 
+        };
+      }
+      return updated;
+    });
+
+    const srcId = parseInt(bed.id);
+    const dstId = parseInt(destId);
+    
+    await patchBed(srcId, { status: "cleaning" });
+    
+    if (bed.patient) {
+      await patchBed(dstId, {
+        status: "occupied",
+        // ✅ Remove occupied_by line – backend will handle patient ID from source bed
+        attributes: {
+          patient_name: bed.patient.name,
+          patient_initials: bed.patient.initials,
+          mrn: bed.patient.mrn,
+          admission_date: bed.patient.admissionDate,
+        }
+      });
+    }
+
+    toast.success("Patient transferred", {
+      description: `Transfer from Bed ${bed.number} complete`
+    });
+  } catch (error) {
+    setLocalBeds(beds);
+    toast.error("Failed to transfer patient");
+  }
+};
 
   const handleMarkAvailable = async (bed: Bed) => {
     try {
@@ -856,67 +851,63 @@ export default function WardPage() {
               </TabsList>
 
               <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-  {/* Search */}
-  <div className="relative flex-1">
-    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-    <Input
-      placeholder="Search bed, patient, MRN…"
-      className="pl-9 h-9 w-full"
-      value={search}
-      onChange={(e) => setSearch(e.target.value)}
-    />
-  </div>
+                <div className="relative flex-1">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search bed, patient, MRN…"
+                    className="pl-9 h-9 w-full"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                  />
+                </div>
 
-  {/* Status Select */}
-  <Select value={statusFilter} onValueChange={setStatusFilter}>
-    <SelectTrigger className="h-9 w-full sm:w-32">
-      <SelectValue placeholder="Status" />
-    </SelectTrigger>
-    <SelectContent>
-      <SelectItem value="all">All Status</SelectItem>
-      <SelectItem value="available">Available</SelectItem>
-      <SelectItem value="occupied">Occupied</SelectItem>
-      <SelectItem value="cleaning">Cleaning</SelectItem>
-      <SelectItem value="maintenance">Maintenance</SelectItem>
-      <SelectItem value="reserved">Reserved</SelectItem>
-    </SelectContent>
-  </Select>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="h-9 w-full sm:w-32">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="available">Available</SelectItem>
+                    <SelectItem value="occupied">Occupied</SelectItem>
+                    <SelectItem value="cleaning">Cleaning</SelectItem>
+                    <SelectItem value="maintenance">Maintenance</SelectItem>
+                    <SelectItem value="reserved">Reserved</SelectItem>
+                  </SelectContent>
+                </Select>
 
-  {/* Type Select */}
-  <Select value={typeFilter} onValueChange={setTypeFilter}>
-    <SelectTrigger className="h-9 w-full sm:w-32">
-      <SelectValue placeholder="Type" />
-    </SelectTrigger>
-    <SelectContent>
-      <SelectItem value="all">All Types</SelectItem>
-      <SelectItem value="General">General</SelectItem>
-      <SelectItem value="ICU">ICU</SelectItem>
-      <SelectItem value="Pediatric">Pediatric</SelectItem>
-      <SelectItem value="Emergency">Emergency</SelectItem>
-      <SelectItem value="Maternity">Maternity</SelectItem>
-    </SelectContent>
-  </Select>
+                <Select value={typeFilter} onValueChange={setTypeFilter}>
+                  <SelectTrigger className="h-9 w-full sm:w-32">
+                    <SelectValue placeholder="Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Types</SelectItem>
+                    <SelectItem value="General">General</SelectItem>
+                    <SelectItem value="ICU">ICU</SelectItem>
+                    <SelectItem value="Pediatric">Pediatric</SelectItem>
+                    <SelectItem value="Emergency">Emergency</SelectItem>
+                    <SelectItem value="Maternity">Maternity</SelectItem>
+                  </SelectContent>
+                </Select>
 
-  {/* View Mode Toggle */}
-  <div className="flex rounded-md border self-start sm:self-auto">
-    <Button
-      variant={viewMode === "grid" ? "default" : "ghost"}
-      size="icon"
-      className="h-9 w-9 rounded-r-none"
-      onClick={() => setViewMode("grid")}
-    >
-      <LayoutGrid className="h-4 w-4" />
-    </Button>
-    <Button
-      variant={viewMode === "floor" ? "default" : "ghost"}
-      size="icon"
-      className="h-9 w-9 rounded-l-none"
-      onClick={() => setViewMode("floor")}
-    >
-      <Map className="h-4 w-4" />
-    </Button>
-  </div>
-</div>
+                <div className="flex rounded-md border self-start sm:self-auto">
+                  <Button
+                    variant={viewMode === "grid" ? "default" : "ghost"}
+                    size="icon"
+                    className="h-9 w-9 rounded-r-none"
+                    onClick={() => setViewMode("grid")}
+                  >
+                    <LayoutGrid className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant={viewMode === "floor" ? "default" : "ghost"}
+                    size="icon"
+                    className="h-9 w-9 rounded-l-none"
+                    onClick={() => setViewMode("floor")}
+                  >
+                    <Map className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
             </div>
 
             <TabsContent value="beds">
@@ -926,9 +917,9 @@ export default function WardPage() {
                     <BedCard
                       key={bed.id}
                       bed={bed}
+                       onAssign={() => {}}  
                       onSelect={handleSelect}
-                      onAssign={(b) => setAdmitBed(b)}
-                      onDischarge={(b) => setDischargeBed(b)}
+                      onDischarge={handleDischarge}
                       onTransfer={(b) => setTransferBed(b)}
                       onMarkCleaning={handleMarkAvailable}
                     />
@@ -945,7 +936,7 @@ export default function WardPage() {
             </TabsContent>
 
             <TabsContent value="heatmap">
-             <OccupancyHeatmap wards={wards} />
+              <OccupancyHeatmap wards={wards} />
             </TabsContent>
             <TabsContent value="handover">
               <ShiftHandover beds={localBeds} />
@@ -962,20 +953,8 @@ export default function WardPage() {
         bed={selectedBed}
         open={detailOpen}
         onClose={() => setDetailOpen(false)}
-        onDischarge={(b) => { setDetailOpen(false); setDischargeBed(b); }}
+        onDischarge={(b) => { setDetailOpen(false); handleDischarge(b); }}
         onTransfer={(b) => { setDetailOpen(false); setTransferBed(b); }}
-      />
-      <AdmissionDialog
-        bed={admitBed}
-        open={!!admitBed}
-        onClose={() => setAdmitBed(null)}
-        onSuccess={refresh}
-      />
-      <DischargeDialog
-        bed={dischargeBed}
-        open={!!dischargeBed}
-        onClose={() => setDischargeBed(null)}
-        onSuccess={refresh}
       />
       <TransferDialog
         bed={transferBed}
@@ -984,6 +963,45 @@ export default function WardPage() {
         onSuccess={refresh}
         availableBeds={availableBeds}
       />
+
+      {/* Manual Discharge Modal */}
+      <Dialog open={!!manualDischargeBed} onOpenChange={() => setManualDischargeBed(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Discharge Patient</DialogTitle>
+            <DialogDescription>
+              Enter a unique discharge ID and optional notes.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <Label htmlFor="dischargeId">Discharge ID *</Label>
+              <Input
+                id="dischargeId"
+                placeholder="e.g., DISC-1775107620404-1"
+                value={dischargeIdInput}
+                onChange={(e) => setDischargeIdInput(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="notes">Discharge Notes (optional)</Label>
+              <Input
+                id="notes"
+                placeholder="Clinical notes..."
+                value={dischargeNotesInput}
+                onChange={(e) => setDischargeNotesInput(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setManualDischargeBed(null)}>Cancel</Button>
+            <Button onClick={performDischarge} disabled={discharging}>
+              {discharging && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Confirm Discharge
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

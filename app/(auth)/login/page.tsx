@@ -141,6 +141,9 @@ if (data.refreshToken) {
           case "laboratory":
           router.push("/laboratory");
           break;
+           case "billing":   // ✅ add this
+    router.push("/billing/dashboard");
+    break;
         default:
           router.push("/");
       }

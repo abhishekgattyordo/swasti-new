@@ -1,97 +1,176 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/db';
+import { query, transaction } from '@/lib/db';
 
-// POST /api/admissions/discharge
-// Request: { admissionId, dischargeDate }
 export async function POST(req: NextRequest) {
-  const { admissionId, dischargeDate } = await req.json();
+  const { admissionId, dischargeId, dischargeNotes } = await req.json();
+
+  if (!admissionId) {
+    return NextResponse.json({ success: false, message: 'Admission ID required' }, { status: 400 });
+  }
+  if (!dischargeId || !dischargeId.trim()) {
+    return NextResponse.json({ success: false, message: 'Discharge ID required' }, { status: 400 });
+  }
+
+  const today = new Date().toISOString().split('T')[0];
 
   try {
-    await query('BEGIN');
-
-    // 1. Update admission with discharge date
-    const updateRes = await query(
-      `UPDATE admissions SET discharge_date = $1, status = 'discharged'
-       WHERE id = $2 RETURNING patient_id, ward_id, admission_date`,
-      [dischargeDate, admissionId]
-    );
-    if (updateRes.rows.length === 0) {
-      throw new Error('Admission not found');
-    }
-    const admission = updateRes.rows[0];
-
-    // 2. Get ward daily rate
-    const wardRes = await query(
-      `SELECT daily_rate FROM wards WHERE id = $1`,
-      [admission.ward_id]
-    );
-    const dailyRate = wardRes.rows[0]?.daily_rate || 0;
-
-    // 3. Calculate days (inclusive)
-    const start = new Date(admission.admission_date);
-    const end = new Date(dischargeDate);
-    const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-    const roomTotal = dailyRate * days;
-
-    // 4. Get or create bill for this admission
-    let bill = await query(
-      `SELECT id FROM ip_bills WHERE admission_id = $1`,
-      [admissionId]
-    );
-    let billId: number;
-    if (bill.rows.length === 0) {
-      // Create a new bill
-      const billNumber = `IP-${Date.now()}-${admissionId}`;
-      const insertBill = await query(
-        `INSERT INTO ip_bills (admission_id, patient_id, bill_number, status)
-         VALUES ($1, $2, $3, 'UNPAID')
-         RETURNING id`,
-        [admissionId, admission.patient_id, billNumber]
+    await transaction(async (client) => {
+      // 1. Get admission details
+      const admissionRes = await client.query(
+        `SELECT * FROM admissions WHERE id = $1`,
+        [admissionId]
       );
-      billId = insertBill.rows[0].id;
-    } else {
-      billId = bill.rows[0].id;
-    }
+      if (admissionRes.rows.length === 0) {
+        throw new Error('Admission not found');
+      }
+      const admission = admissionRes.rows[0];
 
-    // 5. Insert or update room rent line item
-    const existingRoom = await query(
-      `SELECT id FROM ip_bill_items WHERE bill_id = $1 AND medicine_name ILIKE 'Room Rent%'`,
-      [billId]
-    );
-    if (existingRoom.rows.length === 0) {
-      await query(
-        `INSERT INTO ip_bill_items (bill_id, medicine_name, quantity, unit_price, total_price)
-         VALUES ($1, $2, $3, $4, $5)`,
-        [billId, `Room Rent – ${days} days @ ₹${dailyRate}/day`, days, dailyRate, roomTotal]
+      // If already discharged, reject
+      if (admission.status === 'discharged') {
+        throw new Error('Admission already discharged');
+      }
+
+      // 2. If a discharge ID already exists (from billing), it must match the provided one
+      if (admission.discharge_id && admission.discharge_id !== dischargeId) {
+        throw new Error('Invalid discharge ID. Please use the correct ID generated after payment.');
+      }
+
+      // 3. If no discharge ID exists (shouldn't happen if billing generated it), ensure the provided ID is unique
+      if (!admission.discharge_id) {
+        const existing = await client.query(
+          `SELECT id FROM admissions WHERE discharge_id = $1`,
+          [dischargeId]
+        );
+        if (existing.rows.length > 0) {
+          throw new Error('Discharge ID already exists');
+        }
+      }
+
+      // 4. Get bill and check full payment
+      const billRes = await client.query(
+        `SELECT id, total_amount, paid_amount, status FROM ip_bills WHERE admission_id = $1`,
+        [admissionId]
       );
-    } else {
-      // Update existing room rent line
-      await query(
-        `UPDATE ip_bill_items
-         SET quantity = $1, unit_price = $2, total_price = $3
-         WHERE id = $4`,
-        [days, dailyRate, roomTotal, existingRoom.rows[0].id]
+      if (billRes.rows.length === 0) {
+        throw new Error('No bill found for this admission');
+      }
+      const bill = billRes.rows[0];
+      const total = parseFloat(bill.total_amount);
+      const paid = parseFloat(bill.paid_amount);
+      const remaining = total - paid;
+
+      if (remaining > 0) {
+        throw new Error(`Cannot discharge: Outstanding balance of ₹${remaining.toFixed(2)}`);
+      }
+
+      // 5. Update admission record (store the provided ID, which should match existing or be new)
+      await client.query(
+        `UPDATE admissions
+         SET discharge_date = $1, status = 'discharged', discharge_id = $2, updated_at = NOW()
+         WHERE id = $3`,
+        [today, dischargeId, admissionId]
       );
-    }
 
-    // 6. Mark bill as FINAL (or update total amount if needed)
-    // Recalculate total amount from items
-    const totalRes = await query(
-      `SELECT SUM(total_price) as total FROM ip_bill_items WHERE bill_id = $1`,
-      [billId]
-    );
-    const newTotal = totalRes.rows[0]?.total || 0;
-    await query(
-      `UPDATE ip_bills SET total_amount = $1, status = 'FINAL', updated_at = NOW() WHERE id = $2`,
-      [newTotal, billId]
-    );
+      // 6. Free the bed (set to cleaning)
+      if (admission.bed_id) {
+        const bedRes = await client.query(
+          `SELECT attributes FROM beds WHERE id = $1`,
+          [admission.bed_id]
+        );
+        const bedAttributes = bedRes.rows[0]?.attributes || {};
+        const updatedAttributes = {
+          ...bedAttributes,
+          lastDischarge: {
+            date: today,
+            notes: dischargeNotes,
+            patientId: admission.patient_id,
+          },
+        };
+        await client.query(
+          `UPDATE beds
+           SET status = 'cleaning',
+               occupied_by = NULL,
+               occupied_at = NULL,
+               attributes = $1::jsonb,
+               updated_at = NOW()
+           WHERE id = $2`,
+          [JSON.stringify(updatedAttributes), admission.bed_id]
+        );
+      }
 
-    await query('COMMIT');
-    return NextResponse.json({ success: true, message: 'Discharged and bill updated' });
+      // 7. Mark bill as PAID if not already
+      if (bill.status !== 'PAID') {
+        await client.query(
+          `UPDATE ip_bills SET status = 'PAID', updated_at = NOW() WHERE id = $1`,
+          [bill.id]
+        );
+      }
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: 'Patient discharged successfully',
+      data: { dischargeId },
+    });
   } catch (error: unknown) {
-    await query('ROLLBACK');
-    console.error(error);
+    console.error('Discharge error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     return NextResponse.json({ success: false, message: errorMessage }, { status: 500 });
+  }
+}
+
+// GET handler remains unchanged
+export async function GET(req: NextRequest) {
+  const url = new URL(req.url);
+  const admissionId = url.searchParams.get('admissionId');
+
+  if (!admissionId) {
+    return NextResponse.json(
+      { success: false, message: 'Admission ID required' },
+      { status: 400 }
+    );
+  }
+
+  try {
+    const result = await query(
+      `SELECT 
+        id,
+        admission_date,
+        discharge_date,
+        discharge_id,
+        status,
+        patient_id,
+        ward_id,
+        bed_id
+       FROM admissions
+       WHERE id = $1`,
+      [admissionId]
+    );
+
+    if (result.rows.length === 0) {
+      return NextResponse.json(
+        { success: false, message: 'Admission not found' },
+        { status: 404 }
+      );
+    }
+
+    const admission = result.rows[0];
+    return NextResponse.json({
+      success: true,
+      data: {
+        admissionId: admission.id,
+        admissionDate: admission.admission_date,
+        dischargeDate: admission.discharge_date,
+        dischargeId: admission.discharge_id,
+        status: admission.status,
+        isDischarged: admission.status === 'discharged',
+      },
+    });
+  } catch (error: any) {
+    console.error('Error fetching discharge details:', error);
+    return NextResponse.json(
+      { success: false, message: error.message },
+      { status: 500 }
+    );
   }
 }

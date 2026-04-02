@@ -1,17 +1,24 @@
-// import { Pool } from 'pg';
+
+
+// import { Pool, types } from 'pg';  // ✅ import types
+
+// // ✅ Override DATE type (OID 1082) to return as string (YYYY-MM-DD)
+// types.setTypeParser(1082, (val: string) => val);
+
+// const connectionString = process.env.DATABASE_URL;
+
+// if (!connectionString) {
+//   console.warn('⚠️ DATABASE_URL is not set. Using fallback local connection.');
+// }
 
 // const pool = new Pool({
-//   host: process.env.DB_HOST || 'localhost',
-//   port: parseInt(process.env.DB_PORT || '5432'),
-//   user: process.env.DB_USER || 'a1989',  // Changed from 'postgres' to 'a1989'
-//   password: process.env.DB_PASSWORD || '',
-//   database: process.env.DB_NAME || 'patient_registration',
+//   connectionString: connectionString,
+//   ssl: { rejectUnauthorized: false },   // ✅ disable certificate validation
 //   max: 20,
 //   idleTimeoutMillis: 30000,
 //   connectionTimeoutMillis: 2000,
 // });
 
-// // Add connection test
 // pool.on('connect', () => {
 //   console.log('✅ Connected to PostgreSQL database');
 // });
@@ -35,7 +42,6 @@
 
 // export async function transaction<T>(callback: (client: any) => Promise<T>): Promise<T> {
 //   const client = await pool.connect();
-  
 //   try {
 //     await client.query('BEGIN');
 //     const result = await callback(client);
@@ -52,9 +58,9 @@
 // export default pool;
 
 
-import { Pool, types } from 'pg';  // ✅ import types
+import { Pool, types } from 'pg';
 
-// ✅ Override DATE type (OID 1082) to return as string (YYYY-MM-DD)
+// Override DATE type to return as string
 types.setTypeParser(1082, (val: string) => val);
 
 const connectionString = process.env.DATABASE_URL;
@@ -65,10 +71,11 @@ if (!connectionString) {
 
 const pool = new Pool({
   connectionString: connectionString,
-  ssl: { rejectUnauthorized: false },   // ✅ disable certificate validation
-  max: 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
+  ssl: { rejectUnauthorized: false },
+  max: 20,                      // max connections in the pool
+  idleTimeoutMillis: 30000,     // how long a client is allowed to stay idle
+  connectionTimeoutMillis: 10000, // ⬆️ increased from 2000 to 10000 ms (10 seconds)
+  statement_timeout: 30000,      // optional: kill queries that run longer than 30 seconds
 });
 
 pool.on('connect', () => {
