@@ -72,7 +72,7 @@ if (!connectionString) {
 const pool = new Pool({
   connectionString: connectionString,
   ssl: { rejectUnauthorized: false },
-  max: 20,                      // max connections in the pool
+  max: 30,                      // max connections in the pool
   idleTimeoutMillis: 30000,     // how long a client is allowed to stay idle
   connectionTimeoutMillis: 10000, // ⬆️ increased from 2000 to 10000 ms (10 seconds)
   statement_timeout: 30000,      // optional: kill queries that run longer than 30 seconds
