@@ -7,7 +7,7 @@ First, run the development server:
 
 
 ```bash
-npm run deve
+npm run deved
 # or
 yarn dev
 # or
