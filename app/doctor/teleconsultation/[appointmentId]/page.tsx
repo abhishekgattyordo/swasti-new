@@ -606,7 +606,7 @@ export default function DoctorTeleconsultationPage() {
   if (error || !appointment) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <Header />
+      
         <div className="flex items-center justify-center min-h-[60vh]">
           <Card className="w-full max-w-md">
             <CardHeader>
@@ -649,7 +649,7 @@ export default function DoctorTeleconsultationPage() {
   return (
     <>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <Header />
+
         <div className="container mx-auto px-4 sm:px-6 py-8 max-w-3xl">
           {/* Back Button */}
           <Button

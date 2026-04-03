@@ -74,6 +74,26 @@ export default function AdmissionBillPage() {
   const [generatingDischargeId, setGeneratingDischargeId] = useState(false);
   const hasGeneratedIdRef = useRef(false); // Prevent multiple generation calls
 
+
+
+  // Inside app/billing/admission/[admissionId]/page.tsx
+// useEffect(() => {
+//   const updateBill = async () => {
+//     try {
+//       await fetch('/api/billing/generate', {
+//         method: 'POST',
+//         headers: { 'Content-Type': 'application/json' },
+//         body: JSON.stringify({ admissionId }),
+//       });
+//       // Then refresh the bill data
+//       fetchBill();
+//     } catch (err) {
+//       console.error('Bill auto‑update failed', err);
+//     }
+//   };
+//   updateBill();
+// }, [admissionId]);
+
   useEffect(() => {
     fetchBill();
   }, [admissionId]);
