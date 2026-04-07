@@ -401,7 +401,7 @@ export default function HealthcareDashboard() {
                       </div>
                       <div className="flex justify-between text-[10px] text-gray-500 dark:text-gray-400">
                         <span>0%</span>
-                        <span>Occupancy</span>
+                     
                         <span>100%</span>
                       </div>
                     </div>

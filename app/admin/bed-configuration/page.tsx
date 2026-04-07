@@ -15,6 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import toast from "react-hot-toast";
 import Sidebar from "@/components/admin/Sidebar";
+import { BedBulkImportExport } from "@/components/admin/BedBulkImportExport";
 
 import {
   Building2,
@@ -513,7 +514,16 @@ export default function BedConfigurationPage() {
                 Define floors, wards, and beds
               </p>
             </div>
-        
+
+            {/* ✅ Bulk Import/Export - only shown when a ward is selected */}
+            <div className="flex-shrink-0">
+              <BedBulkImportExport
+                wardId={selectedWard?.id}
+                onImportSuccess={() => {
+                  if (selectedWard) loadBeds(selectedWard.id);
+                }}
+              />
+            </div>
           </div>
 
           {/* Loading indicator */}
@@ -632,53 +642,69 @@ export default function BedConfigurationPage() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-2">
-  <Input
-    placeholder="Ward name"
-    value={newWardName}
-    onChange={(e) => setNewWardName(e.target.value)}
-    className="w-full"
-  />
-  <Select value={newWardType} onValueChange={(v) => setNewWardType(v as WardType)}>
-    <SelectTrigger className="w-full">
-      <SelectValue placeholder="Type" />
-    </SelectTrigger>
-    <SelectContent>
-      <SelectItem value="General">General</SelectItem>
-      <SelectItem value="Semi-Special">Semi-Special</SelectItem>
-      <SelectItem value="Special">Special</SelectItem>
-      <SelectItem value="VIP">VIP</SelectItem>
-      <SelectItem value="ICU">ICU</SelectItem>
-      <SelectItem value="Pediatric">Pediatric</SelectItem>
-    </SelectContent>
-  </Select>
-  <Select value={newWardCategory} onValueChange={(v) => setNewWardCategory(v as PatientCategory)}>
-    <SelectTrigger className="w-full">
-      <SelectValue placeholder="Category" />
-    </SelectTrigger>
-    <SelectContent>
-      <SelectItem value="Male">Male</SelectItem>
-      <SelectItem value="Female">Female</SelectItem>
-      <SelectItem value="Children">Children</SelectItem>
-      <SelectItem value="Mixed">Mixed</SelectItem>
-    </SelectContent>
-  </Select>
-  <Input
-    placeholder="Description"
-    value={newWardDesc}
-    onChange={(e) => setNewWardDesc(e.target.value)}
-    className="w-full"
-  />
-  <Input
-    type="number"
-    placeholder="Rate (₹/day)"
-    value={newWardRate}
-    onChange={(e) => setNewWardRate(parseFloat(e.target.value) || 0)}
-    className="w-full"
-  />
-  <Button onClick={handleAddWard} disabled={isLoading} className="w-full">
-    <Plus className="h-4 w-4 mr-1" /> Add
-  </Button>
-</div>
+                        <Input
+                          placeholder="Ward name"
+                          value={newWardName}
+                          onChange={(e) => setNewWardName(e.target.value)}
+                          className="w-full"
+                        />
+                        <Select
+                          value={newWardType}
+                          onValueChange={(v) => setNewWardType(v as WardType)}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="General">General</SelectItem>
+                            <SelectItem value="Semi-Special">
+                              Semi-Special
+                            </SelectItem>
+                            <SelectItem value="Special">Special</SelectItem>
+                            <SelectItem value="VIP">VIP</SelectItem>
+                            <SelectItem value="ICU">ICU</SelectItem>
+                            <SelectItem value="Pediatric">Pediatric</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Select
+                          value={newWardCategory}
+                          onValueChange={(v) =>
+                            setNewWardCategory(v as PatientCategory)
+                          }
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Category" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Male">Male</SelectItem>
+                            <SelectItem value="Female">Female</SelectItem>
+                            <SelectItem value="Children">Children</SelectItem>
+                            <SelectItem value="Mixed">Mixed</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Input
+                          placeholder="Description"
+                          value={newWardDesc}
+                          onChange={(e) => setNewWardDesc(e.target.value)}
+                          className="w-full"
+                        />
+                        <Input
+                          type="number"
+                          placeholder="Rate (₹/day)"
+                          value={newWardRate}
+                          onChange={(e) =>
+                            setNewWardRate(parseFloat(e.target.value) || 0)
+                          }
+                          className="w-full"
+                        />
+                        <Button
+                          onClick={handleAddWard}
+                          disabled={isLoading}
+                          className="w-full"
+                        >
+                          <Plus className="h-4 w-4 mr-1" /> Add
+                        </Button>
+                      </div>
 
                       {filteredWards.length === 0 ? (
                         <p className="text-sm text-muted-foreground text-center">

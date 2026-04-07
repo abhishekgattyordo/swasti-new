@@ -1,32 +1,16 @@
-
-
-
-
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import Header from '@/components/ui/Header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Clock, User, Video, Phone, Loader2, AlertCircle } from 'lucide-react';
 import { appointmentsApi } from '@/lib/api/appointments';
 
-// Dynamically import VideoCall with error fallback
 const VideoCall = dynamic(
-  () => import('@/components/teleconsultation/VideoCall').catch(err => {
-    console.error('Failed to load VideoCall component:', err);
-    // Fallback component
-    return () => (
-      <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center">
-        <div className="bg-red-500 text-white p-4 rounded-lg">
-          Failed to load video call. Please check console for errors.
-        </div>
-      </div>
-    );
-  }),
+  () => import('@/components/teleconsultation/VideoCall'),
   { ssr: false }
 );
 
@@ -53,6 +37,7 @@ export default function TeleconsultationPage() {
   const [error, setError] = useState<string | null>(null);
   const [joining, setJoining] = useState(false);
   const [showVideoCall, setShowVideoCall] = useState(false);
+  const [agoraToken, setAgoraToken] = useState<string | null>(null);
 
   const agoraAppId = process.env.NEXT_PUBLIC_AGORA_APP_ID;
   const isAgoraConfigured = !!agoraAppId;
@@ -62,14 +47,12 @@ export default function TeleconsultationPage() {
       try {
         const response = await appointmentsApi.getAppointment(appointmentId);
         const data = response.data?.data || response.data;
-
         let apt: Appointment | null = null;
         if (Array.isArray(data)) {
           apt = data.find((item: any) => item.id === appointmentId) || null;
         } else if (data && typeof data === 'object') {
           apt = data;
         }
-
         if (apt && apt.id) {
           setAppointment(apt);
         } else {
@@ -82,17 +65,37 @@ export default function TeleconsultationPage() {
         setLoading(false);
       }
     };
-
-    if (appointmentId) {
-      fetchAppointment();
-    }
+    if (appointmentId) fetchAppointment();
   }, [appointmentId]);
 
-  const handleJoinCall = () => {
+  // Fetch a fresh token from your backend
+  const fetchAgoraToken = async (channelName: string): Promise<string | null> => {
+    try {
+      const res = await fetch('/api/agora/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ channelName }),
+      });
+      const data = await res.json();
+      if (data.success && data.token) return data.token;
+      throw new Error(data.message || 'Failed to get token');
+    } catch (err) {
+      console.error('Token fetch error:', err);
+      setError('Could not initialize video call. Please try again later.');
+      return null;
+    }
+  };
+
+  const handleJoinCall = async () => {
     if (!appointment) return;
     setJoining(true);
-    setShowVideoCall(true);
-    setTimeout(() => setJoining(false), 500);
+    const channelName = `teleconsultation-${appointment.id}`;
+    const token = await fetchAgoraToken(channelName);
+    if (token) {
+      setAgoraToken(token);
+      setShowVideoCall(true);
+    }
+    setJoining(false);
   };
 
   const formatDateTime = (dateStr: string, timeStr: string) => {
@@ -112,52 +115,35 @@ export default function TeleconsultationPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <Header />
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="text-center">
-            <Loader2 className="h-12 w-12 animate-spin text-green-600 mx-auto mb-4" />
-            <p className="text-gray-600 dark:text-gray-400">Loading appointment...</p>
-          </div>
-        </div>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <Loader2 className="h-12 w-12 animate-spin text-green-600" />
       </div>
     );
   }
 
   if (error || !appointment) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <Header />
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <Card className="w-full max-w-md">
-            <CardHeader>
-              <CardTitle className="text-center text-red-600">Error</CardTitle>
-            </CardHeader>
-            <CardContent className="text-center">
-              <p>{error || 'Appointment not found'}</p>
-              <Button
-                className="mt-4"
-                variant="outline"
-                onClick={() => router.push('/patient/dashboard')}
-              >
-                Back to Dashboard
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-center text-red-600">Error</CardTitle>
+          </CardHeader>
+          <CardContent className="text-center">
+            <p>{error || 'Appointment not found'}</p>
+            <Button className="mt-4" variant="outline" onClick={() => router.push('/patient/dashboard')}>
+              Back to Dashboard
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
-  const { formattedDate, time } = formatDateTime(
-    appointment.appointment_date,
-    appointment.appointment_time
-  );
+  const { formattedDate, time } = formatDateTime(appointment.appointment_date, appointment.appointment_time);
 
   return (
     <>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <Header />
         <div className="container mx-auto px-4 sm:px-6 py-8 max-w-3xl">
           <Card>
             <CardHeader className="bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-t-xl">
@@ -167,7 +153,6 @@ export default function TeleconsultationPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6 space-y-6">
-              {/* Doctor Info */}
               <div className="flex items-center gap-4 pb-4 border-b border-gray-200 dark:border-gray-700">
                 <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
                   <User className="h-8 w-8 text-green-600" />
@@ -182,7 +167,6 @@ export default function TeleconsultationPage() {
                 </div>
               </div>
 
-              {/* Appointment Details */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="flex items-center gap-3">
                   <Calendar className="h-5 w-5 text-green-600" />
@@ -200,21 +184,13 @@ export default function TeleconsultationPage() {
                 </div>
               </div>
 
-              {/* Status Badge */}
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-500">Status</span>
-                <Badge
-                  className={
-                    appointment.status === 'BOOKED'
-                      ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                      : 'bg-gray-100 text-gray-800'
-                  }
-                >
+                <Badge className={appointment.status === 'BOOKED' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
                   {appointment.status}
                 </Badge>
               </div>
 
-              {/* Notes */}
               {appointment.notes && (
                 <div>
                   <p className="text-sm text-gray-500 mb-1">Notes</p>
@@ -222,11 +198,10 @@ export default function TeleconsultationPage() {
                 </div>
               )}
 
-              {/* Join Call Button */}
               <div className="pt-4">
                 {!isAgoraConfigured ? (
-                  <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-                    <div className="flex items-center gap-2 text-yellow-800 dark:text-yellow-300">
+                  <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 rounded-lg p-4">
+                    <div className="flex items-center gap-2 text-yellow-800">
                       <AlertCircle className="h-5 w-5" />
                       <p className="text-sm">Video call is not configured. Please contact support.</p>
                     </div>
@@ -240,7 +215,7 @@ export default function TeleconsultationPage() {
                     {joining ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Opening Call...
+                        Initializing Call...
                       </>
                     ) : (
                       <>
@@ -256,15 +231,14 @@ export default function TeleconsultationPage() {
         </div>
       </div>
 
-      {/* Video Call Modal */}
-      {showVideoCall && appointment && isAgoraConfigured && (
-      <VideoCall
-  appId={agoraAppId!}
-  channel="test123"   // fixed channel for testing
-  token="007eJxTYHj+8FELX0HNm+/f/r5dueKNdwOfe7TrYqnlL/RvtqfWtV9UYDAxSzG3SDNMtEhKTDMxSU1JNDO3NDBONk1KTDIzsEhO0pU9ltkQyMgwmbWImZEBAkF8doaS1OISQyNjBgYA46cjGw=="
-  uid={null}          // let Agora assign a unique UID
-  onClose={() => setShowVideoCall(false)}
-/>
+      {showVideoCall && appointment && isAgoraConfigured && agoraToken && (
+        <VideoCall
+          appId={agoraAppId!}
+          channel={`teleconsultation-${appointment.id}`}
+          token={agoraToken}
+          uid={null}
+          onClose={() => setShowVideoCall(false)}
+        />
       )}
     </>
   );
