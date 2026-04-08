@@ -186,20 +186,21 @@ export async function POST(req: Request) {
     // ✅ Convert patient_id to number (if present)
     const numericPatientId = patient_id ? Number(patient_id) : null;
 
-    const result = await query(
-      `INSERT INTO appointments 
-       (doctor_id, patient_id, appointment_date, appointment_time, consultation_type, notes, status)
-       VALUES ($1, $2, $3, $4, $5, $6, 'BOOKED')
-       RETURNING *`,
-      [
-        doctor_id,
-        numericPatientId,    // ✅ use converted number
-        appointment_date,
-        appointment_time,
-      consultation_type === 'video' ? 'teleconsultation' : 'in-person',
-        notes || '',
-      ]
-    );
+   const result = await query(
+  `INSERT INTO appointments 
+   (doctor_id, patient_id, appointment_date, appointment_time, consultation_type, notes, status)
+   VALUES ($1, $2, $3, $4, $5, $6, 'BOOKED')
+   RETURNING *`,
+  [
+    doctor_id,
+    numericPatientId,
+    appointment_date,
+    appointment_time,
+    // Fixed mapping: keep 'teleconsultation' as is, map 'video' to 'teleconsultation', default to 'in-person'
+    (consultation_type === 'video' || consultation_type === 'teleconsultation') ? 'teleconsultation' : 'in-person',
+    notes || '',
+  ]
+);
 
     console.log("✅ Appointment created successfully:", result.rows[0].id);
 
