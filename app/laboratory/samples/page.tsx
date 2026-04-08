@@ -2,70 +2,84 @@
 
 // "use client";
 
-// import { useState } from "react";
+// import { useState, useEffect } from "react";
 // import Card from "@/components/laboratory/Card";
 
-// interface SampleOrder {
+// interface LabOrder {
 //   id: string;
 //   order_id: string;
 //   patient_name: string;
 //   patient_id: string;
-//   tests: Array<{ id: string; name: string }>;
-//   status: "Ordered" | "Collected" | "Completed";
+//   tests: Array<{ id: string; name: string; price: number }>;
+//   status: "Ordered" | "Collected" | "Completed" | "Cancelled";
 //   order_date: string;
 //   collected_date?: string;
+//   completed_date?: string;
+//   results?: Array<{ test_id: string; result: string; entered_at: string }>;
 // }
 
 // export default function SampleCollectionPage() {
-//   const [orders, setOrders] = useState<SampleOrder[]>([
-//     {
-//       id: "1",
-//       order_id: "LAB-2026-001",
-//       patient_name: "John Doe",
-//       patient_id: "P12345",
-//       tests: [
-//         { id: "1", name: "Complete Blood Count" },
-//         { id: "2", name: "Blood Glucose" },
-//       ],
-//       status: "Ordered",
-//       order_date: "2026-03-31",
-//     },
-//     {
-//       id: "2",
-//       order_id: "LAB-2026-002",
-//       patient_name: "Jane Smith",
-//       patient_id: "P12346",
-//       tests: [{ id: "3", name: "Urine Routine" }],
-//       status: "Collected",
-//       order_date: "2026-03-30",
-//       collected_date: "2026-03-31",
-//     },
-//   ]);
-
-//   const [selectedOrder, setSelectedOrder] = useState<SampleOrder | null>(null);
+//   const [orders, setOrders] = useState<LabOrder[]>([]);
+//   const [selectedOrder, setSelectedOrder] = useState<LabOrder | null>(null);
 //   const [showResultModal, setShowResultModal] = useState(false);
 //   const [results, setResults] = useState<{ [key: string]: string }>({});
 
+//   useEffect(() => {
+//     const savedOrders = localStorage.getItem('lab_orders');
+//     if (savedOrders) {
+//       setOrders(JSON.parse(savedOrders));
+//     }
+//   }, []);
+
+//   const saveOrders = (updatedOrders: LabOrder[]) => {
+//     setOrders(updatedOrders);
+//     localStorage.setItem('lab_orders', JSON.stringify(updatedOrders));
+//   };
+
 //   const markAsCollected = (orderId: string) => {
-//     setOrders(orders.map(order =>
-//       order.id === orderId
-//         ? { ...order, status: "Collected", collected_date: new Date().toISOString().split("T")[0] }
+//     const updatedOrders = orders.map(order =>
+//       order.id === orderId && order.status === "Ordered"
+//         ? { 
+//             ...order, 
+//             status: "Collected" as const, 
+//             collected_date: new Date().toISOString().split("T")[0]
+//           }
 //         : order
-//     ));
+//     );
+//     saveOrders(updatedOrders);
+//     alert(`✅ Sample collected for order ${orders.find(o => o.id === orderId)?.order_id}`);
 //   };
 
 //   const completeOrder = () => {
 //     if (!selectedOrder) return;
     
-//     setOrders(orders.map(order =>
-//       order.id === selectedOrder.id
-//         ? { ...order, status: "Completed" }
-//         : order
-//     ));
+//     // Check if all tests have results
+//     const allTestsHaveResults = selectedOrder.tests.every(test => results[test.id]?.trim());
+//     if (!allTestsHaveResults) {
+//       alert('Please enter results for all tests before completing');
+//       return;
+//     }
     
+//     const updatedOrders = orders.map(order =>
+//       order.id === selectedOrder.id
+//         ? { 
+//             ...order, 
+//             status: "Completed" as const,
+//             completed_date: new Date().toISOString().split("T")[0],
+//             results: Object.entries(results).map(([test_id, result]) => ({
+//               test_id,
+//               result,
+//               entered_at: new Date().toISOString()
+//             }))
+//           }
+//         : order
+//     );
+    
+//     saveOrders(updatedOrders);
 //     setShowResultModal(false);
 //     setResults({});
 //     setSelectedOrder(null);
+//     alert(`✅ Order ${selectedOrder.order_id} completed successfully! Results have been saved.`);
 //   };
 
 //   const pendingOrders = orders.filter(o => o.status === "Ordered");
@@ -151,6 +165,12 @@
 //                   <button
 //                     onClick={() => {
 //                       setSelectedOrder(order);
+//                       // Pre-fill existing results if any
+//                       const existingResults: { [key: string]: string } = {};
+//                       order.results?.forEach(r => {
+//                         existingResults[r.test_id] = r.result;
+//                       });
+//                       setResults(existingResults);
 //                       setShowResultModal(true);
 //                     }}
 //                     className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
@@ -190,6 +210,7 @@
 //               <div className="mb-4 p-4 bg-gray-50 rounded-lg">
 //                 <p className="text-sm text-gray-600">Patient: <span className="font-medium text-gray-900">{selectedOrder.patient_name}</span></p>
 //                 <p className="text-sm text-gray-600">Order ID: <span className="font-medium text-gray-900">{selectedOrder.order_id}</span></p>
+//                 <p className="text-sm text-gray-600">Collected Date: <span className="font-medium text-gray-900">{selectedOrder.collected_date}</span></p>
 //               </div>
 
 //               <div className="space-y-4 max-h-96 overflow-y-auto">
@@ -223,7 +244,7 @@
 //                   onClick={completeOrder}
 //                   className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
 //                 >
-//                   Complete Order
+//                   Complete Order & Save Results
 //                 </button>
 //               </div>
 //             </div>
@@ -238,6 +259,7 @@
 
 import { useState, useEffect } from "react";
 import Card from "@/components/laboratory/Card";
+import { supabase } from "@/lib/supabaseClient";
 
 interface LabOrder {
   id: string;
@@ -250,6 +272,7 @@ interface LabOrder {
   collected_date?: string;
   completed_date?: string;
   results?: Array<{ test_id: string; result: string; entered_at: string }>;
+  created_at?: string;
 }
 
 export default function SampleCollectionPage() {
@@ -258,62 +281,95 @@ export default function SampleCollectionPage() {
   const [showResultModal, setShowResultModal] = useState(false);
   const [results, setResults] = useState<{ [key: string]: string }>({});
 
+  // ✅ FETCH ORDERS FROM SUPABASE
   useEffect(() => {
-    const savedOrders = localStorage.getItem('lab_orders');
-    if (savedOrders) {
-      setOrders(JSON.parse(savedOrders));
-    }
+    fetchOrders();
   }, []);
 
-  const saveOrders = (updatedOrders: LabOrder[]) => {
-    setOrders(updatedOrders);
-    localStorage.setItem('lab_orders', JSON.stringify(updatedOrders));
-  };
+  const fetchOrders = async () => {
+    const { data, error } = await supabase
+      .from("lab_orders")
+      .select("*")
+      .in("status", ["Ordered", "Collected"])
+      .order("created_at", { ascending: false });
 
-  const markAsCollected = (orderId: string) => {
-    const updatedOrders = orders.map(order =>
-      order.id === orderId && order.status === "Ordered"
-        ? { 
-            ...order, 
-            status: "Collected" as const, 
-            collected_date: new Date().toISOString().split("T")[0]
-          }
-        : order
-    );
-    saveOrders(updatedOrders);
-    alert(`✅ Sample collected for order ${orders.find(o => o.id === orderId)?.order_id}`);
-  };
-
-  const completeOrder = () => {
-    if (!selectedOrder) return;
-    
-    // Check if all tests have results
-    const allTestsHaveResults = selectedOrder.tests.every(test => results[test.id]?.trim());
-    if (!allTestsHaveResults) {
-      alert('Please enter results for all tests before completing');
+    if (error) {
+      console.error("Error fetching orders:", error);
       return;
     }
+
+    setOrders(data || []);
+  };
+
+  // ✅ MARK AS COLLECTED IN SUPABASE
+  const markAsCollected = async (orderId: string) => {
+    const today = new Date().toISOString().split("T")[0];
+
+    const { error } = await supabase
+      .from("lab_orders")
+      .update({
+        status: "Collected",
+        collected_date: today,
+      })
+      .eq("id", orderId);
+
+    if (error) {
+      console.error("Error updating order:", error);
+      alert("Error updating order. Please try again.");
+      return;
+    }
+
+    alert(`✅ Sample collected for order ${orders.find(o => o.id === orderId)?.order_id}`);
     
-    const updatedOrders = orders.map(order =>
-      order.id === selectedOrder.id
-        ? { 
-            ...order, 
-            status: "Completed" as const,
-            completed_date: new Date().toISOString().split("T")[0],
-            results: Object.entries(results).map(([test_id, result]) => ({
-              test_id,
-              result,
-              entered_at: new Date().toISOString()
-            }))
-          }
-        : order
+    // Refresh orders
+    await fetchOrders();
+  };
+
+  // ✅ COMPLETE ORDER WITH RESULTS IN SUPABASE
+  const completeOrder = async () => {
+    if (!selectedOrder) return;
+
+    // Check if all tests have results
+    const allTestsHaveResults = selectedOrder.tests.every(
+      (test) => results[test.id]?.trim()
     );
     
-    saveOrders(updatedOrders);
+    if (!allTestsHaveResults) {
+      alert("Please enter results for all tests before completing");
+      return;
+    }
+
+    const today = new Date().toISOString().split("T")[0];
+
+    const resultsArray = Object.entries(results).map(([test_id, result]) => ({
+      test_id,
+      result,
+      entered_at: new Date().toISOString(),
+    }));
+
+    const { error } = await supabase
+      .from("lab_orders")
+      .update({
+        status: "Completed",
+        completed_date: today,
+        results: resultsArray,
+      })
+      .eq("id", selectedOrder.id);
+
+    if (error) {
+      console.error("Error saving results:", error);
+      alert("Error saving results. Please try again.");
+      return;
+    }
+
+    alert(`✅ Order ${selectedOrder.order_id} completed successfully! Results have been saved.`);
+
+    // Reset and refresh
     setShowResultModal(false);
     setResults({});
     setSelectedOrder(null);
-    alert(`✅ Order ${selectedOrder.order_id} completed successfully! Results have been saved.`);
+    
+    await fetchOrders();
   };
 
   const pendingOrders = orders.filter(o => o.status === "Ordered");
@@ -442,9 +498,15 @@ export default function SampleCollectionPage() {
               </div>
 
               <div className="mb-4 p-4 bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-600">Patient: <span className="font-medium text-gray-900">{selectedOrder.patient_name}</span></p>
-                <p className="text-sm text-gray-600">Order ID: <span className="font-medium text-gray-900">{selectedOrder.order_id}</span></p>
-                <p className="text-sm text-gray-600">Collected Date: <span className="font-medium text-gray-900">{selectedOrder.collected_date}</span></p>
+                <p className="text-sm text-gray-600">
+                  Patient: <span className="font-medium text-gray-900">{selectedOrder.patient_name}</span>
+                </p>
+                <p className="text-sm text-gray-600">
+                  Order ID: <span className="font-medium text-gray-900">{selectedOrder.order_id}</span>
+                </p>
+                <p className="text-sm text-gray-600">
+                  Collected Date: <span className="font-medium text-gray-900">{selectedOrder.collected_date}</span>
+                </p>
               </div>
 
               <div className="space-y-4 max-h-96 overflow-y-auto">
