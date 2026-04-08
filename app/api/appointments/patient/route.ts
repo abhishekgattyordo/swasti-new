@@ -196,7 +196,7 @@ export async function POST(req: Request) {
         numericPatientId,    // ✅ use converted number
         appointment_date,
         appointment_time,
-        consultation_type || 'in-person',
+      consultation_type === 'video' ? 'teleconsultation' : 'in-person',
         notes || '',
       ]
     );

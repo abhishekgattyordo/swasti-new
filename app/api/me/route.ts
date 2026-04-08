@@ -33,9 +33,9 @@ export async function GET(req: Request) {
       return NextResponse.json({ success: false, message: "Invalid token payload" }, { status: 401 });
     }
 
-    // 4. Query the database
+    // 4. Query the database – include patient_id
     const result = await query(
-      `SELECT id, email, role, doctor_id FROM users WHERE id = $1`,
+      `SELECT id, email, role, doctor_id, patient_id FROM users WHERE id = $1`,
       [userId]
     );
 
@@ -45,7 +45,7 @@ export async function GET(req: Request) {
 
     const user = result.rows[0];
 
-    // 5. Return the user data (including doctor_id)
+    // 5. Return the user data (including doctor_id and patient_id)
     return NextResponse.json({
       success: true,
       user: {
@@ -53,6 +53,7 @@ export async function GET(req: Request) {
         email: user.email,
         role: user.role,
         doctor_id: user.doctor_id,
+        patient_id: user.patient_id,
       },
     });
   } catch (error) {

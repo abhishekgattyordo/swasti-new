@@ -27,7 +27,7 @@ export default function NewAppointmentModal({
   const [selectedPatient, setSelectedPatient] = useState<any | null>(null);
   const [showDropdown, setShowDropdown] = useState(false);
   const [form, setForm] = useState({
-    consultationType: "in-person",
+    consultationType: "",
     notes: "",
   });
 

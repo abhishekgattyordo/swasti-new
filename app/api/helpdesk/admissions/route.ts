@@ -157,13 +157,16 @@ export async function POST(req: NextRequest) {
   }
 }
 
+
+
 export async function GET(req: NextRequest) {
   try {
     const url = new URL(req.url);
     const status = url.searchParams.get('status');
     const patientId = url.searchParams.get('patientId');
     const wardId = url.searchParams.get('wardId');
-    const bedId = url.searchParams.get('bedId');   // ✅ new
+    const bedId = url.searchParams.get('bedId');
+    const admissionId = url.searchParams.get('admissionId'); // ✅ new
 
     let sql = `
       SELECT 
@@ -202,6 +205,10 @@ export async function GET(req: NextRequest) {
     if (bedId) {
       sql += ` AND a.bed_id = $${paramIndex++}`;
       params.push(parseInt(bedId));
+    }
+    if (admissionId) {
+      sql += ` AND a.id = $${paramIndex++}`;
+      params.push(parseInt(admissionId));
     }
     sql += ` ORDER BY a.admission_date DESC`;
 

@@ -17,6 +17,7 @@ import {
   Logout,
   EventNote,
 } from '@mui/icons-material';
+import { CalendarDays } from 'lucide-react';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -53,6 +54,12 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     }
   });
 
+
+// Use the current date (or a selected date from state)
+const today = new Date().toISOString().split('T')[0];
+const selectedDate = today; // replace with actual selected date if you have one
+
+const admissionSummaryHref = `/patient/inpatient-summary?patientId=${patientId}&date=${selectedDate}`;
   const toggleCollapse = () => setIsCollapsed(!isCollapsed);
 
   const navItems = [
@@ -60,7 +67,12 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     { icon: FolderShared, label: 'Medical Records', href: '/patient/medical-records', badge: 3, color: 'from-green-500 to-green-700' },
     { icon: Medication, label: 'Prescriptions', href: '/patient/prescriptions', color: 'from-emerald-500 to-emerald-700' },
     { icon: ReceiptLong, label: 'Billing', href: '/patient/billing', color: 'from-green-500 to-green-700' },
-    { icon: EventNote, label: 'Admission Summary', href: '/patient/admission-summary', color: 'from-green-500 to-green-700' },
+ {
+  icon: CalendarDays,
+  label: 'Admission Summary',
+  href: admissionSummaryHref,
+  color: 'from-green-500 to-green-700',
+}
   ];
 
   const settingsItems = [
