@@ -119,9 +119,30 @@ export default function VideoCall({ appId, channel, token, uid, onClose }: Video
     setIsVideoMuted(!isVideoMuted);
   };
 
-  const endCall = () => {
-    onClose();
-  };
+ const endCall = async () => {
+  try {
+    if (localAudioTrack) {
+      localAudioTrack.stop();
+      localAudioTrack.close();
+    }
+
+    if (localVideoTrack) {
+      localVideoTrack.stop();
+      localVideoTrack.close();
+    }
+
+    if (client) {
+      await client.leave();
+    }
+
+    setIsJoined(false);
+    setRemoteUsers([]);
+  } catch (err) {
+    console.error('Error ending call:', err);
+  } finally {
+    onClose(); // close UI
+  }
+};
 
   if (error) {
     return (

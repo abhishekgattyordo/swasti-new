@@ -47,14 +47,12 @@ export function BedDetailPanel({ bed, open, onClose, onDischarge, onTransfer }: 
                   <User className="h-4 w-4" /> {bed.patient.gender}, {bed.patient.age}y
                 </div>
                 <div className="flex items-center gap-2 text-muted-foreground">
-                  <Phone className="h-4 w-4" /> {bed.patient.contact}
+                  <Phone className="h-4 w-4" /> {bed.patient.phone}
                 </div>
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Clock className="h-4 w-4" /> Admitted {bed.patient.admissionDate}
                 </div>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Clock className="h-4 w-4" /> Est. discharge {bed.patient.estimatedDischarge}
-                </div>
+                
               </div>
 
               <div>

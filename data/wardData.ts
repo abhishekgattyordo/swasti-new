@@ -505,6 +505,7 @@ export interface Patient {
   gender: "M" | "F";
   age: number;
   mrn: string;
+   phone?: string;  
   admissionDate: string;
   estimatedDischarge: string;
   diagnosis: string;

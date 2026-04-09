@@ -9,7 +9,7 @@
 // import { BedCard } from "../../../data/BedCard";
 // import { FloorPlan } from "../../../data/FloorPlan";
 // import { BedDetailPanel } from "../../../data/BedDetailPanel";
-// import { AdmissionDialog, DischargeDialog, TransferDialog } from "../../../data/ADTDialogs";
+// import { TransferDialog } from "../../../data/ADTDialogs";
 // import { OccupancyHeatmap } from "../../../data/OccupancyHeatmap";
 // import { ShiftHandover } from "../../../data/ShiftHandover";
 // import { PredictiveChart } from "../../../data/PredictiveChart";
@@ -19,14 +19,22 @@
 // import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 // import {
 //   BedDouble, Activity, Search, LayoutGrid, Map, BarChart3,
-//   ClipboardList, TrendingUp, RefreshCw, Loader2
+//   ClipboardList, TrendingUp, RefreshCw, Loader2, Menu, X
 // } from "lucide-react";
 // import { patchBed } from "@/lib/api/bed-config";
 // import AdminSidebar from "@/components/admin/Sidebar";
 // import HelpDeskSidebar from "@/components/helpdesk/HelpDeskSidebar";
 // import Header from "@/components/admin/Header";
-// import { Menu, X } from 'lucide-react';
 // import { toast } from "sonner";
+// import {
+//   Dialog,
+//   DialogContent,
+//   DialogHeader,
+//   DialogTitle,
+//   DialogDescription,
+//   DialogFooter,
+// } from "@/components/ui/dialog";
+// import { Label } from "@/components/ui/label";
 
 // type ViewMode = "grid" | "floor";
 
@@ -39,9 +47,13 @@
 //   const [typeFilter, setTypeFilter] = useState<string>("all");
 //   const [selectedBed, setSelectedBed] = useState<Bed | null>(null);
 //   const [detailOpen, setDetailOpen] = useState(false);
-//   const [admitBed, setAdmitBed] = useState<Bed | null>(null);
-//   const [dischargeBed, setDischargeBed] = useState<Bed | null>(null);
 //   const [transferBed, setTransferBed] = useState<Bed | null>(null);
+  
+//   // Manual discharge modal state
+//   const [manualDischargeBed, setManualDischargeBed] = useState<Bed | null>(null);
+//   const [dischargeIdInput, setDischargeIdInput] = useState('');
+//   const [dischargeNotesInput, setDischargeNotesInput] = useState('');
+//   const [discharging, setDischarging] = useState(false);
 
 //   // Get user role from localStorage
 //   const [userRole, setUserRole] = useState<string | null>(null);
@@ -67,7 +79,7 @@
 
 //   // Handlers for HelpDeskSidebar props
 //   const handleBillingClick = () => router.push('/helpdesk/billing');
-//   const handleRoomAvailabilityClick = () => router.push('/admin/bed-management'); // already here
+//   const handleRoomAvailabilityClick = () => router.push('/admin/bed-management');
 //   const handleDoctorSlotsClick = () => router.push('/helpdesk/doctor-slots');
 
 //   const stats = useMemo(() => {
@@ -108,128 +120,107 @@
 //     setDetailOpen(true); 
 //   };
 
-//   const handleAdmit = async (bed: Bed, name: string, mrn: string) => {
-//     try {
-//       setLocalBeds(prev => prev.map(b => b.id === bed.id ? {
-//         ...b, status: "occupied" as BedStatus, recentlyChanged: true,
-//         patient: { 
-//           name, 
-//           initials: name.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2), 
-//           gender: "M", age: 30, mrn, 
-//           admissionDate: new Date().toISOString().split('T')[0], 
-//           estimatedDischarge: new Date(Date.now() + 7*24*60*60*1000).toISOString().split('T')[0],
-//           diagnosis: "Pending evaluation", 
-//           contact: "", 
-//           specialRequirements: "" 
-//         }
-//       } : b));
-
-//       const bedId = parseInt(bed.id);
-//       await patchBed(bedId, {
-//         status: "occupied",
-//         attributes: {
-//           patient_name: name,
-//           patient_initials: name.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2),
-//           mrn,
-//           admission_date: new Date().toISOString().split('T')[0],
-//         }
-//       });
-
-//       toast.success("Patient admitted", {
-//         description: `${name} assigned to Bed ${bed.number}`
-//       });
-//     } catch (error) {
-//       setLocalBeds(beds);
-//       toast.error("Failed to admit patient");
-//     }
+//   // Discharge flow
+//   const handleDischarge = (bed: Bed) => {
+//     setManualDischargeBed(bed);
+//     setDischargeIdInput('');
+//     setDischargeNotesInput('');
 //   };
 
-//   const handleDischarge = async (bed: Bed) => {
-//     try {
-//       setLocalBeds(prev => prev.map(b => b.id === bed.id ? { 
-//         ...b, 
-//         status: "cleaning" as BedStatus, 
-//         patient: undefined, 
-//         vitals: undefined, 
-//         notes: [], 
-//         recentlyChanged: true 
-//       } : b));
-      
-//       setDetailOpen(false);
-
-//       const bedId = parseInt(bed.id);
-//       await patchBed(bedId, {
-//         status: "cleaning",
-//         attributes: {
-//           patient_name: undefined,
-//           patient_initials: undefined,
-//           mrn: undefined,
-//           admission_date: undefined,
-//         }
-//       });
-
-//       toast.success("Patient discharged", {
-//         description: `Bed ${bed.number} moved to cleaning`
-//       });
-//     } catch (error) {
-//       setLocalBeds(beds);
-//       toast.error("Failed to discharge patient");
+//   const performDischarge = async () => {
+//     if (!manualDischargeBed) return;
+//     if (!dischargeIdInput.trim()) {
+//       toast.error('Please enter a discharge ID');
+//       return;
 //     }
-//   };
 
-//   const handleTransfer = async (bed: Bed, destId: string) => {
+//     setDischarging(true);
 //     try {
-//       setLocalBeds(prev => {
-//         const updated = [...prev];
-//         const srcIdx = updated.findIndex(b => b.id === bed.id);
-//         const dstIdx = updated.findIndex(b => b.id === destId);
-        
-//         if (srcIdx >= 0 && dstIdx >= 0) {
-//           updated[dstIdx] = { 
-//             ...updated[dstIdx], 
-//             status: "occupied", 
-//             patient: updated[srcIdx].patient, 
-//             vitals: updated[srcIdx].vitals, 
-//             notes: updated[srcIdx].notes, 
-//             recentlyChanged: true 
-//           };
-//           updated[srcIdx] = { 
-//             ...updated[srcIdx], 
-//             status: "cleaning", 
-//             patient: undefined, 
-//             vitals: undefined, 
-//             notes: [], 
-//             recentlyChanged: true 
-//           };
-//         }
-//         return updated;
-//       });
-
-//       const srcId = parseInt(bed.id);
-//       const dstId = parseInt(destId);
-      
-//       await patchBed(srcId, { status: "cleaning" });
-      
-//       if (bed.patient) {
-//         await patchBed(dstId, {
-//           status: "occupied",
-//           attributes: {
-//             patient_name: bed.patient.name,
-//             patient_initials: bed.patient.initials,
-//             mrn: bed.patient.mrn,
-//             admission_date: bed.patient.admissionDate,
-//           }
-//         });
+//       const bedId = manualDischargeBed.id;
+//       const admRes = await fetch(`/api/helpdesk/admissions?bedId=${bedId}&status=active`);
+//       const admData = await admRes.json();
+//       if (!admData.success || admData.data.length === 0) {
+//         throw new Error('No active admission found for this bed');
 //       }
+//       const admissionId = admData.data[0].id;
 
-//       toast.success("Patient transferred", {
-//         description: `Transfer from Bed ${bed.number} complete`
+//       const res = await fetch('/api/helpdesk/admissions/discharge', {
+//         method: 'POST',
+//         headers: { 'Content-Type': 'application/json' },
+//         body: JSON.stringify({
+//           admissionId,
+//           dischargeId: dischargeIdInput,
+//           dischargeNotes: dischargeNotesInput,
+//         }),
 //       });
-//     } catch (error) {
-//       setLocalBeds(beds);
-//       toast.error("Failed to transfer patient");
+//       const result = await res.json();
+//       if (!result.success) throw new Error(result.message);
+
+//       toast.success('Patient discharged successfully');
+//       refresh(); // refresh bed data
+//       setManualDischargeBed(null);
+//     } catch (err: any) {
+//       toast.error(err.message || 'Discharge failed');
+//     } finally {
+//       setDischarging(false);
 //     }
 //   };
+
+//   // Transfer flow
+//   const handleTransfer = async (bed: Bed, destId: string) => {
+//   try {
+//     setLocalBeds(prev => {
+//       const updated = [...prev];
+//       const srcIdx = updated.findIndex(b => b.id === bed.id);
+//       const dstIdx = updated.findIndex(b => b.id === destId);
+      
+//       if (srcIdx >= 0 && dstIdx >= 0) {
+//         updated[dstIdx] = { 
+//           ...updated[dstIdx], 
+//           status: "occupied", 
+//           patient: updated[srcIdx].patient, 
+//           vitals: updated[srcIdx].vitals, 
+//           notes: updated[srcIdx].notes, 
+//           recentlyChanged: true 
+//         };
+//         updated[srcIdx] = { 
+//           ...updated[srcIdx], 
+//           status: "cleaning", 
+//           patient: undefined, 
+//           vitals: undefined, 
+//           notes: [], 
+//           recentlyChanged: true 
+//         };
+//       }
+//       return updated;
+//     });
+
+//     const srcId = parseInt(bed.id);
+//     const dstId = parseInt(destId);
+    
+//     await patchBed(srcId, { status: "cleaning" });
+    
+//     if (bed.patient) {
+//       await patchBed(dstId, {
+//         status: "occupied",
+//         // ✅ Remove occupied_by line – backend will handle patient ID from source bed
+//         attributes: {
+//           patient_name: bed.patient.name,
+//           patient_initials: bed.patient.initials,
+//           mrn: bed.patient.mrn,
+//           admission_date: bed.patient.admissionDate,
+//         }
+//       });
+//     }
+
+//     toast.success("Patient transferred", {
+//       description: `Transfer from Bed ${bed.number} complete`
+//     });
+//   } catch (error) {
+//     setLocalBeds(beds);
+//     toast.error("Failed to transfer patient");
+//   }
+// };
 
 //   const handleMarkAvailable = async (bed: Bed) => {
 //     try {
@@ -364,83 +355,83 @@
 //               </TabsList>
 
 //               <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-//   {/* Search */}
-//   <div className="relative flex-1">
-//     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-//     <Input
-//       placeholder="Search bed, patient, MRN…"
-//       className="pl-9 h-9 w-full"
-//       value={search}
-//       onChange={(e) => setSearch(e.target.value)}
-//     />
-//   </div>
+//                 <div className="relative flex-1">
+//                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+//                   <Input
+//                     placeholder="Search bed, patient, MRN…"
+//                     className="pl-9 h-9 w-full"
+//                     value={search}
+//                     onChange={(e) => setSearch(e.target.value)}
+//                   />
+//                 </div>
 
-//   {/* Status Select */}
-//   <Select value={statusFilter} onValueChange={setStatusFilter}>
-//     <SelectTrigger className="h-9 w-full sm:w-32">
-//       <SelectValue placeholder="Status" />
-//     </SelectTrigger>
-//     <SelectContent>
-//       <SelectItem value="all">All Status</SelectItem>
-//       <SelectItem value="available">Available</SelectItem>
-//       <SelectItem value="occupied">Occupied</SelectItem>
-//       <SelectItem value="cleaning">Cleaning</SelectItem>
-//       <SelectItem value="maintenance">Maintenance</SelectItem>
-//       <SelectItem value="reserved">Reserved</SelectItem>
-//     </SelectContent>
-//   </Select>
+//                 <Select value={statusFilter} onValueChange={setStatusFilter}>
+//                   <SelectTrigger className="h-9 w-full sm:w-32">
+//                     <SelectValue placeholder="Status" />
+//                   </SelectTrigger>
+//                   <SelectContent>
+//                     <SelectItem value="all">All Status</SelectItem>
+//                     <SelectItem value="available">Available</SelectItem>
+//                     <SelectItem value="occupied">Occupied</SelectItem>
+//                     <SelectItem value="cleaning">Cleaning</SelectItem>
+//                     <SelectItem value="maintenance">Maintenance</SelectItem>
+//                     <SelectItem value="reserved">Reserved</SelectItem>
+//                   </SelectContent>
+//                 </Select>
 
-//   {/* Type Select */}
-//   <Select value={typeFilter} onValueChange={setTypeFilter}>
-//     <SelectTrigger className="h-9 w-full sm:w-32">
-//       <SelectValue placeholder="Type" />
-//     </SelectTrigger>
-//     <SelectContent>
-//       <SelectItem value="all">All Types</SelectItem>
-//       <SelectItem value="General">General</SelectItem>
-//       <SelectItem value="ICU">ICU</SelectItem>
-//       <SelectItem value="Pediatric">Pediatric</SelectItem>
-//       <SelectItem value="Emergency">Emergency</SelectItem>
-//       <SelectItem value="Maternity">Maternity</SelectItem>
-//     </SelectContent>
-//   </Select>
+//                 <Select value={typeFilter} onValueChange={setTypeFilter}>
+//                   <SelectTrigger className="h-9 w-full sm:w-32">
+//                     <SelectValue placeholder="Type" />
+//                   </SelectTrigger>
+//                   <SelectContent>
+//                     <SelectItem value="all">All Types</SelectItem>
+//                     <SelectItem value="General">General</SelectItem>
+//                     <SelectItem value="ICU">ICU</SelectItem>
+//                     <SelectItem value="Pediatric">Pediatric</SelectItem>
+//                     <SelectItem value="Emergency">Emergency</SelectItem>
+//                     <SelectItem value="Maternity">Maternity</SelectItem>
+//                   </SelectContent>
+//                 </Select>
 
-//   {/* View Mode Toggle */}
-//   <div className="flex rounded-md border self-start sm:self-auto">
-//     <Button
-//       variant={viewMode === "grid" ? "default" : "ghost"}
-//       size="icon"
-//       className="h-9 w-9 rounded-r-none"
-//       onClick={() => setViewMode("grid")}
-//     >
-//       <LayoutGrid className="h-4 w-4" />
-//     </Button>
-//     <Button
-//       variant={viewMode === "floor" ? "default" : "ghost"}
-//       size="icon"
-//       className="h-9 w-9 rounded-l-none"
-//       onClick={() => setViewMode("floor")}
-//     >
-//       <Map className="h-4 w-4" />
-//     </Button>
-//   </div>
-// </div>
+//                 <div className="flex rounded-md border self-start sm:self-auto">
+//                   <Button
+//                     variant={viewMode === "grid" ? "default" : "ghost"}
+//                     size="icon"
+//                     className="h-9 w-9 rounded-r-none"
+//                     onClick={() => setViewMode("grid")}
+//                   >
+//                     <LayoutGrid className="h-4 w-4" />
+//                   </Button>
+//                   <Button
+//                     variant={viewMode === "floor" ? "default" : "ghost"}
+//                     size="icon"
+//                     className="h-9 w-9 rounded-l-none"
+//                     onClick={() => setViewMode("floor")}
+//                   >
+//                     <Map className="h-4 w-4" />
+//                   </Button>
+//                 </div>
+//               </div>
 //             </div>
 
 //             <TabsContent value="beds">
 //               {viewMode === "grid" ? (
 //                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-//                   {filteredBeds.map(bed => (
-//                     <BedCard
-//                       key={bed.id}
-//                       bed={bed}
-//                       onSelect={handleSelect}
-//                       onAssign={(b) => setAdmitBed(b)}
-//                       onDischarge={(b) => setDischargeBed(b)}
-//                       onTransfer={(b) => setTransferBed(b)}
-//                       onMarkCleaning={handleMarkAvailable}
-//                     />
-//                   ))}
+//                {filteredBeds.map(bed => {
+//   console.log("BED DATA:", bed); // ✅ ADD HERE
+
+//   return (
+//     <BedCard
+//       key={bed.id}
+//       bed={bed}
+//       onAssign={() => {}}
+//       onSelect={handleSelect}
+//       onDischarge={handleDischarge}
+//       onTransfer={(b) => setTransferBed(b)}
+//       onMarkCleaning={handleMarkAvailable}
+//     />
+//   );
+// })}
 //                 </div>
 //               ) : (
 //                 <FloorPlan beds={filteredBeds} onSelect={handleSelect} />
@@ -453,7 +444,7 @@
 //             </TabsContent>
 
 //             <TabsContent value="heatmap">
-//              <OccupancyHeatmap wards={wards} />
+//               <OccupancyHeatmap wards={wards} />
 //             </TabsContent>
 //             <TabsContent value="handover">
 //               <ShiftHandover beds={localBeds} />
@@ -470,20 +461,8 @@
 //         bed={selectedBed}
 //         open={detailOpen}
 //         onClose={() => setDetailOpen(false)}
-//         onDischarge={(b) => { setDetailOpen(false); setDischargeBed(b); }}
+//         onDischarge={(b) => { setDetailOpen(false); handleDischarge(b); }}
 //         onTransfer={(b) => { setDetailOpen(false); setTransferBed(b); }}
-//       />
-//       <AdmissionDialog
-//         bed={admitBed}
-//         open={!!admitBed}
-//         onClose={() => setAdmitBed(null)}
-//         onSuccess={refresh}
-//       />
-//       <DischargeDialog
-//         bed={dischargeBed}
-//         open={!!dischargeBed}
-//         onClose={() => setDischargeBed(null)}
-//         onSuccess={refresh}
 //       />
 //       <TransferDialog
 //         bed={transferBed}
@@ -492,14 +471,52 @@
 //         onSuccess={refresh}
 //         availableBeds={availableBeds}
 //       />
+
+//       {/* Manual Discharge Modal */}
+//       <Dialog open={!!manualDischargeBed} onOpenChange={() => setManualDischargeBed(null)}>
+//         <DialogContent>
+//           <DialogHeader>
+//             <DialogTitle>Discharge Patient</DialogTitle>
+//             <DialogDescription>
+//               Enter a unique discharge ID and optional notes.
+//             </DialogDescription>
+//           </DialogHeader>
+//           <div className="space-y-4 py-2">
+//             <div>
+//               <Label htmlFor="dischargeId">Discharge ID *</Label>
+//               <Input
+//                 id="dischargeId"
+//                 placeholder="e.g., DISC-1775107620404-1"
+//                 value={dischargeIdInput}
+//                 onChange={(e) => setDischargeIdInput(e.target.value)}
+//               />
+//             </div>
+//             <div>
+//               <Label htmlFor="notes">Discharge Notes (optional)</Label>
+//               <Input
+//                 id="notes"
+//                 placeholder="Clinical notes..."
+//                 value={dischargeNotesInput}
+//                 onChange={(e) => setDischargeNotesInput(e.target.value)}
+//               />
+//             </div>
+//           </div>
+//           <DialogFooter>
+//             <Button variant="outline" onClick={() => setManualDischargeBed(null)}>Cancel</Button>
+//             <Button onClick={performDischarge} disabled={discharging}>
+//               {discharging && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+//               Confirm Discharge
+//             </Button>
+//           </DialogFooter>
+//         </DialogContent>
+//       </Dialog>
 //     </div>
 //   );
 // }
 
-
 'use client';
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useWardData, Bed, BedStatus } from "../../../data/wardData";
 import { BedCard } from "../../../data/BedCard";
@@ -545,13 +562,11 @@ export default function WardPage() {
   const [detailOpen, setDetailOpen] = useState(false);
   const [transferBed, setTransferBed] = useState<Bed | null>(null);
   
-  // Manual discharge modal state
   const [manualDischargeBed, setManualDischargeBed] = useState<Bed | null>(null);
   const [dischargeIdInput, setDischargeIdInput] = useState('');
   const [dischargeNotesInput, setDischargeNotesInput] = useState('');
   const [discharging, setDischarging] = useState(false);
 
-  // Get user role from localStorage
   const [userRole, setUserRole] = useState<string | null>(null);
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -568,9 +583,71 @@ export default function WardPage() {
   const { beds, wards, forecast, loading, error, refresh } = useWardData();
   
   const [localBeds, setLocalBeds] = useState<Bed[]>([]);
+  const fetchedPatientRef = useRef<Set<string>>(new Set());
 
+  // Normalize patient data from backend to match BedCard expectations
+ const normalizePatient = (patient: any) => {
+  if (!patient) return undefined;
+  const name = patient.full_name_en || patient.patient_name || patient.name || '—';
+  return {
+    name,
+    initials: patient.initials || name.split(' ').map((n: string) => n[0]).join('').toUpperCase(),
+    mrn: patient.patient_id || patient.mrn,
+    gender: patient.gender || 'Unknown',
+    age: patient.age ?? '?',
+    phone: patient.phone || '',
+    diagnosis: patient.diagnosis || '',
+    admissionDate: patient.admission_date || patient.admissionDate,
+    // Add missing required fields with empty defaults
+    estimatedDischarge: '',
+    contact: '',
+    specialRequirements: '',
+  };
+};
+
+  // Enrich a single bed with patient data from API if needed
+  const enrichBedWithPatient = async (bed: Bed): Promise<Bed> => {
+  // Treat placeholder as missing data – fetch real patient for occupied beds
+  const hasPlaceholder = bed.patient && (bed.patient.name === 'Unknown' || bed.patient.name === '—' || bed.patient.name === 'patient');
+  
+  if (bed.status !== 'occupied') return bed;
+  if (!hasPlaceholder && bed.patient) return bed; // already has real patient data
+  if (fetchedPatientRef.current.has(bed.id)) return bed;
+  fetchedPatientRef.current.add(bed.id);
+
+  try {
+    const res = await fetch(`/api/bed-config/beds/${bed.id}/current-patient`);
+    const data = await res.json();
+    console.log(`📡 API response for bed ${bed.id}:`, data);
+    if (data.success && data.data) {
+      const patient = normalizePatient(data.data);
+      console.log(`👤 Normalized patient for bed ${bed.id}:`, patient);
+      return { ...bed, patient };
+    } else {
+      // No active patient – clear placeholder
+      return { ...bed, patient: undefined };
+    }
+  } catch (err) {
+    console.error(`Error fetching patient for bed ${bed.id}:`, err);
+    return bed;
+  }
+};
+
+  // Normalize and enrich beds when they change
   useEffect(() => {
-    setLocalBeds(beds);
+    const processBeds = async () => {
+      // First normalize patient data from original beds
+      const normalized = beds.map(bed => ({
+        ...bed,
+        patient: normalizePatient(bed.patient)
+      }));
+      // Then enrich any occupied beds without patient data
+      const enriched = await Promise.all(normalized.map(bed => enrichBedWithPatient(bed)));
+      setLocalBeds(enriched);
+    };
+    if (beds.length) {
+      processBeds();
+    }
   }, [beds]);
 
   // Handlers for HelpDeskSidebar props
@@ -616,7 +693,6 @@ export default function WardPage() {
     setDetailOpen(true); 
   };
 
-  // Discharge flow
   const handleDischarge = (bed: Bed) => {
     setManualDischargeBed(bed);
     setDischargeIdInput('');
@@ -653,7 +729,9 @@ export default function WardPage() {
       if (!result.success) throw new Error(result.message);
 
       toast.success('Patient discharged successfully');
-      refresh(); // refresh bed data
+      // Clear cache and refresh
+      fetchedPatientRef.current.clear();
+      await refresh();
       setManualDischargeBed(null);
     } catch (err: any) {
       toast.error(err.message || 'Discharge failed');
@@ -662,67 +740,68 @@ export default function WardPage() {
     }
   };
 
-  // Transfer flow
   const handleTransfer = async (bed: Bed, destId: string) => {
-  try {
-    setLocalBeds(prev => {
-      const updated = [...prev];
-      const srcIdx = updated.findIndex(b => b.id === bed.id);
-      const dstIdx = updated.findIndex(b => b.id === destId);
-      
-      if (srcIdx >= 0 && dstIdx >= 0) {
-        updated[dstIdx] = { 
-          ...updated[dstIdx], 
-          status: "occupied", 
-          patient: updated[srcIdx].patient, 
-          vitals: updated[srcIdx].vitals, 
-          notes: updated[srcIdx].notes, 
-          recentlyChanged: true 
-        };
-        updated[srcIdx] = { 
-          ...updated[srcIdx], 
-          status: "cleaning", 
-          patient: undefined, 
-          vitals: undefined, 
-          notes: [], 
-          recentlyChanged: true 
-        };
-      }
-      return updated;
-    });
-
-    const srcId = parseInt(bed.id);
-    const dstId = parseInt(destId);
-    
-    await patchBed(srcId, { status: "cleaning" });
-    
-    if (bed.patient) {
-      await patchBed(dstId, {
-        status: "occupied",
-        // ✅ Remove occupied_by line – backend will handle patient ID from source bed
-        attributes: {
-          patient_name: bed.patient.name,
-          patient_initials: bed.patient.initials,
-          mrn: bed.patient.mrn,
-          admission_date: bed.patient.admissionDate,
+    try {
+      setLocalBeds(prev => {
+        const updated = [...prev];
+        const srcIdx = updated.findIndex(b => b.id === bed.id);
+        const dstIdx = updated.findIndex(b => b.id === destId);
+        
+        if (srcIdx >= 0 && dstIdx >= 0) {
+          updated[dstIdx] = { 
+            ...updated[dstIdx], 
+            status: "occupied", 
+            patient: updated[srcIdx].patient, 
+            vitals: updated[srcIdx].vitals, 
+            notes: updated[srcIdx].notes, 
+            recentlyChanged: true 
+          };
+          updated[srcIdx] = { 
+            ...updated[srcIdx], 
+            status: "cleaning", 
+            patient: undefined, 
+            vitals: undefined, 
+            notes: [], 
+            recentlyChanged: true 
+          };
         }
+        return updated;
       });
-    }
 
-    toast.success("Patient transferred", {
-      description: `Transfer from Bed ${bed.number} complete`
-    });
-  } catch (error) {
-    setLocalBeds(beds);
-    toast.error("Failed to transfer patient");
-  }
-};
+      const srcId = parseInt(bed.id);
+      const dstId = parseInt(destId);
+      
+      await patchBed(srcId, { status: "cleaning" });
+      
+      if (bed.patient) {
+        await patchBed(dstId, {
+          status: "occupied",
+          attributes: {
+            patient_name: bed.patient.name,
+            patient_initials: bed.patient.initials,
+            mrn: bed.patient.mrn,
+            admission_date: bed.patient.admissionDate,
+          }
+        });
+      }
+
+      toast.success("Patient transferred", {
+        description: `Transfer from Bed ${bed.number} complete`
+      });
+      fetchedPatientRef.current.clear();
+      await refresh();
+    } catch (error) {
+      setLocalBeds(beds.map(b => ({ ...b, patient: b.patient })));
+      toast.error("Failed to transfer patient");
+    }
+  };
 
   const handleMarkAvailable = async (bed: Bed) => {
     try {
       setLocalBeds(prev => prev.map(b => b.id === bed.id ? { 
         ...b, 
         status: "available" as BedStatus, 
+        patient: undefined,
         recentlyChanged: true 
       } : b));
 
@@ -732,8 +811,10 @@ export default function WardPage() {
       toast.success("Bed available", {
         description: `Bed ${bed.number} is now available`
       });
+      fetchedPatientRef.current.clear();
+      await refresh();
     } catch (error) {
-      setLocalBeds(beds);
+      setLocalBeds(beds.map(b => ({ ...b, patient: b.patient })));
       toast.error("Failed to update bed status");
     }
   };
@@ -774,7 +855,6 @@ export default function WardPage() {
 
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900 font-sans text-gray-900 dark:text-gray-100">
-      {/* Mobile Menu Button */}
       <button
         className="lg:hidden fixed bottom-20 right-6 z-50 p-3 bg-primary hover:bg-primary-dark text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -783,7 +863,6 @@ export default function WardPage() {
         {isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
       </button>
 
-      {/* Conditional Sidebar */}
       {userRole === 'helpdesk' ? (
         <HelpDeskSidebar
           isOpen={isSidebarOpen}
@@ -797,17 +876,13 @@ export default function WardPage() {
       )}
 
       {isSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/30 backdrop-blur-sm z-30 lg:hidden"
-          onClick={() => setIsSidebarOpen(false)}
-        />
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-30 lg:hidden" onClick={() => setIsSidebarOpen(false)} />
       )}
 
       <main className="flex-1 flex flex-col overflow-y-auto">
         <Header />
 
         <div className="p-5 lg:p-6 space-y-6">
-          {/* Header with Refresh */}
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <div>
               <h2 className="text-xl lg:text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
@@ -823,7 +898,6 @@ export default function WardPage() {
             </Button>
           </div>
 
-          {/* Stats Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
             {statCards.map((s) => (
               <button
@@ -840,7 +914,6 @@ export default function WardPage() {
             ))}
           </div>
 
-          {/* Tabs and Filters */}
           <Tabs defaultValue="beds" className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
               <TabsList>
@@ -917,7 +990,7 @@ export default function WardPage() {
                     <BedCard
                       key={bed.id}
                       bed={bed}
-                       onAssign={() => {}}  
+                      onAssign={() => {}}
                       onSelect={handleSelect}
                       onDischarge={handleDischarge}
                       onTransfer={(b) => setTransferBed(b)}
@@ -948,7 +1021,6 @@ export default function WardPage() {
         </div>
       </main>
 
-      {/* Dialogs */}
       <BedDetailPanel
         bed={selectedBed}
         open={detailOpen}
@@ -964,7 +1036,6 @@ export default function WardPage() {
         availableBeds={availableBeds}
       />
 
-      {/* Manual Discharge Modal */}
       <Dialog open={!!manualDischargeBed} onOpenChange={() => setManualDischargeBed(null)}>
         <DialogContent>
           <DialogHeader>
