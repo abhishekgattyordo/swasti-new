@@ -1,9 +1,11 @@
 
 
+
 // "use client";
 
 // import { useState, useEffect } from "react";
 // import Card from "@/components/laboratory/Card";
+// import { supabase } from "@/lib/supabaseClient";
 
 // interface LabTest {
 //   id: string;
@@ -35,84 +37,118 @@
 //     active: true,
 //   });
 
-//   // Load tests from localStorage on mount
+//   // ✅ FETCH FROM SUPABASE
 //   useEffect(() => {
-//     const savedTests = localStorage.getItem('lab_tests');
-//     if (savedTests) {
-//       setTests(JSON.parse(savedTests));
-//     } else {
-//       // Default tests
-//       const defaultTests: LabTest[] = [
-//         { id: "1", test_name: "Complete Blood Count", test_code: "CBC001", category: "Blood", price: 500, active: true, created_at: new Date().toISOString() },
-//         { id: "2", test_name: "Blood Glucose", test_code: "GLU002", category: "Blood", price: 150, active: true, created_at: new Date().toISOString() },
-//         { id: "3", test_name: "Urine Routine", test_code: "UR003", category: "Urine", price: 200, active: true, created_at: new Date().toISOString() },
-//       ];
-//       setTests(defaultTests);
-//       localStorage.setItem('lab_tests', JSON.stringify(defaultTests));
-//     }
+//     fetchTests();
 //   }, []);
 
-//   const handleSave = () => {
+//   const fetchTests = async () => {
+//     const { data, error } = await supabase
+//       .from("lab_tests")
+//       .select("*")
+//       .order("created_at", { ascending: false });
+
+//     if (error) {
+//       console.error("Error fetching tests:", error);
+//       return;
+//     }
+
+//     setTests(data || []);
+//   };
+
+//   // ✅ CREATE + UPDATE
+//   const handleSave = async () => {
 //     if (!formData.test_name || !formData.test_code || !formData.price) {
-//       alert('Please fill all required fields');
+//       alert("Please fill all required fields");
 //       return;
 //     }
 
 //     const priceNum = parseFloat(formData.price);
-//     if (isNaN(priceNum) || priceNum <= 0) {
-//       alert('Please enter a valid price');
+
+//     if (editingTest) {
+//       // UPDATE
+//       const { error } = await supabase
+//         .from("lab_tests")
+//         .update({
+//           test_name: formData.test_name,
+//           test_code: formData.test_code,
+//           category: formData.category,
+//           price: priceNum,
+//           active: formData.active,
+//         })
+//         .eq("id", editingTest.id);
+
+//       if (error) {
+//         console.error(error);
+//         alert("Update failed");
+//         return;
+//       }
+//     } else {
+//       // CREATE
+//       const { error } = await supabase.from("lab_tests").insert([
+//         {
+//           test_name: formData.test_name,
+//           test_code: formData.test_code,
+//           category: formData.category,
+//           price: priceNum,
+//           active: formData.active,
+//         },
+//       ]);
+
+//       if (error) {
+//         console.error(error);
+//         alert("Insert failed");
+//         return;
+//       }
+//     }
+
+//     await fetchTests();
+
+//     setShowModal(false);
+//     setEditingTest(null);
+//     setFormData({
+//       test_name: "",
+//       test_code: "",
+//       category: "Blood",
+//       price: "",
+//       active: true,
+//     });
+//   };
+
+//   // ✅ TOGGLE ACTIVE
+//   const toggleActive = async (id: string, currentStatus: boolean) => {
+//     const { error } = await supabase
+//       .from("lab_tests")
+//       .update({ active: !currentStatus })
+//       .eq("id", id);
+
+//     if (error) {
+//       console.error(error);
 //       return;
 //     }
 
-//     if (editingTest) {
-//       const updatedTests = tests.map(test => 
-//         test.id === editingTest.id 
-//           ? { 
-//               ...test, 
-//               test_name: formData.test_name,
-//               test_code: formData.test_code,
-//               category: formData.category,
-//               price: priceNum,
-//               active: formData.active,
-//             }
-//           : test
-//       );
-//       setTests(updatedTests);
-//       localStorage.setItem('lab_tests', JSON.stringify(updatedTests));
-//     } else {
-//       const newTest: LabTest = {
-//         id: Date.now().toString(),
-//         test_name: formData.test_name,
-//         test_code: formData.test_code,
-//         category: formData.category,
-//         price: priceNum,
-//         active: formData.active,
-//         created_at: new Date().toISOString(),
-//       };
-//       const updatedTests = [newTest, ...tests];
-//       setTests(updatedTests);
-//       localStorage.setItem('lab_tests', JSON.stringify(updatedTests));
-//     }
-    
-//     setShowModal(false);
-//     setEditingTest(null);
-//     setFormData({ test_name: "", test_code: "", category: "Blood", price: "", active: true });
-//   };
-
-//   const toggleActive = (id: string) => {
-//     const updatedTests = tests.map(test => 
-//       test.id === id ? { ...test, active: !test.active } : test
+//     setTests((prev) =>
+//       prev.map((test) =>
+//         test.id === id ? { ...test, active: !currentStatus } : test
+//       )
 //     );
-//     setTests(updatedTests);
-//     localStorage.setItem('lab_tests', JSON.stringify(updatedTests));
 //   };
 
-//   const deleteTest = (id: string) => {
-//     if (confirm('Are you sure you want to delete this test?')) {
-//       const updatedTests = tests.filter(test => test.id !== id);
-//       setTests(updatedTests);
-//       localStorage.setItem('lab_tests', JSON.stringify(updatedTests));
+//   // ✅ DELETE
+//   const deleteTest = async (id: string) => {
+//     if (!confirm("Are you sure you want to delete this test?")) return;
+
+//     const { error } = await supabase
+//       .from("lab_tests")
+//       .delete()
+//       .eq("id", id);
+
+//     if (error) {
+//       console.error(error);
+//       return;
 //     }
+
+//     setTests((prev) => prev.filter((test) => test.id !== id));
 //   };
 
 //   const openModal = (test?: LabTest) => {
@@ -127,7 +163,13 @@
 //       });
 //     } else {
 //       setEditingTest(null);
-//       setFormData({ test_name: "", test_code: "", category: "Blood", price: "", active: true });
+//       setFormData({
+//         test_name: "",
+//         test_code: "",
+//         category: "Blood",
+//         price: "",
+//         active: true,
+//       });
 //     }
 //     setShowModal(true);
 //   };
@@ -147,7 +189,9 @@
 //         <div className="flex justify-between items-center">
 //           <div>
 //             <h1 className="text-2xl font-semibold text-gray-900">Test Catalog</h1>
-//             <p className="text-sm text-gray-500 mt-1">Manage laboratory test configurations</p>
+//             <p className="text-sm text-gray-500 mt-1">
+//               Manage laboratory test configurations
+//             </p>
 //           </div>
 //           <button
 //             onClick={() => openModal()}
@@ -161,12 +205,21 @@
 //       <div className="p-8">
 //         <div className="grid grid-cols-1 gap-4">
 //           {tests.map((test) => (
-//             <Card key={test.id} className="p-6 hover:shadow-md transition-shadow">
+//             <Card
+//               key={test.id}
+//               className="p-6 hover:shadow-md transition-shadow"
+//             >
 //               <div className="flex items-center justify-between">
 //                 <div className="flex-1">
 //                   <div className="flex items-center space-x-3 mb-2">
-//                     <h3 className="text-lg font-semibold text-gray-900">{test.test_name}</h3>
-//                     <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getCategoryColor(test.category)}`}>
+//                     <h3 className="text-lg font-semibold text-gray-900">
+//                       {test.test_name}
+//                     </h3>
+//                     <span
+//                       className={`px-2 py-1 rounded-full text-xs font-medium border ${getCategoryColor(
+//                         test.category
+//                       )}`}
+//                     >
 //                       {test.category}
 //                     </span>
 //                     {!test.active && (
@@ -178,17 +231,19 @@
 //                   <p className="text-sm text-gray-500">Code: {test.test_code}</p>
 //                 </div>
 //                 <div className="text-right">
-//                   <p className="text-2xl font-bold text-gray-900">₹{test.price}</p>
+//                   <p className="text-2xl font-bold text-gray-900">
+//                     ₹{test.price}
+//                   </p>
 //                   <div className="flex items-center space-x-3 mt-2">
 //                     <button
-//                       onClick={() => toggleActive(test.id)}
+//                       onClick={() => toggleActive(test.id, test.active)}
 //                       className={`px-3 py-1 rounded-lg text-sm transition-colors ${
-//                         test.active 
-//                           ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' 
-//                           : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+//                         test.active
+//                           ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+//                           : "bg-gray-100 text-gray-600 hover:bg-gray-200"
 //                       }`}
 //                     >
-//                       {test.active ? 'Active' : 'Activate'}
+//                       {test.active ? "Active" : "Activate"}
 //                     </button>
 //                     <button
 //                       onClick={() => openModal(test)}
@@ -235,7 +290,9 @@
 //                   <input
 //                     type="text"
 //                     value={formData.test_name}
-//                     onChange={(e) => setFormData({ ...formData, test_name: e.target.value })}
+//                     onChange={(e) =>
+//                       setFormData({ ...formData, test_name: e.target.value })
+//                     }
 //                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
 //                     placeholder="e.g., Complete Blood Count"
 //                   />
@@ -248,7 +305,9 @@
 //                   <input
 //                     type="text"
 //                     value={formData.test_code}
-//                     onChange={(e) => setFormData({ ...formData, test_code: e.target.value })}
+//                     onChange={(e) =>
+//                       setFormData({ ...formData, test_code: e.target.value })
+//                     }
 //                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
 //                     placeholder="e.g., CBC001"
 //                   />
@@ -260,7 +319,15 @@
 //                   </label>
 //                   <select
 //                     value={formData.category}
-//                     onChange={(e) => setFormData({ ...formData, category: e.target.value as "Blood" | "Urine" | "Other" })}
+//                     onChange={(e) =>
+//                       setFormData({
+//                         ...formData,
+//                         category: e.target.value as
+//                           | "Blood"
+//                           | "Urine"
+//                           | "Other",
+//                       })
+//                     }
 //                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
 //                   >
 //                     <option value="Blood">Blood</option>
@@ -278,7 +345,9 @@
 //                     step="0.01"
 //                     min="0"
 //                     value={formData.price}
-//                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+//                     onChange={(e) =>
+//                       setFormData({ ...formData, price: e.target.value })
+//                     }
 //                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
 //                     placeholder="e.g., 500"
 //                   />
@@ -288,10 +357,14 @@
 //                   <input
 //                     type="checkbox"
 //                     checked={formData.active}
-//                     onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
+//                     onChange={(e) =>
+//                       setFormData({ ...formData, active: e.target.checked })
+//                     }
 //                     className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
 //                   />
-//                   <label className="ml-2 block text-sm text-gray-700">Active</label>
+//                   <label className="ml-2 block text-sm text-gray-700">
+//                     Active
+//                   </label>
 //                 </div>
 //               </div>
 
@@ -322,7 +395,6 @@
 
 import { useState, useEffect } from "react";
 import Card from "@/components/laboratory/Card";
-import { supabase } from "@/lib/supabaseClient";
 
 interface LabTest {
   id: string;
@@ -346,6 +418,8 @@ export default function LabTestsPage() {
   const [tests, setTests] = useState<LabTest[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [editingTest, setEditingTest] = useState<LabTest | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<FormData>({
     test_name: "",
     test_code: "",
@@ -354,26 +428,33 @@ export default function LabTestsPage() {
     active: true,
   });
 
-  // ✅ FETCH FROM SUPABASE
+  // ✅ FETCH FROM API
   useEffect(() => {
     fetchTests();
   }, []);
 
   const fetchTests = async () => {
-    const { data, error } = await supabase
-      .from("lab_tests")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      console.error("Error fetching tests:", error);
-      return;
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch("/api/laboratory/tests");
+      const result = await response.json();
+      
+      if (result.success) {
+        setTests(result.data);
+      } else {
+        setError(result.error || "Failed to fetch tests");
+        console.error("Error fetching tests:", result.error);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      setError("Network error. Please check if the server is running.");
+    } finally {
+      setLoading(false);
     }
-
-    setTests(data || []);
   };
 
-  // ✅ CREATE + UPDATE
+  // ✅ CREATE + UPDATE via API
   const handleSave = async () => {
     if (!formData.test_name || !formData.test_code || !formData.price) {
       alert("Please fill all required fields");
@@ -381,91 +462,121 @@ export default function LabTestsPage() {
     }
 
     const priceNum = parseFloat(formData.price);
-
-    if (editingTest) {
-      // UPDATE
-      const { error } = await supabase
-        .from("lab_tests")
-        .update({
-          test_name: formData.test_name,
-          test_code: formData.test_code,
-          category: formData.category,
-          price: priceNum,
-          active: formData.active,
-        })
-        .eq("id", editingTest.id);
-
-      if (error) {
-        console.error(error);
-        alert("Update failed");
-        return;
-      }
-    } else {
-      // CREATE
-      const { error } = await supabase.from("lab_tests").insert([
-        {
-          test_name: formData.test_name,
-          test_code: formData.test_code,
-          category: formData.category,
-          price: priceNum,
-          active: formData.active,
-        },
-      ]);
-
-      if (error) {
-        console.error(error);
-        alert("Insert failed");
-        return;
-      }
-    }
-
-    await fetchTests();
-
-    setShowModal(false);
-    setEditingTest(null);
-    setFormData({
-      test_name: "",
-      test_code: "",
-      category: "Blood",
-      price: "",
-      active: true,
-    });
-  };
-
-  // ✅ TOGGLE ACTIVE
-  const toggleActive = async (id: string, currentStatus: boolean) => {
-    const { error } = await supabase
-      .from("lab_tests")
-      .update({ active: !currentStatus })
-      .eq("id", id);
-
-    if (error) {
-      console.error(error);
+    if (isNaN(priceNum) || priceNum <= 0) {
+      alert("Please enter a valid price");
       return;
     }
 
-    setTests((prev) =>
-      prev.map((test) =>
-        test.id === id ? { ...test, active: !currentStatus } : test
-      )
-    );
+    try {
+      if (editingTest) {
+        // UPDATE
+        console.log("Updating test:", editingTest.id);
+        const response = await fetch("/api/laboratory/tests", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: editingTest.id,
+            test_name: formData.test_name,
+            test_code: formData.test_code,
+            category: formData.category,
+            price: priceNum,
+            active: formData.active,
+          }),
+        });
+        
+        const result = await response.json();
+        console.log("Update response:", result);
+        
+        if (!result.success) {
+          throw new Error(result.error || "Update failed");
+        }
+        
+        alert("Test updated successfully!");
+      } else {
+        // CREATE
+        console.log("Creating new test");
+        const response = await fetch("/api/laboratory/tests", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            test_name: formData.test_name,
+            test_code: formData.test_code,
+            category: formData.category,
+            price: priceNum,
+            active: formData.active,
+          }),
+        });
+        
+        const result = await response.json();
+        console.log("Create response:", result);
+        
+        if (!result.success) {
+          throw new Error(result.error || "Create failed");
+        }
+        
+        alert("Test added successfully!");
+      }
+
+      await fetchTests();
+      setShowModal(false);
+      setEditingTest(null);
+      setFormData({
+        test_name: "",
+        test_code: "",
+        category: "Blood",
+        price: "",
+        active: true,
+      });
+    } catch (error: any) {
+      console.error("Error saving test:", error);
+      alert(`Error saving test: ${error.message}`);
+    }
   };
 
-  // ✅ DELETE
+  // ✅ TOGGLE ACTIVE via API
+  const toggleActive = async (id: string, currentStatus: boolean) => {
+    try {
+      const response = await fetch("/api/laboratory/tests", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id,
+          active: !currentStatus,
+        }),
+      });
+      
+      const result = await response.json();
+      if (!result.success) throw new Error(result.error);
+      
+      setTests((prev) =>
+        prev.map((test) =>
+          test.id === id ? { ...test, active: !currentStatus } : test
+        )
+      );
+    } catch (error) {
+      console.error("Error toggling test:", error);
+      alert("Error updating test status");
+    }
+  };
+
+  // ✅ DELETE via API
   const deleteTest = async (id: string) => {
     if (!confirm("Are you sure you want to delete this test?")) return;
 
-    const { error } = await supabase
-      .from("lab_tests")
-      .delete()
-      .eq("id", id);
-
-    if (error) {
-      console.error(error);
-      return;
+    try {
+      const response = await fetch(`/api/laboratory/tests?id=${id}`, {
+        method: "DELETE",
+      });
+      
+      const result = await response.json();
+      if (!result.success) throw new Error(result.error);
+      
+      setTests((prev) => prev.filter((test) => test.id !== id));
+      alert("Test deleted successfully!");
+    } catch (error) {
+      console.error("Error deleting test:", error);
+      alert("Error deleting test");
     }
-
-    setTests((prev) => prev.filter((test) => test.id !== id));
   };
 
   const openModal = (test?: LabTest) => {
@@ -499,6 +610,36 @@ export default function LabTestsPage() {
     };
     return colors[category as keyof typeof colors];
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading tests...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="bg-red-50 text-red-600 p-4 rounded-lg">
+            <p className="font-semibold">Error loading tests</p>
+            <p className="text-sm mt-1">{error}</p>
+            <button 
+              onClick={fetchTests}
+              className="mt-3 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">

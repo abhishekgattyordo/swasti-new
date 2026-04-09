@@ -1,4 +1,5 @@
 
+
 // "use client";
 
 // import { useState, useEffect } from "react";
@@ -21,6 +22,7 @@
 //   const [selectedReport, setSelectedReport] = useState<CompletedReport | null>(null);
 //   const [filter, setFilter] = useState("");
 //   const [reports, setReports] = useState<CompletedReport[]>([]);
+//   const [viewMode, setViewMode] = useState<"table" | "cards">("table");
 
 //   // ✅ FETCH COMPLETED REPORTS FROM SUPABASE
 //   useEffect(() => {
@@ -63,7 +65,9 @@
 
 //   const filteredReports = filter
 //     ? reports.filter((r) =>
-//         r.patient_name.toLowerCase().includes(filter.toLowerCase())
+//         r.patient_name.toLowerCase().includes(filter.toLowerCase()) ||
+//         r.order_id.toLowerCase().includes(filter.toLowerCase()) ||
+//         r.patient_id.toLowerCase().includes(filter.toLowerCase())
 //       )
 //     : reports;
 
@@ -71,18 +75,78 @@
 //     window.print();
 //   };
 
+//   const exportToCSV = () => {
+//     const headers = ["Order ID", "Patient Name", "Patient ID", "Tests", "Total Amount", "Completed Date", "Collected Date", "Billing ID"];
+//     const csvData = filteredReports.map(report => [
+//       report.order_id,
+//       report.patient_name,
+//       report.patient_id,
+//       report.tests.map(t => t.name).join("; "),
+//       report.total_amount,
+//       report.completed_date,
+//       report.collected_date || "-",
+//       report.billing_entry_id || "-"
+//     ]);
+    
+//     const csvContent = [headers, ...csvData].map(row => row.join(",")).join("\n");
+//     const blob = new Blob([csvContent], { type: "text/csv" });
+//     const url = URL.createObjectURL(blob);
+//     const a = document.createElement("a");
+//     a.href = url;
+//     a.download = `lab_reports_${new Date().toISOString().split("T")[0]}.csv`;
+//     a.click();
+//     URL.revokeObjectURL(url);
+//   };
+
 //   return (
 //     <div className="min-h-screen bg-gray-50">
 //       <div className="bg-white border-b border-gray-200 px-8 py-6 sticky top-0 z-10">
-//         <div className="flex justify-between items-center">
+//         <div className="flex justify-between items-center flex-wrap gap-4">
 //           <div>
 //             <h1 className="text-2xl font-semibold text-gray-900">Lab Reports</h1>
 //             <p className="text-sm text-gray-500 mt-1">View completed test reports</p>
 //           </div>
+//           <div className="flex items-center space-x-3">
+//             {/* View Toggle */}
+//             <div className="flex bg-gray-100 rounded-lg p-1">
+//               <button
+//                 onClick={() => setViewMode("table")}
+//                 className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+//                   viewMode === "table" 
+//                     ? "bg-white text-primary shadow-sm" 
+//                     : "text-gray-600 hover:text-gray-900"
+//                 }`}
+//               >
+//                 📋 Table View
+//               </button>
+//               <button
+//                 onClick={() => setViewMode("cards")}
+//                 className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+//                   viewMode === "cards" 
+//                     ? "bg-white text-primary shadow-sm" 
+//                     : "text-gray-600 hover:text-gray-900"
+//                 }`}
+//               >
+//                 🃏 Card View
+//               </button>
+//             </div>
+            
+//             {/* Export Button */}
+//             <button
+//               onClick={exportToCSV}
+//               className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm font-medium"
+//             >
+//               📥 Export CSV
+//             </button>
+//           </div>
+//         </div>
+        
+//         {/* Search Bar */}
+//         <div className="mt-4">
 //           <input
 //             type="text"
-//             placeholder="Search by patient name..."
-//             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent w-64"
+//             placeholder="Search by patient name, order ID, or patient ID..."
+//             className="w-full md:w-96 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
 //             value={filter}
 //             onChange={(e) => setFilter(e.target.value)}
 //           />
@@ -90,69 +154,160 @@
 //       </div>
 
 //       <div className="p-8">
-//         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-//           {filteredReports.map((report) => (
-//             <Card
-//               key={report.id}
-//               className="overflow-hidden hover:shadow-lg transition-all duration-300"
-//             >
-//               <div className="p-6">
-//                 <div className="flex justify-between items-start mb-4">
-//                   <div>
-//                     <h3 className="text-lg font-semibold text-gray-900">
-//                       {report.patient_name}
-//                     </h3>
-//                     <p className="text-sm text-gray-500 mt-1">
-//                       {report.order_id} • {report.patient_id}
-//                     </p>
-//                   </div>
-//                   <div className="text-right">
-//                     <p className="text-sm text-gray-500">
-//                       Completed: {report.completed_date}
-//                     </p>
-//                     <p className="text-lg font-bold text-primary mt-1">
-//                       ₹{report.total_amount}
-//                     </p>
-//                   </div>
+//         {/* Table View */}
+//         {viewMode === "table" && (
+//           <Card className="overflow-hidden">
+//             <div className="overflow-x-auto">
+//               <table className="w-full">
+//                 <thead className="bg-gray-50 border-b border-gray-200">
+//                   <tr>
+//                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
+//                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Patient Name</th>
+//                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Patient ID</th>
+//                     <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Tests</th>
+//                     <th className="text-right px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+//                     <th className="text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Completed Date</th>
+//                     <th className="text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+//                   </tr>
+//                 </thead>
+//                 <tbody className="divide-y divide-gray-200">
+//                   {filteredReports.length === 0 ? (
+//                     <tr>
+//                       <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
+//                         No completed reports found
+//                       </td>
+//                     </tr>
+//                   ) : (
+//                     filteredReports.map((report) => (
+//                       <tr key={report.id} className="hover:bg-gray-50 transition-colors">
+//                         <td className="px-6 py-4 text-sm font-mono font-medium text-gray-900">
+//                           {report.order_id}
+//                         </td>
+//                         <td className="px-6 py-4 text-sm font-medium text-gray-900">
+//                           {report.patient_name}
+//                         </td>
+//                         <td className="px-6 py-4 text-sm text-gray-500">
+//                           {report.patient_id}
+//                         </td>
+//                         <td className="px-6 py-4 text-sm text-gray-600">
+//                           <div className="flex flex-wrap gap-1">
+//                             {report.tests.slice(0, 2).map((test, idx) => (
+//                               <span key={idx} className="text-xs">
+//                                 {test.name}{idx < Math.min(report.tests.length, 2) - 1 ? "," : ""}
+//                               </span>
+//                             ))}
+//                             {report.tests.length > 2 && (
+//                               <span className="text-xs text-gray-400">
+//                                 +{report.tests.length - 2} more
+//                               </span>
+//                             )}
+//                           </div>
+//                         </td>
+//                         <td className="px-6 py-4 text-sm font-semibold text-gray-900 text-right">
+//                           ₹{report.total_amount}
+//                         </td>
+//                         <td className="px-6 py-4 text-sm text-gray-500 text-center">
+//                           {report.completed_date}
+//                         </td>
+//                         <td className="px-6 py-4 text-center">
+//                           <button
+//                             onClick={() => setSelectedReport(report)}
+//                             className="px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-lg transition-colors text-xs font-medium"
+//                           >
+//                             View Details
+//                           </button>
+//                         </td>
+//                       </tr>
+//                     ))
+//                   )}
+//                 </tbody>
+//               </table>
+//             </div>
+            
+//             {/* Summary Row */}
+//             {filteredReports.length > 0 && (
+//               <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+//                 <div className="flex justify-between items-center">
+//                   <span className="text-sm text-gray-600">
+//                     Total Reports: <span className="font-semibold text-gray-900">{filteredReports.length}</span>
+//                   </span>
+//                   <span className="text-sm text-gray-600">
+//                     Total Revenue: <span className="font-semibold text-primary">
+//                       ₹{filteredReports.reduce((sum, r) => sum + r.total_amount, 0).toLocaleString()}
+//                     </span>
+//                   </span>
 //                 </div>
+//               </div>
+//             )}
+//           </Card>
+//         )}
 
-//                 <div className="space-y-3 mb-4">
-//                   {report.tests.slice(0, 3).map((test, idx) => (
-//                     <div key={idx} className="border-l-2 border-primary pl-3">
-//                       <p className="text-sm font-medium text-gray-900">
-//                         {test.name}
-//                       </p>
-//                       <p className="text-xs text-gray-600 mt-1 line-clamp-2">
-//                         {test.result || "No result recorded"}
+//         {/* Card View (Original) */}
+//         {viewMode === "cards" && (
+//           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+//             {filteredReports.map((report) => (
+//               <Card
+//                 key={report.id}
+//                 className="overflow-hidden hover:shadow-lg transition-all duration-300"
+//               >
+//                 <div className="p-6">
+//                   <div className="flex justify-between items-start mb-4">
+//                     <div>
+//                       <h3 className="text-lg font-semibold text-gray-900">
+//                         {report.patient_name}
+//                       </h3>
+//                       <p className="text-sm text-gray-500 mt-1">
+//                         {report.order_id} • {report.patient_id}
 //                       </p>
 //                     </div>
-//                   ))}
-//                   {report.tests.length > 3 && (
-//                     <p className="text-xs text-gray-400">
-//                       +{report.tests.length - 3} more tests
-//                     </p>
-//                   )}
+//                     <div className="text-right">
+//                       <p className="text-sm text-gray-500">
+//                         Completed: {report.completed_date}
+//                       </p>
+//                       <p className="text-lg font-bold text-primary mt-1">
+//                         ₹{report.total_amount}
+//                       </p>
+//                     </div>
+//                   </div>
+
+//                   <div className="space-y-3 mb-4">
+//                     {report.tests.slice(0, 3).map((test, idx) => (
+//                       <div key={idx} className="border-l-2 border-primary pl-3">
+//                         <p className="text-sm font-medium text-gray-900">
+//                           {test.name}
+//                         </p>
+//                         <p className="text-xs text-gray-600 mt-1 line-clamp-2">
+//                           {test.result || "No result recorded"}
+//                         </p>
+//                       </div>
+//                     ))}
+//                     {report.tests.length > 3 && (
+//                       <p className="text-xs text-gray-400">
+//                         +{report.tests.length - 3} more tests
+//                       </p>
+//                     )}
+//                   </div>
+
+//                   <button
+//                     onClick={() => setSelectedReport(report)}
+//                     className="w-full mt-2 px-4 py-2 bg-gray-50 text-primary hover:bg-primary hover:text-white rounded-lg transition-colors text-sm font-medium"
+//                   >
+//                     View Full Report
+//                   </button>
 //                 </div>
-
-//                 <button
-//                   onClick={() => setSelectedReport(report)}
-//                   className="w-full mt-2 px-4 py-2 bg-gray-50 text-primary hover:bg-primary hover:text-white rounded-lg transition-colors text-sm font-medium"
-//                 >
-//                   View Full Report
-//                 </button>
-//               </div>
-//             </Card>
-//           ))}
-//         </div>
-
-//         {filteredReports.length === 0 && (
-//           <Card className="p-8 text-center">
-//             <p className="text-gray-500">No completed reports found</p>
-//           </Card>
+//               </Card>
+//             ))}
+            
+//             {filteredReports.length === 0 && (
+//               <Card className="p-8 text-center col-span-2">
+//                 <p className="text-gray-500">No completed reports found</p>
+//               </Card>
+//             )}
+//           </div>
 //         )}
 //       </div>
 
-//       {/* Report Details Modal */}
+//       {/* Report Details Modal - Same as before */}
 //       {selectedReport && (
 //         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
 //           <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl mx-4 max-h-[90vh] overflow-y-auto">
@@ -305,7 +460,6 @@
 
 import { useState, useEffect } from "react";
 import Card from "@/components/laboratory/Card";
-import { supabase } from "@/lib/supabaseClient";
 
 interface CompletedReport {
   id: string;
@@ -324,44 +478,27 @@ export default function ReportsPage() {
   const [filter, setFilter] = useState("");
   const [reports, setReports] = useState<CompletedReport[]>([]);
   const [viewMode, setViewMode] = useState<"table" | "cards">("table");
+  const [loading, setLoading] = useState(true);
 
-  // ✅ FETCH COMPLETED REPORTS FROM SUPABASE
+  // ✅ FETCH COMPLETED REPORTS FROM API
   useEffect(() => {
     fetchReports();
   }, []);
 
   const fetchReports = async () => {
-    const { data, error } = await supabase
-      .from("lab_orders")
-      .select("*")
-      .eq("status", "Completed")
-      .order("completed_date", { ascending: false });
-
-    if (error) {
+    setLoading(true);
+    try {
+      const response = await fetch("/api/laboratory/reports");
+      const result = await response.json();
+      
+      if (result.success) {
+        setReports(result.data);
+      }
+    } catch (error) {
       console.error("Error fetching reports:", error);
-      return;
+    } finally {
+      setLoading(false);
     }
-
-    const formattedReports = (data || []).map((order: any) => ({
-      id: order.id,
-      order_id: order.order_id,
-      patient_name: order.patient_name,
-      patient_id: order.patient_id,
-      tests: order.tests.map((test: any) => ({
-        id: test.id,
-        name: test.name,
-        price: test.price,
-        result:
-          order.results?.find((r: any) => r.test_id === test.id)?.result ||
-          "Result not available",
-      })),
-      total_amount: order.total_amount,
-      completed_date: order.completed_date,
-      collected_date: order.collected_date,
-      billing_entry_id: order.billing_entry_id,
-    }));
-
-    setReports(formattedReports);
   };
 
   const filteredReports = filter
@@ -398,6 +535,17 @@ export default function ReportsPage() {
     a.click();
     URL.revokeObjectURL(url);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading reports...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -543,7 +691,7 @@ export default function ReportsPage() {
           </Card>
         )}
 
-        {/* Card View (Original) */}
+        {/* Card View */}
         {viewMode === "cards" && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {filteredReports.map((report) => (
@@ -608,7 +756,7 @@ export default function ReportsPage() {
         )}
       </div>
 
-      {/* Report Details Modal - Same as before */}
+      {/* Report Details Modal */}
       {selectedReport && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl mx-4 max-h-[90vh] overflow-y-auto">
