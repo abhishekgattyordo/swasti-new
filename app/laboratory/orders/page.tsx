@@ -1,5 +1,6 @@
 
 
+
 // "use client";
 
 // import { useState, useEffect } from "react";
@@ -28,6 +29,10 @@
 //   collected_date?: string;
 //   completed_date?: string;
 //   billing_entry_id?: string;
+//   admission_id?: string;
+//   admission_date?: string;
+//   ward_id?: number;
+//   bed_id?: number;
 //   created_at?: string;
 // }
 
@@ -38,6 +43,19 @@
 //   registration_id?: string;
 //   dob?: string;
 //   gender?: string;
+// }
+
+// interface AdmissionInfo {
+//   isAdmitted: boolean;
+//   admission: {
+//     id: number;
+//     admissionDate: string;
+//     wardId: number;
+//     bedId: number;
+//     reason: string;
+//     diagnosis: string | null;
+//     status: string;
+//   } | null;
 // }
 
 // export default function LabOrdersPage() {
@@ -55,6 +73,8 @@
 //   const [availableTests, setAvailableTests] = useState<LabTest[]>([]);
 //   const [orders, setOrders] = useState<LabOrder[]>([]);
 //   const [loading, setLoading] = useState(true);
+//   const [admissionInfo, setAdmissionInfo] = useState<AdmissionInfo | null>(null);
+//   const [checkingAdmission, setCheckingAdmission] = useState(false);
 
 //   // ✅ FETCH FROM API
 //   useEffect(() => {
@@ -83,6 +103,35 @@
 //       console.error("Error fetching data:", error);
 //     } finally {
 //       setLoading(false);
+//     }
+//   };
+
+//   // ✅ CHECK ADMISSION STATUS
+//   const checkAdmissionStatus = async (patientId: string) => {
+//     setCheckingAdmission(true);
+//     try {
+//       const response = await fetch(`/api/lab/admission-status?patientId=${patientId}`);
+//       const result = await response.json();
+      
+//       console.log("Admission status response:", result);
+      
+//       if (result.success && result.data?.isAdmitted) {
+//         setAdmissionInfo(result.data);
+//         // Auto-select IP if patient is admitted
+//         setSelectedVisitType("IP");
+//         return true;
+//       } else {
+//         setAdmissionInfo(null);
+//         // Auto-select OP if patient is not admitted
+//         setSelectedVisitType("OP");
+//         return false;
+//       }
+//     } catch (error) {
+//       console.error("Error checking admission:", error);
+//       setAdmissionInfo(null);
+//       return false;
+//     } finally {
+//       setCheckingAdmission(false);
 //     }
 //   };
 
@@ -124,6 +173,8 @@
 //         if (patients.length === 1) {
 //           setSelectedPatient(patients[0]);
 //           setShowPatientDropdown(false);
+//           // Check admission status for the selected patient
+//           await checkAdmissionStatus(patients[0].id);
 //         }
 //       } else {
 //         setSearchError("No patient found with this phone number");
@@ -142,10 +193,12 @@
 //     }
 //   };
 
-//   const selectPatient = (patient: Patient) => {
+//   const selectPatient = async (patient: Patient) => {
 //     setSelectedPatient(patient);
 //     setShowPatientDropdown(false);
 //     setPhoneSearch(patient.phone);
+//     // Check admission status when patient is selected
+//     await checkAdmissionStatus(patient.id);
 //   };
 
 //   // ✅ CREATE ORDER VIA API
@@ -168,10 +221,23 @@
 
 //     const today = new Date().toISOString().split("T")[0];
 
-//     // Generate visit ID based on visit type
-//     const visitId = selectedVisitType === "OP" 
-//       ? selectedPatient.registration_id || `OP-${Date.now()}`
-//       : `IP-${Date.now()}`;
+//     // Generate visit ID based on visit type and admission status
+//     let visitId = "";
+//     let admissionData = {};
+
+//     if (selectedVisitType === "IP" && admissionInfo?.isAdmitted && admissionInfo.admission) {
+//       // Use admission details for IP visit
+//       visitId = `IP-${admissionInfo.admission.id}`;
+//       admissionData = {
+//         admission_id: admissionInfo.admission.id.toString(),
+//         admission_date: admissionInfo.admission.admissionDate,
+//         ward_id: admissionInfo.admission.wardId,
+//         bed_id: admissionInfo.admission.bedId,
+//       };
+//     } else {
+//       // Use registration ID for OP visit
+//       visitId = selectedPatient.registration_id || `OP-${Date.now()}`;
+//     }
 
 //     // Map tests to the format expected by the database
 //     const testsForDb = selectedTestsData.map((t) => ({
@@ -191,7 +257,10 @@
 //       status: "Ordered",
 //       order_date: today,
 //       billing_entry_id: `BILL-${Date.now()}`,
+//       ...admissionData,
 //     };
+
+//     console.log("Order Data being sent:", orderData);
 
 //     try {
 //       const response = await fetch("/api/laboratory/orders", {
@@ -206,7 +275,13 @@
 //         throw new Error(result.error);
 //       }
 
-//       alert(`✅ Order Created Successfully!\n\nOrder ID: ${orderId}\nPatient: ${selectedPatient.name}\nTotal Amount: ₹${totalAmount}\nAmount added to patient's account.`);
+//       let message = `✅ Order Created Successfully!\n\nOrder ID: ${orderId}\nPatient: ${selectedPatient.name}\nTotal Amount: ₹${totalAmount}`;
+      
+//       if (selectedVisitType === "IP" && admissionInfo?.isAdmitted && admissionInfo.admission) {
+//         message += `\n\n🏥 Admission Details:\nAdmission ID: ${admissionInfo.admission.id}\nWard: ${admissionInfo.admission.wardId}\nBed: ${admissionInfo.admission.bedId}`;
+//       }
+
+//       alert(message);
 
 //       // Refresh data
 //       await fetchData();
@@ -219,6 +294,7 @@
 //       setPhoneSearch("");
 //       setShowPatientDropdown(false);
 //       setSelectedVisitType("OP");
+//       setAdmissionInfo(null);
 //     } catch (error) {
 //       console.error("Error creating order:", error);
 //       alert("Error creating order. Please try again.");
@@ -359,6 +435,12 @@
 //                     {order.order_id} • {order.visit_type} Visit: {order.visit_id} •{" "}
 //                     {order.order_date}
 //                   </p>
+//                   {/* Show admission details if IP visit */}
+//                   {order.visit_type === "IP" && order.admission_id && (
+//                     <p className="text-xs text-blue-600 mb-2">
+//                       🏥 Admission ID: {order.admission_id} | Ward: {order.ward_id} | Bed: {order.bed_id}
+//                     </p>
+//                   )}
 //                   <div className="flex flex-wrap gap-2">
 //                     {order.tests.map((test, idx) => (
 //                       <span
@@ -418,6 +500,7 @@
 //                     setPhoneSearch("");
 //                     setShowPatientDropdown(false);
 //                     setSelectedVisitType("OP");
+//                     setAdmissionInfo(null);
 //                   }}
 //                   className="text-gray-400 hover:text-gray-600"
 //                 >
@@ -442,6 +525,7 @@
 //                         setSearchError("");
 //                         setSelectedPatient(null);
 //                         setShowPatientDropdown(false);
+//                         setAdmissionInfo(null);
 //                       }}
 //                       className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
 //                       maxLength={10}
@@ -512,7 +596,37 @@
 //                   </div>
 //                 )}
 
-//                 {/* Visit Type */}
+//                 {/* Admission Status Display */}
+//                 {checkingAdmission && (
+//                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+//                     <p className="text-sm text-blue-600">Checking admission status...</p>
+//                   </div>
+//                 )}
+
+//                 {admissionInfo?.isAdmitted && admissionInfo.admission && selectedPatient && (
+//                   <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+//                     <p className="text-sm font-medium text-purple-900 mb-2">
+//                       🏥 Patient is Currently Admitted
+//                     </p>
+//                     <div className="space-y-1">
+//                       <p className="text-sm">
+//                         <span className="font-medium">Admission ID:</span> {admissionInfo.admission.id}
+//                       </p>
+//                       <p className="text-sm">
+//                         <span className="font-medium">Admission Date:</span> {admissionInfo.admission.admissionDate}
+//                       </p>
+//                       <p className="text-sm">
+//                         <span className="font-medium">Ward ID:</span> {admissionInfo.admission.wardId} | 
+//                         <span className="font-medium ml-2">Bed ID:</span> {admissionInfo.admission.bedId}
+//                       </p>
+//                       <p className="text-sm">
+//                         <span className="font-medium">Reason:</span> {admissionInfo.admission.reason}
+//                       </p>
+//                     </div>
+//                   </div>
+//                 )}
+
+//                 {/* Visit Type - Auto-selected based on admission status */}
 //                 {selectedPatient && (
 //                   <div>
 //                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -528,6 +642,7 @@
 //                             setSelectedVisitType(e.target.value as "OP")
 //                           }
 //                           className="mr-2"
+//                           disabled={admissionInfo?.isAdmitted}
 //                         />
 //                         OP Visit
 //                       </label>
@@ -542,8 +657,16 @@
 //                           className="mr-2"
 //                         />
 //                         IP Admission
+//                         {admissionInfo?.isAdmitted && (
+//                           <span className="ml-2 text-xs text-green-600">(Auto-selected - Patient admitted)</span>
+//                         )}
 //                       </label>
 //                     </div>
+//                     {admissionInfo?.isAdmitted && selectedVisitType === "OP" && (
+//                       <p className="text-xs text-amber-600 mt-1">
+//                         Note: This patient is currently admitted. IP admission is recommended.
+//                       </p>
+//                     )}
 //                   </div>
 //                 )}
 
@@ -649,6 +772,7 @@
 //                     setPhoneSearch("");
 //                     setShowPatientDropdown(false);
 //                     setSelectedVisitType("OP");
+//                     setAdmissionInfo(null);
 //                   }}
 //                   className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
 //                 >
@@ -669,7 +793,6 @@
 //     </div>
 //   );
 // }
-
 
 "use client";
 
@@ -871,7 +994,7 @@ export default function LabOrdersPage() {
     await checkAdmissionStatus(patient.id);
   };
 
-  // ✅ CREATE ORDER VIA API
+  // ✅ CREATE ORDER VIA API (UPDATED VERSION)
   const handleOrderTest = async () => {
     if (!selectedPatient || selectedTests.length === 0) {
       alert("Please select a patient and at least one test");
@@ -884,32 +1007,32 @@ export default function LabOrdersPage() {
 
     const totalAmount = selectedTestsData.reduce((sum, t) => sum + t.price, 0);
 
-    // Generate order ID
     const year = new Date().getFullYear();
     const randomNum = Math.floor(Math.random() * 1000);
     const orderId = `LAB-${year}-${String(randomNum).padStart(3, "0")}`;
-
     const today = new Date().toISOString().split("T")[0];
 
-    // Generate visit ID based on visit type and admission status
     let visitId = "";
     let admissionData = {};
 
+    console.log("=== CHECKING ADMISSION STATUS ===");
+    console.log("selectedVisitType:", selectedVisitType);
+    console.log("admissionInfo:", admissionInfo);
+
     if (selectedVisitType === "IP" && admissionInfo?.isAdmitted && admissionInfo.admission) {
-      // Use admission details for IP visit
       visitId = `IP-${admissionInfo.admission.id}`;
       admissionData = {
-        admission_id: admissionInfo.admission.id.toString(),
+        admission_id: String(admissionInfo.admission.id),
         admission_date: admissionInfo.admission.admissionDate,
-        ward_id: admissionInfo.admission.wardId,
-        bed_id: admissionInfo.admission.bedId,
+        ward_id: Number(admissionInfo.admission.wardId),
+        bed_id: Number(admissionInfo.admission.bedId),
       };
+      console.log("✅ IP Visit - Adding admission data:", admissionData);
     } else {
-      // Use registration ID for OP visit
       visitId = selectedPatient.registration_id || `OP-${Date.now()}`;
+      console.log("❌ OP Visit - No admission data");
     }
 
-    // Map tests to the format expected by the database
     const testsForDb = selectedTestsData.map((t) => ({
       id: t.id,
       name: t.test_name,
@@ -930,7 +1053,8 @@ export default function LabOrdersPage() {
       ...admissionData,
     };
 
-    console.log("Order Data being sent:", orderData);
+    console.log("=== FINAL ORDER DATA ===");
+    console.log(JSON.stringify(orderData, null, 2));
 
     try {
       const response = await fetch("/api/laboratory/orders", {
@@ -940,6 +1064,8 @@ export default function LabOrdersPage() {
       });
       
       const result = await response.json();
+      console.log("=== API RESPONSE ===");
+      console.log(result);
       
       if (!result.success) {
         throw new Error(result.error);
@@ -952,11 +1078,8 @@ export default function LabOrdersPage() {
       }
 
       alert(message);
-
-      // Refresh data
       await fetchData();
 
-      // Reset modal state
       setShowOrderModal(false);
       setSelectedTests([]);
       setSelectedPatient(null);
@@ -966,7 +1089,7 @@ export default function LabOrdersPage() {
       setSelectedVisitType("OP");
       setAdmissionInfo(null);
     } catch (error) {
-      console.error("Error creating order:", error);
+      console.error("❌ Error creating order:", error);
       alert("Error creating order. Please try again.");
     }
   };
