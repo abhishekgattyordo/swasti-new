@@ -1,9 +1,8 @@
 // app/patient/medical-records/page.tsx
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Sidebar from "@/components/patient/Sidebar";
-import Header from "@/components/patient/Header";
 import {
   Select,
   SelectContent,
@@ -23,149 +22,67 @@ import {
 } from "@/components/ui/popover";
 import {
   Calendar,
-  Download,
-  Eye,
-  FileText,
   FlaskConical,
   HeartPulse,
-  Image,
   Pill,
-  User,
   ChevronUp,
   ChevronDown,
   Menu,
   X,
   Filter,
+  Loader2,
 } from "lucide-react";
+import { format } from "date-fns";
 
-// Types
-interface MedicalRecord {
-  id: number;
+// ---------- Types ----------
+interface LabOrderTest {
+  id: string;
   name: string;
-  ref: string;
-  doctor: string;
-  specialty: string;
-  date: string;
-  status: "Ready" | "Processing Report" | "Pending" | "Reviewed";
-  type: "lab" | "imaging" | "document";
+  price: number;
 }
 
-// Sample data
-const records: MedicalRecord[] = [
-  {
-    id: 1,
-    name: "Complete Blood Count (CBC)",
-    ref: "LR-8902",
-    doctor: "Dr. Emily Chen",
-    specialty: "Cardiologist",
-    date: "2023-10-24",
-    status: "Ready",
-    type: "lab",
-  },
-  {
-    id: 2,
-    name: "Lipid Panel",
-    ref: "LR-8901",
-    doctor: "Dr. Emily Chen",
-    specialty: "Cardiologist",
-    date: "2023-10-24",
-    status: "Ready",
-    type: "lab",
-  },
-  {
-    id: 3,
-    name: "MRI - Lumbar Spine",
-    ref: "IMG-4421",
-    doctor: "Dr. Alan Grant",
-    specialty: "Neurologist",
-    date: "2023-09-12",
-    status: "Processing Report",
-    type: "imaging",
-  },
-  {
-    id: 4,
-    name: "Comprehensive Metabolic Panel",
-    ref: "LR-8002",
-    doctor: "Dr. Emily Chen",
-    specialty: "Cardiologist",
-    date: "2023-08-05",
-    status: "Ready",
-    type: "lab",
-  },
-  {
-    id: 5,
-    name: "Urinalysis",
-    ref: "LR-7721",
-    doctor: "Dr. Sarah Connor",
-    specialty: "General Practitioner",
-    date: "2023-07-12",
-    status: "Ready",
-    type: "lab",
-  },
-  {
-    id: 6,
-    name: "Chest X-Ray",
-    ref: "IMG-5123",
-    doctor: "Dr. Alan Grant",
-    specialty: "Neurologist",
-    date: "2023-06-30",
-    status: "Reviewed",
-    type: "imaging",
-  },
-  {
-    id: 7,
-    name: "Discharge Summary",
-    ref: "DOC-001",
-    doctor: "Dr. Lisa Cuddy",
-    specialty: "Internal Medicine",
-    date: "2023-05-18",
-    status: "Ready",
-    type: "document",
-  },
-];
+interface LabOrderResult {
+  test_id: string;
+  result: string;
+  entered_at: string;
+}
 
-// Quick stats
-const quickStats = [
-  {
-    title: "Active Prescriptions",
-    value: "3",
-    subtext: "Refills available",
-    icon: Pill,
-  },
-  {
-    title: "Next Appointment",
-    value: "Nov 12",
-    subtext: "10:00 AM",
-    icon: Calendar,
-  },
-  {
-    title: "Unread Messages",
-    value: "0",
-    subtext: "No new messages",
-    icon: HeartPulse,
-  },
-];
+interface LabOrder {
+  id: string;
+  order_id: string;
+  patient_id: string;
+  patient_name: string;
+  visit_type: string;
+  visit_id: string;
+  tests: LabOrderTest[];
+  total_amount: string;
+  status: "Ordered" | "Collected" | "Completed";
+  order_date: string;
+  collected_date: string | null;
+  completed_date: string | null;
+  billing_entry_id: string;
+  results: LabOrderResult[];
+  created_at: string;
+}
 
-// Status badge color mapping
+// Flattened record for display
+interface MedicalRecord {
+  id: string;            // test id
+  orderId: string;       // lab order number
+  name: string;          // test name
+  date: string;          // order_date
+  status: string;        // order status
+  type: "lab";           // always lab for now
+  result?: string;       // from results if available
+  reference: string;     // order_id as ref
+}
+
 const statusColorMap: Record<string, string> = {
-  Ready:
-    "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800",
-  "Processing Report":
-    "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 border-amber-200 dark:border-amber-800",
-  Pending:
-    "bg-slate-100 text-slate-800 dark:bg-slate-800/50 dark:text-slate-300 border-slate-200 dark:border-slate-700",
-  Reviewed:
-    "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 border-blue-200 dark:border-blue-800",
+  Ordered: "bg-slate-100 text-slate-800 dark:bg-slate-800/50 dark:text-slate-300 border-slate-200",
+  Collected: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 border-amber-200",
+  Completed: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300 border-emerald-200",
 };
 
-// Type icon mapping
-const typeIconMap = {
-  lab: FlaskConical,
-  imaging: Image,
-  document: FileText,
-};
-
-// Column Filter Types
 interface ColumnFilter {
   column: string;
   value: string;
@@ -176,7 +93,7 @@ interface DateRangeFilter {
   to: string;
 }
 
-// Column Filter Component
+// Column Filter Popover
 function ColumnFilterPopover({
   column,
   placeholder = "Filter...",
@@ -209,9 +126,7 @@ function ColumnFilterPopover({
       <PopoverTrigger asChild>
         <button
           className={`ml-1 p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
-            currentValue
-              ? "text-green-600 dark:text-green-400"
-              : "text-gray-400"
+            currentValue ? "text-green-600 dark:text-green-400" : "text-gray-400"
           }`}
         >
           <Filter className="h-3.5 w-3.5" />
@@ -251,12 +166,7 @@ function ColumnFilterPopover({
             </div>
           )}
           <div className="flex justify-between gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleClear}
-              className="flex-1"
-            >
+            <Button variant="outline" size="sm" onClick={handleClear} className="flex-1">
               Clear
             </Button>
             <Button size="sm" onClick={handleApply} className="flex-1">
@@ -269,7 +179,7 @@ function ColumnFilterPopover({
   );
 }
 
-// Date Range Filter Component
+// Date Range Filter Popover
 function DateRangeFilterPopover({
   column,
   onFilter,
@@ -334,12 +244,7 @@ function DateRangeFilterPopover({
             </div>
           </div>
           <div className="flex justify-between gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleClear}
-              className="flex-1"
-            >
+            <Button variant="outline" size="sm" onClick={handleClear} className="flex-1">
               Clear
             </Button>
             <Button size="sm" onClick={handleApply} className="flex-1">
@@ -353,109 +258,138 @@ function DateRangeFilterPopover({
 }
 
 export default function MedicalRecordsPage() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [dateFilter, setDateFilter] = useState("last6months");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [activeTab, setActiveTab] = useState("all");
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [columnFilters, setColumnFilters] = useState<ColumnFilter[]>([]);
-  const [dateFilters, setDateFilters] = useState<
-    Record<string, DateRangeFilter>
-  >({});
-  const [sortConfig, setSortConfig] = useState<{
-    key: keyof MedicalRecord;
-    direction: "asc" | "desc";
-  }>({ key: "date", direction: "desc" });
+  const [dateFilters, setDateFilters] = useState<Record<string, DateRangeFilter>>({});
+  const [sortConfig, setSortConfig] = useState<{ key: keyof MedicalRecord; direction: "asc" | "desc" }>({
+    key: "date",
+    direction: "desc",
+  });
 
-  // Helper to parse date
-  const parseDate = (dateStr: string): Date => {
-    return new Date(dateStr);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [labOrders, setLabOrders] = useState<LabOrder[]>([]);
+
+  const getPatientId = (): string | null => {
+    try {
+      const user = JSON.parse(localStorage.getItem("user") || "null");
+      return user?.patient_id || user?.id || null;
+    } catch {
+      return null;
+    }
   };
 
-  // Filter records
+  useEffect(() => {
+    const patientId = getPatientId();
+    if (!patientId) {
+      setError("Patient not identified. Please log in.");
+      setLoading(false);
+      return;
+    }
+
+    const fetchLabOrders = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch(`/api/patient/lab-orders?patientId=${patientId}`);
+        const result = await res.json();
+        if (result.success) {
+          setLabOrders(result.data);
+        } else {
+          setError(result.message || "Failed to load medical records");
+        }
+      } catch (err) {
+        console.error(err);
+        setError("Network error. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchLabOrders();
+  }, []);
+
+  // Flatten lab orders
+  const records: MedicalRecord[] = useMemo(() => {
+    const flat: MedicalRecord[] = [];
+    for (const order of labOrders) {
+      for (const test of order.tests) {
+        const resultEntry = order.results?.find((r) => r.test_id === test.id);
+        flat.push({
+          id: test.id,
+          orderId: order.order_id,
+          name: test.name,
+          date: order.order_date,
+          status: order.status,
+          type: "lab",
+          result: resultEntry?.result,
+          reference: order.order_id,
+        });
+      }
+    }
+    return flat;
+  }, [labOrders]);
+
+  // Filtering and sorting (fixed for undefined values)
   const filteredRecords = useMemo(() => {
     let filtered = records.filter((record) => {
-      // Global search
       const matchesSearch =
         record.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        record.doctor.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        record.specialty.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        record.ref.toLowerCase().includes(searchQuery.toLowerCase());
+        record.orderId.toLowerCase().includes(searchQuery.toLowerCase());
 
-      // Tab filter
       const matchesTab = activeTab === "all" || record.type === activeTab;
 
-      // Category filter
-      const matchesCategory =
-        categoryFilter === "all" ||
-        record.specialty.toLowerCase().includes(categoryFilter.toLowerCase());
-
-      // Column filters
       const matchesColumnFilters = columnFilters.every((filter) => {
-        const value = record[filter.column as keyof MedicalRecord];
-        return value
-          ?.toString()
-          .toLowerCase()
-          .includes(filter.value.toLowerCase());
+        let value: string | undefined;
+        switch (filter.column) {
+          case "name":
+            value = record.name;
+            break;
+          case "status":
+            value = record.status;
+            break;
+          case "orderId":
+            value = record.orderId;
+            break;
+          default:
+            return true;
+        }
+        return value?.toLowerCase().includes(filter.value.toLowerCase());
       });
 
-      // Date range filters
-      const matchesDateFilters = Object.entries(dateFilters).every(
-        ([column, range]) => {
-          if (!range.from && !range.to) return true;
-          const patientDateStr = record[
-            column as keyof MedicalRecord
-          ] as string;
-          if (!patientDateStr) return false;
-          const patientDate = parseDate(patientDateStr);
-
-          if (range.from && range.to) {
-            const fromDate = parseDate(range.from);
-            const toDate = parseDate(range.to);
-            return patientDate >= fromDate && patientDate <= toDate;
-          } else if (range.from) {
-            const fromDate = parseDate(range.from);
-            return patientDate >= fromDate;
-          } else if (range.to) {
-            const toDate = parseDate(range.to);
-            return patientDate <= toDate;
-          }
-          return true;
-        },
-      );
-
-      return (
-        matchesSearch &&
-        matchesTab &&
-        matchesCategory &&
-        matchesColumnFilters &&
-        matchesDateFilters
-      );
+      let matchesDateFilters = true;
+      const dateRange = dateFilters.date;
+      if (dateRange && (dateRange.from || dateRange.to)) {
+        const recordDate = new Date(record.date);
+        if (dateRange.from && new Date(recordDate) < new Date(dateRange.from)) matchesDateFilters = false;
+        if (dateRange.to && new Date(recordDate) > new Date(dateRange.to)) matchesDateFilters = false;
+      }
+      return matchesSearch && matchesTab && matchesColumnFilters && matchesDateFilters;
     });
 
-    // Sort
+    // Sorting – handle undefined values safely
     filtered.sort((a, b) => {
-      let aVal = a[sortConfig.key];
-      let bVal = b[sortConfig.key];
+      let aVal: string | number = a[sortConfig.key] as string | number;
+      let bVal: string | number = b[sortConfig.key] as string | number;
+
       if (sortConfig.key === "date") {
         aVal = new Date(a.date).getTime();
         bVal = new Date(b.date).getTime();
+      } else {
+        // Convert undefined to empty string for string comparisons
+        if (aVal === undefined) aVal = "";
+        if (bVal === undefined) bVal = "";
       }
+
       if (aVal < bVal) return sortConfig.direction === "asc" ? -1 : 1;
       if (aVal > bVal) return sortConfig.direction === "asc" ? 1 : -1;
       return 0;
     });
-
     return filtered;
-  }, [
-    searchQuery,
-    dateFilter,
-    categoryFilter,
-    activeTab,
-    columnFilters,
-    dateFilters,
-    sortConfig,
-  ]);
+  }, [records, searchQuery, activeTab, columnFilters, dateFilters, sortConfig]);
 
   const handleSort = (key: keyof MedicalRecord) => {
     setSortConfig((prev) => ({
@@ -500,25 +434,33 @@ export default function MedicalRecordsPage() {
     setActiveTab("all");
   };
 
+  if (loading) {
+    return (
+      <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-green-600" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900 items-center justify-center">
+        <div className="text-center text-red-600">{error}</div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Mobile Menu Button */}
+      {/* Mobile menu button */}
       <button
         className="lg:hidden fixed bottom-20 right-6 z-50 p-3 bg-green-600 hover:bg-green-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center"
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-        aria-label="Toggle menu"
       >
-        {isSidebarOpen ? (
-          <X className="w-5 h-5" />
-        ) : (
-          <Menu className="w-5 h-5" />
-        )}
+        {isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
       </button>
 
-      {/* Sidebar */}
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-
-      {/* Backdrop overlay for mobile */}
       {isSidebarOpen && (
         <div
           className="fixed inset-0 bg-black/30 backdrop-blur-sm z-30 lg:hidden"
@@ -526,23 +468,18 @@ export default function MedicalRecordsPage() {
         />
       )}
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col w-full lg:ml-0">
         <main className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
-          {/* Page Header with Mobile Background */}
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
                 My Medical Records
               </h1>
               <p className="text-gray-500 dark:text-gray-400 text-sm">
-                View and manage your lab results, imaging reports, and health
-                documents.
+                Lab reports and test results
               </p>
             </div>
-
-            {(columnFilters.length > 0 ||
-              Object.keys(dateFilters).length > 0) && (
+            {(columnFilters.length > 0 || Object.keys(dateFilters).length > 0) && (
               <Button
                 variant="outline"
                 size="sm"
@@ -556,23 +493,6 @@ export default function MedicalRecordsPage() {
 
           {/* Filters and Tabs */}
           <div className="flex flex-col gap-4 mb-6">
-            {/* Tabs - Scrollable on mobile */}
-            <div className="overflow-x-auto pb-2 -mx-4 px-4">
-              <Tabs
-                value={activeTab}
-                onValueChange={setActiveTab}
-                className="min-w-max"
-              >
-                <TabsList className="inline-flex w-auto">
-                  <TabsTrigger value="all">All</TabsTrigger>
-                  <TabsTrigger value="lab">Labs</TabsTrigger>
-                  <TabsTrigger value="imaging">Imaging</TabsTrigger>
-                  <TabsTrigger value="document">Documents</TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </div>
-
-            {/* Filters - Stack on mobile */}
             <div className="flex flex-col sm:flex-row gap-3">
               <Select value={dateFilter} onValueChange={setDateFilter}>
                 <SelectTrigger className="w-full sm:w-[160px]">
@@ -584,73 +504,41 @@ export default function MedicalRecordsPage() {
                   <SelectItem value="all">All Time</SelectItem>
                 </SelectContent>
               </Select>
-
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger className="w-full sm:w-[160px]">
-                  <SelectValue placeholder="Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  <SelectItem value="cardiology">Cardiology</SelectItem>
-                  <SelectItem value="neurology">Neurology</SelectItem>
-                  <SelectItem value="general">General</SelectItem>
-                </SelectContent>
-              </Select>
+              <Input
+                placeholder="Search by test or order ID..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full sm:w-64"
+              />
             </div>
           </div>
 
-          {/* Records Table with Column Filters and Vertical Lines */}
+          {/* Records Table – no Actions column */}
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left min-w-[1000px] md:min-w-full border-collapse">
+              <table className="w-full text-sm text-left min-w-[800px] border-collapse">
                 <thead className="bg-gray-50 dark:bg-gray-900/50 text-xs uppercase text-gray-500 dark:text-gray-400">
                   <tr className="border-b border-gray-200 dark:border-gray-700">
                     <th className="px-4 sm:px-6 py-3 font-medium border-r border-gray-200 dark:border-gray-700">
                       <div className="flex items-center">
-                        Record Name
+                        Test Name
                         <ColumnFilterPopover
                           column="name"
-                          placeholder="Filter by name..."
+                          placeholder="Filter by test..."
                           onFilter={handleColumnFilter}
-                          currentValue={
-                            columnFilters.find((f) => f.column === "name")
-                              ?.value
-                          }
+                          currentValue={columnFilters.find((f) => f.column === "name")?.value}
                         />
                         <SortIcon columnKey="name" />
                       </div>
                     </th>
                     <th className="px-4 sm:px-6 py-3 font-medium border-r border-gray-200 dark:border-gray-700">
-                      <div className="flex items-center">
-                        Type
-                        <ColumnFilterPopover
-                          column="type"
-                          options={["lab", "imaging", "document"]}
-                          onFilter={handleColumnFilter}
-                          currentValue={
-                            columnFilters.find((f) => f.column === "type")
-                              ?.value
-                          }
-                        />
-                      </div>
-                    </th>
-                    <th className="px-4 sm:px-6 py-3 font-medium border-r border-gray-200 dark:border-gray-700">
-                      <div className="flex items-center">
-                        Doctor
-                        <ColumnFilterPopover
-                          column="doctor"
-                          placeholder="Filter by doctor..."
-                          options={Array.from(
-                            new Set(records.map((r) => r.doctor)),
-                          )}
-                          onFilter={handleColumnFilter}
-                          currentValue={
-                            columnFilters.find((f) => f.column === "doctor")
-                              ?.value
-                          }
-                        />
-                        <SortIcon columnKey="doctor" />
-                      </div>
+                      Order ID
+                      <ColumnFilterPopover
+                        column="orderId"
+                        placeholder="Filter by order..."
+                        onFilter={handleColumnFilter}
+                        currentValue={columnFilters.find((f) => f.column === "orderId")?.value}
+                      />
                     </th>
                     <th className="px-4 sm:px-6 py-3 font-medium border-r border-gray-200 dark:border-gray-700">
                       <div className="flex items-center">
@@ -668,132 +556,55 @@ export default function MedicalRecordsPage() {
                         Status
                         <ColumnFilterPopover
                           column="status"
-                          options={[
-                            "Ready",
-                            "Processing Report",
-                            "Pending",
-                            "Reviewed",
-                          ]}
+                          options={["Ordered", "Collected", "Completed"]}
                           onFilter={handleColumnFilter}
-                          currentValue={
-                            columnFilters.find((f) => f.column === "status")
-                              ?.value
-                          }
+                          currentValue={columnFilters.find((f) => f.column === "status")?.value}
                         />
                       </div>
                     </th>
-                    <th className="px-4 sm:px-6 py-3 font-medium text-right">
-                      Actions
-                    </th>
+                    <th className="px-4 sm:px-6 py-3 font-medium">Result</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {filteredRecords.map((record) => {
-                    const TypeIcon = typeIconMap[record.type];
-                    return (
-                      <tr
-                        key={record.id}
-                        className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-                      >
-                        <td className="px-4 sm:px-6 py-4 border-r border-gray-200 dark:border-gray-700">
-                          <div className="flex items-center gap-3">
-                            <div
-                              className={`p-2 rounded-lg flex-shrink-0 ${
-                                record.type === "lab"
-                                  ? "bg-red-50 dark:bg-red-900/20"
-                                  : record.type === "imaging"
-                                    ? "bg-blue-50 dark:bg-blue-900/20"
-                                    : "bg-purple-50 dark:bg-purple-900/20"
-                              }`}
-                            >
-                              <TypeIcon
-                                className={`h-4 w-4 ${
-                                  record.type === "lab"
-                                    ? "text-red-600 dark:text-red-400"
-                                    : record.type === "imaging"
-                                      ? "text-blue-600 dark:text-blue-400"
-                                      : "text-purple-600 dark:text-purple-400"
-                                }`}
-                              />
-                            </div>
-                            <div className="min-w-0">
-                              <p className="font-medium text-gray-900 dark:text-white truncate max-w-[150px] sm:max-w-none">
-                                {record.name}
-                              </p>
-                              <p className="text-xs text-gray-500 dark:text-gray-400">
-                                Ref: {record.ref}
-                              </p>
-                            </div>
+                  {filteredRecords.map((record) => (
+                    <tr key={record.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                      <td className="px-4 sm:px-6 py-4 border-r border-gray-200 dark:border-gray-700">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 rounded-lg bg-red-50 dark:bg-red-900/20">
+                            <FlaskConical className="h-4 w-4 text-red-600 dark:text-red-400" />
                           </div>
-                        </td>
-                        <td className="px-4 sm:px-6 py-4 capitalize text-gray-600 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700">
-                          {record.type}
-                        </td>
-                        <td className="px-4 sm:px-6 py-4 border-r border-gray-200 dark:border-gray-700">
-                          <p className="text-gray-900 dark:text-white whitespace-nowrap">
-                            {record.doctor}
-                          </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {record.specialty}
-                          </p>
-                        </td>
-                        <td className="px-4 sm:px-6 py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap border-r border-gray-200 dark:border-gray-700">
-                          {new Date(record.date).toLocaleDateString("en-US", {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                          })}
-                        </td>
-                        <td className="px-4 sm:px-6 py-4 border-r border-gray-200 dark:border-gray-700">
-                          <Badge className={statusColorMap[record.status]}>
-                            {record.status}
-                          </Badge>
-                        </td>
-                        <td className="px-4 sm:px-6 py-4 text-right">
-                          <div className="flex items-center justify-end gap-1 sm:gap-2">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                            >
-                              <Download className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                          <span className="font-medium text-gray-900 dark:text-white">{record.name}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 sm:px-6 py-4 text-gray-600 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700">
+                        {record.orderId}
+                      </td>
+                      <td className="px-4 sm:px-6 py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap border-r border-gray-200 dark:border-gray-700">
+                        {format(new Date(record.date), "MMM dd, yyyy")}
+                      </td>
+                      <td className="px-4 sm:px-6 py-4 border-r border-gray-200 dark:border-gray-700">
+                        <Badge className={statusColorMap[record.status] || "bg-gray-100 text-gray-800"}>
+                          {record.status}
+                        </Badge>
+                      </td>
+                      <td className="px-4 sm:px-6 py-4 text-gray-700 dark:text-gray-300">
+                        {record.result || "—"}
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
 
-            {/* Pagination */}
             <div className="px-4 sm:px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row items-center justify-between gap-4">
               <p className="text-sm text-gray-500 dark:text-gray-400 order-2 sm:order-1">
                 Showing {filteredRecords.length} of {records.length} records
               </p>
               <div className="flex gap-2 order-1 sm:order-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled
-                  className="w-20 sm:w-auto"
-                >
+                <Button variant="outline" size="sm" disabled className="w-20 sm:w-auto">
                   Previous
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled
-                  className="w-20 sm:w-auto"
-                >
+                <Button variant="outline" size="sm" disabled className="w-20 sm:w-auto">
                   Next
                 </Button>
               </div>

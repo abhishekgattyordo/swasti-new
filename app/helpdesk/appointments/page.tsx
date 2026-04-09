@@ -269,7 +269,7 @@ export default function HelpDeskPage() {
           onClick={() => setShowCreateModal(true)}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center justify-center gap-2 whitespace-nowrap"
         >
-          <span className="material-icons text-sm">Add</span>
+        
           New Appointment
         </button>
       </div>

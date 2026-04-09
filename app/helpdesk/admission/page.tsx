@@ -34,6 +34,7 @@ interface Bed {
   id: number;
   bed_number: string;
   room_id: number | null;
+    ward_id?: number;   // add this
 }
 
 interface Doctor {
@@ -131,21 +132,36 @@ export default function AdmissionForm() {
   }, []);
 
   // Load beds when ward changes
-  useEffect(() => {
-    if (form.ward) {
-      admissionsApi
-        .getBeds({ ward_id: parseInt(form.ward), status: "available" })
-        .then((res) => {
-          const bedsData = res.data?.data || res.data;
-          setBeds(Array.isArray(bedsData) ? bedsData : []);
-          setForm((prev) => ({ ...prev, bed: "" }));
-        })
-        .catch((err) => console.error("Failed to load beds", err));
-    } else {
-      setBeds([]);
-      setForm((prev) => ({ ...prev, bed: "" }));
-    }
-  }, [form.ward]);
+useEffect(() => {
+  if (form.ward) {
+    const wardId = parseInt(form.ward);
+    admissionsApi
+     .getBeds({ ward_id: wardId, status: "available" })
+      .then((res: any) => {
+        // Safely extract beds array from different response structures
+        let bedsData: Bed[] = [];
+        if (res?.data?.data && Array.isArray(res.data.data)) {
+          bedsData = res.data.data;
+        } else if (res?.data && Array.isArray(res.data)) {
+          bedsData = res.data;
+        } else if (Array.isArray(res)) {
+          bedsData = res;
+        } else if (res?.beds && Array.isArray(res.beds)) {
+          bedsData = res.beds;
+        }
+        
+        // Filter by ward_id (in case API returns all beds)
+       bedsData = bedsData.filter((bed) => bed.ward_id === wardId);
+        
+        setBeds(bedsData);
+        setForm((prev) => ({ ...prev, bed: "" }));
+      })
+      .catch((err) => console.error("Failed to load beds", err));
+  } else {
+    setBeds([]);
+    setForm((prev) => ({ ...prev, bed: "" }));
+  }
+}, [form.ward]);
 
   // Load doctors
   useEffect(() => {
