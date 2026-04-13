@@ -1,388 +1,71 @@
-
-
-// import { NextRequest, NextResponse } from 'next/server';
-// import { query } from '../../../lib/db';
-// import bcrypt from 'bcryptjs';
-// import jwt from 'jsonwebtoken';
-
-// // ==================== INTERFACES ====================
-
-// interface LoginPayload {
-//   email: string;
-//   password: string;
-// }
-
-// interface User {
-//   id: number;
-//   email: string;
-//   password: string;
-//   full_name_en: string;
-//   role: string;
-//   patient_id?: string;
-//   created_at: Date;
-// }
-
-// // ==================== HELPER FUNCTIONS ====================
-
-// /**
-//  * Generate JWT token
-//  */
-// function generateToken(user: Partial<User>): string {
-//   const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
-  
-//   return jwt.sign(
-//     {
-//       id: user.id,
-//       email: user.email,
-//       role: user.role,
-//       patientId: user.patient_id
-//     },
-//     JWT_SECRET,
-//     { expiresIn: '7d' }
-//   );
-// }
-
-// /**
-//  * Validate login input
-//  */
-// function validateInput(data: any): { isValid: boolean; errors: { email?: string; password?: string } } {
-//   const errors: { email?: string; password?: string } = {};
-
-//   if (!data.email?.trim()) {
-//     errors.email = "Email or Patient ID is required";
-//   }
-
-//   if (!data.password) {
-//     errors.password = "Password is required";
-//   } else if (data.password.length < 6) {
-//     errors.password = "Password must be at least 6 characters";
-//   }
-
-//   return {
-//     isValid: Object.keys(errors).length === 0,
-//     errors
-//   };
-// }
-
-// // ==================== POST ENDPOINT ====================
-
-// export async function POST(req: NextRequest) {
-//   try {
-//     const body = await req.json();
-//     const { email, password } = body as LoginPayload;
-
-//     // Validate input
-//     const validation = validateInput(body);
-//     if (!validation.isValid) {
-//       return NextResponse.json(
-//         { 
-//           success: false, 
-//           message: "Validation failed", 
-//           errors: validation.errors 
-//         },
-//         { status: 400 }
-//       );
-//     }
-
-//     console.log(`🔍 Login attempt for: ${email}`);
-
-//     // Determine if input is email or patient ID
-//     const isEmail = email.includes('@');
-    
-//     let userResult;
-    
-//     if (isEmail) {
-//       // Search by email
-//       userResult = await query(
-//         'SELECT id, email, password, full_name_en, role, patient_id, created_at FROM users WHERE email = $1',
-//         [email.toLowerCase()]
-//       );
-//     } else {
-//       // Search by patient ID (for patients)
-//       userResult = await query(
-//         'SELECT id, email, password, full_name_en, role, patient_id, created_at FROM users WHERE patient_id = $1',
-//         [email]
-//       );
-//     }
-
-//     const users = userResult.rows;
-
-//     if (users.length === 0) {
-//       return NextResponse.json(
-//         { 
-//           success: false, 
-//           message: "Invalid email/patient ID or password" 
-//         },
-//         { status: 401 }
-//       );
-//     }
-
-//     const user = users[0];
-
-//     // Verify password
-//     const isValidPassword = await bcrypt.compare(password, user.password);
-
-//     if (!isValidPassword) {
-//       return NextResponse.json(
-//         { 
-//           success: false, 
-//           message: "Invalid email/patient ID or password" 
-//         },
-//         { status: 401 }
-//       );
-//     }
-
-//     // Generate JWT token
-//     const token = generateToken(user);
-
-//     // Remove password from response
-//     const { password: _, ...userWithoutPassword } = user;
-
-//     // Set cookie for authentication
-//     const response = NextResponse.json({
-//       success: true,
-//       message: "Login successful",
-//       user: userWithoutPassword,
-//       token // Send token for client-side storage if needed
-//     });
-
-//     // Set HTTP-only cookie
-//     response.cookies.set({
-//       name: 'token',
-//       value: token,
-//       httpOnly: true,
-//       secure: process.env.NODE_ENV === 'production',
-//       sameSite: 'strict',
-//       maxAge: 60 * 60 * 24 * 7, // 7 days
-//       path: '/',
-//     });
-
-//     // Set user info cookie (non-httpOnly for client access)
-//     response.cookies.set({
-//       name: 'user',
-//       value: JSON.stringify(userWithoutPassword),
-//       httpOnly: false,
-//       secure: process.env.NODE_ENV === 'production',
-//       sameSite: 'strict',
-//       maxAge: 60 * 60 * 24 * 7, // 7 days
-//       path: '/',
-//     });
-
-//     console.log(`✅ Login successful for user: ${user.email} (role: ${user.role})`);
-
-//     return response;
-
-//   } catch (error) {
-//     console.error("❌ Login error:", error);
-    
-//     return NextResponse.json(
-//       {
-//         success: false,
-//         message: "An error occurred during login. Please try again.",
-//       },
-//       { status: 500 }
-//     );
-//   }
-// }
-
-// // ==================== GET ENDPOINT (Check current user) ====================
-
-// export async function GET(req: NextRequest) {
-//   try {
-//     const token = req.cookies.get('token')?.value;
-
-//     if (!token) {
-//       return NextResponse.json(
-//         { success: false, message: "Not authenticated" },
-//         { status: 401 }
-//       );
-//     }
-
-//     const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
-    
-//     try {
-//       const decoded = jwt.verify(token, JWT_SECRET) as any;
-      
-//       // Get fresh user data
-//       const userResult = await query(
-//         'SELECT id, email, full_name_en, role, patient_id, created_at FROM users WHERE id = $1',
-//         [decoded.id]
-//       );
-
-//       if (userResult.rows.length === 0) {
-//         return NextResponse.json(
-//           { success: false, message: "User not found" },
-//           { status: 404 }
-//         );
-//       }
-
-//       return NextResponse.json({
-//         success: true,
-//         user: userResult.rows[0]
-//       });
-
-//     } catch (err) {
-//       return NextResponse.json(
-//         { success: false, message: "Invalid token" },
-//         { status: 401 }
-//       );
-//     }
-
-//   } catch (error) {
-//     console.error("❌ Error fetching user:", error);
-//     return NextResponse.json(
-//       {
-//         success: false,
-//         message: "An error occurred",
-//       },
-//       { status: 500 }
-//     );
-//   }
-// }
-
-
-
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabaseServer';
+import { query } from '@/lib/db';
+import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-
-// ==================== HELPER FUNCTIONS ====================
-
-function validateInput(data: any): { isValid: boolean; errors: { email?: string; password?: string } } {
-  const errors: { email?: string; password?: string } = {};
-
-  if (!data.email?.trim()) {
-    errors.email = "Email or Patient ID is required";
-  }
-
-  if (!data.password) {
-    errors.password = "Password is required";
-  } else if (data.password.length < 6) {
-    errors.password = "Password must be at least 6 characters";
-  }
-
-  return {
-    isValid: Object.keys(errors).length === 0,
-    errors,
-  };
-}
-
-// ==================== POST ENDPOINT ====================
 
 export async function POST(req: NextRequest) {
   try {
     const { email, password } = await req.json();
 
-    const validation = validateInput({ email, password });
-    if (!validation.isValid) {
+    if (!email || !password) {
       return NextResponse.json(
-        { success: false, message: "Validation failed", errors: validation.errors },
+        { success: false, message: 'Email and password required' },
         { status: 400 }
       );
     }
 
-    // Authenticate with Supabase
-    const { data: authData, error: authError } = await supabaseAdmin.auth.signInWithPassword({
-      email: email.toLowerCase(),
-      password,
-    });
+    // Find user by email
+    const result = await query(
+      `SELECT id, email, full_name_en, role, patient_id, doctor_id, password
+       FROM users 
+       WHERE email = $1`,
+      [email.toLowerCase()]
+    );
 
-    if (authError || !authData.user) {
+    if (result.rows.length === 0) {
       return NextResponse.json(
-        { success: false, message: "Invalid email or password" },
+        { success: false, message: 'Invalid email or password' },
         { status: 401 }
       );
     }
 
-    // Try to find custom user by auth_user_id
-    let { data: customUser, error: dbError } = await supabaseAdmin
-      .from('users')
-      .select('id, email, full_name_en, role, patient_id, doctor_id')
-      .eq('auth_user_id', authData.user.id)
-      .single();
+    const user = result.rows[0];
 
-    // Fallback: search by email (for legacy users)
-    if (dbError || !customUser) {
-      console.log('User not found by auth_user_id, trying email...');
-      const { data: userByEmail, error: emailError } = await supabaseAdmin
-        .from('users')
-        .select('id, email, full_name_en, role, patient_id, doctor_id')
-        .eq('email', email.toLowerCase())
-        .single();
-
-      if (userByEmail) {
-        // Link the existing user to this Supabase user
-        const { error: updateError } = await supabaseAdmin
-          .from('users')
-          .update({ auth_user_id: authData.user.id })
-          .eq('id', userByEmail.id);
-        if (updateError) {
-          console.error('Failed to update auth_user_id:', updateError);
-        } else {
-          console.log(`Linked user ${userByEmail.email} to auth_user_id ${authData.user.id}`);
-        }
-        customUser = userByEmail;
-      } else {
-        return NextResponse.json(
-          { success: false, message: "User profile not found" },
-          { status: 404 }
-        );
-      }
+    // Verify password
+    const isValidPassword = await bcrypt.compare(password, user.password);
+    if (!isValidPassword) {
+      return NextResponse.json(
+        { success: false, message: 'Invalid email or password' },
+        { status: 401 }
+      );
     }
 
-    // Generate your own JWT (optional)
+    // Generate JWT token
     const token = jwt.sign(
       {
-        id: customUser.id,
-        email: customUser.email,
-        role: customUser.role,
-        patient_id: customUser.patient_id,
-        doctor_id: customUser.doctor_id,
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        patient_id: user.patient_id,
+        doctor_id: user.doctor_id,
       },
       process.env.JWT_SECRET!,
       { expiresIn: '7d' }
     );
 
-    const response = NextResponse.json({
+    // Return user data (without password)
+    const { password: _, ...userWithoutPassword } = user;
+
+    return NextResponse.json({
       success: true,
-      message: "Login successful",
-      user: {
-        id: customUser.id,
-        email: customUser.email,
-        full_name_en: customUser.full_name_en,
-        role: customUser.role,
-        patient_id: customUser.patient_id,
-        doctor_id: customUser.doctor_id,
-      },
+      message: 'Login successful',
+      user: userWithoutPassword,
       token,
     });
-
-    // Set cookies (optional)
-    response.cookies.set({
-      name: 'token',
-      value: token,
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 60 * 60 * 24 * 7,
-      path: '/',
-    });
-
-    response.cookies.set({
-      name: 'user',
-      value: JSON.stringify(customUser),
-      httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 60 * 60 * 24 * 7,
-      path: '/',
-    });
-
-    return response;
-  } catch (error) {
-    console.error("Login error:", error);
+  } catch (error: any) {
+    console.error('Login error:', error);
     return NextResponse.json(
-      { success: false, message: "Server error" },
+      { success: false, message: error.message || 'Server error' },
       { status: 500 }
     );
   }

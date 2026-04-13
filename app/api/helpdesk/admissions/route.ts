@@ -18,7 +18,6 @@ function generateRandomPassword(length = 12): string {
     .map(byte => chars[byte % chars.length])
     .join('');
 }
-
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -87,40 +86,55 @@ export async function POST(req: NextRequest) {
         console.log(`🔑 Generated password for ${patient.email}: ${plainPassword}`);
       }
 
-      // Insert admission
+      // Extract primary_consultant and consultant_dept from admission object
+      const {
+        admissionDate,
+        wardId,
+        roomId,
+        bedId,
+        reason,
+        diagnosis,
+        primary_consultant,
+        consultant_dept,
+      } = admission;
+
+      // Insert admission with primary_consultant and consultant_dept
       const admissionResult = await query(
         `INSERT INTO admissions (
-          patient_id, admission_date, ward_id, room_id, bed_id, reason, diagnosis, status, created_at, updated_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
+          patient_id, admission_date, ward_id, room_id, bed_id, reason, diagnosis, status,
+          created_at, updated_at, primary_consultant, consultant_dept
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW(), $9, $10)
         RETURNING id`,
         [
           actualPatientId,
-          admission.admissionDate,
-          admission.wardId || null,
-          admission.roomId || null,
-          admission.bedId || null,
-          admission.reason || null,
-          admission.diagnosis || null,
+          admissionDate,
+          wardId || null,
+          roomId || null,
+          bedId || null,
+          reason || null,
+          diagnosis || null,
           'active',
+          primary_consultant || null,
+          consultant_dept || null,
         ]
       );
 
       const admissionId = admissionResult.rows[0].id;
 
-      // 🆕 Insert initial ward_transfers record (so room rent starts from admission date)
-      if (admission.wardId) {
+      // Insert initial ward_transfers record
+      if (wardId) {
         await query(
           `INSERT INTO ward_transfers (admission_id, ward_id, from_date)
            VALUES ($1, $2, $3)`,
-          [admissionId, admission.wardId, admission.admissionDate]
+          [admissionId, wardId, admissionDate]
         );
       }
 
       // Update bed occupancy
-      if (admission.bedId) {
+      if (bedId) {
         await query(
           `UPDATE beds SET status = 'occupied', occupied_by = $1, occupied_at = NOW() WHERE id = $2`,
-          [actualPatientId, admission.bedId]
+          [actualPatientId, bedId]
         );
       }
 
@@ -135,8 +149,8 @@ export async function POST(req: NextRequest) {
         response.data.generatedPassword = plainPassword;
       }
 
-      // 🔥 Generate bill automatically in the background (fire and forget)
-      const baseUrl = req.nextUrl.origin; // e.g., http://localhost:3000
+      // Generate bill in background
+      const baseUrl = req.nextUrl.origin;
       fetch(`${baseUrl}/api/billing/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

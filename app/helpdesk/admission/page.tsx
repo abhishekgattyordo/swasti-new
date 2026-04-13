@@ -298,6 +298,7 @@ useEffect(() => {
       bedId: form.bed ? parseInt(form.bed) : null,
       reason: form.reason,
       diagnosis: form.diagnosis,
+       primary_consultant: form.physician || null,
     },
     emergency: {
       name: form.emergencyName,
@@ -367,16 +368,18 @@ try {
   };
 
   // Load draft
-  useEffect(() => {
-    const draft = localStorage.getItem("admissionDraft");
-    if (draft) {
-      try {
-        const saved = JSON.parse(draft);
-        setForm(saved);
-      
-      } catch (e) {}
-    }
-  }, []);
+ useEffect(() => {
+  const draft = localStorage.getItem("admissionDraft");
+  if (draft) {
+    try {
+      const saved = JSON.parse(draft);
+      setForm({
+        ...saved,
+        admissionDate: new Date().toISOString().split("T")[0], // ✅ force today's date
+      });
+    } catch (e) {}
+  }
+}, []);
 
   const handleBillingClick = () => router.push("/helpdesk/billing");
   const handleRoomAvailabilityClick = () =>
