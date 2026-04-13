@@ -17,7 +17,7 @@ import {
 import bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
 import { sendPasswordEmail } from '@/lib/api/email';
-import { supabaseAdmin } from '@/lib/supabaseServer';
+
 
 // ==================== HELPER FUNCTIONS ====================
 

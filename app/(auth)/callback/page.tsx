@@ -1,22 +1,18 @@
-'use client';
+// app/callback/page.tsx
+import { Suspense } from 'react';
+import CallbackHandler from './callback-handler';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabaseClient';
-
-export default function AuthCallback() {
-  const router = useRouter();
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        // After magic link, we redirect to the password set page
-        router.push('/set-password');
-      } else {
-        router.push('/login');
-      }
-    });
-  }, [router]);
-
-  return <div>Verifying...</div>;
+export default function CallbackPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="text-gray-600">Loading...</div>
+        </div>
+      </div>
+    }>
+      <CallbackHandler />
+    </Suspense>
+  );
 }

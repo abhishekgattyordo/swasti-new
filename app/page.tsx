@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { supabase } from '@/lib/supabaseClient';
+
 import {
   Video,
   Calendar,
