@@ -6,6 +6,9 @@ export const MODULE_KEYS = {
   PATIENT: 'patient',
   HELPDESK: 'helpdesk',
   BILLING: 'billing',
+  DOCTOR: 'doctor',
+  LABARATORY: 'labaratory',
+  ADMIN: 'admin', 
 } as const;
 
 // Pharmacy Microfeature Keys
@@ -43,8 +46,6 @@ export const HELPDESK_FEATURES = {
   NEW_ADMISSION: 'helpdesk_new_admission',
 } as const;
 
-
-
 // Billing Microfeature Keys
 export const BILLING_FEATURES = {
   DASHBOARD: 'billing_dashboard',
@@ -54,8 +55,27 @@ export const BILLING_FEATURES = {
   LEDGER: 'billing_ledger',
 } as const;
 
+// Doctor Microfeature Keys
+export const DOCTOR_FEATURES = {
+  DASHBOARD: 'doctor_dashboard',
+  SCHEDULE: 'doctor_schedule',
+  PATIENTS: 'doctor_patients',
+  BILLING: 'doctor_billing',
+} as const;
 
+// Laboratory Microfeature Keys
+export const LABARATORY_FEATURES = {
+  DASHBOARD: 'labaratory_dashboard',
+  TEST_CATALOG: 'labaratory_test_catalog',
+  LAB_ORDERS: 'labaratory_lab_orders',
+  SAMPLE_COLLECTION: 'labaratory_sample_collection',
+  REPORTS: 'labaratory_reports',
+} as const;
 
-
-
-
+// Admin Microfeature Keys
+export const ADMIN_FEATURES = {
+  DASHBOARD: 'admin_dashboard',
+  DOCTORS: 'admin_doctors',
+  PATIENTS: 'admin_patients',
+  BED_CONFIGURATION: 'admin_bed_configuration',
+} as const;
