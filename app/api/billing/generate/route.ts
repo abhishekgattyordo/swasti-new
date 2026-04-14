@@ -1,3 +1,5 @@
+
+
 // import { NextRequest, NextResponse } from 'next/server';
 // import { query } from '@/lib/db';
 
@@ -58,10 +60,10 @@
 //         const rate = parseFloat(period.daily_rate);
 //         const total = days * rate;
 //         roomItems.push({
-//           description: `${period.ward_type} (${days} days @ ₹${rate}/day)`,
+//           medicine_name: `Room Rent – ${period.ward_type}`,
 //           quantity: days,
-//           unitPrice: rate,
-//           totalPrice: total,
+//           unit_price: rate,
+//           total_price: total,
 //         });
 //       }
 //     } else {
@@ -82,17 +84,45 @@
 //       const days = Math.max(0, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
 //       if (days > 0) {
 //         roomItems.push({
-//           description: `${ward.ward_type} (${days} days @ ₹${dailyRate}/day)`,
+//           medicine_name: `Room Rent – ${ward.ward_type}`,
 //           quantity: days,
-//           unitPrice: dailyRate,
-//           totalPrice: days * dailyRate,
+//           unit_price: dailyRate,
+//           total_price: days * dailyRate,
 //         });
 //       }
 //     }
 
-//     const roomTotal = roomItems.reduce((sum, item) => sum + item.totalPrice, 0);
+//     // 4. Fetch lab orders for this admission
+//     const labOrders = await query(
+//       `SELECT 
+//          id,
+//          tests,
+//          total_amount,
+//          order_date
+//        FROM lab_orders
+//        WHERE admission_id = $1 AND status = 'Completed'
+//        ORDER BY order_date ASC`,
+//       [admissionId]
+//     );
 
-//     // 4. Get or create the bill record (without touching total_amount yet)
+//     // 5. Convert lab orders to bill items
+//     const labItems: any[] = [];
+//     for (const order of labOrders.rows) {
+//       const tests = order.tests;
+//       if (Array.isArray(tests)) {
+//         for (const test of tests) {
+//           labItems.push({
+//             medicine_name: test.name,
+//             quantity: 1,
+//             unit_price: test.price,
+//             total_price: test.price,
+//             lab_order_id: order.id,
+//           });
+//         }
+//       }
+//     }
+
+//     // 6. Get or create the bill record
 //     const billNumber = `IP-${Date.now()}-${admissionId}`;
 //     const insertBill = await query(
 //       `INSERT INTO ip_bills (sale_id, patient_id, admission_id, bill_number, total_amount, status)
@@ -113,27 +143,49 @@
 //       billId = insertBill.rows[0].id;
 //     }
 
-//     // 5. Replace all room rent items for this bill
-//     await query(
-//       `DELETE FROM ip_bill_items WHERE bill_id = $1 AND medicine_name LIKE 'Room Rent%'`,
-//       [billId]
-//     );
+//     // 7. Delete existing items
+//     await query(`DELETE FROM ip_bill_items WHERE bill_id = $1`, [billId]);
+
+//     // 8. DEDUPLICATE AND INSERT ROOM ITEMS
+//     const uniqueRoomItems = new Map();
+    
 //     for (const item of roomItems) {
+//       const key = item.medicine_name;
+//       if (uniqueRoomItems.has(key)) {
+//         const existing = uniqueRoomItems.get(key);
+//         existing.quantity += item.quantity;
+//         existing.total_price += item.total_price;
+//       } else {
+//         uniqueRoomItems.set(key, { ...item });
+//       }
+//     }
+    
+//     // Insert deduplicated room items
+//     for (const item of uniqueRoomItems.values()) {
 //       await query(
 //         `INSERT INTO ip_bill_items (bill_id, medicine_name, quantity, unit_price, total_price)
 //          VALUES ($1, $2, $3, $4, $5)`,
-//         [billId, `Room Rent – ${item.description}`, item.quantity, item.unitPrice, item.totalPrice]
+//         [billId, item.medicine_name, item.quantity, item.unit_price, item.total_price]
 //       );
 //     }
 
-//     // 6. Recalculate total amount from all items (including medicines)
+//     // 9. Insert lab items
+//     for (const item of labItems) {
+//       await query(
+//         `INSERT INTO ip_bill_items (bill_id, medicine_name, quantity, unit_price, total_price)
+//          VALUES ($1, $2, $3, $4, $5)`,
+//         [billId, item.medicine_name, item.quantity, item.unit_price, item.total_price]
+//       );
+//     }
+
+//     // 10. Recalculate total amount
 //     const totalAmountRes = await query(
 //       `SELECT SUM(total_price) as total FROM ip_bill_items WHERE bill_id = $1`,
 //       [billId]
 //     );
 //     const newTotal = totalAmountRes.rows[0]?.total || 0;
 
-//     // 7. Get current paid amount and determine new status
+//     // 11. Get current paid amount and determine status
 //     const billPaidRes = await query(
 //       `SELECT paid_amount FROM ip_bills WHERE id = $1`,
 //       [billId]
@@ -141,7 +193,7 @@
 //     const currentPaid = parseFloat(billPaidRes.rows[0]?.paid_amount || 0);
 //     const newStatus = newTotal <= currentPaid ? 'PAID' : currentPaid > 0 ? 'PARTIAL' : 'UNPAID';
 
-//     // 8. Update bill totals and status
+//     // 12. Update bill totals and status
 //     await query(
 //       `UPDATE ip_bills
 //        SET total_amount = $1, status = $2, updated_at = NOW()
@@ -149,7 +201,7 @@
 //       [newTotal, newStatus, billId]
 //     );
 
-//     // 9. Return the updated bill summary
+//     // 13. Return the updated bill summary
 //     const finalBillRes = await query(
 //       `SELECT id, total_amount, paid_amount, status FROM ip_bills WHERE id = $1`,
 //       [billId]
@@ -176,7 +228,6 @@
 //     return NextResponse.json({ success: false, message: errorMessage }, { status: 500 });
 //   }
 // }
-
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
@@ -286,7 +337,7 @@ export async function POST(req: NextRequest) {
     // 5. Convert lab orders to bill items
     const labItems: any[] = [];
     for (const order of labOrders.rows) {
-      const tests = order.tests; // JSON array [{id, name, price}, ...]
+      const tests = order.tests;
       if (Array.isArray(tests)) {
         for (const test of tests) {
           labItems.push({
@@ -300,7 +351,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 6. Get or create the bill record (without touching total_amount yet)
+    // 6. Get or create the bill record
     const billNumber = `IP-${Date.now()}-${admissionId}`;
     const insertBill = await query(
       `INSERT INTO ip_bills (sale_id, patient_id, admission_id, bill_number, total_amount, status)
@@ -321,14 +372,24 @@ export async function POST(req: NextRequest) {
       billId = insertBill.rows[0].id;
     }
 
-    // 7. Delete existing items (room rent + lab items) and re-insert everything
-    await query(
-      `DELETE FROM ip_bill_items WHERE bill_id = $1`,
-      [billId]
-    );
+    // 7. Delete existing items
+    await query(`DELETE FROM ip_bill_items WHERE bill_id = $1`, [billId]);
 
-    // Insert room rent items
+    // 8. DEDUPLICATE ROOM ITEMS
+    const uniqueRoomItems = new Map();
     for (const item of roomItems) {
+      const key = item.medicine_name;
+      if (uniqueRoomItems.has(key)) {
+        const existing = uniqueRoomItems.get(key);
+        existing.quantity += item.quantity;
+        existing.total_price += item.total_price;
+      } else {
+        uniqueRoomItems.set(key, { ...item });
+      }
+    }
+
+    // Insert deduplicated room items
+    for (const item of uniqueRoomItems.values()) {
       await query(
         `INSERT INTO ip_bill_items (bill_id, medicine_name, quantity, unit_price, total_price)
          VALUES ($1, $2, $3, $4, $5)`,
@@ -336,8 +397,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Insert lab items
+    // 9. DEDUPLICATE LAB ITEMS
+    const uniqueLabItems = new Map();
     for (const item of labItems) {
+      const key = item.medicine_name;
+      if (uniqueLabItems.has(key)) {
+        const existing = uniqueLabItems.get(key);
+        existing.quantity += item.quantity;
+        existing.total_price += item.total_price;
+      } else {
+        uniqueLabItems.set(key, { ...item });
+      }
+    }
+
+    // Insert deduplicated lab items
+    for (const item of uniqueLabItems.values()) {
       await query(
         `INSERT INTO ip_bill_items (bill_id, medicine_name, quantity, unit_price, total_price)
          VALUES ($1, $2, $3, $4, $5)`,
@@ -345,14 +419,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 8. Recalculate total amount from all items
+    // 10. Recalculate total amount
     const totalAmountRes = await query(
       `SELECT SUM(total_price) as total FROM ip_bill_items WHERE bill_id = $1`,
       [billId]
     );
     const newTotal = totalAmountRes.rows[0]?.total || 0;
 
-    // 9. Get current paid amount and determine new status
+    // 11. Get current paid amount and determine status
     const billPaidRes = await query(
       `SELECT paid_amount FROM ip_bills WHERE id = $1`,
       [billId]
@@ -360,7 +434,7 @@ export async function POST(req: NextRequest) {
     const currentPaid = parseFloat(billPaidRes.rows[0]?.paid_amount || 0);
     const newStatus = newTotal <= currentPaid ? 'PAID' : currentPaid > 0 ? 'PARTIAL' : 'UNPAID';
 
-    // 10. Update bill totals and status
+    // 12. Update bill totals and status
     await query(
       `UPDATE ip_bills
        SET total_amount = $1, status = $2, updated_at = NOW()
@@ -368,7 +442,7 @@ export async function POST(req: NextRequest) {
       [newTotal, newStatus, billId]
     );
 
-    // 11. Return the updated bill summary
+    // 13. Return the updated bill summary
     const finalBillRes = await query(
       `SELECT id, total_amount, paid_amount, status FROM ip_bills WHERE id = $1`,
       [billId]
@@ -380,7 +454,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Bill generated/updated successfully (including lab orders)',
+      message: 'Bill generated/updated successfully',
       data: {
         billId: bill.id,
         totalAmount: total,

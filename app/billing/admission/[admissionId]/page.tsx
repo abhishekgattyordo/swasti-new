@@ -1,3 +1,5 @@
+
+
 // 'use client';
 
 // import { useState, useEffect, useRef } from 'react';
@@ -24,7 +26,7 @@
 //   SelectTrigger,
 //   SelectValue,
 // } from '@/components/ui/select';
-// import { Loader2, Receipt, Calendar, Bed, Building2, User, AlertCircle } from 'lucide-react';
+// import { Loader2, Receipt, Calendar, Bed, Building2, User, AlertCircle, IdCard } from 'lucide-react';
 
 // interface BillItem {
 //   medicine_name: string;
@@ -62,69 +64,97 @@
 //   const [billData, setBillData] = useState<BillData | null>(null);
 //   const [error, setError] = useState<string | null>(null);
 
+//   // Discharge ID from existing admission (if already discharged)
+//   const [existingDischargeId, setExistingDischargeId] = useState<string | null>(null);
+//   const hasFetchedDischargeId = useRef(false);
+
 //   // Payment dialog
 //   const [paymentOpen, setPaymentOpen] = useState(false);
 //   const [paymentAmount, setPaymentAmount] = useState('');
 //   const [paymentMethod, setPaymentMethod] = useState('Cash');
 //   const [submitting, setSubmitting] = useState(false);
 
-//   // Discharge ID generation
+//   // New discharge ID generation (for fully paid admission that was not discharged yet)
 //   const [dischargeId, setDischargeId] = useState<string | null>(null);
 //   const [showDischargeIdDialog, setShowDischargeIdDialog] = useState(false);
 //   const [generatingDischargeId, setGeneratingDischargeId] = useState(false);
-//   const hasGeneratedIdRef = useRef(false); // Prevent multiple generation calls
+//   const hasGeneratedIdRef = useRef(false);
 
+//   // Fetch bill data
+//   const fetchBill = async () => {
+//   setLoading(true);
+//   setError(null);
+//   try {
+//     // Step 1: Generate/update the bill (this recalculates room rent)
+//     console.log('Generating bill for admissionId:', admissionId);
+//     const generateRes = await fetch('/api/billing/generate', {
+//       method: 'POST',
+//       headers: { 'Content-Type': 'application/json' },
+//       body: JSON.stringify({ admissionId: parseInt(admissionId) }),
+//     });
+    
+//     const generateData = await generateRes.json();
+    
+//     if (!generateData.success) {
+//       throw new Error(generateData.message || 'Failed to generate bill');
+//     }
+    
+//     console.log('Bill generated:', generateData.data);
+    
+//     // Step 2: Now fetch the updated bill data to display
+//     const res = await fetch(`/api/billing?admissionId=${admissionId}`, {
+//       cache: 'no-store',
+//       headers: { 'Cache-Control': 'no-cache' }
+//     });
+    
+//     const data = await res.json();
+    
+//     if (data.success) {
+//       setBillData(data.data);
+//     } else {
+//       setError(data.message || 'Failed to load bill');
+//       toast.error(data.message || 'Failed to load bill');
+//     }
+//   } catch (err) {
+//     console.error(err);
+//     setError('An error occurred while fetching the bill');
+//     toast.error('An error occurred');
+//   } finally {
+//     setLoading(false);
+//   }
+// };
 
-
-//   // Inside app/billing/admission/[admissionId]/page.tsx
-// // useEffect(() => {
-// //   const updateBill = async () => {
-// //     try {
-// //       await fetch('/api/billing/generate', {
-// //         method: 'POST',
-// //         headers: { 'Content-Type': 'application/json' },
-// //         body: JSON.stringify({ admissionId }),
-// //       });
-// //       // Then refresh the bill data
-// //       fetchBill();
-// //     } catch (err) {
-// //       console.error('Bill auto‑update failed', err);
-// //     }
-// //   };
-// //   updateBill();
-// // }, [admissionId]);
+//   // Fetch existing discharge ID from /api/discharge
+//   const fetchExistingDischargeId = async () => {
+//     if (hasFetchedDischargeId.current) return;
+//     hasFetchedDischargeId.current = true;
+//     try {
+//       const res = await fetch(`/api/discharge?admissionId=${admissionId}`);
+//       const data = await res.json();
+//       if (data.success && data.data?.dischargeId) {
+//         setExistingDischargeId(data.data.dischargeId);
+//       }
+//     } catch (err) {
+//       console.error('Failed to fetch discharge ID', err);
+//     }
+//   };
 
 //   useEffect(() => {
 //     fetchBill();
+//     fetchExistingDischargeId();
 //   }, [admissionId]);
 
-//   // After billData updates, check if fully paid and generate discharge ID if needed
+//   // After billData updates, check if fully paid and no existing discharge ID, then generate a new one
 //   useEffect(() => {
-//     if (billData && billData.bill_summary.remainingAmount === 0 && !hasGeneratedIdRef.current) {
+//     if (
+//       billData &&
+//       billData.bill_summary.remainingAmount === 0 &&
+//       !hasGeneratedIdRef.current &&
+//       !existingDischargeId
+//     ) {
 //       generateDischargeId();
 //     }
-//   }, [billData]);
-
-//   const fetchBill = async () => {
-//     setLoading(true);
-//     setError(null);
-//     try {
-//       const res = await fetch(`/api/billing?admissionId=${admissionId}`);
-//       const data = await res.json();
-//       if (data.success) {
-//         setBillData(data.data);
-//       } else {
-//         setError(data.message || 'Failed to load bill');
-//         toast.error(data.message || 'Failed to load bill');
-//       }
-//     } catch (err) {
-//       console.error(err);
-//       setError('An error occurred while fetching the bill');
-//       toast.error('An error occurred');
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
+//   }, [billData, existingDischargeId]);
 
 //   const generateDischargeId = async () => {
 //     if (hasGeneratedIdRef.current) return;
@@ -248,6 +278,17 @@
 //       >
 //         ← Back to Patients
 //       </Button>
+
+//       {/* Show existing discharge ID if patient is already discharged */}
+//       {existingDischargeId && (
+//         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 flex items-center gap-3">
+//           <IdCard className="h-5 w-5 text-blue-600" />
+//           <div>
+//             <p className="text-sm font-medium text-blue-800">Discharge ID (Already Discharged)</p>
+//             <p className="text-lg font-mono font-bold text-blue-900">{existingDischargeId}</p>
+//           </div>
+//         </div>
+//       )}
 
 //       {/* Bill Header */}
 //       <Card className="mb-6">
@@ -394,7 +435,7 @@
 //         </DialogContent>
 //       </Dialog>
 
-//       {/* Discharge ID Dialog */}
+//       {/* Newly generated Discharge ID Dialog */}
 //       <Dialog open={showDischargeIdDialog} onOpenChange={setShowDischargeIdDialog}>
 //         <DialogContent>
 //           <DialogHeader>
@@ -415,7 +456,6 @@
 //     </div>
 //   );
 // }
-
 
 'use client';
 
@@ -481,6 +521,9 @@ export default function AdmissionBillPage() {
   const [billData, setBillData] = useState<BillData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Prevent double API calls in React Strict Mode
+  const hasFetchedBill = useRef(false);
+
   // Discharge ID from existing admission (if already discharged)
   const [existingDischargeId, setExistingDischargeId] = useState<string | null>(null);
   const hasFetchedDischargeId = useRef(false);
@@ -502,8 +545,30 @@ export default function AdmissionBillPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/billing?admissionId=${admissionId}`);
+      // Step 1: Generate/update the bill (this recalculates room rent)
+      console.log('Generating bill for admissionId:', admissionId);
+      const generateRes = await fetch('/api/billing/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ admissionId: parseInt(admissionId) }),
+      });
+      
+      const generateData = await generateRes.json();
+      
+      if (!generateData.success) {
+        throw new Error(generateData.message || 'Failed to generate bill');
+      }
+      
+      console.log('Bill generated:', generateData.data);
+      
+      // Step 2: Now fetch the updated bill data to display
+      const res = await fetch(`/api/billing?admissionId=${admissionId}`, {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache' }
+      });
+      
       const data = await res.json();
+      
       if (data.success) {
         setBillData(data.data);
       } else {
@@ -534,9 +599,13 @@ export default function AdmissionBillPage() {
     }
   };
 
+  // UseEffect with prevention of double calls
   useEffect(() => {
-    fetchBill();
-    fetchExistingDischargeId();
+    if (!hasFetchedBill.current) {
+      hasFetchedBill.current = true;
+      fetchBill();
+      fetchExistingDischargeId();
+    }
   }, [admissionId]);
 
   // After billData updates, check if fully paid and no existing discharge ID, then generate a new one
