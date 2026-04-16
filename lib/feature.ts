@@ -25,7 +25,7 @@ export const PHARMACY_FEATURES = {
   STOCK_ADJUSTMENT: 'pharmacy_stock_adjustment',
 } as const;
 
-// Patient Microfeature Keys
+
 export const PATIENT_FEATURES = {
   DASHBOARD: 'patient_dashboard',
   MEDICAL_RECORDS: 'patient_medical_records',
