@@ -1,11 +1,11 @@
 
 
+
 // "use client";
 
 // import { useEffect, useState } from "react";
 // import { useRouter } from "next/navigation";
 // import Card from "@/components/laboratory/Card";
-// import { supabase } from "@/lib/supabaseClient";
 
 // export default function LaboratoryDashboard() {
 //   const router = useRouter();
@@ -25,42 +25,19 @@
 
 //   const fetchDashboardData = async () => {
 //     setLoading(true);
-//     // Fetch all orders
-//     const { data, error } = await supabase
-//       .from("lab_orders")
-//       .select("*");
-
-//     if (error) {
+//     try {
+//       const response = await fetch("/api/laboratory/dashboard");
+//       const result = await response.json();
+      
+//       if (result.success) {
+//         setStats(result.data.stats);
+//         setRecentOrders(result.data.recentOrders);
+//       }
+//     } catch (error) {
 //       console.error("Error fetching dashboard data:", error);
+//     } finally {
 //       setLoading(false);
-//       return;
 //     }
-
-//     const today = new Date().toISOString().split("T")[0];
-
-//     const totalOrders = data?.length || 0;
-//     const pendingCollection = data?.filter((o: any) => o.status === "Ordered").length || 0;
-//     const pendingResults = data?.filter((o: any) => o.status === "Collected").length || 0;
-//     const completedToday = data?.filter(
-//       (o: any) => o.status === "Completed" && o.completed_date === today
-//     ).length || 0;
-
-//     setStats({
-//       totalOrders,
-//       pendingCollection,
-//       pendingResults,
-//       completedToday,
-//     });
-
-//     // Recent Orders (last 5)
-//     const recent = (data || [])
-//       .sort((a: any, b: any) => 
-//         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-//       )
-//       .slice(0, 5);
-
-//     setRecentOrders(recent);
-//     setLoading(false);
 //   };
 
 //   const getStatusConfig = (status: string) => {
@@ -73,10 +50,20 @@
 //     return configs[status] || configs.Ordered;
 //   };
 
-//   // Navigation handlers
 //   const navigateTo = (path: string) => {
 //     router.push(path);
 //   };
+
+//   if (loading) {
+//     return (
+//       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+//         <div className="text-center">
+//           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+//           <p className="mt-4 text-gray-600">Loading dashboard...</p>
+//         </div>
+//       </div>
+//     );
+//   }
 
 //   return (
 //     <div className="min-h-screen bg-gray-50">
@@ -96,7 +83,7 @@
 //               <div>
 //                 <p className="text-sm font-medium text-gray-500 mb-1">Total Orders</p>
 //                 <p className="text-3xl font-bold text-gray-900">
-//                   {loading ? "..." : stats.totalOrders}
+//                   {stats.totalOrders}
 //                 </p>
 //                 <p className="text-xs text-green-600 mt-2">All time</p>
 //               </div>
@@ -111,7 +98,7 @@
 //               <div>
 //                 <p className="text-sm font-medium text-gray-500 mb-1">Pending Collection</p>
 //                 <p className="text-3xl font-bold text-amber-600">
-//                   {loading ? "..." : stats.pendingCollection}
+//                   {stats.pendingCollection}
 //                 </p>
 //                 <p className="text-xs text-gray-500 mt-2">Ready for collection</p>
 //               </div>
@@ -126,7 +113,7 @@
 //               <div>
 //                 <p className="text-sm font-medium text-gray-500 mb-1">Pending Results</p>
 //                 <p className="text-3xl font-bold text-blue-600">
-//                   {loading ? "..." : stats.pendingResults}
+//                   {stats.pendingResults}
 //                 </p>
 //                 <p className="text-xs text-gray-500 mt-2">Awaiting results entry</p>
 //               </div>
@@ -141,7 +128,7 @@
 //               <div>
 //                 <p className="text-sm font-medium text-gray-500 mb-1">Completed Today</p>
 //                 <p className="text-3xl font-bold text-emerald-600">
-//                   {loading ? "..." : stats.completedToday}
+//                   {stats.completedToday}
 //                 </p>
 //                 <p className="text-xs text-emerald-600 mt-2">Today's reports</p>
 //               </div>
@@ -170,13 +157,7 @@
 //                 </tr>
 //               </thead>
 //               <tbody className="divide-y divide-gray-200">
-//                 {loading ? (
-//                   <tr>
-//                     <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
-//                       Loading orders...
-//                     </td>
-//                   </tr>
-//                 ) : recentOrders.length === 0 ? (
+//                 {recentOrders.length === 0 ? (
 //                   <tr>
 //                     <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
 //                       No orders found. Create your first order!
@@ -207,7 +188,7 @@
 //           </div>
 //         </Card>
 
-//         {/* Quick Actions - NOW WORKING */}
+//         {/* Quick Actions */}
 //         <div>
 //           <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
 //           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -250,15 +231,18 @@
 //   );
 // }
 
-
 "use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTenant } from "@/contexts/TenantContext";
+import { MODULE_KEYS, LABARATORY_FEATURES } from "@/lib/feature";
 import Card from "@/components/laboratory/Card";
 
 export default function LaboratoryDashboard() {
   const router = useRouter();
+  const { tenant, isMicroFeatureEnabled, isLoading: tenantLoading } = useTenant();
+  
   const [stats, setStats] = useState({
     totalOrders: 0,
     pendingCollection: 0,
@@ -269,9 +253,25 @@ export default function LaboratoryDashboard() {
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Check if Dashboard feature is enabled
+  const isDashboardEnabled = isMicroFeatureEnabled(
+    MODULE_KEYS.LABARATORY,
+    LABARATORY_FEATURES.DASHBOARD
+  );
+
+  // Redirect if feature is not enabled
   useEffect(() => {
-    fetchDashboardData();
-  }, []);
+    if (!tenantLoading && !isDashboardEnabled) {
+      router.push("/unauthorized");
+    }
+  }, [tenantLoading, isDashboardEnabled, router]);
+
+  // Fetch dashboard data only if feature is enabled
+  useEffect(() => {
+    if (isDashboardEnabled) {
+      fetchDashboardData();
+    }
+  }, [isDashboardEnabled]);
 
   const fetchDashboardData = async () => {
     setLoading(true);
@@ -304,6 +304,39 @@ export default function LaboratoryDashboard() {
     router.push(path);
   };
 
+  // Show loading state while checking tenant and feature flags
+  if (tenantLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show unauthorized if feature is not enabled
+  if (!isDashboardEnabled) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="text-red-500 text-6xl mb-4">🔒</div>
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h1>
+          <p className="text-gray-600">
+            Laboratory Dashboard feature is not enabled for {tenant?.name}.
+          </p>
+          <button
+            onClick={() => router.push("/dashboard")}
+            className="mt-4 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+          >
+            Go to Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -322,6 +355,11 @@ export default function LaboratoryDashboard() {
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">Laboratory Dashboard</h1>
           <p className="text-sm text-gray-500 mt-1">Overview of laboratory operations</p>
+          {tenant && (
+            <p className="text-xs text-gray-400 mt-1">
+              Tenant: {tenant.name}
+            </p>
+          )}
         </div>
       </div>
 

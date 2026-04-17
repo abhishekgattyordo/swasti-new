@@ -1,11 +1,9 @@
 
 
-
 // "use client";
 
 // import { useState, useEffect } from "react";
 // import Card from "@/components/laboratory/Card";
-// import { supabase } from "@/lib/supabaseClient";
 
 // interface LabTest {
 //   id: string;
@@ -29,6 +27,8 @@
 //   const [tests, setTests] = useState<LabTest[]>([]);
 //   const [showModal, setShowModal] = useState(false);
 //   const [editingTest, setEditingTest] = useState<LabTest | null>(null);
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState<string | null>(null);
 //   const [formData, setFormData] = useState<FormData>({
 //     test_name: "",
 //     test_code: "",
@@ -37,26 +37,33 @@
 //     active: true,
 //   });
 
-//   // ✅ FETCH FROM SUPABASE
+//   // ✅ FETCH FROM API
 //   useEffect(() => {
 //     fetchTests();
 //   }, []);
 
 //   const fetchTests = async () => {
-//     const { data, error } = await supabase
-//       .from("lab_tests")
-//       .select("*")
-//       .order("created_at", { ascending: false });
-
-//     if (error) {
-//       console.error("Error fetching tests:", error);
-//       return;
+//     setLoading(true);
+//     setError(null);
+//     try {
+//       const response = await fetch("/api/laboratory/tests");
+//       const result = await response.json();
+      
+//       if (result.success) {
+//         setTests(result.data);
+//       } else {
+//         setError(result.error || "Failed to fetch tests");
+//         console.error("Error fetching tests:", result.error);
+//       }
+//     } catch (error) {
+//       console.error("Error:", error);
+//       setError("Network error. Please check if the server is running.");
+//     } finally {
+//       setLoading(false);
 //     }
-
-//     setTests(data || []);
 //   };
 
-//   // ✅ CREATE + UPDATE
+//   // ✅ CREATE + UPDATE via API
 //   const handleSave = async () => {
 //     if (!formData.test_name || !formData.test_code || !formData.price) {
 //       alert("Please fill all required fields");
@@ -64,91 +71,121 @@
 //     }
 
 //     const priceNum = parseFloat(formData.price);
-
-//     if (editingTest) {
-//       // UPDATE
-//       const { error } = await supabase
-//         .from("lab_tests")
-//         .update({
-//           test_name: formData.test_name,
-//           test_code: formData.test_code,
-//           category: formData.category,
-//           price: priceNum,
-//           active: formData.active,
-//         })
-//         .eq("id", editingTest.id);
-
-//       if (error) {
-//         console.error(error);
-//         alert("Update failed");
-//         return;
-//       }
-//     } else {
-//       // CREATE
-//       const { error } = await supabase.from("lab_tests").insert([
-//         {
-//           test_name: formData.test_name,
-//           test_code: formData.test_code,
-//           category: formData.category,
-//           price: priceNum,
-//           active: formData.active,
-//         },
-//       ]);
-
-//       if (error) {
-//         console.error(error);
-//         alert("Insert failed");
-//         return;
-//       }
-//     }
-
-//     await fetchTests();
-
-//     setShowModal(false);
-//     setEditingTest(null);
-//     setFormData({
-//       test_name: "",
-//       test_code: "",
-//       category: "Blood",
-//       price: "",
-//       active: true,
-//     });
-//   };
-
-//   // ✅ TOGGLE ACTIVE
-//   const toggleActive = async (id: string, currentStatus: boolean) => {
-//     const { error } = await supabase
-//       .from("lab_tests")
-//       .update({ active: !currentStatus })
-//       .eq("id", id);
-
-//     if (error) {
-//       console.error(error);
+//     if (isNaN(priceNum) || priceNum <= 0) {
+//       alert("Please enter a valid price");
 //       return;
 //     }
 
-//     setTests((prev) =>
-//       prev.map((test) =>
-//         test.id === id ? { ...test, active: !currentStatus } : test
-//       )
-//     );
+//     try {
+//       if (editingTest) {
+//         // UPDATE
+//         console.log("Updating test:", editingTest.id);
+//         const response = await fetch("/api/laboratory/tests", {
+//           method: "PUT",
+//           headers: { "Content-Type": "application/json" },
+//           body: JSON.stringify({
+//             id: editingTest.id,
+//             test_name: formData.test_name,
+//             test_code: formData.test_code,
+//             category: formData.category,
+//             price: priceNum,
+//             active: formData.active,
+//           }),
+//         });
+        
+//         const result = await response.json();
+//         console.log("Update response:", result);
+        
+//         if (!result.success) {
+//           throw new Error(result.error || "Update failed");
+//         }
+        
+//         alert("Test updated successfully!");
+//       } else {
+//         // CREATE
+//         console.log("Creating new test");
+//         const response = await fetch("/api/laboratory/tests", {
+//           method: "POST",
+//           headers: { "Content-Type": "application/json" },
+//           body: JSON.stringify({
+//             test_name: formData.test_name,
+//             test_code: formData.test_code,
+//             category: formData.category,
+//             price: priceNum,
+//             active: formData.active,
+//           }),
+//         });
+        
+//         const result = await response.json();
+//         console.log("Create response:", result);
+        
+//         if (!result.success) {
+//           throw new Error(result.error || "Create failed");
+//         }
+        
+//         alert("Test added successfully!");
+//       }
+
+//       await fetchTests();
+//       setShowModal(false);
+//       setEditingTest(null);
+//       setFormData({
+//         test_name: "",
+//         test_code: "",
+//         category: "Blood",
+//         price: "",
+//         active: true,
+//       });
+//     } catch (error: any) {
+//       console.error("Error saving test:", error);
+//       alert(`Error saving test: ${error.message}`);
+//     }
 //   };
 
-//   // ✅ DELETE
+//   // ✅ TOGGLE ACTIVE via API
+//   const toggleActive = async (id: string, currentStatus: boolean) => {
+//     try {
+//       const response = await fetch("/api/laboratory/tests", {
+//         method: "PUT",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify({
+//           id,
+//           active: !currentStatus,
+//         }),
+//       });
+      
+//       const result = await response.json();
+//       if (!result.success) throw new Error(result.error);
+      
+//       setTests((prev) =>
+//         prev.map((test) =>
+//           test.id === id ? { ...test, active: !currentStatus } : test
+//         )
+//       );
+//     } catch (error) {
+//       console.error("Error toggling test:", error);
+//       alert("Error updating test status");
+//     }
+//   };
+
+//   // ✅ DELETE via API
 //   const deleteTest = async (id: string) => {
 //     if (!confirm("Are you sure you want to delete this test?")) return;
 
-//     const { error } = await supabase
-//       .from("lab_tests")
-//       .delete()
-//       .eq("id", id);
-
-//     if (error) {
-//       console.error(error);
-//       return;
+//     try {
+//       const response = await fetch(`/api/laboratory/tests?id=${id}`, {
+//         method: "DELETE",
+//       });
+      
+//       const result = await response.json();
+//       if (!result.success) throw new Error(result.error);
+      
+//       setTests((prev) => prev.filter((test) => test.id !== id));
+//       alert("Test deleted successfully!");
+//     } catch (error) {
+//       console.error("Error deleting test:", error);
+//       alert("Error deleting test");
 //     }
-
-//     setTests((prev) => prev.filter((test) => test.id !== id));
 //   };
 
 //   const openModal = (test?: LabTest) => {
@@ -182,6 +219,36 @@
 //     };
 //     return colors[category as keyof typeof colors];
 //   };
+
+//   if (loading) {
+//     return (
+//       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+//         <div className="text-center">
+//           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+//           <p className="mt-4 text-gray-600">Loading tests...</p>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   if (error) {
+//     return (
+//       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+//         <div className="text-center">
+//           <div className="bg-red-50 text-red-600 p-4 rounded-lg">
+//             <p className="font-semibold">Error loading tests</p>
+//             <p className="text-sm mt-1">{error}</p>
+//             <button 
+//               onClick={fetchTests}
+//               className="mt-3 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"
+//             >
+//               Retry
+//             </button>
+//           </div>
+//         </div>
+//       </div>
+//     );
+//   }
 
 //   return (
 //     <div className="min-h-screen bg-gray-50">
@@ -390,10 +457,12 @@
 //   );
 // }
 
-
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useTenant } from "@/contexts/TenantContext";
+import { MODULE_KEYS, LABARATORY_FEATURES } from "@/lib/feature";
 import Card from "@/components/laboratory/Card";
 
 interface LabTest {
@@ -415,6 +484,9 @@ interface FormData {
 }
 
 export default function LabTestsPage() {
+  const router = useRouter();
+  const { tenant, isMicroFeatureEnabled, isLoading: tenantLoading } = useTenant();
+  
   const [tests, setTests] = useState<LabTest[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [editingTest, setEditingTest] = useState<LabTest | null>(null);
@@ -428,10 +500,25 @@ export default function LabTestsPage() {
     active: true,
   });
 
-  // ✅ FETCH FROM API
+  // Check if Test Catalog feature is enabled
+  const isTestCatalogEnabled = isMicroFeatureEnabled(
+    MODULE_KEYS.LABARATORY,
+    LABARATORY_FEATURES.TEST_CATALOG
+  );
+
+  // Redirect if feature is not enabled
   useEffect(() => {
-    fetchTests();
-  }, []);
+    if (!tenantLoading && !isTestCatalogEnabled) {
+      router.push("/unauthorized");
+    }
+  }, [tenantLoading, isTestCatalogEnabled, router]);
+
+  // Fetch tests only if feature is enabled
+  useEffect(() => {
+    if (isTestCatalogEnabled) {
+      fetchTests();
+    }
+  }, [isTestCatalogEnabled]);
 
   const fetchTests = async () => {
     setLoading(true);
@@ -454,7 +541,7 @@ export default function LabTestsPage() {
     }
   };
 
-  // ✅ CREATE + UPDATE via API
+  // Create + Update via API
   const handleSave = async () => {
     if (!formData.test_name || !formData.test_code || !formData.price) {
       alert("Please fill all required fields");
@@ -533,7 +620,7 @@ export default function LabTestsPage() {
     }
   };
 
-  // ✅ TOGGLE ACTIVE via API
+  // Toggle active via API
   const toggleActive = async (id: string, currentStatus: boolean) => {
     try {
       const response = await fetch("/api/laboratory/tests", {
@@ -559,7 +646,7 @@ export default function LabTestsPage() {
     }
   };
 
-  // ✅ DELETE via API
+  // Delete via API
   const deleteTest = async (id: string) => {
     if (!confirm("Are you sure you want to delete this test?")) return;
 
@@ -611,6 +698,39 @@ export default function LabTestsPage() {
     return colors[category as keyof typeof colors];
   };
 
+  // Show loading state while checking tenant and feature flags
+  if (tenantLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show unauthorized if feature is not enabled
+  if (!isTestCatalogEnabled) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="text-red-500 text-6xl mb-4">🔒</div>
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h1>
+          <p className="text-gray-600">
+            Test Catalog feature is not enabled for {tenant?.name}.
+          </p>
+          <button
+            onClick={() => router.push("/dashboard")}
+            className="mt-4 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+          >
+            Go to Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -650,6 +770,11 @@ export default function LabTestsPage() {
             <p className="text-sm text-gray-500 mt-1">
               Manage laboratory test configurations
             </p>
+            {tenant && (
+              <p className="text-xs text-gray-400 mt-1">
+                Tenant: {tenant.name}
+              </p>
+            )}
           </div>
           <button
             onClick={() => openModal()}
@@ -662,64 +787,73 @@ export default function LabTestsPage() {
 
       <div className="p-8">
         <div className="grid grid-cols-1 gap-4">
-          {tests.map((test) => (
-            <Card
-              key={test.id}
-              className="p-6 hover:shadow-md transition-shadow"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-3 mb-2">
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      {test.test_name}
-                    </h3>
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium border ${getCategoryColor(
-                        test.category
-                      )}`}
-                    >
-                      {test.category}
-                    </span>
-                    {!test.active && (
-                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
-                        Inactive
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-sm text-gray-500">Code: {test.test_code}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-2xl font-bold text-gray-900">
-                    ₹{test.price}
-                  </p>
-                  <div className="flex items-center space-x-3 mt-2">
-                    <button
-                      onClick={() => toggleActive(test.id, test.active)}
-                      className={`px-3 py-1 rounded-lg text-sm transition-colors ${
-                        test.active
-                          ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                      }`}
-                    >
-                      {test.active ? "Active" : "Activate"}
-                    </button>
-                    <button
-                      onClick={() => openModal(test)}
-                      className="px-3 py-1 rounded-lg text-sm text-primary hover:bg-primary/10 transition-colors"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => deleteTest(test.id)}
-                      className="px-3 py-1 rounded-lg text-sm text-red-600 hover:bg-red-50 transition-colors"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              </div>
+          {tests.length === 0 ? (
+            <Card className="p-8 text-center">
+              <p className="text-gray-500">No tests found. Click "Add New Test" to create one.</p>
             </Card>
-          ))}
+          ) : (
+            tests.map((test) => (
+              <Card
+                key={test.id}
+                className="p-6 hover:shadow-md transition-shadow"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-3 mb-2">
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        {test.test_name}
+                      </h3>
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium border ${getCategoryColor(
+                          test.category
+                        )}`}
+                      >
+                        {test.category}
+                      </span>
+                      {!test.active && (
+                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
+                          Inactive
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-500">Code: {test.test_code}</p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      Created: {new Date(test.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-2xl font-bold text-gray-900">
+                      ₹{test.price}
+                    </p>
+                    <div className="flex items-center space-x-3 mt-2">
+                      <button
+                        onClick={() => toggleActive(test.id, test.active)}
+                        className={`px-3 py-1 rounded-lg text-sm transition-colors ${
+                          test.active
+                            ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                        }`}
+                      >
+                        {test.active ? "Active" : "Activate"}
+                      </button>
+                      <button
+                        onClick={() => openModal(test)}
+                        className="px-3 py-1 rounded-lg text-sm text-primary hover:bg-primary/10 transition-colors"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => deleteTest(test.id)}
+                        className="px-3 py-1 rounded-lg text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            ))
+          )}
         </div>
       </div>
 

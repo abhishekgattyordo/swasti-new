@@ -1,10 +1,8 @@
 
-
 // "use client";
 
 // import { useState, useEffect } from "react";
 // import Card from "@/components/laboratory/Card";
-// import { supabase } from "@/lib/supabaseClient";
 
 // interface CompletedReport {
 //   id: string;
@@ -23,44 +21,27 @@
 //   const [filter, setFilter] = useState("");
 //   const [reports, setReports] = useState<CompletedReport[]>([]);
 //   const [viewMode, setViewMode] = useState<"table" | "cards">("table");
+//   const [loading, setLoading] = useState(true);
 
-//   // ✅ FETCH COMPLETED REPORTS FROM SUPABASE
+//   // ✅ FETCH COMPLETED REPORTS FROM API
 //   useEffect(() => {
 //     fetchReports();
 //   }, []);
 
 //   const fetchReports = async () => {
-//     const { data, error } = await supabase
-//       .from("lab_orders")
-//       .select("*")
-//       .eq("status", "Completed")
-//       .order("completed_date", { ascending: false });
-
-//     if (error) {
+//     setLoading(true);
+//     try {
+//       const response = await fetch("/api/laboratory/reports");
+//       const result = await response.json();
+      
+//       if (result.success) {
+//         setReports(result.data);
+//       }
+//     } catch (error) {
 //       console.error("Error fetching reports:", error);
-//       return;
+//     } finally {
+//       setLoading(false);
 //     }
-
-//     const formattedReports = (data || []).map((order: any) => ({
-//       id: order.id,
-//       order_id: order.order_id,
-//       patient_name: order.patient_name,
-//       patient_id: order.patient_id,
-//       tests: order.tests.map((test: any) => ({
-//         id: test.id,
-//         name: test.name,
-//         price: test.price,
-//         result:
-//           order.results?.find((r: any) => r.test_id === test.id)?.result ||
-//           "Result not available",
-//       })),
-//       total_amount: order.total_amount,
-//       completed_date: order.completed_date,
-//       collected_date: order.collected_date,
-//       billing_entry_id: order.billing_entry_id,
-//     }));
-
-//     setReports(formattedReports);
 //   };
 
 //   const filteredReports = filter
@@ -97,6 +78,17 @@
 //     a.click();
 //     URL.revokeObjectURL(url);
 //   };
+
+//   if (loading) {
+//     return (
+//       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+//         <div className="text-center">
+//           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+//           <p className="mt-4 text-gray-600">Loading reports...</p>
+//         </div>
+//       </div>
+//     );
+//   }
 
 //   return (
 //     <div className="min-h-screen bg-gray-50">
@@ -242,7 +234,7 @@
 //           </Card>
 //         )}
 
-//         {/* Card View (Original) */}
+//         {/* Card View */}
 //         {viewMode === "cards" && (
 //           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 //             {filteredReports.map((report) => (
@@ -307,7 +299,7 @@
 //         )}
 //       </div>
 
-//       {/* Report Details Modal - Same as before */}
+//       {/* Report Details Modal */}
 //       {selectedReport && (
 //         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
 //           <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl mx-4 max-h-[90vh] overflow-y-auto">
@@ -459,6 +451,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useTenant } from "@/contexts/TenantContext";
+import { MODULE_KEYS, LABARATORY_FEATURES } from "@/lib/feature";
 import Card from "@/components/laboratory/Card";
 
 interface CompletedReport {
@@ -474,16 +469,34 @@ interface CompletedReport {
 }
 
 export default function ReportsPage() {
+  const router = useRouter();
+  const { tenant, isMicroFeatureEnabled, isLoading: tenantLoading } = useTenant();
+  
   const [selectedReport, setSelectedReport] = useState<CompletedReport | null>(null);
   const [filter, setFilter] = useState("");
   const [reports, setReports] = useState<CompletedReport[]>([]);
   const [viewMode, setViewMode] = useState<"table" | "cards">("table");
   const [loading, setLoading] = useState(true);
 
-  // ✅ FETCH COMPLETED REPORTS FROM API
+  // Check if Reports feature is enabled
+  const isReportsEnabled = isMicroFeatureEnabled(
+    MODULE_KEYS.LABARATORY,
+    LABARATORY_FEATURES.REPORTS
+  );
+
+  // Redirect if feature is not enabled
   useEffect(() => {
-    fetchReports();
-  }, []);
+    if (!tenantLoading && !isReportsEnabled) {
+      router.push("/unauthorized");
+    }
+  }, [tenantLoading, isReportsEnabled, router]);
+
+  // Fetch reports only if feature is enabled
+  useEffect(() => {
+    if (isReportsEnabled) {
+      fetchReports();
+    }
+  }, [isReportsEnabled]);
 
   const fetchReports = async () => {
     setLoading(true);
@@ -536,6 +549,39 @@ export default function ReportsPage() {
     URL.revokeObjectURL(url);
   };
 
+  // Show loading state while checking tenant and feature flags
+  if (tenantLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show unauthorized if feature is not enabled
+  if (!isReportsEnabled) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="text-red-500 text-6xl mb-4">🔒</div>
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h1>
+          <p className="text-gray-600">
+            Lab Reports feature is not enabled for {tenant?.name}.
+          </p>
+          <button
+            onClick={() => router.push("/dashboard")}
+            className="mt-4 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+          >
+            Go to Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -554,6 +600,11 @@ export default function ReportsPage() {
           <div>
             <h1 className="text-2xl font-semibold text-gray-900">Lab Reports</h1>
             <p className="text-sm text-gray-500 mt-1">View completed test reports</p>
+            {tenant && (
+              <p className="text-xs text-gray-400 mt-1">
+                Tenant: {tenant.name}
+              </p>
+            )}
           </div>
           <div className="flex items-center space-x-3">
             {/* View Toggle */}
