@@ -15,6 +15,8 @@ import { doctorsApi } from "@/lib/api/doctors";
 import { patientsApi } from "@/lib/api/registration";
 import { appointmentsApi } from "@/lib/api/appointments"; // 👈 new import
 import toast from "react-hot-toast";
+import { useTenant } from "@/contexts/TenantContext";
+import { MODULE_KEYS, HELPDESK_FEATURES } from "@/lib/feature";
 
 type Doctor = {
   id: string;
@@ -47,16 +49,32 @@ export default function HelpDeskPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+  const { tenant, isMicroFeatureEnabled, isLoading: tenantLoading } = useTenant();
+
+  const isAppointmentsEnabled = isMicroFeatureEnabled(
+  MODULE_KEYS.HELPDESK,
+  HELPDESK_FEATURES.APPOINTMENTS
+);
+
+  useEffect(() => {
+    if (!tenantLoading && !isAppointmentsEnabled) {
+      router.push("/unauthorized");
+      return;
+    }
+    fetchDoctors();
+  }, [tenantLoading]);
+
+    useEffect(() => {
+    if (isAppointmentsEnabled) {
+      fetchAppointments(selectedDate);
+    }
+  }, [selectedDate, isAppointmentsEnabled]);
+
 
   // Fetch doctors on mount
-  useEffect(() => {
-    fetchDoctors();
-  }, []);
 
   // Fetch appointments whenever selectedDate changes
-  useEffect(() => {
-    fetchAppointments(selectedDate);
-  }, [selectedDate]);
+ 
 
   const fetchDoctors = async () => {
     try {
@@ -220,6 +238,21 @@ export default function HelpDeskPage() {
   const handleBillingClick = () => router.push('/helpdesk/billing');
   const handleRoomAvailabilityClick = () => console.log('Room Availability clicked');
   const handleDoctorSlotsClick = () => router.push('/helpdesk/doctor-slots');
+
+  if (!tenantLoading && !isAppointmentsEnabled) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="text-red-500 text-6xl mb-4">🔒</div>
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h1>
+          <p className="text-gray-600">
+            Appointments feature is not enabled for {tenant?.name}.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
 
   return (
     <div className="min-h-screen bg-gray-50 flex">

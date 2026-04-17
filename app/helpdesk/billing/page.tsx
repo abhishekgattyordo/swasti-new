@@ -1,14 +1,16 @@
+
+
 // "use client";
 
 // import { useState, useEffect } from "react";
 // import { useRouter } from "next/navigation";
-// import { Menu, X, Search, Plus, Edit, DollarSign, Clock, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+// import { Menu, X, Search, Edit, DollarSign, Clock, CheckCircle2, AlertCircle, Loader2, Calendar } from "lucide-react";
 // import HelpDeskSidebar from "@/components/helpdesk/HelpDeskSidebar";
 // import { toast } from "sonner";
 
 // type Invoice = {
-//   id: string;               // display ID (e.g., INV-20260330-0001)
-//   appointmentId: string;    // original appointment UUID
+//   id: string;
+//   appointmentId: string;
 //   patientName: string;
 //   patientId: string;
 //   date: string;
@@ -23,8 +25,14 @@
 //   const [searchQuery, setSearchQuery] = useState("");
 //   const [statusFilter, setStatusFilter] = useState<string>("");
 //   const [invoices, setInvoices] = useState<Invoice[]>([]);
+//   const [filteredInvoices, setFilteredInvoices] = useState<Invoice[]>([]);
 //   const [loading, setLoading] = useState(true);
 //   const [error, setError] = useState<string | null>(null);
+  
+//   // Date filter state – default to today
+//   const [selectedDate, setSelectedDate] = useState(() => {
+//     return new Date().toISOString().split('T')[0];
+//   });
 
 //   // Edit modal state
 //   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
@@ -32,11 +40,14 @@
 //   const [editMethod, setEditMethod] = useState<string>("");
 //   const [isUpdating, setIsUpdating] = useState(false);
 
+//   // Fetch invoices when date changes
 //   useEffect(() => {
 //     const fetchInvoices = async () => {
 //       try {
 //         setLoading(true);
-//         const response = await fetch("/api/helpdesk/invoices");
+//         // Build URL with date filter
+//         let url = `/api/helpdesk/invoices?startDate=${selectedDate}&endDate=${selectedDate}`;
+//         const response = await fetch(url);
 //         const data = await response.json();
 //         if (data.success) {
 //           setInvoices(data.data);
@@ -53,17 +64,25 @@
 //       }
 //     };
 //     fetchInvoices();
-//   }, []);
+//   }, [selectedDate]);
 
-//   const filteredInvoices = invoices.filter((inv) => {
-//     const matchesSearch =
-//       searchQuery === "" ||
-//       inv.patientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-//       inv.patientId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-//       inv.id.toLowerCase().includes(searchQuery.toLowerCase());
-//     const matchesStatus = statusFilter === "" || inv.status === statusFilter;
-//     return matchesSearch && matchesStatus;
-//   });
+//   // Apply search and status filters (client-side)
+//   useEffect(() => {
+//     let filtered = [...invoices];
+//     if (searchQuery) {
+//       const q = searchQuery.toLowerCase();
+//       filtered = filtered.filter(
+//         (inv) =>
+//           inv.patientName.toLowerCase().includes(q) ||
+//           inv.patientId.toLowerCase().includes(q) ||
+//           inv.id.toLowerCase().includes(q)
+//       );
+//     }
+//     if (statusFilter) {
+//       filtered = filtered.filter((inv) => inv.status === statusFilter);
+//     }
+//     setFilteredInvoices(filtered);
+//   }, [invoices, searchQuery, statusFilter]);
 
 //   const totalRevenue = invoices.reduce((sum, inv) => sum + inv.amount, 0);
 //   const pendingAmount = invoices.filter((inv) => inv.status === "pending").reduce((sum, inv) => sum + inv.amount, 0);
@@ -71,10 +90,10 @@
 //   const overdueAmount = invoices.filter((inv) => inv.status === "overdue").reduce((sum, inv) => sum + inv.amount, 0);
 
 //   const stats = [
-//     { title: "Total Revenue", value: `$${totalRevenue.toFixed(2)}`, bgColor: "bg-blue-100", icon: <DollarSign className="w-5 h-5 text-blue-600" /> },
-//     { title: "Pending Payments", value: `$${pendingAmount.toFixed(2)}`, bgColor: "bg-amber-100", icon: <Clock className="w-5 h-5 text-amber-600" /> },
-//     { title: "Paid Invoices", value: `$${paidAmount.toFixed(2)}`, bgColor: "bg-emerald-100", icon: <CheckCircle2 className="w-5 h-5 text-emerald-600" /> },
-//     { title: "Overdue", value: `$${overdueAmount.toFixed(2)}`, bgColor: "bg-rose-100", icon: <AlertCircle className="w-5 h-5 text-rose-600" /> },
+//     { title: "Total Revenue", value: `₹${totalRevenue.toFixed(2)}`, bgColor: "bg-blue-100", icon: <DollarSign className="w-5 h-5 text-blue-600" /> },
+//     { title: "Pending Payments", value: `₹${pendingAmount.toFixed(2)}`, bgColor: "bg-amber-100", icon: <Clock className="w-5 h-5 text-amber-600" /> },
+//     { title: "Paid Invoices", value: `₹${paidAmount.toFixed(2)}`, bgColor: "bg-emerald-100", icon: <CheckCircle2 className="w-5 h-5 text-emerald-600" /> },
+//     { title: "Overdue", value: `₹${overdueAmount.toFixed(2)}`, bgColor: "bg-rose-100", icon: <AlertCircle className="w-5 h-5 text-rose-600" /> },
 //   ];
 
 //   const handleBillingClick = () => {};
@@ -89,8 +108,6 @@
 //       default: return "bg-gray-100 text-gray-600";
 //     }
 //   };
-
- 
 
 //   const handleEditClick = (invoice: Invoice) => {
 //     setEditingInvoice(invoice);
@@ -126,6 +143,10 @@
 //     } finally {
 //       setIsUpdating(false);
 //     }
+//   };
+
+//   const clearDateFilter = () => {
+//     setSelectedDate(new Date().toISOString().split('T')[0]);
 //   };
 
 //   if (loading) {
@@ -170,6 +191,8 @@
 //               <h1 className="text-2xl font-bold text-gray-900">Billing Management</h1>
 //               <p className="text-sm text-gray-500 mt-1">Manage invoices and payments</p>
 //             </div>
+
+//             {/* Stats Cards */}
 //             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3">
 //               {stats.map((stat, i) => (
 //                 <div key={i} className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
@@ -179,6 +202,8 @@
 //                 </div>
 //               ))}
 //             </div>
+
+//             {/* Filters Row */}
 //             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
 //               <div className="relative w-full sm:w-96">
 //                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -191,14 +216,33 @@
 //                   <option value="pending">Pending</option>
 //                   <option value="overdue">Overdue</option>
 //                 </select>
-               
+//                 {/* Date Picker */}
+//                 <div className="relative">
+//                   <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+//                   <input
+//                     type="date"
+//                     value={selectedDate}
+//                     onChange={(e) => setSelectedDate(e.target.value)}
+//                     className="pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
+//                   />
+//                 </div>
+//                 {selectedDate !== new Date().toISOString().split('T')[0] && (
+//                   <button
+//                     onClick={clearDateFilter}
+//                     className="px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+//                   >
+//                     Today
+//                   </button>
+//                 )}
 //               </div>
 //             </div>
+
+//             {/* Invoices Table */}
 //             <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
 //               <div className="overflow-x-auto">
 //                 <table className="w-full min-w-[800px] lg:min-w-full border-collapse">
 //                   <thead className="bg-gray-50">
-//                     <tr>
+//                     <tr className="border-b">
 //                       <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase border border-gray-200">Invoice ID</th>
 //                       <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase border border-gray-200">Patient</th>
 //                       <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase border border-gray-200">Date</th>
@@ -216,7 +260,7 @@
 //                           <div><p className="font-medium text-gray-900">{inv.patientName}</p><p className="text-xs text-gray-500">{inv.patientId}</p></div>
 //                         </td>
 //                         <td className="p-3 border border-gray-200 text-sm">{new Date(inv.date).toLocaleDateString()}</td>
-//                         <td className="p-3 border border-gray-200 text-sm font-medium">${inv.amount.toFixed(2)}</td>
+//                         <td className="p-3 border border-gray-200 text-sm font-medium">₹{inv.amount.toFixed(2)}</td>
 //                         <td className="p-3 border border-gray-200"><span className={`px-2 py-1 text-xs rounded-full font-medium ${getStatusColor(inv.status)}`}>{inv.status}</span></td>
 //                         <td className="p-3 border border-gray-200 text-sm text-gray-600">{inv.method || "-"}</td>
 //                         <td className="p-3 border border-gray-200">
@@ -232,7 +276,7 @@
 //               {filteredInvoices.length === 0 && (
 //                 <div className="text-center py-12">
 //                   <span className="material-icons text-gray-400 text-4xl mb-2">receipt</span>
-//                   <p className="text-gray-500">No invoices found</p>
+//                   <p className="text-gray-500">No invoices found for {selectedDate}</p>
 //                 </div>
 //               )}
 //             </div>
@@ -275,17 +319,8 @@
 //               </div>
 //             </div>
 //             <div className="flex justify-end gap-3 mt-6">
-//               <button
-//                 onClick={() => setEditingInvoice(null)}
-//                 className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-//               >
-//                 Cancel
-//               </button>
-//               <button
-//                 onClick={handleUpdateInvoice}
-//                 disabled={isUpdating}
-//                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-//               >
+//               <button onClick={() => setEditingInvoice(null)} className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
+//               <button onClick={handleUpdateInvoice} disabled={isUpdating} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">
 //                 {isUpdating ? "Saving..." : "Save Changes"}
 //               </button>
 //             </div>
@@ -297,6 +332,8 @@
 // }
 
 
+
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -304,6 +341,8 @@ import { useRouter } from "next/navigation";
 import { Menu, X, Search, Edit, DollarSign, Clock, CheckCircle2, AlertCircle, Loader2, Calendar } from "lucide-react";
 import HelpDeskSidebar from "@/components/helpdesk/HelpDeskSidebar";
 import { toast } from "sonner";
+import { useTenant } from "@/contexts/TenantContext";
+import { MODULE_KEYS, HELPDESK_FEATURES } from "@/lib/feature";
 
 type Invoice = {
   id: string;
@@ -336,6 +375,18 @@ export default function BillingPage() {
   const [editStatus, setEditStatus] = useState<string>("");
   const [editMethod, setEditMethod] = useState<string>("");
   const [isUpdating, setIsUpdating] = useState(false);
+  const { tenant, isMicroFeatureEnabled, isLoading: tenantLoading } = useTenant();
+
+  const isBillingEnabled = isMicroFeatureEnabled(
+  MODULE_KEYS.HELPDESK,
+  HELPDESK_FEATURES.BILLING
+);
+
+useEffect(() => {
+  if (!tenantLoading && !isBillingEnabled) {
+    router.push("/unauthorized");
+  }
+}, [tenantLoading]);
 
   // Fetch invoices when date changes
   useEffect(() => {
@@ -470,6 +521,20 @@ export default function BillingPage() {
       </div>
     );
   }
+  // Add this BEFORE the loading check
+if (!tenantLoading && !isBillingEnabled) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <div className="text-red-500 text-6xl mb-4">🔒</div>
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h1>
+        <p className="text-gray-600">
+          Billing feature is not enabled for {tenant?.name}.
+        </p>
+      </div>
+    </div>
+  );
+}
 
   return (
     <div className="min-h-screen bg-gray-50 flex">

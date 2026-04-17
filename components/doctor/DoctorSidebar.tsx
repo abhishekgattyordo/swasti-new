@@ -16,10 +16,21 @@ import {
   Activity,
   LogOut,
 } from 'lucide-react';
+import { useTenant } from '@/contexts/TenantContext';
+import { MODULE_KEYS, DOCTOR_FEATURES } from '@/lib/feature';
 
 interface DoctorSidebarProps {
   isOpen: boolean;
   onClose: () => void;
+}
+
+interface NavItem {
+  icon: React.ElementType;
+  label: string;
+  href: string;
+  badge?: string;
+  color: string;
+  featureKey: string;
 }
 
 export default function DoctorSidebar({ isOpen, onClose }: DoctorSidebarProps) {
@@ -28,6 +39,9 @@ export default function DoctorSidebar({ isOpen, onClose }: DoctorSidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [userName, setUserName] = useState('Doctor');
   const [doctorSpecialty, setDoctorSpecialty] = useState('');
+const { isMicroFeatureEnabled } = useTenant();
+
+
 
   useEffect(() => {
     const userStr = localStorage.getItem('user');
@@ -43,14 +57,44 @@ export default function DoctorSidebar({ isOpen, onClose }: DoctorSidebarProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // run once after mount
 
+  const isDashboardEnabled = isMicroFeatureEnabled(MODULE_KEYS.DOCTOR, DOCTOR_FEATURES.DASHBOARD);
+const isScheduleEnabled = isMicroFeatureEnabled(MODULE_KEYS.DOCTOR, DOCTOR_FEATURES.SCHEDULE);
+const isPatientsEnabled = isMicroFeatureEnabled(MODULE_KEYS.DOCTOR, DOCTOR_FEATURES.PATIENTS);
+const isBillingEnabled = isMicroFeatureEnabled(MODULE_KEYS.DOCTOR, DOCTOR_FEATURES.BILLING);
+
+
   const toggleCollapse = () => setIsCollapsed(!isCollapsed);
 
-  const navItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', href: '/doctor/dashboard', color: 'from-emerald-500 to-emerald-700' },
-    { icon: Calendar, label: 'Schedule', href: '/doctor/schedule', badge: '12', color: 'from-blue-500 to-blue-700' },
-    { icon: Users, label: 'Patients', href: '/doctor/patients', badge: '5', color: 'from-purple-500 to-purple-700' },
-    { icon: CreditCard, label: 'Billing', href: '/doctor/billing', badge: '3', color: 'from-amber-500 to-amber-700' },
-  ];
+const navItems: NavItem[] = [
+  { icon: LayoutDashboard, label: 'Dashboard', href: '/doctor/dashboard', color: 'from-emerald-500 to-emerald-700', featureKey: DOCTOR_FEATURES.DASHBOARD },
+  { icon: Calendar, label: 'Schedule', href: '/doctor/schedule', badge: '12', color: 'from-blue-500 to-blue-700', featureKey: DOCTOR_FEATURES.SCHEDULE },
+  { icon: Users, label: 'Patients', href: '/doctor/patients', badge: '5', color: 'from-purple-500 to-purple-700', featureKey: DOCTOR_FEATURES.PATIENTS },
+  { icon: CreditCard, label: 'Billing', href: '/doctor/billing', badge: '3', color: 'from-amber-500 to-amber-700', featureKey: DOCTOR_FEATURES.BILLING },
+];
+
+  const visibleNavItems = navItems.filter(item => {
+    switch (item.featureKey) {
+      case DOCTOR_FEATURES.DASHBOARD:
+        return isDashboardEnabled;
+      case DOCTOR_FEATURES.SCHEDULE:
+        return isScheduleEnabled;
+      case DOCTOR_FEATURES.PATIENTS:
+        return isPatientsEnabled;
+      case DOCTOR_FEATURES.BILLING:
+        return isBillingEnabled;
+      default:
+        return true;
+    }
+  });
+
+  useEffect(() => {
+  console.log("=== DOCTOR FEATURE DEBUG ===");
+  console.log("isDashboardEnabled:", isDashboardEnabled);
+  console.log("isScheduleEnabled:", isScheduleEnabled);
+  console.log("isPatientsEnabled:", isPatientsEnabled);
+  console.log("isBillingEnabled:", isBillingEnabled);
+  console.log("DOCTOR_FEATURES:", DOCTOR_FEATURES);
+}, []);
 
   const quickAccessItems = [
     { icon: User, label: 'New Appointment', href: '/doctor/patients/new', iconBg: 'bg-blue-50', iconColor: 'text-blue-600' },
@@ -124,7 +168,7 @@ export default function DoctorSidebar({ isOpen, onClose }: DoctorSidebarProps) {
           <div className="mb-6">
             {!isCollapsed && <p className="text-xs font-medium text-gray-400 uppercase tracking-wider px-4 mb-3">Main Navigation</p>}
             <div className="space-y-2">
-              {navItems.map((item) => {
+              {visibleNavItems.map((item) => {
                 const active = isActive(item.href);
                 return (
                   <Link

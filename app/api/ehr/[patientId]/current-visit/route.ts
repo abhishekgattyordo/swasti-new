@@ -1,3 +1,6 @@
+
+
+
 // import { NextRequest, NextResponse } from 'next/server';
 // import pool from '@/lib/db';
 
@@ -48,7 +51,7 @@
 
 //     const url = new URL(req.url);
 //     const appointmentId = url.searchParams.get('appointmentId');
-//     const dateParam = url.searchParams.get('date'); // e.g., 2026-03-12
+//     const dateParam = url.searchParams.get('date');
 
 //     let targetAppointmentId = appointmentId;
 //     if (!targetAppointmentId) {
@@ -71,7 +74,7 @@
 //       }
 //     }
 
-//     // Fetch visit details (if they exist)
+//     // Fetch visit details including consultation fee from appointments table
 //     const visitResult = await client.query(
 //       `SELECT 
 //         vd.diagnosis,
@@ -84,7 +87,8 @@
 //         a.appointment_date,
 //         a.appointment_time,
 //         a.doctor_id,
-//         d.first_name || ' ' || d.last_name as doctor_name
+//         d.first_name || ' ' || d.last_name as doctor_name,
+//         a.consultation_fee   -- add consultation fee from appointments
 //        FROM visit_details vd
 //        JOIN appointments a ON vd.appointment_id = a.id
 //        JOIN doctors d ON a.doctor_id = d.id
@@ -93,10 +97,23 @@
 //     );
 
 //     if (visitResult.rows.length === 0) {
-//       // Return empty but still 200 with null data, so frontend knows it's new
+//       // No visit details yet, but we can still return appointment data (including fee)
+//       const apptResult = await client.query(
+//         `SELECT a.consultation_fee, a.appointment_date, a.appointment_time, a.doctor_id
+//          FROM appointments a
+//          WHERE a.id = $1`,
+//         [targetAppointmentId]
+//       );
+//       const apptData = apptResult.rows[0];
 //       return NextResponse.json({
 //         success: true,
-//         data: null,
+//         data: {
+//           consultation_fee: apptData?.consultation_fee || 0,
+//           appointment_date: apptData?.appointment_date,
+//           appointment_time: apptData?.appointment_time,
+//           doctor_id: apptData?.doctor_id,
+//           // other fields null
+//         },
 //         appointmentId: targetAppointmentId
 //       });
 //     }
@@ -128,6 +145,7 @@
 
 //     let appointmentId = body.appointmentId;
 //     const date = body.date; // optional: YYYY-MM-DD
+//     const consultationFee = body.consultation_fee; // new field
 
 //     // Resolve appointmentId if not provided but date is given
 //     if (!appointmentId) {
@@ -154,14 +172,22 @@
 
 //     await client.query('BEGIN');
 
-//     // Check if a record already exists for this appointment
+//     // Update consultation fee in appointments table
+//     if (consultationFee !== undefined) {
+//       await client.query(
+//         `UPDATE appointments SET consultation_fee = $1 WHERE id = $2`,
+//         [consultationFee, appointmentId]
+//       );
+//     }
+
+//     // Check if a record already exists for this appointment in visit_details
 //     const existing = await client.query(
 //       'SELECT id FROM visit_details WHERE appointment_id = $1',
 //       [appointmentId]
 //     );
 
 //     if (existing.rows.length > 0) {
-//       // Update
+//       // Update visit_details
 //       await client.query(
 //         `UPDATE visit_details SET
 //           diagnosis = $1,
@@ -174,7 +200,7 @@
 //         [diagnosis, icd10_code, clinical_notes, follow_up_date, patient_instructions, appointmentId]
 //       );
 //     } else {
-//       // Insert
+//       // Insert into visit_details
 //       await client.query(
 //         `INSERT INTO visit_details
 //           (appointment_id, diagnosis, icd10_code, clinical_notes, follow_up_date, patient_instructions, created_at, updated_at)
@@ -202,16 +228,13 @@
 //   }
 // }
 
-
-
 import { NextRequest, NextResponse } from 'next/server';
-import pool from '@/lib/db';
+import { query } from '@/lib/db';
 
 // Helper to get the latest appointment ID for a patient
 async function getLatestAppointmentId(patientId: string): Promise<string | null> {
-  const client = await pool.connect();
   try {
-    const result = await client.query(
+    const result = await query(
       `SELECT id FROM appointments 
        WHERE patient_id = $1 
        ORDER BY appointment_date DESC, appointment_time DESC 
@@ -219,16 +242,16 @@ async function getLatestAppointmentId(patientId: string): Promise<string | null>
       [patientId]
     );
     return result.rows[0]?.id || null;
-  } finally {
-    client.release();
+  } catch (error) {
+    console.error('Error getting latest appointment ID:', error);
+    return null;
   }
 }
 
 // Helper to get appointment ID by patient ID and date
 async function getAppointmentIdByDate(patientId: string, date: string): Promise<string | null> {
-  const client = await pool.connect();
   try {
-    const result = await client.query(
+    const result = await query(
       `SELECT id FROM appointments 
        WHERE patient_id = $1 AND appointment_date = $2::date
        ORDER BY appointment_time DESC
@@ -236,19 +259,18 @@ async function getAppointmentIdByDate(patientId: string, date: string): Promise<
       [patientId, date]
     );
     return result.rows[0]?.id || null;
-  } finally {
-    client.release();
+  } catch (error) {
+    console.error('Error getting appointment ID by date:', error);
+    return null;
   }
 }
 
 // GET /api/ehr/[patientId]/current-visit?appointmentId=xxx&date=yyyy-mm-dd
 
-
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ patientId: string }> }
 ) {
-  const client = await pool.connect();
   try {
     const { patientId } = await params;
 
@@ -278,7 +300,7 @@ export async function GET(
     }
 
     // Fetch visit details including consultation fee from appointments table
-    const visitResult = await client.query(
+    const visitResult = await query(
       `SELECT 
         vd.diagnosis,
         vd.icd10_code,
@@ -291,7 +313,7 @@ export async function GET(
         a.appointment_time,
         a.doctor_id,
         d.first_name || ' ' || d.last_name as doctor_name,
-        a.consultation_fee   -- add consultation fee from appointments
+        a.consultation_fee
        FROM visit_details vd
        JOIN appointments a ON vd.appointment_id = a.id
        JOIN doctors d ON a.doctor_id = d.id
@@ -301,7 +323,7 @@ export async function GET(
 
     if (visitResult.rows.length === 0) {
       // No visit details yet, but we can still return appointment data (including fee)
-      const apptResult = await client.query(
+      const apptResult = await query(
         `SELECT a.consultation_fee, a.appointment_date, a.appointment_time, a.doctor_id
          FROM appointments a
          WHERE a.id = $1`,
@@ -315,7 +337,6 @@ export async function GET(
           appointment_date: apptData?.appointment_date,
           appointment_time: apptData?.appointment_time,
           doctor_id: apptData?.doctor_id,
-          // other fields null
         },
         appointmentId: targetAppointmentId
       });
@@ -331,8 +352,6 @@ export async function GET(
       { success: false, message: 'Internal server error' },
       { status: 500 }
     );
-  } finally {
-    client.release();
   }
 }
 
@@ -341,14 +360,13 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ patientId: string }> }
 ) {
-  const client = await pool.connect();
   try {
     const { patientId } = await params;
     const body = await req.json();
 
     let appointmentId = body.appointmentId;
-    const date = body.date; // optional: YYYY-MM-DD
-    const consultationFee = body.consultation_fee; // new field
+    const date = body.date;
+    const consultationFee = body.consultation_fee;
 
     // Resolve appointmentId if not provided but date is given
     if (!appointmentId) {
@@ -373,25 +391,23 @@ export async function POST(
 
     const { diagnosis, icd10_code, clinical_notes, follow_up_date, patient_instructions } = body;
 
-    await client.query('BEGIN');
-
     // Update consultation fee in appointments table
     if (consultationFee !== undefined) {
-      await client.query(
+      await query(
         `UPDATE appointments SET consultation_fee = $1 WHERE id = $2`,
         [consultationFee, appointmentId]
       );
     }
 
     // Check if a record already exists for this appointment in visit_details
-    const existing = await client.query(
+    const existing = await query(
       'SELECT id FROM visit_details WHERE appointment_id = $1',
       [appointmentId]
     );
 
     if (existing.rows.length > 0) {
       // Update visit_details
-      await client.query(
+      await query(
         `UPDATE visit_details SET
           diagnosis = $1,
           icd10_code = $2,
@@ -404,7 +420,7 @@ export async function POST(
       );
     } else {
       // Insert into visit_details
-      await client.query(
+      await query(
         `INSERT INTO visit_details
           (appointment_id, diagnosis, icd10_code, clinical_notes, follow_up_date, patient_instructions, created_at, updated_at)
          VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())`,
@@ -412,21 +428,16 @@ export async function POST(
       );
     }
 
-    await client.query('COMMIT');
-
     return NextResponse.json({
       success: true,
       message: 'Current visit saved successfully',
       appointmentId
     });
   } catch (error) {
-    await client.query('ROLLBACK');
     console.error('Error saving current visit:', error);
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }
     );
-  } finally {
-    client.release();
   }
 }

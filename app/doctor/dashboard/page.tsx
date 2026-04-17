@@ -9,9 +9,26 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { useDoctor } from "../layout";
+import { useTenant } from "@/contexts/TenantContext";
+import { MODULE_KEYS, DOCTOR_FEATURES } from "@/lib/feature";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function DashboardPage() {
   const { appointments, patients, invoices } = useDoctor();
+  const router = useRouter();
+const { tenant, isMicroFeatureEnabled, isLoading: tenantLoading } = useTenant();
+
+const isDashboardEnabled = isMicroFeatureEnabled(
+  MODULE_KEYS.DOCTOR,
+  DOCTOR_FEATURES.DASHBOARD
+);
+
+useEffect(() => {
+  if (!tenantLoading && !isDashboardEnabled) {
+    router.push("/unauthorized");
+  }
+}, [tenantLoading]);
 
   const stats = [
     {
@@ -41,6 +58,20 @@ export default function DashboardPage() {
   ];
 
   const upcomingAppointments = appointments.filter(apt => apt.status !== "Completed").slice(0, 3);
+
+  if (!tenantLoading && !isDashboardEnabled) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <div className="text-red-500 text-6xl mb-4">🔒</div>
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h1>
+        <p className="text-gray-600">
+          Doctor Dashboard is not enabled for {tenant?.name}.
+        </p>
+      </div>
+    </div>
+  );
+}
 
   return (
     <div className="space-y-6">

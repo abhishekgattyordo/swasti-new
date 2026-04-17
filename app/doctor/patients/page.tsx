@@ -4,11 +4,27 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Search, Plus } from "lucide-react";
 import { useDoctor } from "../layout";
+import { useTenant } from "@/contexts/TenantContext";
+import { MODULE_KEYS, DOCTOR_FEATURES } from "@/lib/feature";
+
 
 export default function PatientsPage() {
   const router = useRouter();
   const { patients } = useDoctor();
   const [searchTerm, setSearchTerm] = useState("");
+
+  const { tenant, isMicroFeatureEnabled, isLoading: tenantLoading } = useTenant();
+
+const isPatientsEnabled = isMicroFeatureEnabled(
+  MODULE_KEYS.DOCTOR,
+  DOCTOR_FEATURES.PATIENTS
+);
+
+useEffect(() => {
+  if (!tenantLoading && !isPatientsEnabled) {
+    router.push("/unauthorized");
+  }
+}, [tenantLoading]);
 
   useEffect(() => {
     console.log("Patients response:", patients);
@@ -27,6 +43,19 @@ export default function PatientsPage() {
   //   e.stopPropagation();
   //   router.push(`/doctor/ehr/${patientId}/current-visit`);
   // };
+if (!tenantLoading && !isPatientsEnabled) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <div className="text-red-500 text-6xl mb-4">🔒</div>
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h1>
+        <p className="text-gray-600">
+          Doctor Patients feature is not enabled for {tenant?.name}.
+        </p>
+      </div>
+    </div>
+  );
+}
 
   return (
     <div className="space-y-4 sm:space-y-6">

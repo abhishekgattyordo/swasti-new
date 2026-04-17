@@ -1,10 +1,10 @@
 
 
-
 // import type { Metadata } from "next";
 // import { Geist, Geist_Mono } from "next/font/google";
 // import "./globals.css";
-// import { Toaster } from "react-hot-toast";
+// import { Toaster as HotToaster } from "react-hot-toast"; // rename if needed
+// import { Toaster } from "sonner"; // import sonner's Toaster
 // import { TooltipProvider } from "@/components/ui/tooltip";
 
 // const geistSans = Geist({
@@ -32,24 +32,31 @@
 //       <body
 //         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
 //       >
-//         {/* Global Tooltip Context */}
 //         <TooltipProvider delayDuration={200}>
 //           {children}
 //         </TooltipProvider>
 
-//         {/* Global Toast Notifications */}
-//         <Toaster position="bottom-right" />
+//         {/* Toast from react-hot-toast (if you still use it elsewhere) */}
+//         <HotToaster position="bottom-right" />
+        
+//         {/* ✅ Toast from sonner – this makes your success messages appear */}
+//         <Toaster richColors position="top-right" />
 //       </body>
 //     </html>
 //   );
 // }
 
+
+
+
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { Toaster as HotToaster } from "react-hot-toast"; // rename if needed
-import { Toaster } from "sonner"; // import sonner's Toaster
+import { Toaster as HotToaster } from "react-hot-toast";
+import { Toaster } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { TenantProvider } from "@/contexts/TenantContext";
+import { TenantLoader } from "@/components/TenantLoader";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -76,14 +83,18 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <TooltipProvider delayDuration={200}>
-          {children}
-        </TooltipProvider>
+        <TenantProvider>
+          <TenantLoader>
+            <TooltipProvider delayDuration={200}>
+              {children}
+            </TooltipProvider>
+          </TenantLoader>
+        </TenantProvider>
 
         {/* Toast from react-hot-toast (if you still use it elsewhere) */}
         <HotToaster position="bottom-right" />
         
-        {/* ✅ Toast from sonner – this makes your success messages appear */}
+        {/* Toast from sonner – this makes your success messages appear */}
         <Toaster richColors position="top-right" />
       </body>
     </html>

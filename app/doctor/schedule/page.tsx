@@ -33,6 +33,8 @@ import {
   addMonths,
   subMonths,
 } from "date-fns";
+import { useTenant } from "@/contexts/TenantContext";
+import { MODULE_KEYS, DOCTOR_FEATURES } from "@/lib/feature";
 
 import { doctorsApi } from "@/lib/api/doctors";
 import NewAppointmentModal from "@/components/doctor/schedule/NewAppointmentModal";
@@ -86,6 +88,19 @@ export default function SchedulePage() {
   const [doctorId, setDoctorId] = useState<number | null>(null);
 
   const router = useRouter();
+
+  const { tenant, isMicroFeatureEnabled, isLoading: tenantLoading } = useTenant();
+
+const isScheduleEnabled = isMicroFeatureEnabled(
+  MODULE_KEYS.DOCTOR,
+  DOCTOR_FEATURES.SCHEDULE
+);
+
+useEffect(() => {
+  if (!tenantLoading && !isScheduleEnabled) {
+    router.push("/unauthorized");
+  }
+}, [tenantLoading]);
 
 useEffect(() => {
   const fetchDoctorId = async () => {
@@ -370,6 +385,20 @@ useEffect(() => {
 
   const typeOptions = Array.from(new Set(appointments.map((a) => a.type)));
   const statusOptions = Array.from(new Set(appointments.map((a) => a.status)));
+
+  if (!tenantLoading && !isScheduleEnabled) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <div className="text-red-500 text-6xl mb-4">🔒</div>
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h1>
+        <p className="text-gray-600">
+          Doctor Schedule is not enabled for {tenant?.name}.
+        </p>
+      </div>
+    </div>
+  );
+}
 
   return (
     <>

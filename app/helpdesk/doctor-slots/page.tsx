@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Menu, X, Search, Loader2, Stethoscope, Clock, ChevronRight, Filter } from "lucide-react";
 import HelpDeskSidebar from "@/components/helpdesk/HelpDeskSidebar";
+import { useTenant } from "@/contexts/TenantContext";
+import { MODULE_KEYS, HELPDESK_FEATURES } from "@/lib/feature";
 
 interface Doctor {
   id: number;
@@ -22,6 +24,7 @@ export default function DoctorSlotsPage() {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const { tenant, isMicroFeatureEnabled, isLoading: tenantLoading } = useTenant();
 
   // Column filter state
   const [filters, setFilters] = useState({
@@ -33,6 +36,31 @@ export default function DoctorSlotsPage() {
 
   const [openFilter, setOpenFilter] = useState<string | null>(null);
   const filterRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  
+
+  const isDoctorSlotsEnabled = isMicroFeatureEnabled(
+  MODULE_KEYS.HELPDESK,
+  HELPDESK_FEATURES.DOCTOR_SLOTS
+);
+
+
+// Add this useEffect for debugging
+useEffect(() => {
+  console.log("=== DOCTOR SLOTS PAGE DEBUG ===");
+  console.log("1. tenantLoading:", tenantLoading);
+  console.log("2. tenant:", tenant);
+  console.log("3. isDoctorSlotsEnabled:", isDoctorSlotsEnabled);
+  console.log("4. MODULE_KEYS.HELPDESK:", MODULE_KEYS.HELPDESK);
+  console.log("5. HELPDESK_FEATURES.DOCTOR_SLOTS:", HELPDESK_FEATURES.DOCTOR_SLOTS);
+}, [tenantLoading, tenant, isDoctorSlotsEnabled]);
+
+useEffect(() => {
+  if (!tenantLoading && !isDoctorSlotsEnabled) {
+   
+    return;
+  }
+}, [tenantLoading]);
 
   useEffect(() => {
     fetchDoctors();
@@ -97,6 +125,8 @@ export default function DoctorSlotsPage() {
     const isOpen = openFilter === column;
     const value = filters[column];
 
+    
+
     return (
       <div className="relative inline-block" ref={(el) => { filterRefs.current[column] = el; }}>
         <button
@@ -140,6 +170,20 @@ export default function DoctorSlotsPage() {
       </div>
     );
   };
+
+  if (!tenantLoading && !isDoctorSlotsEnabled) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <div className="text-red-500 text-6xl mb-4">🔒</div>
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h1>
+        <p className="text-gray-600">
+          Doctor Slots feature is not enabled for {tenant?.name}.
+        </p>
+      </div>
+    </div>
+  );
+}
 
   return (
     <div className="min-h-screen bg-gray-50 flex">

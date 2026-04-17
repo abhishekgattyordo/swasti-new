@@ -1,191 +1,3 @@
-// // app/doctor/billing/page.tsx
-// "use client";
-
-// import { useState, useEffect } from "react";
-// import { Loader2 } from "lucide-react";
-// import { toast } from "sonner";
-
-// interface Invoice {
-//   id: string;
-//   appointmentId: string;
-//   patientName: string;
-//   patientId: string;
-//   date: string;
-//   amount: number;
-//   status: string;
-//   method: string | null;
-//   doctorId: number | null;
-//   doctorName: string | null;
-// }
-
-// export default function BillingPage() {
-//   const [invoices, setInvoices] = useState<Invoice[]>([]);
-//   const [loading, setLoading] = useState(true);
-//   const [doctorId, setDoctorId] = useState<number | null>(null);
-
-//   // Get logged-in doctor's ID from localStorage
-//   useEffect(() => {
-//     const userStr = localStorage.getItem("user");
-//     if (userStr) {
-//       try {
-//         const user = JSON.parse(userStr);
-//         // Adjust the key based on your user object structure
-//         const id = user.doctor_id || user.id;
-//         setDoctorId(id);
-//       } catch (e) {
-//         console.error("Failed to parse user", e);
-//       }
-//     }
-//   }, []);
-
-//   // Fetch invoices when doctorId is known
-//   useEffect(() => {
-//     if (!doctorId) return;
-//     fetchInvoices();
-//   }, [doctorId]);
-
-//   const fetchInvoices = async () => {
-//     setLoading(true);
-//     try {
-//       // ✅ Backend filtering – only request invoices for this doctor
-//       const res = await fetch(`/api/helpdesk/invoices?doctorId=${doctorId}`);
-//       const data = await res.json();
-//       if (data.success) {
-//         setInvoices(data.data); // Already filtered
-//       } else {
-//         toast.error("Failed to load invoices");
-//       }
-//     } catch (err) {
-//       console.error(err);
-//       toast.error("An error occurred");
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   const totalRevenue = invoices.reduce((sum, inv) => sum + inv.amount, 0);
-//   const pendingAmount = invoices
-//     .filter((i) => i.status.toLowerCase() === "pending")
-//     .reduce((sum, inv) => sum + inv.amount, 0);
-//   const paidAmount = invoices
-//     .filter((i) => i.status.toLowerCase() === "paid")
-//     .reduce((sum, inv) => sum + inv.amount, 0);
-
-//   if (loading) {
-//     return (
-//       <div className="flex items-center justify-center h-64">
-//         <Loader2 className="h-8 w-8 animate-spin text-green-600" />
-//       </div>
-//     );
-//   }
-
-//   return (
-//     <div className="space-y-6">
-//       <div className="flex justify-between items-center">
-//         <h2 className="text-2xl font-bold text-gray-800">Billing</h2>
-//       </div>
-
-//       {/* Stats Cards */}
-//       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-//         <div className="bg-white rounded-xl p-6 border border-gray-200">
-//           <p className="text-sm text-gray-500 mb-2">Total Revenue</p>
-//           <p className="text-2xl font-bold text-gray-900">
-//             ${totalRevenue.toFixed(2)}
-//           </p>
-//         </div>
-//         <div className="bg-white rounded-xl p-6 border border-gray-200">
-//           <p className="text-sm text-gray-500 mb-2">Pending Payments</p>
-//           <p className="text-2xl font-bold text-orange-600">
-//             ${pendingAmount.toFixed(2)}
-//           </p>
-//         </div>
-//         <div className="bg-white rounded-xl p-6 border border-gray-200">
-//           <p className="text-sm text-gray-500 mb-2">Paid</p>
-//           <p className="text-2xl font-bold text-green-600">
-//             ${paidAmount.toFixed(2)}
-//           </p>
-//         </div>
-//       </div>
-
-//       {/* Invoices Table */}
-//       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-//         <div className="overflow-x-auto">
-//           <table className="w-full">
-//             <thead className="bg-gray-50 border-b border-gray-200">
-//               <tr>
-//                 <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase">
-//                   Invoice ID
-//                 </th>
-//                 <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase">
-//                   Patient
-//                 </th>
-//                 <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase">
-//                   Date
-//                 </th>
-//                 <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase">
-//                   Amount
-//                 </th>
-//                 <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase">
-//                   Status
-//                 </th>
-//                 <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase">
-//                   Method
-//                 </th>
-//                 <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase">
-//                   Actions
-//                 </th>
-//               </tr>
-//             </thead>
-//             <tbody>
-//               {invoices.map((invoice) => (
-//                 <tr key={invoice.id} className="border-b border-gray-200 hover:bg-gray-50">
-//                   <td className="p-4 text-sm font-medium text-gray-900">
-//                     {invoice.id}
-//                   </td>
-//                   <td className="p-4 text-sm text-gray-600">{invoice.patientName}</td>
-//                   <td className="p-4 text-sm text-gray-600">{invoice.date}</td>
-//                   <td className="p-4 text-sm font-medium text-gray-900">
-//                     ${invoice.amount.toFixed(2)}
-//                   </td>
-//                   <td className="p-4">
-//                     <span
-//                       className={`px-2 py-1 text-xs rounded-full ${
-//                         invoice.status.toLowerCase() === "paid"
-//                           ? "bg-green-100 text-green-600"
-//                           : invoice.status.toLowerCase() === "pending"
-//                           ? "bg-yellow-100 text-yellow-600"
-//                           : "bg-red-100 text-red-600"
-//                       }`}
-//                     >
-//                       {invoice.status}
-//                     </span>
-//                   </td>
-//                   <td className="p-4 text-sm text-gray-600">
-//                     {invoice.method || "-"}
-//                   </td>
-//                   <td className="p-4">
-//                     <button className="text-blue-600 text-sm hover:text-blue-800">
-//                       View
-//                     </button>
-//                   </td>
-//                 </tr>
-//               ))}
-//               {invoices.length === 0 && (
-//                 <tr>
-//                   <td colSpan={7} className="p-8 text-center text-gray-500">
-//                     No invoices found for this doctor.
-//                   </td>
-//                 </tr>
-//               )}
-//             </tbody>
-//           </table>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-
-// app/doctor/billing/page.tsx
 
 
 "use client";
@@ -193,6 +5,9 @@
 import { useState, useEffect, useRef } from "react";
 import { Loader2, Calendar, X, Filter } from "lucide-react";
 import { toast } from "sonner";
+import { useTenant } from "@/contexts/TenantContext";
+import { MODULE_KEYS, DOCTOR_FEATURES } from "@/lib/feature";
+import { useRouter } from "next/navigation";
 
 interface Invoice {
   id: string;
@@ -214,6 +29,15 @@ export default function BillingPage() {
   const [doctorId, setDoctorId] = useState<number | null>(null);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const { tenant, isMicroFeatureEnabled, isLoading: tenantLoading } = useTenant();
+   const router = useRouter();
+
+const isBillingEnabled = isMicroFeatureEnabled(
+  MODULE_KEYS.DOCTOR,
+  DOCTOR_FEATURES.BILLING
+);
+
+
 
   // Column filters
   const [filters, setFilters] = useState({
@@ -226,6 +50,12 @@ export default function BillingPage() {
   });
   const [openFilter, setOpenFilter] = useState<string | null>(null);
   const filterRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  useEffect(() => {
+  if (!tenantLoading && !isBillingEnabled) {
+    router.push("/unauthorized");
+  }
+}, [tenantLoading]);
 
   useEffect(() => {
     const userStr = localStorage.getItem("user");
@@ -335,6 +165,8 @@ export default function BillingPage() {
     const isOpen = openFilter === column;
     const value = filters[column];
 
+
+
     return (
       <div className="relative inline-block" ref={el => { filterRefs.current[column] = el; }}>
         <button
@@ -395,6 +227,19 @@ export default function BillingPage() {
     );
   }
 
+if (!tenantLoading && !isBillingEnabled) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <div className="text-red-500 text-6xl mb-4">🔒</div>
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h1>
+        <p className="text-gray-600">
+          Doctor Billing feature is not enabled for {tenant?.name}.
+        </p>
+      </div>
+    </div>
+  );
+}
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">

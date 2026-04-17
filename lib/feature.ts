@@ -57,10 +57,10 @@ export const BILLING_FEATURES = {
 
 // Doctor Microfeature Keys
 export const DOCTOR_FEATURES = {
-  DASHBOARD: 'doctor_dashboard',
-  SCHEDULE: 'doctor_schedule',
-  PATIENTS: 'doctor_patients',
-  BILLING: 'doctor_billing',
+  DASHBOARD: 'dashboard',
+  SCHEDULE: 'schedule',
+  PATIENTS: 'patients',
+  BILLING: 'billing',
 } as const;
 
 // Laboratory Microfeature Keys
