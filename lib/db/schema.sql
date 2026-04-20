@@ -1,7 +1,3 @@
-
-
-
-
 -- =====================================================
 -- 1. Enable required extensions
 -- =====================================================
@@ -351,92 +347,7 @@ CREATE TRIGGER update_rooms_updated_at BEFORE UPDATE ON rooms FOR EACH ROW EXECU
 CREATE TRIGGER update_beds_updated_at BEFORE UPDATE ON beds FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- =====================================================
--- Admissions and Billing tables
--- =====================================================
-
-CREATE TABLE IF NOT EXISTS admissions (
-    id SERIAL PRIMARY KEY,
-    patient_id BIGINT NOT NULL REFERENCES patients(patient_id),
-    admission_date DATE NOT NULL,
-    discharge_date DATE,
-    ward_id INTEGER REFERENCES wards(id),
-    room_id INTEGER REFERENCES rooms(id),
-    bed_id INTEGER REFERENCES beds(id),
-    reason TEXT,
-    diagnosis TEXT,
-    status VARCHAR(20) DEFAULT 'active',
-    discharge_id VARCHAR(50) UNIQUE,
-    primary_consultant VARCHAR(255),
-    consultant_dept VARCHAR(255),
-    wing VARCHAR(100),
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS ip_bills (
-    id SERIAL PRIMARY KEY,
-    sale_id INTEGER REFERENCES sales(id),
-    patient_id VARCHAR(50),
-    admission_id INTEGER UNIQUE REFERENCES admissions(id),
-    bill_number VARCHAR(50) UNIQUE NOT NULL,
-    total_amount NUMERIC(10,2) DEFAULT 0 NOT NULL,
-    paid_amount NUMERIC(10,2) DEFAULT 0 NOT NULL,
-    status VARCHAR(20) DEFAULT 'UNPAID' NOT NULL,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS ip_bill_items (
-    id SERIAL PRIMARY KEY,
-    bill_id INTEGER NOT NULL REFERENCES ip_bills(id) ON DELETE CASCADE,
-    medicine_name VARCHAR(255) NOT NULL,
-    quantity INTEGER NOT NULL,
-    unit_price NUMERIC(10,2) NOT NULL,
-    total_price NUMERIC(10,2) NOT NULL,
-    sale_item_id INTEGER REFERENCES sale_items(id),
-    created_at TIMESTAMP DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS ip_payments (
-    id SERIAL PRIMARY KEY,
-    bill_id INTEGER NOT NULL REFERENCES ip_bills(id),
-    amount NUMERIC(10,2) NOT NULL,
-    payment_method VARCHAR(20),
-    transaction_id VARCHAR(100),
-    payment_date TIMESTAMP DEFAULT NOW()
-);
-
--- Trigger to update bill total
-CREATE OR REPLACE FUNCTION update_bill_total()
-RETURNS TRIGGER AS $$
-BEGIN
-  UPDATE ip_bills
-  SET total_amount = (
-    SELECT COALESCE(SUM(total_price), 0)
-    FROM ip_bill_items
-    WHERE bill_id = COALESCE(NEW.bill_id, OLD.bill_id)
-  ),
-  updated_at = NOW()
-  WHERE id = COALESCE(NEW.bill_id, OLD.bill_id);
-  RETURN NULL;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER bill_items_changed AFTER INSERT OR DELETE OR UPDATE ON ip_bill_items
-FOR EACH ROW EXECUTE FUNCTION update_bill_total();
-
--- Ward Transfers table
-CREATE TABLE IF NOT EXISTS ward_transfers (
-    id SERIAL PRIMARY KEY,
-    admission_id INTEGER NOT NULL REFERENCES admissions(id),
-    ward_id INTEGER NOT NULL REFERENCES wards(id),
-    from_date DATE NOT NULL,
-    to_date DATE,
-    created_at TIMESTAMP DEFAULT NOW()
-);
-
--- =====================================================
--- Pharmacy tables
+-- Pharmacy tables (including sales)
 -- =====================================================
 
 CREATE TABLE IF NOT EXISTS medicines (
@@ -532,6 +443,7 @@ CREATE TRIGGER update_stock_updated_at
     FOR EACH ROW 
     EXECUTE FUNCTION update_updated_at_column();
 
+-- Sales tables (MUST be before ip_bills)
 CREATE TABLE IF NOT EXISTS sales (
     id SERIAL PRIMARY KEY,
     patient_id BIGINT REFERENCES patients(patient_id),
@@ -566,6 +478,91 @@ CREATE TABLE IF NOT EXISTS sale_items (
     tax_percent NUMERIC(5,2) DEFAULT 0,
     total NUMERIC(10,2) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- =====================================================
+-- Admissions and Billing tables (AFTER sales)
+-- =====================================================
+
+CREATE TABLE IF NOT EXISTS admissions (
+    id SERIAL PRIMARY KEY,
+    patient_id BIGINT NOT NULL REFERENCES patients(patient_id),
+    admission_date DATE NOT NULL,
+    discharge_date DATE,
+    ward_id INTEGER REFERENCES wards(id),
+    room_id INTEGER REFERENCES rooms(id),
+    bed_id INTEGER REFERENCES beds(id),
+    reason TEXT,
+    diagnosis TEXT,
+    status VARCHAR(20) DEFAULT 'active',
+    discharge_id VARCHAR(50) UNIQUE,
+    primary_consultant VARCHAR(255),
+    consultant_dept VARCHAR(255),
+    wing VARCHAR(100),
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS ip_bills (
+    id SERIAL PRIMARY KEY,
+    sale_id INTEGER REFERENCES sales(id),
+    patient_id VARCHAR(50),
+    admission_id INTEGER UNIQUE REFERENCES admissions(id),
+    bill_number VARCHAR(50) UNIQUE NOT NULL,
+    total_amount NUMERIC(10,2) DEFAULT 0 NOT NULL,
+    paid_amount NUMERIC(10,2) DEFAULT 0 NOT NULL,
+    status VARCHAR(20) DEFAULT 'UNPAID' NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS ip_bill_items (
+    id SERIAL PRIMARY KEY,
+    bill_id INTEGER NOT NULL REFERENCES ip_bills(id) ON DELETE CASCADE,
+    medicine_name VARCHAR(255) NOT NULL,
+    quantity INTEGER NOT NULL,
+    unit_price NUMERIC(10,2) NOT NULL,
+    total_price NUMERIC(10,2) NOT NULL,
+    sale_item_id INTEGER REFERENCES sale_items(id),
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS ip_payments (
+    id SERIAL PRIMARY KEY,
+    bill_id INTEGER NOT NULL REFERENCES ip_bills(id),
+    amount NUMERIC(10,2) NOT NULL,
+    payment_method VARCHAR(20),
+    transaction_id VARCHAR(100),
+    payment_date TIMESTAMP DEFAULT NOW()
+);
+
+-- Trigger to update bill total
+CREATE OR REPLACE FUNCTION update_bill_total()
+RETURNS TRIGGER AS $$
+BEGIN
+  UPDATE ip_bills
+  SET total_amount = (
+    SELECT COALESCE(SUM(total_price), 0)
+    FROM ip_bill_items
+    WHERE bill_id = COALESCE(NEW.bill_id, OLD.bill_id)
+  ),
+  updated_at = NOW()
+  WHERE id = COALESCE(NEW.bill_id, OLD.bill_id);
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER bill_items_changed AFTER INSERT OR DELETE OR UPDATE ON ip_bill_items
+FOR EACH ROW EXECUTE FUNCTION update_bill_total();
+
+-- Ward Transfers table
+CREATE TABLE IF NOT EXISTS ward_transfers (
+    id SERIAL PRIMARY KEY,
+    admission_id INTEGER NOT NULL REFERENCES admissions(id),
+    ward_id INTEGER NOT NULL REFERENCES wards(id),
+    from_date DATE NOT NULL,
+    to_date DATE,
+    created_at TIMESTAMP DEFAULT NOW()
 );
 
 -- Pharmacy Prescriptions table

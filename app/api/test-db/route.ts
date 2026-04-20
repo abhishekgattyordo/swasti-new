@@ -12,39 +12,35 @@
 //     return NextResponse.json({ error: 'Network error', details: String(err) }, { status: 500 });
 //   }
 // }
-
-import { NextResponse } from "next/server";
-import { query } from "@/lib/db";
+import { NextResponse } from 'next/server';
+import { query } from '@/lib/db';
 
 export async function GET() {
+  const start = Date.now();
+  
   try {
-    // Test 1: Check connection
-    const connectionTest = await query("SELECT NOW() as current_time");
+    // Test basic connection
+    const result = await query('SELECT NOW() as server_time, current_database() as db_name, version() as pg_version');
     
-    // Test 2: Count lab_orders
-    const countResult = await query("SELECT COUNT(*) FROM lab_orders");
-    
-    // Test 3: Get latest order (if any)
-    const latestOrder = await query(`
-      SELECT id, order_id, patient_name, status, created_at 
-      FROM lab_orders 
-      ORDER BY created_at DESC 
-      LIMIT 1
-    `);
+    const duration = Date.now() - start;
     
     return NextResponse.json({
       success: true,
-      database: "PostgreSQL Connected",
-      currentTime: connectionTest.rows[0].current_time,
-      totalOrders: parseInt(countResult.rows[0].count),
-      latestOrder: latestOrder.rows[0] || null,
-      message: "✅ Database is ready for migration!"
+      message: '✅ Database connected successfully!',
+      database: result.rows[0].db_name,
+      serverTime: result.rows[0].server_time,
+      responseTime: `${duration}ms`,
+      postgresVersion: result.rows[0].pg_version?.substring(0, 50),
     });
-  } catch (error: any) {
+  } catch (error) {
+    const duration = Date.now() - start;
+    console.error('Database connection error:', error);
+    
     return NextResponse.json({
       success: false,
-      error: error.message,
-      hint: "Check DATABASE_URL and network connectivity"
+      message: '❌ Database connection failed',
+      error: error instanceof Error ? error.message : 'Unknown error',
+      responseTime: `${duration}ms`,
     }, { status: 500 });
   }
 }
