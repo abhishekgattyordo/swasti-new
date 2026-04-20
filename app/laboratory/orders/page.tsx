@@ -793,14 +793,12 @@
 //   );
 // }
 
-
 "use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTenant } from "@/contexts/TenantContext";
-import { MODULE_KEYS } from "@/lib/feature";
-import { LABARATORY_FEATURES } from "@/lib/features/laboratory";
+import { MODULE_KEYS, LABARATORY_FEATURES } from "@/lib/feature";
 import Card from "@/components/laboratory/Card";
 
 interface LabTest {
@@ -1190,6 +1188,12 @@ export default function LabOrdersPage() {
           <p className="text-gray-600">
             Lab Orders feature is not enabled for {tenant?.name}.
           </p>
+          <button
+            onClick={() => router.push("/dashboard")}
+            className="mt-4 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+          >
+            Go to Dashboard
+          </button>
         </div>
       </div>
     );
