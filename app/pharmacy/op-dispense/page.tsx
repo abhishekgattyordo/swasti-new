@@ -18,6 +18,8 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, User, Stethoscope, Menu, X, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import Sidebar from '@/components/pharmacy/Sidebar';
+import { useTenant } from "@/contexts/TenantContext";
+import { MODULE_KEYS, PHARMACY_FEATURES } from "@/lib/feature";
 
 // Types
 interface SaleItem {
@@ -54,6 +56,18 @@ export default function OPDispensePage() {
   const [submitting, setSubmitting] = useState(false);
 
   const selectedItem = items.find((i) => i.id === selectedId);
+  const { tenant, isMicroFeatureEnabled, isLoading: tenantLoading } = useTenant();
+
+const isOpDispenseEnabled = isMicroFeatureEnabled(
+  MODULE_KEYS.PHARMACY,
+  PHARMACY_FEATURES.OP_DISPENSE
+);
+
+useEffect(() => {
+  if (!tenantLoading && !isOpDispenseEnabled) {
+    router.push("/unauthorized");
+  }
+}, [tenantLoading]);
 
   // Fetch only pending OTC sales (walk‑in)
   useEffect(() => {
@@ -166,6 +180,20 @@ export default function OPDispensePage() {
       </div>
     );
   }
+
+  if (!tenantLoading && !isOpDispenseEnabled) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <div className="text-red-500 text-6xl mb-4">🔒</div>
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h1>
+        <p className="text-gray-600">
+          Pharmacy OP Dispense feature is not enabled for {tenant?.name}.
+        </p>
+      </div>
+    </div>
+  );
+}
 
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">

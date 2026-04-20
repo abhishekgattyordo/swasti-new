@@ -41,6 +41,8 @@ import { toast } from 'sonner';
 import { purchasesApi } from '@/lib/api/purchasesApi';
 import { salesApi } from '@/lib/api/salesApi';
 import Sidebar from '@/components/pharmacy/Sidebar';
+import { useTenant } from "@/contexts/TenantContext";
+import { MODULE_KEYS, PHARMACY_FEATURES } from "@/lib/feature";
 
 interface Medicine {
   id: number;
@@ -93,7 +95,18 @@ export default function BillingPage() {
   const [openMedicineId, setOpenMedicineId] = useState<number | null>(null);
   const [paymentMode, setPaymentMode] = useState('Cash');
   const [submitting, setSubmitting] = useState(false);
+const { tenant, isMicroFeatureEnabled, isLoading: tenantLoading } = useTenant();
 
+const isBillingEnabled = isMicroFeatureEnabled(
+  MODULE_KEYS.PHARMACY,
+  PHARMACY_FEATURES.BILLING
+);
+
+useEffect(() => {
+  if (!tenantLoading && !isBillingEnabled) {
+    router.push("/unauthorized");
+  }
+}, [tenantLoading]);
   // Fetch medicines with proper error handling
   useEffect(() => {
     const fetchStock = async () => {
@@ -299,6 +312,20 @@ export default function BillingPage() {
       setSubmitting(false);
     }
   };
+
+  if (!tenantLoading && !isBillingEnabled) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <div className="text-red-500 text-6xl mb-4">🔒</div>
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h1>
+        <p className="text-gray-600">
+          Pharmacy Billing feature is not enabled for {tenant?.name}.
+        </p>
+      </div>
+    </div>
+  );
+}
 
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">

@@ -28,6 +28,8 @@ import { Search, Download, Menu, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import Sidebar from "@/components/pharmacy/Sidebar";
 import { purchasesApi } from "@/lib/api/purchasesApi";
+import { useTenant } from "@/contexts/TenantContext";
+import { MODULE_KEYS, PHARMACY_FEATURES } from "@/lib/feature";
 
 // Types for stock item
 interface StockItem {
@@ -100,6 +102,18 @@ export default function CurrentStockPage() {
   const [stockItems, setStockItems] = useState<StockItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { tenant, isMicroFeatureEnabled, isLoading: tenantLoading } = useTenant();
+
+const isCurrentStockEnabled = isMicroFeatureEnabled(
+  MODULE_KEYS.PHARMACY,
+  PHARMACY_FEATURES.CURRENT_STOCK
+);
+
+useEffect(() => {
+  if (!tenantLoading && !isCurrentStockEnabled) {
+    router.push("/unauthorized");
+  }
+}, [tenantLoading]);
 
   // Fetch stock data
   useEffect(() => {
@@ -161,6 +175,20 @@ export default function CurrentStockPage() {
       </div>
     );
   }
+
+  if (!tenantLoading && !isCurrentStockEnabled) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <div className="text-red-500 text-6xl mb-4">🔒</div>
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h1>
+        <p className="text-gray-600">
+          Pharmacy Current Stock feature is not enabled for {tenant?.name}.
+        </p>
+      </div>
+    </div>
+  );
+}
 
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">

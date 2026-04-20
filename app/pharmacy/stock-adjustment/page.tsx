@@ -24,6 +24,8 @@ import { AlertCircle, Menu, X, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import Sidebar from '@/components/pharmacy/Sidebar';
 import { purchasesApi } from '@/lib/api/purchasesApi';
+import { useTenant } from "@/contexts/TenantContext";
+import { MODULE_KEYS, PHARMACY_FEATURES } from "@/lib/feature";
 
 // Types
 interface Medicine {
@@ -61,6 +63,18 @@ export default function StockAdjustmentPage() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
+  const { tenant, isMicroFeatureEnabled, isLoading: tenantLoading } = useTenant();
+
+const isStockAdjustmentEnabled = isMicroFeatureEnabled(
+  MODULE_KEYS.PHARMACY,
+  PHARMACY_FEATURES.STOCK_ADJUSTMENT
+);
+
+useEffect(() => {
+  if (!tenantLoading && !isStockAdjustmentEnabled) {
+    router.push("/unauthorized");
+  }
+}, [tenantLoading]);
 
   // Fetch stock data on mount
   useEffect(() => {
@@ -181,6 +195,20 @@ export default function StockAdjustmentPage() {
       </div>
     );
   }
+
+  if (!tenantLoading && !isStockAdjustmentEnabled) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <div className="text-red-500 text-6xl mb-4">🔒</div>
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h1>
+        <p className="text-gray-600">
+          Pharmacy Stock Adjustment feature is not enabled for {tenant?.name}.
+        </p>
+      </div>
+    </div>
+  );
+}
 
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">

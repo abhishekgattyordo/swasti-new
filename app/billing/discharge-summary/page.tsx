@@ -15,6 +15,8 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Loader2, Search, Download, Calendar, Building2, Bed, User } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTenant } from "@/contexts/TenantContext";
+import { MODULE_KEYS, BILLING_FEATURES } from "@/lib/feature";
 
 interface DischargeAdmission {
   id: number;
@@ -40,6 +42,19 @@ export default function DischargeSummaryPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedDischarge, setSelectedDischarge] = useState<DischargeAdmission | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const router = useRouter(); // Add if not present
+const { tenant, isMicroFeatureEnabled, isLoading: tenantLoading } = useTenant();
+
+const isDischargeSummaryEnabled = isMicroFeatureEnabled(
+  MODULE_KEYS.BILLING,
+  BILLING_FEATURES.DISCHARGE_SUMMARY
+);
+
+useEffect(() => {
+  if (!tenantLoading && !isDischargeSummaryEnabled) {
+    router.push("/unauthorized");
+  }
+}, [tenantLoading]);
 
   useEffect(() => {
     fetchDischarges();
@@ -191,6 +206,20 @@ export default function DischargeSummaryPage() {
       </div>
     );
   }
+
+  if (!tenantLoading && !isDischargeSummaryEnabled) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <div className="text-red-500 text-6xl mb-4">🔒</div>
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h1>
+        <p className="text-gray-600">
+          Discharge Summary feature is not enabled for {tenant?.name}.
+        </p>
+      </div>
+    </div>
+  );
+}
 
   return (
     <div className="flex-1 overflow-y-auto p-4 md:p-6">

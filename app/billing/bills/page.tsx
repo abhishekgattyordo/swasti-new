@@ -10,6 +10,8 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Loader2, Filter, Search, Download } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTenant } from "@/contexts/TenantContext";
+import { MODULE_KEYS, BILLING_FEATURES } from "@/lib/feature";
 
 interface BillItem {
   medicine_name: string;
@@ -46,6 +48,18 @@ export default function AllBillsPage() {
   });
   const [openFilter, setOpenFilter] = useState<string | null>(null);
   const filterRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const { tenant, isMicroFeatureEnabled, isLoading: tenantLoading } = useTenant();
+
+const isAllBillsEnabled = isMicroFeatureEnabled(
+  MODULE_KEYS.BILLING,
+  BILLING_FEATURES.ALL_BILLS
+);
+
+useEffect(() => {
+  if (!tenantLoading && !isAllBillsEnabled) {
+    router.push("/unauthorized");
+  }
+}, [tenantLoading]);
 
   useEffect(() => {
     fetchBills();
@@ -166,6 +180,20 @@ export default function AllBillsPage() {
   const FilterPopover = ({ column, placeholder, label }: { column: keyof typeof filters; placeholder: string; label: string }) => {
     const isOpen = openFilter === column;
     const value = filters[column];
+
+    if (!tenantLoading && !isAllBillsEnabled) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <div className="text-red-500 text-6xl mb-4">🔒</div>
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h1>
+        <p className="text-gray-600">
+          All Bills feature is not enabled for {tenant?.name}.
+        </p>
+      </div>
+    </div>
+  );
+}
 
     return (
       <div className="relative inline-block" ref={el => { filterRefs.current[column] = el; }}>

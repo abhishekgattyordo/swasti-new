@@ -18,6 +18,8 @@ import {
    BookOpen,
   X,
 } from 'lucide-react';
+import { useTenant } from "@/contexts/TenantContext";
+import { MODULE_KEYS, BILLING_FEATURES } from "@/lib/feature";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -28,6 +30,7 @@ export default function BillingSidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const { isMicroFeatureEnabled } = useTenant();
 
   // Lazy initialization – read from localStorage once, no effect needed
   const [userName] = useState(() => {
@@ -56,14 +59,21 @@ export default function BillingSidebar({ isOpen, onClose }: SidebarProps) {
 
   const toggleCollapse = () => setIsCollapsed(!isCollapsed);
 
-  const navItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', href: '/billing/dashboard', color: 'from-blue-500 to-blue-700' },
-    { icon: Users, label: 'Admitted Patients', href: '/billing/admitted-patients', color: 'from-green-500 to-green-700' },
-    { icon: Receipt, label: 'All Bills', href: '/billing/bills', badge: 3, color: 'from-purple-500 to-purple-700' },
-    { icon: Calendar, label: 'Discharge Summary', href: '/billing/discharge-summary', color: 'from-indigo-500 to-indigo-700' },
-    // Add to navItems array:
-{ icon: BookOpen, label: 'Ledger', href: '/billing/ledger', color: 'from-cyan-500 to-cyan-700' },
-  ];
+  const isDashboardEnabled = isMicroFeatureEnabled(MODULE_KEYS.BILLING, BILLING_FEATURES.DASHBOARD);
+const isAdmittedPatientsEnabled = isMicroFeatureEnabled(MODULE_KEYS.BILLING, BILLING_FEATURES.ADMITTED_PATIENT_BILLING);
+const isAllBillsEnabled = isMicroFeatureEnabled(MODULE_KEYS.BILLING, BILLING_FEATURES.ALL_BILLS);
+const isDischargeSummaryEnabled = isMicroFeatureEnabled(MODULE_KEYS.BILLING, BILLING_FEATURES.DISCHARGE_SUMMARY);
+const isLedgerEnabled = isMicroFeatureEnabled(MODULE_KEYS.BILLING, BILLING_FEATURES.LEDGER);
+
+const navItems = [
+  { icon: LayoutDashboard, label: 'Dashboard', href: '/billing/dashboard', color: 'from-blue-500 to-blue-700', isEnabled: isDashboardEnabled },
+  { icon: Users, label: 'Admitted Patients', href: '/billing/admitted-patients', color: 'from-green-500 to-green-700', isEnabled: isAdmittedPatientsEnabled },
+  { icon: Receipt, label: 'All Bills', href: '/billing/bills', badge: 3, color: 'from-purple-500 to-purple-700', isEnabled: isAllBillsEnabled },
+  { icon: Calendar, label: 'Discharge Summary', href: '/billing/discharge-summary', color: 'from-indigo-500 to-indigo-700', isEnabled: isDischargeSummaryEnabled },
+  { icon: BookOpen, label: 'Ledger', href: '/billing/ledger', color: 'from-cyan-500 to-cyan-700', isEnabled: isLedgerEnabled },
+];
+
+const visibleNavItems = navItems.filter(item => item.isEnabled !== false);
 
   const handleLinkClick = () => {
     if (window.innerWidth < 1024) onClose();
@@ -133,7 +143,7 @@ export default function BillingSidebar({ isOpen, onClose }: SidebarProps) {
           <div className="mb-6">
             {!isCollapsed && <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wider px-3 mb-3">Billing Menu</p>}
             <div className="space-y-1">
-              {navItems.map((item) => {
+              {visibleNavItems.map((item) => {
                 const active = isActive(item.href);
                 return (
                   <Link

@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 import Sidebar from '@/components/pharmacy/Sidebar';
 import { medicinesApi } from '@/lib/api/medicinesApi';
 
+
 const categories = [
   "Antibiotics",
   "Pain Relief",

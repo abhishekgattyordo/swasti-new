@@ -15,6 +15,8 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Loader2, Search, Download } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTenant } from "@/contexts/TenantContext";
+import { MODULE_KEYS, BILLING_FEATURES } from "@/lib/feature";
 
 interface BillItem {
   medicine_name: string;
@@ -44,6 +46,18 @@ export default function LedgerPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const { tenant, isMicroFeatureEnabled, isLoading: tenantLoading } = useTenant();
+
+const isLedgerEnabled = isMicroFeatureEnabled(
+  MODULE_KEYS.BILLING,
+  BILLING_FEATURES.LEDGER
+);
+
+useEffect(() => {
+  if (!tenantLoading && !isLedgerEnabled) {
+    router.push("/unauthorized");
+  }
+}, [tenantLoading]);
 
   useEffect(() => {
     fetchBills();
@@ -165,6 +179,20 @@ export default function LedgerPage() {
       </div>
     );
   }
+
+if (!tenantLoading && !isLedgerEnabled) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <div className="text-red-500 text-6xl mb-4">🔒</div>
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h1>
+        <p className="text-gray-600">
+          Billing Ledger feature is not enabled for {tenant?.name}.
+        </p>
+      </div>
+    </div>
+  );
+}
 
   return (
     <div className="flex-1 overflow-y-auto p-4 md:p-6">

@@ -25,6 +25,8 @@ import {
 import { toast } from "sonner";
 import Sidebar from "@/components/pharmacy/Sidebar";
 import { admissionsApi } from "@/lib/api/admissions"; // adjust the import path as needed
+import { useTenant } from "@/contexts/TenantContext";
+import { MODULE_KEYS, PHARMACY_FEATURES } from "@/lib/feature";
 
 // Types
 interface IPOrderItem {
@@ -62,6 +64,18 @@ export default function IPIssuePage() {
   const [issueQtys, setIssueQtys] = useState<Record<number, number>>({});
   const [submitting, setSubmitting] = useState(false);
   const [loadingAdmission, setLoadingAdmission] = useState(false); // <-- new state
+  const { tenant, isMicroFeatureEnabled, isLoading: tenantLoading } = useTenant();
+
+const isIpIssueEnabled = isMicroFeatureEnabled(
+  MODULE_KEYS.PHARMACY,
+  PHARMACY_FEATURES.IP_ISSUE
+);
+
+useEffect(() => {
+  if (!tenantLoading && !isIpIssueEnabled) {
+    router.push("/unauthorized");
+  }
+}, [tenantLoading]);
 
   const order = orders.find((o) => o.id === selectedId);
 
@@ -236,6 +250,19 @@ export default function IPIssuePage() {
       </div>
     );
   }
+if (!tenantLoading && !isIpIssueEnabled) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <div className="text-red-500 text-6xl mb-4">🔒</div>
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h1>
+        <p className="text-gray-600">
+          Pharmacy IP Issue feature is not enabled for {tenant?.name}.
+        </p>
+      </div>
+    </div>
+  );
+}
 
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">

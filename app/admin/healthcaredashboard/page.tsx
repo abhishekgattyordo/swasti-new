@@ -31,6 +31,9 @@ import { Menu, X } from 'lucide-react';
 import { doctorsApi } from "@/lib/api/doctors";
 import { patientsApi } from "@/lib/api/registration";
 import { getBedSummary } from "@/lib/api/bed-config";
+import { useTenant } from "@/contexts/TenantContext";
+import { MODULE_KEYS, ADMIN_FEATURES } from "@/lib/feature";
+import { useRouter } from "next/navigation";
 
 // Types
 interface Personnel {
@@ -79,6 +82,19 @@ export default function HealthcareDashboard() {
   const [kpiData, setKpiData] = useState<KPI[]>([]);
   const [personnelData, setPersonnelData] = useState<Personnel[]>([]);
   const [alertsData, setAlertsData] = useState<Alert[]>([]);
+const router = useRouter();
+const { tenant, isMicroFeatureEnabled, isLoading: tenantLoading } = useTenant();
+
+const isDashboardEnabled = isMicroFeatureEnabled(
+  MODULE_KEYS.ADMIN,
+  ADMIN_FEATURES.DASHBOARD
+);
+
+useEffect(() => {
+  if (!tenantLoading && !isDashboardEnabled) {
+    router.push("/unauthorized");
+  }
+}, [tenantLoading]);
 
   useEffect(() => {
     fetchData();
@@ -312,6 +328,20 @@ export default function HealthcareDashboard() {
       </div>
     );
   }
+
+  if (!tenantLoading && !isDashboardEnabled) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <div className="text-red-500 text-6xl mb-4">🔒</div>
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h1>
+        <p className="text-gray-600">
+          Admin Dashboard feature is not enabled for {tenant?.name}.
+        </p>
+      </div>
+    </div>
+  );
+}
 
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900 font-sans text-gray-900 dark:text-gray-100">

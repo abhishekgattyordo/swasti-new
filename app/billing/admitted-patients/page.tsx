@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Loader2, Filter, Calendar, Building2, Bed, User, Download } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTenant } from "@/contexts/TenantContext";
+import { MODULE_KEYS, BILLING_FEATURES } from "@/lib/feature";
 
 interface Admission {
   id: number;
@@ -42,6 +44,19 @@ export default function AdmittedPatientsPage() {
   });
   const [openFilter, setOpenFilter] = useState<string | null>(null);
   const filterRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  const { tenant, isMicroFeatureEnabled, isLoading: tenantLoading } = useTenant();
+
+const isAdmittedBillingEnabled = isMicroFeatureEnabled(
+  MODULE_KEYS.BILLING,
+  BILLING_FEATURES.ADMITTED_PATIENT_BILLING
+);
+
+useEffect(() => {
+  if (!tenantLoading && !isAdmittedBillingEnabled) {
+    router.push("/unauthorized");
+  }
+}, [tenantLoading]);
 
   useEffect(() => {
     fetchAdmissions();
@@ -241,6 +256,20 @@ export default function AdmittedPatientsPage() {
       </div>
     );
   }
+
+  if (!tenantLoading && !isAdmittedBillingEnabled) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <div className="text-red-500 text-6xl mb-4">🔒</div>
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h1>
+        <p className="text-gray-600">
+          Admitted Patient Billing feature is not enabled for {tenant?.name}.
+        </p>
+      </div>
+    </div>
+  );
+}
 
   return (
     <div className="flex-1 overflow-y-auto p-4 md:p-6">

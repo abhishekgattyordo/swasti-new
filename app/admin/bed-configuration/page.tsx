@@ -16,6 +16,9 @@ import { Badge } from "@/components/ui/badge";
 import toast from "react-hot-toast";
 import Sidebar from "@/components/admin/Sidebar";
 import { BedBulkImportExport } from "@/components/admin/BedBulkImportExport";
+import { useTenant } from "@/contexts/TenantContext";
+import { MODULE_KEYS, ADMIN_FEATURES } from "@/lib/feature";
+import { useRouter } from "next/navigation";
 
 import {
   Building2,
@@ -159,6 +162,20 @@ export default function BedConfigurationPage() {
   const [newBedCategory, setNewBedCategory] = useState<PatientCategory | "">(
     "",
   );
+
+  const router = useRouter();
+const { tenant, isMicroFeatureEnabled, isLoading: tenantLoading } = useTenant();
+
+const isBedConfigEnabled = isMicroFeatureEnabled(
+  MODULE_KEYS.ADMIN,
+  ADMIN_FEATURES.BED_CONFIGURATION
+);
+
+useEffect(() => {
+  if (!tenantLoading && !isBedConfigEnabled) {
+    router.push("/unauthorized");
+  }
+}, [tenantLoading]);
 
   // Load floors on mount
   useEffect(() => {
@@ -479,6 +496,20 @@ export default function BedConfigurationPage() {
   const filteredBeds = beds.filter(
     (b) => b.ward_id === selectedWard?.id && b.is_active,
   );
+
+  if (!tenantLoading && !isBedConfigEnabled) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <div className="text-red-500 text-6xl mb-4">🔒</div>
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h1>
+        <p className="text-gray-600">
+          Admin Bed Configuration feature is not enabled for {tenant?.name}.
+        </p>
+      </div>
+    </div>
+  );
+}
 
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">

@@ -26,6 +26,8 @@ import { toast } from 'sonner';
 import Sidebar from '@/components/pharmacy/Sidebar';
 import { purchasesApi } from '@/lib/api/purchasesApi';
 import { medicinesApi } from '@/lib/api/medicinesApi';
+import { useTenant } from "@/contexts/TenantContext";
+import { MODULE_KEYS, PHARMACY_FEATURES } from "@/lib/feature";
 
 // Mock Data - Replace with real API calls later
 const suppliers = [
@@ -70,6 +72,18 @@ const [medicinesLoading, setMedicinesLoading] = useState(false);
   const [gstNo, setGstNo] = useState("");
   const [paymentMode, setPaymentMode] = useState("Cash");
   const [lines, setLines] = useState<LineItem[]>([emptyLine(1), emptyLine(2), emptyLine(3)]);
+  const { tenant, isMicroFeatureEnabled, isLoading: tenantLoading } = useTenant();
+
+const isMedicineEnabled = isMicroFeatureEnabled(
+  MODULE_KEYS.PHARMACY,
+  PHARMACY_FEATURES.MEDICINE
+);
+
+useEffect(() => {
+  if (!tenantLoading && !isMedicineEnabled) {
+    router.push("/unauthorized");
+  }
+}, [tenantLoading]);
 
   const updateLine = (id: number, field: keyof LineItem, value: string) => {
     setLines((prev) => prev.map((l) => l.id === id ? { ...l, [field]: value } : l));
@@ -199,6 +213,20 @@ const message = (response as any)?.message ?? (response as any)?.data?.message ?
 useEffect(() => {
   fetchMedicines();
 }, []);
+
+if (!tenantLoading && !isMedicineEnabled) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <div className="text-red-500 text-6xl mb-4">🔒</div>
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h1>
+        <p className="text-gray-600">
+          Pharmacy Medicine feature is not enabled for {tenant?.name}.
+        </p>
+      </div>
+    </div>
+  );
+}
 
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">

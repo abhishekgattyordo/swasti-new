@@ -5,6 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DollarSign, CreditCard, Receipt, TrendingUp, Loader2 } from 'lucide-react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { toast } from 'sonner';
+import { useRouter } from "next/navigation";
+import { useTenant } from "@/contexts/TenantContext";
+import { MODULE_KEYS, BILLING_FEATURES } from "@/lib/feature";
 
 interface Bill {
   id: number;
@@ -30,6 +33,20 @@ export default function BillingDashboard() {
   });
   const [monthlyData, setMonthlyData] = useState<{ month: string; revenue: number; collected: number }[]>([]);
   const [statusData, setStatusData] = useState<{ name: string; value: number; color: string }[]>([]);
+
+  const router = useRouter();
+const { tenant, isMicroFeatureEnabled, isLoading: tenantLoading } = useTenant();
+
+const isDashboardEnabled = isMicroFeatureEnabled(
+  MODULE_KEYS.BILLING,
+  BILLING_FEATURES.DASHBOARD
+);
+
+useEffect(() => {
+  if (!tenantLoading && !isDashboardEnabled) {
+    router.push("/unauthorized");
+  }
+}, [tenantLoading]);
 
   useEffect(() => {
     fetchData();
@@ -105,6 +122,21 @@ export default function BillingDashboard() {
       </div>
     );
   }
+  
+
+  if (!tenantLoading && !isDashboardEnabled) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <div className="text-red-500 text-6xl mb-4">🔒</div>
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h1>
+        <p className="text-gray-600">
+          Billing Dashboard feature is not enabled for {tenant?.name}.
+        </p>
+      </div>
+    </div>
+  );
+}
 
   return (
     <div className="flex-1 overflow-y-auto p-4 md:p-6">

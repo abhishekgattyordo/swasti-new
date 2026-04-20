@@ -74,8 +74,8 @@ export const LABARATORY_FEATURES = {
 
 // Admin Microfeature Keys
 export const ADMIN_FEATURES = {
-  DASHBOARD: 'admin_dashboard',
-  DOCTORS: 'admin_doctors',
-  PATIENTS: 'admin_patients',
-  BED_CONFIGURATION: 'admin_bed_configuration',
+  DASHBOARD: 'dashboard',           // ← Changed from 'admin_dashboard'
+  DOCTORS: 'doctors',               // ← Changed from 'admin_doctors'
+  PATIENTS: 'patients',             // ← Changed from 'admin_patients'
+  BED_CONFIGURATION: 'bed-configration', // ← Changed from 'admin_bed_configuration'
 } as const;

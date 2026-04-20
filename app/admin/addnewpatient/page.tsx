@@ -27,6 +27,8 @@ import {
 } from '@mui/icons-material';
 import { patientsApi } from '@/lib/api/registration';
 import { toast } from 'sonner';
+import { useTenant } from "@/contexts/TenantContext";
+import { MODULE_KEYS, ADMIN_FEATURES } from "@/lib/feature";
 
 function AddNewPatientContent() {
   const router = useRouter();
@@ -63,6 +65,18 @@ function AddNewPatientContent() {
 
   const genders = ['Male', 'Female', 'Other'];
   const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+  const { tenant, isMicroFeatureEnabled, isLoading: tenantLoading } = useTenant();
+
+  const isPatientsEnabled = isMicroFeatureEnabled(
+  MODULE_KEYS.ADMIN,
+  ADMIN_FEATURES.PATIENTS
+);
+
+useEffect(() => {
+  if (!tenantLoading && !isPatientsEnabled) {
+    router.push("/unauthorized");
+  }
+}, [tenantLoading]);
 
   // Fetch patient data for edit mode
   useEffect(() => {
@@ -290,6 +304,20 @@ function AddNewPatientContent() {
       </div>
     );
   }
+
+  if (!tenantLoading && !isPatientsEnabled) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <div className="text-red-500 text-6xl mb-4">🔒</div>
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h1>
+        <p className="text-gray-600">
+          Admin Patients Management feature is not enabled for {tenant?.name}.
+        </p>
+      </div>
+    </div>
+  );
+}
 
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900 font-sans text-gray-900 dark:text-gray-100">

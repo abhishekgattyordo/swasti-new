@@ -24,6 +24,8 @@ import {
   Close,
 } from "@mui/icons-material";
 import { doctorsApi } from "@/lib/api/doctors";
+import { useTenant } from "@/contexts/TenantContext";
+import { MODULE_KEYS, ADMIN_FEATURES } from "@/lib/feature";
 
 export default function AddNewDoctorPage() {
   const router = useRouter();
@@ -55,6 +57,18 @@ export default function AddNewDoctorPage() {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [departmentOptions, setDepartmentOptions] = useState<string[]>([]);
   const [loadingOptions, setLoadingOptions] = useState(true);
+const { tenant, isMicroFeatureEnabled, isLoading: tenantLoading } = useTenant();
+
+const isDoctorsEnabled = isMicroFeatureEnabled(
+  MODULE_KEYS.ADMIN,
+  ADMIN_FEATURES.DOCTORS
+);
+
+useEffect(() => {
+  if (!tenantLoading && !isDoctorsEnabled) {
+    router.push("/unauthorized");
+  }
+}, [tenantLoading]);
 
   useEffect(() => {
     const fetchOptions = async () => {
@@ -260,6 +274,20 @@ export default function AddNewDoctorPage() {
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
+
+  if (!tenantLoading && !isDoctorsEnabled) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <div className="text-red-500 text-6xl mb-4">🔒</div>
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h1>
+        <p className="text-gray-600">
+          Admin Doctors Management feature is not enabled for {tenant?.name}.
+        </p>
+      </div>
+    </div>
+  );
+}
 
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900 font-sans text-gray-900 dark:text-gray-100">

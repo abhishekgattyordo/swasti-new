@@ -1,396 +1,4 @@
 
-// 'use client';
-
-// import { useState, useEffect } from 'react';
-// import { useRouter } from 'next/navigation';
-// import { Button } from '@/components/ui/button';
-// import { Input } from '@/components/ui/input';
-// import {
-//   Select,
-//   SelectContent,
-//   SelectItem,
-//   SelectTrigger,
-//   SelectValue,
-// } from '@/components/ui/select';
-// import {
-//   Sheet,
-//   SheetContent,
-//   SheetHeader,
-//   SheetTitle,
-// } from '@/components/ui/sheet';
-// import { Card, CardContent } from '@/components/ui/card';
-// import { Badge } from '@/components/ui/badge';
-// import {
-//   Table,
-//   TableBody,
-//   TableCell,
-//   TableHead,
-//   TableHeader,
-//   TableRow,
-// } from '@/components/ui/table';
-// import { Search, Download, Menu, X, Loader2 } from 'lucide-react';
-// import { toast } from 'sonner';
-// import Sidebar from '@/components/pharmacy/Sidebar';
-
-// // Types based on API response
-// interface LedgerEntry {
-//   id: string;
-//   date: string;
-//   patientName: string;
-//   type: 'OP' | 'IP';
-//   medicine: string;
-//   batch: string;
-//   qty: number;
-//   unitPrice: number;
-//   tax: number;
-//   total: number;
-//   refId: string;
-//   status: 'Billed' | 'Returned' | 'Pending';
-// }
-
-// export default function LedgerPage() {
-//   const router = useRouter();
-//   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-//   const [search, setSearch] = useState('');
-//   const [typeFilter, setTypeFilter] = useState<'all' | 'OP' | 'IP'>('all');
-//   const [entries, setEntries] = useState<LedgerEntry[]>([]);
-//   const [loading, setLoading] = useState(true);
-//   const [selectedEntry, setSelectedEntry] = useState<LedgerEntry | null>(null);
-
-//   // Fetch ledger data
-//   useEffect(() => {
-//     const fetchLedger = async () => {
-//       setLoading(true);
-//       try {
-//         const res = await fetch('/api/pharmacy/ledger');
-//         const data = await res.json();
-//         if (data.success) {
-//           setEntries(data.data);
-//         } else {
-//           toast.error('Failed to load ledger');
-//         }
-//       } catch (error) {
-//         console.error(error);
-//         toast.error('An error occurred while loading ledger');
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-//     fetchLedger();
-//   }, []);
-
-//   // Filter entries based on search and type
-//  const filtered = entries.filter((e) => {
-//   const matchSearch = (e.patientName?.toLowerCase() || '').includes(search.toLowerCase()) ||
-//                       (e.medicine?.toLowerCase() || '').includes(search.toLowerCase());
-//   const matchType = typeFilter === 'all' || e.type === typeFilter;
-//   return matchSearch && matchType;
-// });
-
-//   const handleExport = () => {
-//     // Implement export logic (e.g., CSV download)
-//     toast.success('Export started', {
-//       description: 'Your ledger report will be downloaded shortly.',
-//     });
-//   };
-
-//   const getStatusBadge = (status: string) => {
-//     switch (status) {
-//       case 'Billed':
-//         return <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">Billed</Badge>;
-//       case 'Returned':
-//         return <Badge className="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">Returned</Badge>;
-//       case 'Pending':
-//         return <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">Pending</Badge>;
-//       default:
-//         return <Badge variant="outline">{status}</Badge>;
-//     }
-//   };
-
-//   if (loading) {
-//     return (
-//       <div className="flex min-h-screen items-center justify-center">
-//         <Loader2 className="h-8 w-8 animate-spin text-green-600" />
-//       </div>
-//     );
-//   }
-
-//   return (
-//     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
-//       {/* Mobile Menu Button */}
-//       <button
-//         className="lg:hidden fixed bottom-20 right-6 z-50 p-2.5 bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow border border-gray-200 dark:border-gray-700"
-//         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-//       >
-//         {isSidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-//       </button>
-
-//       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-
-//       {isSidebarOpen && (
-//         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-30 lg:hidden" onClick={() => setIsSidebarOpen(false)} />
-//       )}
-
-//       <div className="flex-1 flex flex-col w-full lg:ml-0 min-w-0">
-//         <header className="sticky top-0 z-30 w-full border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950">
-//           <div className="flex h-16 items-center px-4 md:px-6">
-//             <div className="flex items-center gap-3">
-//               <div className="w-8 lg:hidden"></div>
-//               <div>
-//                 <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
-//                   Pharmacy Ledger
-//                 </h1>
-//                 <p className="text-xs text-gray-500 dark:text-gray-400">
-//                   Complete transaction history
-//                 </p>
-//               </div>
-//             </div>
-//           </div>
-//         </header>
-
-//         <main className="flex-1 overflow-y-auto p-4 md:p-6">
-//           <div className="space-y-6">
-//             {/* Header Actions */}
-//             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-//               <div className="flex flex-col sm:flex-row gap-3 flex-1">
-//                 <div className="relative flex-1 max-w-sm">
-//                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-//                   <Input
-//                     type="text"
-//                     placeholder="Search patient or medicine..."
-//                     value={search}
-//                     onChange={(e) => setSearch(e.target.value)}
-//                     className="pl-10"
-//                   />
-//                 </div>
-//                 <Select value={typeFilter} onValueChange={(value: any) => setTypeFilter(value)}>
-//                   <SelectTrigger className="w-full sm:w-[150px]">
-//                     <SelectValue placeholder="All Types" />
-//                   </SelectTrigger>
-//                   <SelectContent>
-//                     <SelectItem value="all">All Types</SelectItem>
-//                     <SelectItem value="OP">OP</SelectItem>
-//                     <SelectItem value="IP">IP</SelectItem>
-//                   </SelectContent>
-//                 </Select>
-//               </div>
-//               <Button variant="outline" onClick={handleExport} className="w-full sm:w-auto">
-//                 <Download className="h-4 w-4 mr-2" />
-//                 Export
-//               </Button>
-//             </div>
-
-//             {/* Table - Desktop */}
-//             <div className="hidden md:block rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm overflow-hidden">
-//               <div className="overflow-x-auto">
-//                 <Table>
-//                   <TableHeader>
-//                     <TableRow>
-//                       <TableHead>Date</TableHead>
-//                       <TableHead>Patient</TableHead>
-//                       <TableHead>Type</TableHead>
-//                       <TableHead>Medicine</TableHead>
-//                       <TableHead>Batch</TableHead>
-//                       <TableHead>Qty</TableHead>
-//                       <TableHead>Unit Price</TableHead>
-//                       <TableHead>Tax</TableHead>
-//                       <TableHead>Total</TableHead>
-//                       <TableHead>Status</TableHead>
-//                     </TableRow>
-//                   </TableHeader>
-//                   <TableBody>
-//                     {filtered.map((e) => (
-//                       <TableRow
-//                         key={e.id}
-//                         className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50"
-//                         onClick={() => setSelectedEntry(e)}
-//                       >
-//                         <TableCell className="text-gray-500 dark:text-gray-400 whitespace-nowrap">
-//                           {e.date}
-//                         </TableCell>
-//                         <TableCell className="font-medium text-gray-900 dark:text-white">
-//                           {e.patientName}
-//                         </TableCell>
-//                         <TableCell>
-//                           <Badge variant="outline" className={
-//                             e.type === 'OP'
-//                               ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300'
-//                               : 'bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-300'
-//                           }>
-//                             {e.type}
-//                           </Badge>
-//                         </TableCell>
-//                         <TableCell className="text-gray-600 dark:text-gray-300">
-//                           {e.medicine}
-//                         </TableCell>
-//                         <TableCell className="text-gray-500 dark:text-gray-400">
-//                           {e.batch}
-//                         </TableCell>
-//                         <TableCell className="text-gray-600 dark:text-gray-300">
-//                           {e.qty}
-//                         </TableCell>
-//                         <TableCell className="text-gray-600 dark:text-gray-300">
-//                           ₹{e.unitPrice.toFixed(2)}
-//                         </TableCell>
-//                         <TableCell className="text-gray-600 dark:text-gray-300">
-//                           ₹{e.tax.toFixed(2)}
-//                         </TableCell>
-//                         <TableCell className="font-medium text-gray-900 dark:text-white">
-//                           ₹{e.total.toFixed(2)}
-//                         </TableCell>
-//                         <TableCell>
-//                           {getStatusBadge(e.status)}
-//                         </TableCell>
-//                       </TableRow>
-//                     ))}
-//                   </TableBody>
-//                 </Table>
-
-//                 {filtered.length === 0 && (
-//                   <div className="p-8 text-center text-gray-500 dark:text-gray-400">
-//                     No ledger entries found
-//                   </div>
-//                 )}
-//               </div>
-//             </div>
-
-//             {/* Mobile Cards */}
-//             <div className="md:hidden space-y-3">
-//               {filtered.map((e) => (
-//                 <Card
-//                   key={e.id}
-//                   className="cursor-pointer hover:shadow-md transition-shadow"
-//                   onClick={() => setSelectedEntry(e)}
-//                 >
-//                   <CardContent className="p-4">
-//                     <div className="flex items-start justify-between mb-3">
-//                       <div>
-//                         <h3 className="font-semibold text-gray-900 dark:text-white">{e.patientName}</h3>
-//                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{e.medicine}</p>
-//                       </div>
-//                       {getStatusBadge(e.status)}
-//                     </div>
-
-//                     <div className="grid grid-cols-2 gap-3 text-sm">
-//                       <div>
-//                         <p className="text-xs text-gray-500 dark:text-gray-400">Date</p>
-//                         <p className="font-medium text-gray-900 dark:text-white">{e.date}</p>
-//                       </div>
-//                       <div>
-//                         <p className="text-xs text-gray-500 dark:text-gray-400">Type</p>
-//                         <Badge variant="outline" className={
-//                           e.type === 'OP'
-//                             ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300'
-//                             : 'bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-300'
-//                         }>
-//                           {e.type}
-//                         </Badge>
-//                       </div>
-//                       <div>
-//                         <p className="text-xs text-gray-500 dark:text-gray-400">Batch</p>
-//                         <p className="font-medium text-gray-900 dark:text-white">{e.batch}</p>
-//                       </div>
-//                       <div>
-//                         <p className="text-xs text-gray-500 dark:text-gray-400">Qty</p>
-//                         <p className="font-medium text-gray-900 dark:text-white">{e.qty}</p>
-//                       </div>
-//                       <div>
-//                         <p className="text-xs text-gray-500 dark:text-gray-400">Unit Price</p>
-//                         <p className="font-medium text-gray-900 dark:text-white">₹{e.unitPrice.toFixed(2)}</p>
-//                       </div>
-//                       <div>
-//                         <p className="text-xs text-gray-500 dark:text-gray-400">Total</p>
-//                         <p className="font-bold text-green-600 dark:text-green-400">₹{e.total.toFixed(2)}</p>
-//                       </div>
-//                     </div>
-
-//                     <div className="mt-3 pt-2 border-t border-gray-100 dark:border-gray-800">
-//                       <p className="text-xs text-gray-500 dark:text-gray-400">
-//                         Ref: {e.refId}
-//                       </p>
-//                     </div>
-//                   </CardContent>
-//                 </Card>
-//               ))}
-
-//               {filtered.length === 0 && (
-//                 <Card>
-//                   <CardContent className="p-8 text-center text-gray-500 dark:text-gray-400">
-//                     No ledger entries found
-//                   </CardContent>
-//                 </Card>
-//               )}
-//             </div>
-
-//             {/* Detail Drawer */}
-//             <Sheet open={!!selectedEntry} onOpenChange={() => setSelectedEntry(null)}>
-//               <SheetContent className="w-full sm:max-w-md">
-//                 <SheetHeader>
-//                   <SheetTitle>Transaction Details</SheetTitle>
-//                 </SheetHeader>
-//                 {selectedEntry && (
-//                   <div className="space-y-4 mt-6">
-//                     <div className="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-2">
-//                       <span className="text-sm text-gray-500 dark:text-gray-400">Date</span>
-//                       <span className="text-sm font-medium text-gray-900 dark:text-white">{selectedEntry.date}</span>
-//                     </div>
-//                     <div className="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-2">
-//                       <span className="text-sm text-gray-500 dark:text-gray-400">Patient</span>
-//                       <span className="text-sm font-medium text-gray-900 dark:text-white">{selectedEntry.patientName}</span>
-//                     </div>
-//                     <div className="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-2">
-//                       <span className="text-sm text-gray-500 dark:text-gray-400">Type</span>
-//                       <Badge variant="outline" className={
-//                         selectedEntry.type === 'OP'
-//                           ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300'
-//                           : 'bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-300'
-//                       }>
-//                         {selectedEntry.type}
-//                       </Badge>
-//                     </div>
-//                     <div className="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-2">
-//                       <span className="text-sm text-gray-500 dark:text-gray-400">Medicine</span>
-//                       <span className="text-sm font-medium text-gray-900 dark:text-white">{selectedEntry.medicine}</span>
-//                     </div>
-//                     <div className="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-2">
-//                       <span className="text-sm text-gray-500 dark:text-gray-400">Batch</span>
-//                       <span className="text-sm font-medium text-gray-900 dark:text-white">{selectedEntry.batch}</span>
-//                     </div>
-//                     <div className="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-2">
-//                       <span className="text-sm text-gray-500 dark:text-gray-400">Quantity</span>
-//                       <span className="text-sm font-medium text-gray-900 dark:text-white">{selectedEntry.qty}</span>
-//                     </div>
-//                     <div className="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-2">
-//                       <span className="text-sm text-gray-500 dark:text-gray-400">Unit Price</span>
-//                       <span className="text-sm font-medium text-gray-900 dark:text-white">₹{selectedEntry.unitPrice.toFixed(2)}</span>
-//                     </div>
-//                     <div className="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-2">
-//                       <span className="text-sm text-gray-500 dark:text-gray-400">Tax</span>
-//                       <span className="text-sm font-medium text-gray-900 dark:text-white">₹{selectedEntry.tax.toFixed(2)}</span>
-//                     </div>
-//                     <div className="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-2">
-//                       <span className="text-sm text-gray-500 dark:text-gray-400">Total</span>
-//                       <span className="text-sm font-bold text-green-600 dark:text-green-400">₹{selectedEntry.total.toFixed(2)}</span>
-//                     </div>
-//                     <div className="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-2">
-//                       <span className="text-sm text-gray-500 dark:text-gray-400">Reference ID</span>
-//                       <span className="text-sm font-medium text-gray-900 dark:text-white">{selectedEntry.refId}</span>
-//                     </div>
-//                     <div className="flex justify-between pb-2">
-//                       <span className="text-sm text-gray-500 dark:text-gray-400">Status</span>
-//                       <span>{getStatusBadge(selectedEntry.status)}</span>
-//                     </div>
-//                   </div>
-//                 )}
-//               </SheetContent>
-//             </Sheet>
-//           </div>
-//         </main>
-//       </div>
-//     </div>
-//   );
-// }
-
 
 'use client';
 
@@ -432,6 +40,8 @@ import {
 import { Search, Download, Menu, X, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import Sidebar from '@/components/pharmacy/Sidebar';
+import { useTenant } from "@/contexts/TenantContext";
+import { MODULE_KEYS, PHARMACY_FEATURES } from "@/lib/feature";
 
 interface LedgerEntry {
   id: string;
@@ -461,6 +71,18 @@ export default function LedgerPage() {
   // Pagination state (client‑side)
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const { tenant, isMicroFeatureEnabled, isLoading: tenantLoading } = useTenant();
+
+const isLedgerEnabled = isMicroFeatureEnabled(
+  MODULE_KEYS.PHARMACY,
+  PHARMACY_FEATURES.LEDGER
+);
+
+useEffect(() => {
+  if (!tenantLoading && !isLedgerEnabled) {
+    router.push("/unauthorized");
+  }
+}, [tenantLoading]);
 
   // Fetch all data once
   useEffect(() => {
@@ -617,7 +239,20 @@ export default function LedgerPage() {
       </div>
     );
   }
-
+  
+if (!tenantLoading && !isLedgerEnabled) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <div className="text-red-500 text-6xl mb-4">🔒</div>
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h1>
+        <p className="text-gray-600">
+          Pharmacy Ledger feature is not enabled for {tenant?.name}.
+        </p>
+      </div>
+    </div>
+  );
+}
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Mobile menu button */}

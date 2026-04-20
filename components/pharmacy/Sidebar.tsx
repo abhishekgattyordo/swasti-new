@@ -19,10 +19,20 @@ import {
   Receipt,
   LogOut,
 } from 'lucide-react';
+import { useTenant } from "@/contexts/TenantContext";
+import { MODULE_KEYS, PHARMACY_FEATURES } from "@/lib/feature";
 
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
+}
+interface NavItem {
+  icon: React.ElementType;
+  label: string;
+  href: string;
+  badge?: number;
+  color: string;
+  isEnabled: boolean;
 }
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
@@ -31,6 +41,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [userName, setUserName] = useState('Pharmacist');
   const [userRole, setUserRole] = useState('Pharmacy Admin');
+const { isMicroFeatureEnabled } = useTenant();
 
   useEffect(() => {
     const userStr = localStorage.getItem('user');
@@ -48,18 +59,31 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
   const toggleCollapse = () => setIsCollapsed(!isCollapsed);
 
-  const navItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', href: '/pharmacy/dashboard', color: 'from-blue-500 to-blue-700' },
-    { icon: Pill, label: 'Medicines', href: '/pharmacy/medicines', badge: 2, color: 'from-green-500 to-green-700' },
-    { icon: ShoppingCart, label: 'Purchase Entry', href: '/pharmacy/purchase', color: 'from-purple-500 to-purple-700' },
-    { icon: Package, label: 'Current Stock', href: '/pharmacy/stock', badge: 5, color: 'from-amber-500 to-amber-700' },
-    { icon: Receipt, label: 'Billing', href: '/pharmacy/billingpage', color: 'from-teal-500 to-teal-700' },
-    { icon: ClipboardList, label: 'OP Dispense', href: '/pharmacy/op-dispense', color: 'from-emerald-500 to-emerald-700' },
-    { icon: Building2, label: 'IP Issue', href: '/pharmacy/ip-issue', color: 'from-indigo-500 to-indigo-700' },
-    { icon: BookOpen, label: 'Ledger', href: '/pharmacy/ledger', color: 'from-cyan-500 to-cyan-700' },
-    { icon: AlertTriangle, label: 'Expiry Report', href: '/pharmacy/expiry-report', badge: 3, color: 'from-red-500 to-red-700' },
-    { icon: ArrowLeftRight, label: 'Stock Adjustment', href: '/pharmacy/stock-adjustment', color: 'from-orange-500 to-orange-700' },
+  const isDashboardEnabled = isMicroFeatureEnabled(MODULE_KEYS.PHARMACY, PHARMACY_FEATURES.DASHBOARD);
+const isMedicineEnabled = isMicroFeatureEnabled(MODULE_KEYS.PHARMACY, PHARMACY_FEATURES.MEDICINE);
+const isPurchaseEntryEnabled = isMicroFeatureEnabled(MODULE_KEYS.PHARMACY, PHARMACY_FEATURES.PURCHASE_ENTRY);
+const isCurrentStockEnabled = isMicroFeatureEnabled(MODULE_KEYS.PHARMACY, PHARMACY_FEATURES.CURRENT_STOCK);
+const isBillingEnabled = isMicroFeatureEnabled(MODULE_KEYS.PHARMACY, PHARMACY_FEATURES.BILLING);
+const isOpDispenseEnabled = isMicroFeatureEnabled(MODULE_KEYS.PHARMACY, PHARMACY_FEATURES.OP_DISPENSE);
+const isIpIssueEnabled = isMicroFeatureEnabled(MODULE_KEYS.PHARMACY, PHARMACY_FEATURES.IP_ISSUE);
+const isLedgerEnabled = isMicroFeatureEnabled(MODULE_KEYS.PHARMACY, PHARMACY_FEATURES.LEDGER);
+const isExpiryReportEnabled = isMicroFeatureEnabled(MODULE_KEYS.PHARMACY, PHARMACY_FEATURES.EXPIRY_REPORT);
+const isStockAdjustmentEnabled = isMicroFeatureEnabled(MODULE_KEYS.PHARMACY, PHARMACY_FEATURES.STOCK_ADJUSTMENT);
+
+  const navItems: NavItem[] = [
+    { icon: LayoutDashboard, label: 'Dashboard', href: '/pharmacy/dashboard', color: 'from-blue-500 to-blue-700', isEnabled: isDashboardEnabled },
+    { icon: Pill, label: 'Medicines', href: '/pharmacy/medicines', badge: 2, color: 'from-green-500 to-green-700', isEnabled: isMedicineEnabled },
+    { icon: ShoppingCart, label: 'Purchase Entry', href: '/pharmacy/purchase', color: 'from-purple-500 to-purple-700', isEnabled: isPurchaseEntryEnabled },
+    { icon: Package, label: 'Current Stock', href: '/pharmacy/stock', badge: 5, color: 'from-amber-500 to-amber-700', isEnabled: isCurrentStockEnabled },
+    { icon: Receipt, label: 'Billing', href: '/pharmacy/billingpage', color: 'from-teal-500 to-teal-700', isEnabled: isBillingEnabled },
+    { icon: ClipboardList, label: 'OP Dispense', href: '/pharmacy/op-dispense', color: 'from-emerald-500 to-emerald-700', isEnabled: isOpDispenseEnabled },
+    { icon: Building2, label: 'IP Issue', href: '/pharmacy/ip-issue', color: 'from-indigo-500 to-indigo-700', isEnabled: isIpIssueEnabled },
+    { icon: BookOpen, label: 'Ledger', href: '/pharmacy/ledger', color: 'from-cyan-500 to-cyan-700', isEnabled: isLedgerEnabled },
+    { icon: AlertTriangle, label: 'Expiry Report', href: '/pharmacy/expiry-report', badge: 3, color: 'from-red-500 to-red-700', isEnabled: isExpiryReportEnabled },
+    { icon: ArrowLeftRight, label: 'Stock Adjustment', href: '/pharmacy/stock-adjustment', color: 'from-orange-500 to-orange-700', isEnabled: isStockAdjustmentEnabled },
   ];
+
+   const visibleNavItems = navItems.filter(item => item.isEnabled !== false);
 
   const handleLinkClick = () => {
     if (window.innerWidth < 1024) onClose();
@@ -129,7 +153,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           <div className="mb-6">
             {!isCollapsed && <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wider px-3 mb-3">Main Menu</p>}
             <div className="space-y-1">
-              {navItems.map((item) => {
+              {visibleNavItems.map((item) => {
                 const active = isActive(item.href);
                 return (
                   <Link

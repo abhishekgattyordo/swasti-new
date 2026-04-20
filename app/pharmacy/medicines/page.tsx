@@ -33,6 +33,8 @@ import Sidebar from "@/components/pharmacy/Sidebar";
 import { medicinesApi } from '@/lib/api/medicinesApi';
 import { toast } from 'sonner';
 import MedicineImport from '@/components/pharmacy/MedicineImport';
+import { useTenant } from "@/contexts/TenantContext";
+import { MODULE_KEYS, PHARMACY_FEATURES } from "@/lib/feature";
 
 // Categories
 const categories = [
@@ -55,7 +57,19 @@ export default function MedicineListPage() {
   const [error, setError] = useState<string | null>(null);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const { tenant, isMicroFeatureEnabled, isLoading: tenantLoading } = useTenant();
 
+const isMedicineEnabled = isMicroFeatureEnabled(
+  MODULE_KEYS.PHARMACY,
+  PHARMACY_FEATURES.MEDICINE
+);
+
+
+useEffect(() => {
+  if (!tenantLoading && !isMedicineEnabled) {
+    router.push("/unauthorized");
+  }
+}, [tenantLoading]);
   // Fetch medicines – memoized with useCallback
   const fetchMedicines = useCallback(async () => {
  
@@ -179,6 +193,20 @@ export default function MedicineListPage() {
       setConfirmModal(null);
     }
   };
+
+  if (!tenantLoading && !isMedicineEnabled) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <div className="text-red-500 text-6xl mb-4">🔒</div>
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h1>
+        <p className="text-gray-600">
+          Pharmacy Medicine feature is not enabled for {tenant?.name}.
+        </p>
+      </div>
+    </div>
+  );
+}
 
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
