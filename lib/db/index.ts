@@ -113,6 +113,8 @@
 
 // export default { query, transaction };
 
+
+
 import { Pool, types } from 'pg';
 import { headers } from 'next/headers';
 
@@ -124,19 +126,24 @@ async function getTenantDatabaseUrl(): Promise<string> {
   try {
     const headersList = await headers();
     
-    // Get tenant ID from header (case-insensitive)
+    // Get tenant ID from header
     const tenantId = headersList.get('x-tenant-id');
     
-    console.log(`🔍 Tenant header detected: ${tenantId}`);
+    console.log(`🔍 Tenant header detected: ${tenantId || 'none'}`);
     
     // If no tenant ID, return default database
     if (!tenantId) {
-      console.log('📊 No tenant ID, using default database: ordo-his-dev');
+      console.log('📊 No tenant ID, using default database');
       return process.env.DATABASE_URL || '';
     }
     
-    // Fetch tenant configuration from API
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    // Get the request's own hostname
+    const hostname = headersList.get('host') || '';
+    const protocol = headersList.get('x-forwarded-proto') || 'http';
+    const baseUrl = `${protocol}://${hostname}`;
+    
+    console.log(`🌐 Fetching tenant config from: ${baseUrl}/api/tenant/config`);
+    
     const response = await fetch(`${baseUrl}/api/tenant/config`, {
       headers: {
         'x-tenant-id': tenantId,
@@ -156,10 +163,10 @@ async function getTenantDatabaseUrl(): Promise<string> {
       return tenantConfig.tenant.databaseUrl;
     }
     
-    console.log('📊 Tenant config has no database URL, using default');
+    console.log('📊 No database URL in tenant config, using default');
     return process.env.DATABASE_URL || '';
   } catch (error) {
-    console.error('Error getting tenant:', error);
+    console.error('❌ Error getting tenant database:', error);
     return process.env.DATABASE_URL || '';
   }
 }
@@ -171,16 +178,17 @@ async function getPool(): Promise<Pool> {
     throw new Error('⚠️ DATABASE_URL is not set');
   }
   
+  // Return cached pool if exists
   if (pools.has(connectionString)) {
     return pools.get(connectionString)!;
   }
   
   const dbName = connectionString.split('/').pop()?.split('?')[0];
-  console.log(`🔄 Creating database pool for: ${dbName}`);
+  console.log(`🆕 Creating new database pool for: ${dbName}`);
   
   const pool = new Pool({
     connectionString: connectionString,
-    ssl: { rejectUnauthorized: false },
+    ssl: connectionString.includes('sslmode=require') ? { rejectUnauthorized: false } : false,
     max: 20,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 10000,
@@ -199,8 +207,8 @@ async function getPool(): Promise<Pool> {
 }
 
 export async function query(text: string, params?: any[]) {
-  const pool = await getPool();
   const start = Date.now();
+  const pool = await getPool();
   
   try {
     const res = await pool.query(text, params);
@@ -230,4 +238,21 @@ export async function transaction<T>(callback: (client: any) => Promise<T>): Pro
   }
 }
 
-export default { query, transaction };
+export async function getCurrentDatabaseInfo() {
+  try {
+    const result = await query('SELECT current_database() as db_name, current_user as db_user, NOW() as server_time');
+    return {
+      success: true,
+      database: result.rows[0].db_name,
+      user: result.rows[0].db_user,
+      serverTime: result.rows[0].server_time,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}
+
+export default { query, transaction, getCurrentDatabaseInfo };
