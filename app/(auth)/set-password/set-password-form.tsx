@@ -7,8 +7,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 export default function SetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const token = searchParams.get('token');
-  const email = searchParams.get('email');
+  const token = searchParams.get('token')?.trim() || '';
+  const email = searchParams.get('email')?.trim() || '';
 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -24,8 +24,13 @@ export default function SetPasswordForm() {
       return;
     }
 
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters');
+    if (!token || !email) {
+      setError('Invalid setup link. Please ask admin to send a new invite.');
+      return;
+    }
+
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters');
       return;
     }
 
@@ -40,7 +45,7 @@ export default function SetPasswordForm() {
 
       const data = await response.json();
 
-      if (!response.ok) throw new Error(data.error || 'Failed to set password');
+      if (!response.ok) throw new Error(data.message || data.error || 'Failed to set password');
 
       router.push('/login?passwordSet=true');
     } catch (err) {
@@ -48,6 +53,19 @@ export default function SetPasswordForm() {
       setLoading(false);
     }
   };
+
+  if (!token || !email) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="max-w-md w-full p-6 bg-white rounded-lg shadow-md">
+          <h1 className="text-2xl font-bold mb-3">Invalid Link</h1>
+          <p className="text-sm text-gray-600">
+            This password setup link is missing required details. Please request a new invite link.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
