@@ -37,7 +37,7 @@ export async function upsertUserByRole(input: CreateUserInput): Promise<void> {
   const passwordHash = await hashIfProvided(input.plainPassword);
 
   await transaction(async (client) => {
-    const existing = await client.query<{ id: number }>(
+    const existing = await client.query(
       "SELECT id FROM users WHERE email = $1 LIMIT 1",
       [email]
     );

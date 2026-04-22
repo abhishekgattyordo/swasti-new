@@ -30,7 +30,7 @@ import { setTenantDatabaseUrl } from '@/lib/domainManager';
 import { verifyAccessToken, ACCESS_TOKEN_COOKIE } from '@/lib/auth/jwt';
 
 // Simple cache for tenant configs
-const tenantCache = new Map<string, { data: any; timestamp: number }>();
+const tenantCache = new Map<string, { data: unknown; timestamp: number }>();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 export async function proxy(request: NextRequest) {
