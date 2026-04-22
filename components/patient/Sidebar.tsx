@@ -64,7 +64,7 @@ const admissionSummaryHref = `/patient/inpatient-summary?patientId=${patientId}&
 
   const navItems = [
     { icon: Dashboard, label: 'Dashboard', href: '/patient/dashboard', color: 'from-green-500 to-green-700' },
-    { icon: FolderShared, label: 'Medical Records', href: '/patient/medical-records', badge: 3, color: 'from-green-500 to-green-700' },
+    { icon: FolderShared, label: 'Medical Records', href: '/patient/medical-records', color: 'from-green-500 to-green-700' },
     { icon: Medication, label: 'Prescriptions', href: '/patient/prescriptions', color: 'from-emerald-500 to-emerald-700' },
     { icon: ReceiptLong, label: 'Billing', href: '/patient/billing', color: 'from-green-500 to-green-700' },
  {
@@ -178,16 +178,8 @@ const admissionSummaryHref = `/patient/inpatient-summary?patientId=${patientId}&
                       </div>
                       {!isCollapsed && <span className="text-sm font-medium">{item.label}</span>}
                     </div>
-                    {!isCollapsed && item.badge && (
-                      <span className={`text-xs font-bold px-2 py-1 rounded-full ${
-                        active ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
-                      }`}>
-                        {item.badge}
-                      </span>
-                    )}
-                    {isCollapsed && item.badge && (
-                      <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white dark:ring-gray-900" />
-                    )}
+                  
+                  
                   </Link>
                 );
               })}

@@ -27,15 +27,23 @@ export async function GET(req: Request) {
     }
 
     // 3. Extract user id from decoded token
-    const userId = decoded.id; // or decoded.user_id, depending on your payload
+    const userId = decoded.id;
     if (!userId) {
       console.error("Token missing user id");
       return NextResponse.json({ success: false, message: "Invalid token payload" }, { status: 401 });
     }
 
-    // 4. Query the database – include patient_id
+    // 4. ✅ Updated query with JOIN to get doctor_id from doctors table
     const result = await query(
-      `SELECT id, email, role, doctor_id, patient_id FROM users WHERE id = $1`,
+      `SELECT 
+        u.id,
+        u.email,
+        u.role,
+        u.patient_id,
+        d.id AS doctor_id
+      FROM users u
+      LEFT JOIN doctors d ON u.email = d.email
+      WHERE u.id = $1`,
       [userId]
     );
 
@@ -45,15 +53,15 @@ export async function GET(req: Request) {
 
     const user = result.rows[0];
 
-    // 5. Return the user data (including doctor_id and patient_id)
+    // 5. Return the user data (including doctor_id from doctors table)
     return NextResponse.json({
       success: true,
       user: {
         id: user.id,
         email: user.email,
         role: user.role,
-        doctor_id: user.doctor_id,
         patient_id: user.patient_id,
+        doctor_id: user.doctor_id  // ✅ This will now be 1 (from doctors table)
       },
     });
   } catch (error) {

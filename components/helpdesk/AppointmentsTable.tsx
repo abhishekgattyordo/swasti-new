@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from "react";
-import { Clock, User, CheckCircle2, XCircle, Filter, CalendarX } from "lucide-react";
+import { Clock, User, CheckCircle2, XCircle, Filter, CalendarX, Eye, Edit, Trash2 } from "lucide-react";
 
 export type Appointment = {
   id: string;
@@ -36,7 +36,7 @@ interface AppointmentsTableProps {
 }
 
 export default function AppointmentsTable({
-  appointments,
+  appointments = [],
   doctors,
   onConfirm,
   onComplete,
@@ -45,7 +45,6 @@ export default function AppointmentsTable({
   getStatusColor,
   getTypeColor,
 }: AppointmentsTableProps) {
-  // Removed "status" from filters
   const [filters, setFilters] = useState({
     patient: "",
     date: "",
@@ -80,7 +79,7 @@ export default function AppointmentsTable({
   };
 
   const filteredAppointments = useMemo(() => {
-    return appointments.filter((apt) => {
+    return (appointments || []).filter((apt) => {
       const matchPatient =
         filters.patient === "" ||
         apt.patientName.toLowerCase().includes(filters.patient.toLowerCase()) ||
@@ -156,6 +155,17 @@ export default function AppointmentsTable({
     );
   };
 
+  // Helper to check if appointment is today
+  const isTodayAppointment = (appointmentDate: string) => {
+    const aptDate = new Date(appointmentDate);
+    const today = new Date();
+    return (
+      aptDate.getFullYear() === today.getFullYear() &&
+      aptDate.getMonth() === today.getMonth() &&
+      aptDate.getDate() === today.getDate()
+    );
+  };
+
   return (
     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
       {/* Mobile filter row – visible only on small screens */}
@@ -174,7 +184,6 @@ export default function AppointmentsTable({
               <th className="p-2 sm:p-3 text-left text-xs font-medium text-gray-500 uppercase border border-gray-200">
                 <div className="flex items-center gap-1">
                   <User className="w-3 h-3" /> PATIENT
-                  {/* Desktop filter icon */}
                   <span className="hidden lg:inline">
                     <FilterPopover
                       column="patient"
@@ -214,98 +223,113 @@ export default function AppointmentsTable({
                 </div>
               </th>
               <th className="p-2 sm:p-3 text-left text-xs font-medium text-gray-500 uppercase border border-gray-200">
+                STATUS
+              </th>
+              <th className="p-2 sm:p-3 text-left text-xs font-medium text-gray-500 uppercase border border-gray-200">
                 ACTIONS
               </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {filteredAppointments.map((apt) => (
-              <tr key={apt.id} className="hover:bg-gray-50 transition-colors">
-                <td className="p-2 sm:p-3 border border-gray-200">
-                  <div className="whitespace-nowrap">
-                    <p className="font-medium text-gray-900 text-sm sm:text-base">
-                      {apt.patientName}
-                    </p>
-                    <p className="text-xs sm:text-sm text-gray-500">
-                      {apt.patientId}
-                    </p>
-                  </div>
-                </td>
-                <td className="p-2 sm:p-3 border border-gray-200">
-                  <div className="flex items-center gap-2 whitespace-nowrap">
-                    <Clock className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                    <div>
-                      <p className="text-gray-900 text-sm sm:text-base">
-                        {new Date(apt.appointmentDate).toLocaleDateString(
-                          "en-US",
-                          {
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                          },
-                        )}
+            {filteredAppointments.map((apt) => {
+              const isToday = isTodayAppointment(apt.appointmentDate);
+              const isCompleted = apt.status === "completed";
+              const isCancelled = apt.status === "cancelled";
+              const isPending = apt.status === "pending";
+              const isConfirmed = apt.status === "confirmed";
+
+              return (
+                <tr key={apt.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="p-2 sm:p-3 border border-gray-200">
+                    <div className="whitespace-nowrap">
+                      <p className="font-medium text-gray-900 text-sm sm:text-base">
+                        {apt.patientName}
                       </p>
                       <p className="text-xs sm:text-sm text-gray-500">
-                        {apt.appointmentTime}
+                        {apt.patientId}
                       </p>
                     </div>
-                  </div>
-                </td>
-                <td className="p-2 sm:p-3 border border-gray-200">
-                  <div className="whitespace-nowrap">
-                    <p className="text-gray-900 text-sm sm:text-base">
-                      {apt.doctorName}
-                    </p>
-                    <p className="text-xs sm:text-sm text-gray-500">
-                      {
-                        doctors.find((d) => d.id === apt.doctorId)
-                          ?.specialization
-                      }
-                    </p>
-                  </div>
-                </td>
-                <td className="p-2 sm:p-3 border border-gray-200">
-                  <div className="whitespace-nowrap">
-                    <span
-                      className={`px-2 py-1 text-xs rounded-full font-medium inline-flex items-center gap-1 ${getTypeColor(apt.type || "consultation")}`}
-                    >
-                      {apt.type
-                        ? apt.type.charAt(0).toUpperCase() + apt.type.slice(1)
-                        : "Consultation"}
-                    </span>
-                  </div>
-                </td>
-                <td className="p-2 sm:p-3 border border-gray-200">
-                  {/* Actions: only for today's appointments */}
-                  <div className="flex gap-2 whitespace-nowrap">
-                    {(() => {
-                      const aptDate = new Date(apt.appointmentDate);
-                      const today = new Date();
-                      const isToday =
-                        aptDate.getFullYear() === today.getFullYear() &&
-                        aptDate.getMonth() === today.getMonth() &&
-                        aptDate.getDate() === today.getDate();
+                  </td>
+                  <td className="p-2 sm:p-3 border border-gray-200">
+                    <div className="flex items-center gap-2 whitespace-nowrap">
+                      <Clock className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                      <div>
+                        <p className="text-gray-900 text-sm sm:text-base">
+                          {new Date(apt.appointmentDate).toLocaleDateString(
+                            "en-US",
+                            {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            }
+                          )}
+                        </p>
+                        <p className="text-xs sm:text-sm text-gray-500">
+                          {apt.appointmentTime}
+                        </p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="p-2 sm:p-3 border border-gray-200">
+                    <div className="whitespace-nowrap">
+                      <p className="text-gray-900 text-sm sm:text-base">
+                        {apt.doctorName}
+                      </p>
+                      <p className="text-xs sm:text-sm text-gray-500">
+                        {doctors.find((d) => d.id === apt.doctorId)
+                          ?.specialization || "General"}
+                      </p>
+                    </div>
+                  </td>
+                  <td className="p-2 sm:p-3 border border-gray-200">
+                    <div className="whitespace-nowrap">
+                      <span
+                        className={`px-2 py-1 text-xs rounded-full font-medium inline-flex items-center gap-1 ${getTypeColor(apt.type || "consultation")}`}
+                      >
+                        {apt.type
+                          ? apt.type.charAt(0).toUpperCase() + apt.type.slice(1)
+                          : "Consultation"}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="p-2 sm:p-3 border border-gray-200">
+                    <div className="whitespace-nowrap">
+                      <span
+                        className={`px-2 py-1 text-xs rounded-full font-medium ${getStatusColor(apt.status)}`}
+                      >
+                        {apt.status.charAt(0).toUpperCase() + apt.status.slice(1)}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="p-2 sm:p-3 border border-gray-200">
+                    <div className="flex gap-2 whitespace-nowrap">
+                      {/* ✅ For completed appointments - show only View Details */}
+                      {isCompleted && (
+                        <button
+                          onClick={() => onEdit(apt.id)}
+                          className="p-1.5 rounded-md hover:bg-gray-100 text-blue-600 transition-colors"
+                          title="View Details"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                      )}
 
-                      if (!isToday) return null;
+                      {/* ✅ For cancelled appointments - show no actions */}
+                      {isCancelled && (
+                        <span className="text-xs text-gray-400">No actions</span>
+                      )}
 
-                      return (
+                      {/* ✅ For pending/confirmed appointments - show full actions (only for today) */}
+                      {(isPending || isConfirmed) && isToday && (
                         <>
                         
-                          {apt.status === "confirmed" && (
-                            <button
-                              onClick={() => onComplete(apt.id)}
-                              className="p-1.5 rounded-md hover:bg-gray-100 text-emerald-600 transition-colors"
-                              title="Complete"
-                            >
-                              <CheckCircle2 className="w-4 h-4" />
-                            </button>
-                          )}
+                          
                           <button
                             onClick={() => onEdit(apt.id)}
                             className="p-1.5 rounded-md hover:bg-gray-100 text-amber-600 transition-colors"
                             title="Edit"
                           >
-                            <span className="material-icons text-sm">edit</span>
+                            <Edit className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => onCancel(apt.id)}
@@ -315,12 +339,32 @@ export default function AppointmentsTable({
                             <XCircle className="w-4 h-4" />
                           </button>
                         </>
-                      );
-                    })()}
-                  </div>
-                </td>
-              </tr>
-            ))}
+                      )}
+
+                      {/* For pending/confirmed but not today - show limited actions */}
+                      {(isPending || isConfirmed) && !isToday && (
+                        <>
+                          <button
+                            onClick={() => onEdit(apt.id)}
+                            className="p-1.5 rounded-md hover:bg-gray-100 text-amber-600 transition-colors"
+                            title="Edit"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => onCancel(apt.id)}
+                            className="p-1.5 rounded-md hover:bg-gray-100 text-rose-600 transition-colors"
+                            title="Cancel"
+                          >
+                            <XCircle className="w-4 h-4" />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

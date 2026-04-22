@@ -641,8 +641,8 @@ export default function PatientBillingPage() {
                   <div className="w-10 h-10 rounded-lg bg-green-600 flex items-center justify-center text-white"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-5m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div>
                   <div><p className="text-xs text-gray-500">Insurance Status</p><p className="text-sm font-semibold">Blue Cross</p></div>
                 </div>
-                <div className="flex justify-between"><p className="text-xs">Deductible (Met)</p><p className="text-lg font-bold">₹1,200 / ₹1,500</p></div>
-                <div className="mt-3 h-1.5 w-full bg-gray-200 rounded-full overflow-hidden"><div className="h-full w-4/5 bg-green-600 rounded-full"></div></div>
+                <div className="flex justify-between"><p className="text-xs">Deductible (Met)</p><p className="text-lg font-bold"></p></div>
+               
               </div>
             </div>
 

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Sidebar from '@/components/patient/Sidebar';
-import { Menu, X, Loader2, Calendar } from 'lucide-react';
+import { Menu, X, Loader2, Calendar, AlertCircle, FileText } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function InPatientSummaryContent() {
@@ -20,6 +20,7 @@ export default function InPatientSummaryContent() {
   const [patientId, setPatientId] = useState<string | null>(null);
   const [manualPatientId, setManualPatientId] = useState('');
   const [showManualInput, setShowManualInput] = useState(false);
+  const [noAdmission, setNoAdmission] = useState(false);
 
   // Sync selectedDate with URL dateParam
   useEffect(() => {
@@ -64,19 +65,32 @@ export default function InPatientSummaryContent() {
   const fetchSummaryByDate = async (pid: string, date: string) => {
     try {
       setLoading(true);
+      setNoAdmission(false);
+      setError(null);
+      
       const res = await fetch(`/api/patient/inpatient-summary?patientId=${pid}&date=${date}`);
       const result = await res.json();
+      
       if (result.success) {
         setSummaryData(result.data);
         setError(null);
+        setNoAdmission(false);
       } else {
-        throw new Error(result.message);
+        // Check if it's a "no admission found" error
+        if (result.message?.includes('No active admission found')) {
+          setNoAdmission(true);
+          setSummaryData(null);
+          setError(null);
+        } else {
+          throw new Error(result.message);
+        }
       }
     } catch (err: any) {
       console.error('Fetch error:', err);
       setError(err.message || 'Failed to load summary');
       toast.error(err.message || 'Failed to load summary');
       setSummaryData(null);
+      setNoAdmission(false);
     } finally {
       setLoading(false);
     }
@@ -126,6 +140,7 @@ export default function InPatientSummaryContent() {
     loadSummary();
   }, [patientId, dateParam]);
 
+  // Manual input screen
   if (showManualInput) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900">
@@ -152,45 +167,114 @@ export default function InPatientSummaryContent() {
     );
   }
 
+  // Loading screen
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <Loader2 className="h-8 w-8 animate-spin text-green-600" />
+      <div className="flex flex-col md:flex-row min-h-screen bg-gray-50 dark:bg-gray-900">
+        <button
+          className="lg:hidden fixed bottom-20 right-6 z-50 p-3 bg-green-600 hover:bg-green-700 text-white rounded-full shadow-lg"
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        >
+          {isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        </button>
+        <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+        <main className="flex-1 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-green-600" />
+        </main>
       </div>
     );
   }
 
+  // No admission found screen
+  if (noAdmission) {
+    return (
+      <div className="flex flex-col md:flex-row min-h-screen bg-gray-50 dark:bg-gray-900">
+        <button
+          className="lg:hidden fixed bottom-20 right-6 z-50 p-3 bg-green-600 hover:bg-green-700 text-white rounded-full shadow-lg"
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        >
+          {isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        </button>
+
+        <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+        {isSidebarOpen && (
+          <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-30 lg:hidden" onClick={() => setIsSidebarOpen(false)} />
+        )}
+
+        <main className="flex-1 flex items-center justify-center p-6">
+          <div className="text-center max-w-md">
+            <div className="w-20 h-20 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+              <FileText className="w-10 h-10 text-amber-600 dark:text-amber-400" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+              No Active Admission
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              You don't have any active admission record 
+            </p>
+       
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Error screen
   if (error || !summaryData) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="text-center">
-          <p className="text-red-600 dark:text-red-400">Error: {error || 'Data not available'}</p>
-          <div className="mt-4 flex gap-2 justify-center">
-            <button
-              onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg"
-            >
-              Retry
-            </button>
-            <button
-              onClick={() => {
-                const today = new Date().toISOString().split('T')[0];
-                handleDateChange(today);
-              }}
-              className="px-4 py-2 bg-gray-600 text-white rounded-lg"
-            >
-              Try Today
-            </button>
+      <div className="flex flex-col md:flex-row min-h-screen bg-gray-50 dark:bg-gray-900">
+        <button
+          className="lg:hidden fixed bottom-20 right-6 z-50 p-3 bg-green-600 hover:bg-green-700 text-white rounded-full shadow-lg"
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        >
+          {isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        </button>
+
+        <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+        {isSidebarOpen && (
+          <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-30 lg:hidden" onClick={() => setIsSidebarOpen(false)} />
+        )}
+
+        <main className="flex-1 flex items-center justify-center p-6">
+          <div className="text-center">
+            <div className="w-20 h-20 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertCircle className="w-10 h-10 text-red-600 dark:text-red-400" />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              Something went wrong
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              {error || 'Unable to load inpatient summary'}
+            </p>
+            <div className="flex gap-2 justify-center">
+              <button
+                onClick={() => window.location.reload()}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+              >
+                Try Again
+              </button>
+              <button
+                onClick={() => {
+                  const today = new Date().toISOString().split('T')[0];
+                  handleDateChange(today);
+                }}
+                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+              >
+                Try Today
+              </button>
+            </div>
           </div>
-        </div>
+        </main>
       </div>
     );
   }
 
+  // Success screen - show summary data
   const { patient, timelineEvents, medicalRecords, billing } = summaryData;
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 antialiased">
+      {/* Mobile menu button */}
       <button
         className="lg:hidden fixed bottom-20 right-6 z-50 p-3 bg-green-600 hover:bg-green-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center"
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -199,11 +283,13 @@ export default function InPatientSummaryContent() {
         {isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
       </button>
 
+      {/* Sidebar */}
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       {isSidebarOpen && (
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-30 lg:hidden" onClick={() => setIsSidebarOpen(false)} />
       )}
 
+      {/* Main Content */}
       <main className="flex-1 flex flex-col h-screen overflow-hidden">
         <div className="flex-1 overflow-y-auto p-6 md:p-8">
           {/* Date picker */}
@@ -226,17 +312,17 @@ export default function InPatientSummaryContent() {
             <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
               <div>
                 <div className="flex items-center gap-3 mb-2">
-                  <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{patient.name || '—'}</h1>
+                  <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{patient?.name || '—'}</h1>
                   <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${
-                    patient.status === 'Discharged'
+                    patient?.status === 'Discharged'
                       ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-green-200 dark:border-green-800'
                       : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-800'
                   }`}>
-                    {patient.status || 'Admitted'}
+                    {patient?.status || 'Admitted'}
                   </span>
                 </div>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Admission ID: <span className="font-mono text-gray-700 dark:text-gray-300">{patient.admissionId || '—'}</span>
+                  Admission ID: <span className="font-mono text-gray-700 dark:text-gray-300">{patient?.admissionId || '—'}</span>
                 </p>
               </div>
             </div>
@@ -247,7 +333,7 @@ export default function InPatientSummaryContent() {
                 <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Primary Consultant</p>
                 <div className="flex items-center gap-3">
                   <div className="relative h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
-                    {patient.primaryConsultant ? (
+                    {patient?.primaryConsultant ? (
                       <div className="h-full w-full flex items-center justify-center text-xs font-bold text-gray-600 dark:text-gray-300">
                         {patient.primaryConsultant.charAt(0)}
                       </div>
@@ -255,46 +341,40 @@ export default function InPatientSummaryContent() {
                       <div className="h-full w-full flex items-center justify-center text-gray-400">—</div>
                     )}
                   </div>
-                  <p className="font-medium text-gray-900 dark:text-white">{patient.primaryConsultant || '—'}</p>
+                  <p className="font-medium text-gray-900 dark:text-white">{patient?.primaryConsultant || '—'}</p>
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-11">{patient.consultantDept || '—'}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-11">{patient?.consultantDept || '—'}</p>
               </div>
 
               <div>
                 <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Ward / Room</p>
                 <div className="flex items-center gap-2 text-gray-900 dark:text-white font-medium">
-                  <span className="material-icons text-green-600 dark:text-green-400 text-xl">meeting_room</span>
-                  <span>{patient.wardRoom || '—'}</span>
+                  <span className="text-green-600 dark:text-green-400 text-xl">🏥</span>
+                  <span>{patient?.wardRoom || '—'}</span>
                 </div>
               </div>
 
               <div>
                 <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Admission Date</p>
                 <div className="flex items-center gap-2 text-gray-900 dark:text-white font-medium">
-                  <span className="material-icons text-green-600 dark:text-green-400 text-xl">event_available</span>
-                  <span>{patient.admissionDate ? new Date(patient.admissionDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}</span>
+                  <span className="text-green-600 dark:text-green-400 text-xl">📅</span>
+                  <span>{patient?.admissionDate ? new Date(patient.admissionDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}</span>
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-7">
-                  {patient.admissionDate ? new Date(patient.admissionDate).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : ''}
-                </p>
               </div>
 
               <div>
                 <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Discharge Date</p>
                 <div className="flex items-center gap-2 text-gray-900 dark:text-white font-medium">
-                  <span className="material-icons text-green-600 dark:text-green-400 text-xl">event_busy</span>
-                  <span>{patient.dischargeDate ? new Date(patient.dischargeDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}</span>
+                  <span className="text-green-600 dark:text-green-400 text-xl">📅</span>
+                  <span>{patient?.dischargeDate ? new Date(patient.dischargeDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}</span>
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-7">
-                  {patient.dischargeDate ? new Date(patient.dischargeDate).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : ''}
-                </p>
               </div>
             </div>
           </section>
 
           {/* Two Column Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Timeline */}
+            {/* Timeline Column */}
             <div className="lg:col-span-2 space-y-6">
               <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 lg:p-8 shadow-sm border border-gray-200 dark:border-gray-700">
                 <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-8 flex items-center gap-2">
@@ -313,10 +393,8 @@ export default function InPatientSummaryContent() {
                               (event.color === 'green'
                                 ? 'border-green-600 dark:border-green-500'
                                 : 'border-gray-300 dark:border-gray-600')
-                        } z-10 relative flex items-center justify-center ${
-                          event.type === 'surgery' ? 'shadow-[0_0_10px_rgba(22,163,74,0.4)]' : ''
-                        }`}>
-                          {event.icon && <span className="material-icons text-white text-[14px]">{event.icon}</span>}
+                        } z-10 relative flex items-center justify-center`}>
+                          {event.icon && <span className="text-white text-[14px]">{event.icon}</span>}
                           {!event.icon && event.color === 'green' && <div className="h-2.5 w-2.5 rounded-full bg-green-600"></div>}
                         </div>
                       </div>
@@ -328,10 +406,7 @@ export default function InPatientSummaryContent() {
                         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">{event.description}</p>
                         {event.note && (
                           <div className="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-3 mt-2 border border-gray-100 dark:border-gray-700">
-                            <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                              <span className="material-icons text-sm text-green-600 dark:text-green-400">check_circle</span>
-                              <span>{event.note}</span>
-                            </div>
+                            <p className="text-xs text-gray-600 dark:text-gray-400">{event.note}</p>
                           </div>
                         )}
                       </div>
@@ -346,22 +421,27 @@ export default function InPatientSummaryContent() {
               {/* Medical Records */}
               <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 h-fit">
                 <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-                  <span className="material-icons text-green-600 dark:text-green-400 text-xl">folder_shared</span>
+                  <span className="text-green-600 dark:text-green-400 text-xl">📋</span>
                   Medical Records
                 </h2>
                 <div className="space-y-3">
                   {medicalRecords?.length > 0 ? (
                     medicalRecords.map((record: any) => (
-                      <a key={record.id} href={record.fileUrl || '#'} className="group block p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 border border-transparent hover:border-green-200 dark:hover:border-green-900 transition-all duration-200">
+                      <a 
+                        key={record.id} 
+                        href={record.fileUrl || '#'} 
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group block p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 border border-transparent hover:border-green-200 dark:hover:border-green-900 transition-all duration-200"
+                      >
                         <div className="flex items-start gap-3">
                           <div className="h-10 w-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0 group-hover:bg-green-600 group-hover:text-white text-green-600 dark:text-green-400 transition-colors">
-                            <span className="material-icons">{record.icon || 'description'}</span>
+                            <span className="text-xl">📄</span>
                           </div>
                           <div className="flex-grow">
                             <p className="text-sm font-semibold text-gray-900 dark:text-white">{record.title}</p>
                             <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{record.subtitle}</p>
                           </div>
-                          <span className="material-icons text-gray-400 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">download</span>
                         </div>
                       </a>
                     ))
@@ -403,6 +483,7 @@ export default function InPatientSummaryContent() {
             </div>
           </div>
 
+          {/* Footer */}
           <footer className="mt-12 text-center">
             <p className="text-xs text-gray-400 max-w-2xl mx-auto">
               Disclaimer: This inpatient summary is for information management purposes.

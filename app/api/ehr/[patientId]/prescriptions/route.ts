@@ -1,11 +1,13 @@
+
+
+
 // import { NextRequest, NextResponse } from 'next/server';
-// import pool from '@/lib/db';
+// import { query } from '@/lib/db';
 
 // // Helper to get appointment ID from patient ID and date
 // async function getAppointmentIdByDate(patientId: string, date: string): Promise<string | null> {
-//   const client = await pool.connect();
 //   try {
-//     const result = await client.query(
+//     const result = await query(
 //       `SELECT id FROM appointments 
 //        WHERE patient_id = $1 AND appointment_date = $2::date
 //        ORDER BY appointment_time DESC
@@ -13,16 +15,16 @@
 //       [patientId, date]
 //     );
 //     return result.rows[0]?.id || null;
-//   } finally {
-//     client.release();
+//   } catch (error) {
+//     console.error('Error getting appointment ID by date:', error);
+//     return null;
 //   }
 // }
 
 // // Helper to get the latest appointment ID for a patient
 // async function getLatestAppointmentId(patientId: string): Promise<string | null> {
-//   const client = await pool.connect();
 //   try {
-//     const result = await client.query(
+//     const result = await query(
 //       `SELECT id FROM appointments 
 //        WHERE patient_id = $1 
 //        ORDER BY appointment_date DESC, appointment_time DESC 
@@ -30,8 +32,9 @@
 //       [patientId]
 //     );
 //     return result.rows[0]?.id || null;
-//   } finally {
-//     client.release();
+//   } catch (error) {
+//     console.error('Error getting latest appointment ID:', error);
+//     return null;
 //   }
 // }
 
@@ -40,7 +43,6 @@
 //   req: NextRequest,
 //   { params }: { params: Promise<{ patientId: string }> }
 // ) {
-//   const client = await pool.connect();
 //   try {
 //     const { patientId } = await params;
 //     const url = new URL(req.url);
@@ -66,17 +68,17 @@
 //     }
 
 //     // Fetch prescriptions for this appointment
-//     const result = await client.query(
+//     const result = await query(
 //       `SELECT 
 //         id,
-//         medication_name as "name",
+//         medication_name as name,
 //         category,
 //         dosage,
 //         frequency,
 //         duration,
 //         instructions,
-//         recorded_by as "recordedBy",
-//         created_at as "createdAt"
+//         recorded_by as recordedBy,
+//         created_at as createdAt
 //        FROM prescriptions
 //        WHERE appointment_id = $1
 //        ORDER BY created_at DESC`,
@@ -93,8 +95,6 @@
 //       { success: false, message: 'Internal server error' },
 //       { status: 500 }
 //     );
-//   } finally {
-//     client.release();
 //   }
 // }
 
@@ -103,7 +103,6 @@
 //   req: NextRequest,
 //   { params }: { params: Promise<{ patientId: string }> }
 // ) {
-//   const client = await pool.connect();
 //   try {
 //     const { patientId } = await params;
 //     const body = await req.json();
@@ -130,7 +129,7 @@
 //       }
 //     }
 
-//     const { medications, recordedBy } = body; // medications is an array
+//     const { medications, recordedBy } = body;
 //     if (!Array.isArray(medications) || medications.length === 0) {
 //       return NextResponse.json(
 //         { success: false, message: 'Medications array is required' },
@@ -138,20 +137,15 @@
 //       );
 //     }
 
-//     // Start a transaction
-//     await client.query('BEGIN');
-
-//     // Optionally delete existing prescriptions for this appointment? 
-//     // For simplicity, we'll just insert new ones. If you want to replace,
-//     // uncomment the next line.
-//     // await client.query('DELETE FROM prescriptions WHERE appointment_id = $1', [appointmentId]);
-
 //     for (const med of medications) {
 //       const { name, category, dosage, frequency, duration, instructions } = med;
 //       if (!name || !dosage) {
-//         throw new Error('Each medication must have name and dosage');
+//         return NextResponse.json(
+//           { success: false, message: 'Each medication must have name and dosage' },
+//           { status: 400 }
+//         );
 //       }
-//       await client.query(
+//       await query(
 //         `INSERT INTO prescriptions
 //           (appointment_id, medication_name, category, dosage, frequency, duration, instructions, recorded_by)
 //          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
@@ -159,33 +153,25 @@
 //       );
 //     }
 
-//     await client.query('COMMIT');
-
 //     return NextResponse.json({
 //       success: true,
 //       message: 'Prescriptions saved successfully',
 //       appointmentId
 //     });
 //   } catch (error) {
-//     await client.query('ROLLBACK');
 //     console.error('Error saving prescriptions:', error);
 //     return NextResponse.json(
 //       { success: false, message: 'Internal server error' },
 //       { status: 500 }
 //     );
-//   } finally {
-//     client.release();
 //   }
 // }
 
-
-// // ... after the POST handler, add:
-
+// // PUT /api/ehr/[patientId]/prescriptions?prescriptionId=xxx
 // export async function PUT(
 //   req: NextRequest,
 //   { params }: { params: Promise<{ patientId: string }> }
 // ) {
-//   const client = await pool.connect();
 //   try {
 //     const { patientId } = await params;
 //     const url = new URL(req.url);
@@ -202,7 +188,7 @@
 //     const { name, category, dosage, frequency, duration, instructions, recordedBy } = body;
 
 //     // Verify that this prescription belongs to the patient
-//     const verify = await client.query(
+//     const verify = await query(
 //       `SELECT p.id FROM prescriptions p
 //        JOIN appointments a ON p.appointment_id = a.id
 //        WHERE p.id = $1 AND a.patient_id = $2`,
@@ -217,20 +203,20 @@
 //     }
 
 //     // Update the prescription
-//     const result = await client.query(
+//     const result = await query(
 //       `UPDATE prescriptions
 //        SET medication_name = $1, category = $2, dosage = $3, frequency = $4, duration = $5, instructions = $6, recorded_by = $7
 //        WHERE id = $8
 //        RETURNING 
 //          id,
-//          medication_name as "name",
+//          medication_name as name,
 //          category,
 //          dosage,
 //          frequency,
 //          duration,
 //          instructions,
-//          recorded_by as "recordedBy",
-//          created_at as "createdAt"`,
+//          recorded_by as recordedBy,
+//          created_at as createdAt`,
 //       [name, category || '', dosage, frequency || '', duration || '', instructions || '', recordedBy || 'Doctor', prescriptionId]
 //     );
 
@@ -245,18 +231,14 @@
 //       { success: false, message: 'Internal server error' },
 //       { status: 500 }
 //     );
-//   } finally {
-//     client.release();
 //   }
 // }
-
 
 // // DELETE /api/ehr/[patientId]/prescriptions?prescriptionId=xxx
 // export async function DELETE(
 //   req: NextRequest,
 //   { params }: { params: Promise<{ patientId: string }> }
 // ) {
-//   const client = await pool.connect();
 //   try {
 //     const { patientId } = await params;
 //     const url = new URL(req.url);
@@ -270,7 +252,7 @@
 //     }
 
 //     // Verify the prescription belongs to the patient
-//     const verify = await client.query(
+//     const verify = await query(
 //       `SELECT p.id FROM prescriptions p
 //        JOIN appointments a ON p.appointment_id = a.id
 //        WHERE p.id = $1 AND a.patient_id = $2`,
@@ -285,7 +267,7 @@
 //     }
 
 //     // Delete the prescription
-//     await client.query('DELETE FROM prescriptions WHERE id = $1', [prescriptionId]);
+//     await query('DELETE FROM prescriptions WHERE id = $1', [prescriptionId]);
 
 //     return NextResponse.json({
 //       success: true,
@@ -297,8 +279,6 @@
 //       { success: false, message: 'Internal server error' },
 //       { status: 500 }
 //     );
-//   } finally {
-//     client.release();
 //   }
 // }
 
@@ -369,7 +349,7 @@ export async function GET(
       }
     }
 
-    // Fetch prescriptions for this appointment
+    // ✅ Updated to use doctor_prescriptions table
     const result = await query(
       `SELECT 
         id,
@@ -379,9 +359,9 @@ export async function GET(
         frequency,
         duration,
         instructions,
-        recorded_by as recordedBy,
-        created_at as createdAt
-       FROM prescriptions
+        recorded_by as "recordedBy",
+        created_at as "createdAt"
+       FROM doctor_prescriptions
        WHERE appointment_id = $1
        ORDER BY created_at DESC`,
       [targetAppointmentId]
@@ -447,8 +427,9 @@ export async function POST(
           { status: 400 }
         );
       }
+      // ✅ Updated to use doctor_prescriptions table
       await query(
-        `INSERT INTO prescriptions
+        `INSERT INTO doctor_prescriptions
           (appointment_id, medication_name, category, dosage, frequency, duration, instructions, recorded_by)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
         [appointmentId, name, category || '', dosage, frequency || '', duration || '', instructions || '', recordedBy || 'Doctor']
@@ -490,10 +471,11 @@ export async function PUT(
     const { name, category, dosage, frequency, duration, instructions, recordedBy } = body;
 
     // Verify that this prescription belongs to the patient
+    // ✅ Updated to use doctor_prescriptions table
     const verify = await query(
-      `SELECT p.id FROM prescriptions p
-       JOIN appointments a ON p.appointment_id = a.id
-       WHERE p.id = $1 AND a.patient_id = $2`,
+      `SELECT dp.id FROM doctor_prescriptions dp
+       JOIN appointments a ON dp.appointment_id = a.id
+       WHERE dp.id = $1 AND a.patient_id = $2`,
       [prescriptionId, patientId]
     );
 
@@ -505,8 +487,9 @@ export async function PUT(
     }
 
     // Update the prescription
+    // ✅ Updated to use doctor_prescriptions table
     const result = await query(
-      `UPDATE prescriptions
+      `UPDATE doctor_prescriptions
        SET medication_name = $1, category = $2, dosage = $3, frequency = $4, duration = $5, instructions = $6, recorded_by = $7
        WHERE id = $8
        RETURNING 
@@ -517,8 +500,8 @@ export async function PUT(
          frequency,
          duration,
          instructions,
-         recorded_by as recordedBy,
-         created_at as createdAt`,
+         recorded_by as "recordedBy",
+         created_at as "createdAt"`,
       [name, category || '', dosage, frequency || '', duration || '', instructions || '', recordedBy || 'Doctor', prescriptionId]
     );
 
@@ -554,10 +537,11 @@ export async function DELETE(
     }
 
     // Verify the prescription belongs to the patient
+    // ✅ Updated to use doctor_prescriptions table
     const verify = await query(
-      `SELECT p.id FROM prescriptions p
-       JOIN appointments a ON p.appointment_id = a.id
-       WHERE p.id = $1 AND a.patient_id = $2`,
+      `SELECT dp.id FROM doctor_prescriptions dp
+       JOIN appointments a ON dp.appointment_id = a.id
+       WHERE dp.id = $1 AND a.patient_id = $2`,
       [prescriptionId, patientId]
     );
 
@@ -569,7 +553,8 @@ export async function DELETE(
     }
 
     // Delete the prescription
-    await query('DELETE FROM prescriptions WHERE id = $1', [prescriptionId]);
+    // ✅ Updated to use doctor_prescriptions table
+    await query('DELETE FROM doctor_prescriptions WHERE id = $1', [prescriptionId]);
 
     return NextResponse.json({
       success: true,
