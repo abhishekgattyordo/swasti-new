@@ -121,54 +121,48 @@ import { headers } from 'next/headers';
 types.setTypeParser(1082, (val: string) => val);
 
 const pools: Map<string, Pool> = new Map();
+const tenantDbCache = new Map();
 
 async function getTenantDatabaseUrl(): Promise<string> {
-  try {
-    const headersList = await headers();
-    
-    // Get tenant ID from header
-    const tenantId = headersList.get('x-tenant-id');
-    
-    console.log(`🔍 Tenant header detected: ${tenantId || 'none'}`);
-    
-    // If no tenant ID, return default database
-    if (!tenantId) {
-      console.log('📊 No tenant ID, using default database');
-      return process.env.DATABASE_URL || '';
-    }
-    
-    // Get the request's own hostname
-    const hostname = headersList.get('host') || '';
-    const protocol = headersList.get('x-forwarded-proto') || 'http';
-    const baseUrl = `${protocol}://${hostname}`;
-    
-    console.log(`🌐 Fetching tenant config from: ${baseUrl}/api/tenant/config`);
-    
-    const response = await fetch(`${baseUrl}/api/tenant/config`, {
-      headers: {
-        'x-tenant-id': tenantId,
-      },
-    });
-    
-    if (!response.ok) {
-      console.log(`⚠️ Tenant config fetch failed for ${tenantId}, using default`);
-      return process.env.DATABASE_URL || '';
-    }
-    
-    const tenantConfig = await response.json();
-    
-    if (tenantConfig.tenant?.databaseUrl) {
-      const dbName = tenantConfig.tenant.databaseUrl.split('/').pop()?.split('?')[0];
-      console.log(`✅ Using tenant database: ${dbName} for tenant: ${tenantId}`);
-      return tenantConfig.tenant.databaseUrl;
-    }
-    
-    console.log('📊 No database URL in tenant config, using default');
-    return process.env.DATABASE_URL || '';
-  } catch (error) {
-    console.error('❌ Error getting tenant database:', error);
-    return process.env.DATABASE_URL || '';
+  const headersList = await headers();
+
+  const host = headersList.get('host');
+  const protocol = headersList.get('x-forwarded-proto') || 'http';
+
+  if (!host) {
+    throw new Error('❌ Host not found');
   }
+
+  // ✅ STEP 1: CHECK CACHE FIRST
+  if (tenantDbCache.has(host)) {
+    console.log('⚡ Using cached DB for host:', host);
+    return tenantDbCache.get(host)!;
+  }
+
+  console.log('🌐 Fetching tenant config for host:', host);
+
+  const response = await fetch(`${protocol}://${host}/api/tenant/config`, {
+   next: { revalidate: 300 }
+  });
+
+  if (!response.ok) {
+    throw new Error(`❌ Tenant config failed for host: ${host}`);
+  }
+
+  const data = await response.json();
+
+  const dbUrl = data?.tenant?.databaseUrl;
+
+  if (!dbUrl) {
+    throw new Error(`❌ No DB URL found for host: ${host}`);
+  }
+
+  // ✅ STEP 2: STORE IN CACHE
+  tenantDbCache.set(host, dbUrl);
+
+  console.log('✅ Cached DB for host:', host);
+
+  return dbUrl;
 }
 
 async function getPool(): Promise<Pool> {

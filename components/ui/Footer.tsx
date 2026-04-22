@@ -14,9 +14,13 @@ import {
   Clock,
   Shield,
 } from "lucide-react";
+import { useTenant } from "@/contexts/TenantContext";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
+  const { tenant, isLoading } = useTenant();
+  const tenantName = tenant?.name || "";
+const tenantSlug = tenant?.slug || "";
 
   const quickLinks = [
     { href: "/", label: "Home" },
@@ -61,7 +65,7 @@ export function Footer() {
               </div>
               <div>
                 <span className="text-xl font-bold bg-gradient-to-r from-green-400 to-green-300 bg-clip-text text-transparent">
-                  Ordo HIS
+                {tenantName}
                 </span>
                 <p className="text-xs text-gray-500 -mt-1">
                   Healthcare Information System

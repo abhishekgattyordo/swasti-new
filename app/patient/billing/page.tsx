@@ -415,6 +415,7 @@ import {
   LocalPharmacy,
 } from "@mui/icons-material";
 import { Menu, X as XIcon } from "lucide-react";
+import apiClient from '@/lib/api/client';
 
 export default function PatientBillingPage() {
   const [activeTab, setActiveTab] = useState("all");

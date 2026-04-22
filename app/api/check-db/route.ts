@@ -1,24 +1,38 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { headers } from 'next/headers';
 
-export async function GET(request: NextRequest) {
-  // Get tenant ID from header
-  const tenantId = request.headers.get('X-Tenant-ID');
-  
-  console.log(`🔍 Check-DB called with tenant: ${tenantId || 'none'}`);
-  
+export async function GET() {
   try {
-    const result = await query('SELECT current_database() as db_name, current_user as db_user');
-    
+    const headersList = await headers();
+    const host = headersList.get('host');
+
+    const result = await query(`
+      SELECT 
+        current_database() as db_name, 
+        current_user as db_user, 
+        NOW() as server_time
+    `);
+
     return NextResponse.json({
       success: true,
-      currentDatabase: result.rows[0].db_name,
-      currentUser: result.rows[0].db_user,
-      requestedTenant: tenantId || 'default',
-      message: `Connected to ${result.rows[0].db_name}`,
-      expectedDatabase: tenantId === 'kmc' ? 'ordo_tenant_kmc' : 'ordo-his-dev'
+
+      // 🔍 DEBUG INFO
+      host: host,
+      database: result.rows[0].db_name,
+      user: result.rows[0].db_user,
+      serverTime: result.rows[0].server_time,
+
+      // ✅ Helpful message
+      message: `Connected to DB: ${result.rows[0].db_name} for host: ${host}`
     });
+
   } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('❌ Debug DB error:', error);
+
+    return NextResponse.json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Connection failed',
+    }, { status: 500 });
   }
 }

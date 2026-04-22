@@ -238,7 +238,7 @@ useEffect(() => {
               <div className="w-8 lg:hidden"></div>
               <div>
                 <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  PharmaCare
+                  Medicine Master
                 </h1>
               </div>
             </div>
@@ -250,12 +250,8 @@ useEffect(() => {
             {/* Page Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  Medicine Master
-                </h1>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                  {filtered.length} {filtered.length === 1 ? "medicine" : "medicines"} found
-                </p>
+               
+              
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" onClick={fetchMedicines} disabled={loading}>
