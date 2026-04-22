@@ -40,6 +40,13 @@ interface ValidationErrors {
   [key: string]: string[];
 }
 
+interface RegistrationCompletionState {
+  patientEmail: string;
+  patientName: string;
+  setupEmailSent: boolean;
+  message: string;
+}
+
 interface Step {
   number: number;
   title: string;
@@ -100,6 +107,7 @@ export default function RegistrationPage() {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
+  const [registrationComplete, setRegistrationComplete] = useState<RegistrationCompletionState | null>(null);
 
   // Initial form data with new fields
   const [formData, setFormData] = useState<FormData>({
@@ -295,7 +303,12 @@ export default function RegistrationPage() {
       
       if (data.success) {
         setError(null);
-        router.push("/");
+        setRegistrationComplete({
+          patientEmail: data?.data?.email || formData.email,
+          patientName: data?.data?.full_name_en || formData.fullNameEn,
+          setupEmailSent: Boolean(data?.data?.setupEmailSent),
+          message: data.message || "Registration completed successfully.",
+        });
         return true;
       } else {
         if (data.errors) {
@@ -410,6 +423,53 @@ export default function RegistrationPage() {
 
   // Render step content based on current step
   const renderStepContent = () => {
+    if (registrationComplete) {
+      return (
+        <div className="space-y-6 animate-fade-in">
+          <div className="rounded-xl border border-green-200 bg-green-50 p-5 dark:border-green-900 dark:bg-green-900/20">
+            <div className="flex items-center gap-2 text-green-800 dark:text-green-300">
+              <Icon name="check_circle" className="text-lg" />
+              <h2 className="text-lg font-bold">Registration Completed</h2>
+            </div>
+            <p className="mt-2 text-sm text-green-700 dark:text-green-300">
+              {registrationComplete.message}
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-[#cfdbe7] bg-white p-5 dark:border-gray-700 dark:bg-[#1a2632]">
+            <h3 className="text-base font-bold text-[#0d141b] dark:text-white">Email Delivery</h3>
+            <p className="mt-2 text-sm text-[#4c739a] dark:text-gray-300">
+              Recipient: <span className="font-semibold">{registrationComplete.patientEmail}</span>
+            </p>
+            <p className="mt-1 text-sm text-[#4c739a] dark:text-gray-300">
+              Patient: <span className="font-semibold">{registrationComplete.patientName}</span>
+            </p>
+            <div
+              className={cn(
+                "mt-4 rounded-lg border px-4 py-3 text-sm",
+                registrationComplete.setupEmailSent
+                  ? "border-green-200 bg-green-50 text-green-800 dark:border-green-800 dark:bg-green-900/20 dark:text-green-300"
+                  : "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300"
+              )}
+            >
+              {registrationComplete.setupEmailSent
+                ? "Verification email sent successfully. Ask the patient to open the mail and set password using the secure link."
+                : "Registration completed but email could not be sent. Please retry or contact support."}
+            </div>
+          </div>
+
+          <div className="flex justify-end">
+            <button
+              onClick={() => router.push("/login")}
+              className="h-11 rounded-lg bg-primary px-6 text-sm font-bold text-white hover:bg-primary-dark"
+            >
+              Go to Login
+            </button>
+          </div>
+        </div>
+      );
+    }
+
     switch (currentStep) {
       case 1:
         return (
@@ -1191,46 +1251,48 @@ export default function RegistrationPage() {
           </div>
 
           {/* Footer Actions */}
-          <div className="pt-4 border-t border-[#e7edf3] dark:border-gray-700 flex flex-col-reverse sm:flex-row justify-between items-center gap-4 p-6">
-            <button
-              onClick={handleBack}
-              className="w-full sm:w-auto h-11 px-6 rounded-lg border border-transparent text-gray-600 dark:text-gray-400 text-sm font-bold hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={currentStep === 1 || isSubmitting}
-            >
-              Back
-            </button>
-
-            <div className="flex flex-col-reverse sm:flex-row gap-3 w-full sm:w-auto">
+          {!registrationComplete && (
+            <div className="pt-4 border-t border-[#e7edf3] dark:border-gray-700 flex flex-col-reverse sm:flex-row justify-between items-center gap-4 p-6">
               <button
-                onClick={handleNext}
-                disabled={isSubmitting}
-                className="w-full sm:w-auto flex items-center justify-center gap-2 h-11 px-6 sm:px-8 rounded-lg bg-primary hover:bg-primary-dark text-white text-sm font-bold shadow-md shadow-blue-200 dark:shadow-none transition-all transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={handleBack}
+                className="w-full sm:w-auto h-11 px-6 rounded-lg border border-transparent text-gray-600 dark:text-gray-400 text-sm font-bold hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={currentStep === 1 || isSubmitting}
               >
-                {isSubmitting ? (
-                  <>
-                    <span className="animate-spin">⚪</span>
-                    <span>Processing...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>
-                      {currentStep < 3
-                        ? `Next: ${steps[currentStep]?.title}`
-                        : "Complete Registration"}
-                    </span>
-                    {currentStep < 3 ? (
-                      <Icon
-                        name="arrow_forward"
-                        className="text-[18px] flex-shrink-0"
-                      />
-                    ) : (
-                      <Icon name="check" className="text-[18px] flex-shrink-0" />
-                    )}
-                  </>
-                )}
+                Back
               </button>
+
+              <div className="flex flex-col-reverse sm:flex-row gap-3 w-full sm:w-auto">
+                <button
+                  onClick={handleNext}
+                  disabled={isSubmitting}
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 h-11 px-6 sm:px-8 rounded-lg bg-primary hover:bg-primary-dark text-white text-sm font-bold shadow-md shadow-blue-200 dark:shadow-none transition-all transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <span className="animate-spin">⚪</span>
+                      <span>Processing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>
+                        {currentStep < 3
+                          ? `Next: ${steps[currentStep]?.title}`
+                          : "Complete Registration"}
+                      </span>
+                      {currentStep < 3 ? (
+                        <Icon
+                          name="arrow_forward"
+                          className="text-[18px] flex-shrink-0"
+                        />
+                      ) : (
+                        <Icon name="check" className="text-[18px] flex-shrink-0" />
+                      )}
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </main>
 

@@ -10,7 +10,7 @@ declare module 'axios' {
 declare global {
   interface Window {
     __TENANT_CONFIG_CACHE__?: {
-      data: any;
+      data: unknown;
       timestamp: number;
       host: string;
     };
@@ -116,26 +116,25 @@ apiClient.interceptors.response.use(
       originalRequest._retry = true;
       
       try {
-        const refreshToken = localStorage.getItem('refreshToken');
-        if (refreshToken) {
-          const response = await apiClient.post('/auth/refresh/', { refresh: refreshToken });
-          const { access } = response as any;
-          
-          localStorage.setItem('accessToken', access);
-          
-          if (originalRequest.headers) {
-            originalRequest.headers.Authorization = `Bearer ${access}`;
-            // Reuse existing tenant ID from cache
-            const tenantId = getTenantIdFromCache();
-            if (tenantId) {
-              originalRequest.headers['X-Tenant-ID'] = tenantId;
-            }
-          }
-          return apiClient(originalRequest);
+        const response = await apiClient.post('/api/auth/refresh', {});
+        const { accessToken } = response as { accessToken?: string };
+        if (!accessToken) {
+          throw new Error('Refresh response missing accessToken');
         }
-      } catch (refreshError) {
+        
+        localStorage.setItem('accessToken', accessToken);
+        
+        if (originalRequest.headers) {
+          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+          
+          const tenantId = getTenantIdFromCache();
+          if (tenantId) {
+            originalRequest.headers['X-Tenant-ID'] = tenantId;
+          }
+        }
+        return apiClient(originalRequest);
+      } catch {
         localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
         localStorage.removeItem('user');
         window.location.href = '/login';
       }

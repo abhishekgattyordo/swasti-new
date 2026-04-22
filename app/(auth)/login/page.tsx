@@ -115,11 +115,6 @@ export default function LoginPage() {
 if (data.token) {
   localStorage.setItem("accessToken", data.token);
 }
-// If the response also contains a refresh token, store it
-if (data.refreshToken) {
-  localStorage.setItem("refreshToken", data.refreshToken);
-}
-
       console.log("✅ Login successful for:", data.user.email, "Role:", data.user.role);
 
       switch (data.user.role) {
@@ -314,7 +309,7 @@ if (data.refreshToken) {
             </Button>
 
             <div className="text-center text-sm text-gray-500">
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
               <button
                 type="button"
                 onClick={handleRegister}

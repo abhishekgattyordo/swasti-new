@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { z } from 'zod';
+import { createPatientUser } from '@/lib/auth/user-provisioning';
 
 // Validation schema matching the fields sent from the PatientImport component
 const BulkPatientSchema = z.object({
@@ -137,12 +138,13 @@ export async function POST(req: NextRequest) {
           );
         }
 
-        // 4. Create user record (no auth_user_id or invitation)
-        await query(
-          `INSERT INTO users (email, full_name_en, role, patient_id, created_at, updated_at)
-           VALUES ($1, $2, $3, $4, NOW(), NOW())`,
-          [data.email, data.fullNameEn, 'patient', patientId]
-        );
+        // 4. Create user record with generated password using shared helper.
+        await createPatientUser({
+          email: data.email,
+          fullNameEn: data.fullNameEn,
+          patientId: String(patientId),
+          plainPassword: `${String(patientId).slice(-6)}@Ordo`,
+        });
 
         inserted.push({ patientId, name: data.fullNameEn });
       }

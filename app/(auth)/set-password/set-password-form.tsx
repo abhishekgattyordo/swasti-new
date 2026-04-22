@@ -1,19 +1,45 @@
 // app/set-password/set-password-form.tsx
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function SetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token')?.trim() || '';
-  const email = searchParams.get('email')?.trim() || '';
 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [tokenChecking, setTokenChecking] = useState(true);
+  const [tokenValid, setTokenValid] = useState(false);
+
+  useEffect(() => {
+    const verifyToken = async () => {
+      if (!token) {
+        setTokenValid(false);
+        setTokenChecking(false);
+        return;
+      }
+      try {
+        const res = await fetch(`/api/auth/set-password?token=${encodeURIComponent(token)}`);
+        if (!res.ok) {
+          setTokenValid(false);
+          setTokenChecking(false);
+          return;
+        }
+        const data = await res.json();
+        setTokenValid(Boolean(data.valid));
+      } catch {
+        setTokenValid(false);
+      } finally {
+        setTokenChecking(false);
+      }
+    };
+    verifyToken();
+  }, [token]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,7 +50,7 @@ export default function SetPasswordForm() {
       return;
     }
 
-    if (!token || !email) {
+    if (!token || !tokenValid) {
       setError('Invalid setup link. Please ask admin to send a new invite.');
       return;
     }
@@ -40,7 +66,7 @@ export default function SetPasswordForm() {
       const response = await fetch('/api/auth/set-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, token, password }),
+        body: JSON.stringify({ token, password }),
       });
 
       const data = await response.json();
@@ -54,13 +80,24 @@ export default function SetPasswordForm() {
     }
   };
 
-  if (!token || !email) {
+  if (tokenChecking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="max-w-md w-full p-6 bg-white rounded-lg shadow-md">
+          <h1 className="text-2xl font-bold mb-3">Verifying Link</h1>
+          <p className="text-sm text-gray-600">Please wait while we verify your secure setup token.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!token || !tokenValid) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="max-w-md w-full p-6 bg-white rounded-lg shadow-md">
           <h1 className="text-2xl font-bold mb-3">Invalid Link</h1>
           <p className="text-sm text-gray-600">
-            This password setup link is missing required details. Please request a new invite link.
+            This password setup link is invalid or expired. Please request a new invite link.
           </p>
         </div>
       </div>

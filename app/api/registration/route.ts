@@ -14,9 +14,10 @@ import {
   Step2Input,
   Step3Input 
 } from '../../../lib/validations/registration';
-import bcrypt from 'bcrypt';
-import { randomBytes } from 'crypto';
-import { sendPasswordEmail } from '@/lib/api/email';
+import { createHash, createHmac, randomBytes } from 'crypto';
+import { sendPatientRegistrationEmail } from '@/lib/api/email';
+import { createPatientUser } from '@/lib/auth/user-provisioning';
+import { requireTenant } from '@/lib/tenant';
 
 
 // ==================== HELPER FUNCTIONS ====================
@@ -40,11 +41,40 @@ function generateRandomPassword(length = 12): string {
     .join('');
 }
 
+function hashPasswordResetToken(token: string): string {
+  const secret = process.env.INVITE_TOKEN_SECRET?.trim();
+  if (secret) {
+    return createHmac("sha256", secret).update(token, "utf8").digest("hex");
+  }
+  return createHash("sha256").update(token, "utf8").digest("hex");
+}
+
 /**
  * Generate a registration ID (REG-XXXXXX format)
  */
 function generateRegistrationId(): string {
   return `REG-${Date.now().toString(36).toUpperCase()}`;
+}
+
+function buildSetupPasswordLink(token: string): string {
+  const baseUrl =
+    process.env.NEXTAUTH_URL?.trim() ||
+    process.env.NEXT_PUBLIC_API_URL?.trim() ||
+    "http://localhost:3000";
+  return `${baseUrl.replace(/\/+$/, "")}/reset-password?token=${encodeURIComponent(token)}`;
+}
+
+function buildTenantSetupPasswordLink(token: string, tenantHost?: string | null): string {
+  const host = (tenantHost || "").trim();
+  if (!host) return buildSetupPasswordLink(token);
+
+  if (host.startsWith("http://") || host.startsWith("https://")) {
+    return `${host.replace(/\/+$/, "")}/reset-password?token=${encodeURIComponent(token)}`;
+  }
+
+  const isLocal = /^(localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/i.test(host);
+  const protocol = isLocal ? "http" : "https";
+  return `${protocol}://${host.replace(/\/+$/, "")}/reset-password?token=${encodeURIComponent(token)}`;
 }
 
 // ==================== POST ENDPOINT ====================
@@ -339,12 +369,11 @@ async function handleStep3(data: Step3Input) {
 
   const registrationId = generateRegistrationId();
 
-  // Generate a random password
-  const plainPassword = generateRandomPassword(12);
-  const hashedPassword = await bcrypt.hash(plainPassword, 10);
-
-  // Log the password to the terminal (for testing)
-  console.log('🔑 Generated password for', patient.email, ':', plainPassword);
+  // Create a bootstrap password hash; patient must set final password via emailed link.
+  const bootstrapPassword = generateRandomPassword(32);
+  const setupToken = randomBytes(32).toString('hex');
+  const setupTokenHash = hashPasswordResetToken(setupToken);
+  const setupTokenExpiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
   // Use transaction for final registration
   await transaction(async (client) => {
@@ -381,28 +410,39 @@ async function handleStep3(data: Step3Input) {
       [patientId, registrationId, 'ACTIVE']
     );
 
-    // Create/update user account for the patient with the generated password
-    const existingUser = await client.query(
-      'SELECT id FROM users WHERE email = $1',
+    // Create/update user account for patient using shared provisioning helper.
+    await createPatientUser({
+      email: patient.email,
+      fullNameEn: patient.full_name_en,
+      patientId: String(patientId),
+      plainPassword: bootstrapPassword,
+    });
+
+    // Invalidate older unused reset/setup tokens, then create a fresh one.
+    await client.query(
+      `UPDATE password_resets
+       SET used_at = NOW()
+       WHERE user_id = (SELECT id FROM users WHERE email = $1 LIMIT 1)
+         AND used_at IS NULL`,
       [patient.email]
     );
 
-    if (existingUser.rows.length > 0) {
-      // Update existing user with the new password and link to patient
-      await client.query(
-        `UPDATE users 
-         SET password = $1, patient_id = $2, full_name_en = $3, role = 'patient', updated_at = NOW()
-         WHERE email = $4`,
-        [hashedPassword, patientId, patient.full_name_en, patient.email]
-      );
-    } else {
-      await client.query(
-        `INSERT INTO users (email, password, full_name_en, role, patient_id, created_at, updated_at)
-         VALUES ($1, $2, $3, $4, $5, NOW(), NOW())`,
-        [patient.email, hashedPassword, patient.full_name_en, 'patient', patientId]
-      );
-    }
+    await client.query(
+      `INSERT INTO password_resets (user_id, token, expires_at)
+       VALUES ((SELECT id FROM users WHERE email = $1 LIMIT 1), $2, $3)`,
+      [patient.email, setupTokenHash, setupTokenExpiresAt]
+    );
   });
+
+  const tenantContext = await requireTenant();
+  const setupPasswordLink = buildTenantSetupPasswordLink(setupToken, tenantContext.host);
+  const organizationName = tenantContext.tenant.name?.trim() || 'Ordo HIS';
+  await sendPatientRegistrationEmail(
+    patient.email,
+    setupPasswordLink,
+    patient.full_name_en,
+    organizationName
+  );
 
   // Fetch complete registration data (same as before)
   const registrationResult = await query(
@@ -444,23 +484,24 @@ async function handleStep3(data: Step3Input) {
     registrationStep: 3,
     completed: true,
     nextSteps: [
-      "Check the terminal for your password.",
-      "Log in using your email and the password shown in the console.",
+      "Open the password setup link sent to your email.",
+      "Set your password securely before first login.",
       "Download your digital health card",
       "Schedule your first appointment",
       "Access your health records",
     ],
+    setupEmailSent: true,
   };
 
-  // In development, include the plain password in the response
+  // In development, return link for easier local verification.
   if (process.env.NODE_ENV !== 'production') {
-    responseData.generatedPassword = plainPassword;
+    responseData.setupPasswordLink = setupPasswordLink;
   }
 
   return NextResponse.json(
     {
       success: true,
-      message: "Registration completed successfully! A password has been generated. Check the terminal or response.",
+      message: "Registration completed successfully! A secure password setup link has been sent.",
       data: responseData,
     },
     { status: 200 }

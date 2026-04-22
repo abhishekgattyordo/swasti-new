@@ -4,7 +4,7 @@ import { CreateDoctorSchema } from '@/lib/validations/doctor';
 import path from 'path';
 import { writeFile, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 
 export async function GET(req: NextRequest) {
   try {

@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, transaction } from '@/lib/db';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
+import { createHash, createHmac } from 'crypto';
+
+function hashPasswordResetToken(token: string): string {
+  const secret = process.env.INVITE_TOKEN_SECRET?.trim();
+  if (secret) {
+    return createHmac("sha256", secret).update(token, "utf8").digest("hex");
+  }
+  return createHash("sha256").update(token, "utf8").digest("hex");
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,12 +22,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const tokenHash = hashPasswordResetToken(token);
+
     // Validate token
     const tokenResult = await query(
       `SELECT id, user_id, expires_at, used_at
        FROM password_resets
        WHERE token = $1 AND (used_at IS NULL)`,
-      [token]
+      [tokenHash]
     );
 
     if (tokenResult.rows.length === 0) {

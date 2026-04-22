@@ -27,6 +27,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { setTenantDatabaseUrl } from '@/lib/domainManager';
+import { verifyAccessToken, ACCESS_TOKEN_COOKIE } from '@/lib/auth/jwt';
 
 // Simple cache for tenant configs
 const tenantCache = new Map<string, { data: any; timestamp: number }>();
@@ -36,7 +37,6 @@ export async function proxy(request: NextRequest) {
   const response = NextResponse.next();
   const { pathname } = request.nextUrl;
   
-  // ✅ Skip static assets and Next.js internal files
   const skipPaths = [
     '/_next/',
     '/favicon.ico',
@@ -59,11 +59,83 @@ export async function proxy(request: NextRequest) {
   const hostname = request.headers.get('host') || '';
   const domain = hostname.split(':')[0];
   
-  // ✅ Only log API requests
+  // Only log API requests
   if (pathname.startsWith('/api/')) {
     console.log(`🌐 API Request: ${domain} - ${pathname}`);
   }
   
+  // Auth Check for protected API routes
+  if (pathname.startsWith('/api/')) {
+    const publicPaths = [
+      '/api/login',
+      '/api/auth', 
+      '/api/registration',
+      '/api/tenant/config',
+      '/api/check-db',
+      '/api/test-db',
+      '/api/test-domain'
+    ];
+    
+    // Check if current path does not start with any of the public paths
+    const isPublicPath = 
+      publicPaths.some(publicPath => pathname.startsWith(publicPath)) ||
+      (pathname === '/api/doctors' && request.method === 'GET');
+    
+    if (!isPublicPath) {
+      try {
+        const authHeader = request.headers.get("authorization");
+        const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+        const token = bearerToken || request.cookies.get(ACCESS_TOKEN_COOKIE)?.value;
+        
+        if (!token) {
+          return NextResponse.json({ success: false, message: "Unauthorized: Access token missing" }, { status: 401 });
+        }
+        
+        // Let verifyAccessToken validate expiration/signature
+        const decoded = verifyAccessToken(token);
+        if (!decoded || !decoded.sub) {
+          return NextResponse.json({ success: false, message: "Unauthorized: Invalid token payload" }, { status: 401 });
+        }
+      } catch (error) {
+        console.error(`❌ Auth Error in proxy for ${pathname}:`, error);
+        return NextResponse.json({ success: false, message: "Unauthorized: Invalid or expired access token" }, { status: 401 });
+      }
+    }
+  }
+  
+  // ✅ Auth Check for protected Frontend routes
+  const protectedFrontendPaths = [
+    '/patient/dashboard',
+    '/doctor',
+    '/admin',
+    '/billing',
+    '/billings',
+    '/helpdesk',
+    '/laboratory',
+    '/pharmacy'
+  ];
+
+  const isProtectedFrontend = protectedFrontendPaths.some(path => pathname.startsWith(path));
+
+  if (isProtectedFrontend) {
+    try {
+      const token = request.cookies.get(ACCESS_TOKEN_COOKIE)?.value || '';
+
+      if (!token) {
+        return NextResponse.redirect(new URL('/login', request.url));
+      }
+
+      // Validate the token signature and expiration
+      const decoded = verifyAccessToken(token);
+      if (!decoded || !decoded.sub) {
+        return NextResponse.redirect(new URL('/login', request.url));
+      }
+    } catch (error) {
+      console.error(`❌ Frontend Auth Error in proxy for ${pathname}:`, error);
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
+  }
+
   // ✅ Only fetch tenant config for actual API routes (not static files)
   if (pathname.startsWith('/api/') && !pathname.includes('/api/tenant/config')) {
     try {
@@ -101,5 +173,15 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: '/api/:path*',
+  matcher: [
+    '/api/:path*',
+    '/patient/:path*',
+    '/doctor/:path*',
+    '/admin/:path*',
+    '/billing/:path*',
+    '/billings/:path*',
+    '/helpdesk/:path*',
+    '/laboratory/:path*',
+    '/pharmacy/:path*',
+  ],
 };

@@ -1,37 +1,10 @@
 import { NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
 import { query } from "@/lib/db";
+import { authErrorResponse, requireAuth } from "@/lib/auth/guards";
 
 export async function GET(req: Request) {
   try {
-    // 1. Get token from Authorization header
-    const authHeader = req.headers.get("authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
-    }
-    const token = authHeader.split(" ")[1];
-
-    // 2. Verify token
-    const secret = process.env.JWT_SECRET;
-    if (!secret) {
-      console.error("JWT_SECRET is not set");
-      return NextResponse.json({ success: false, message: "Server error" }, { status: 500 });
-    }
-
-    let decoded: any;
-    try {
-      decoded = jwt.verify(token, secret);
-    } catch (err) {
-      console.error("Token verification failed:", err);
-      return NextResponse.json({ success: false, message: "Invalid token" }, { status: 401 });
-    }
-
-    // 3. Extract user id from decoded token
-    const userId = decoded.id;
-    if (!userId) {
-      console.error("Token missing user id");
-      return NextResponse.json({ success: false, message: "Invalid token payload" }, { status: 401 });
-    }
+    const { userId } = requireAuth(req);
 
     // 4. ✅ Updated query with JOIN to get doctor_id from doctors table
     const result = await query(
@@ -65,6 +38,10 @@ export async function GET(req: Request) {
       },
     });
   } catch (error) {
+    const authResponse = authErrorResponse(error);
+    if (authResponse) {
+      return authResponse;
+    }
     console.error("❌ /api/me error:", error);
     return NextResponse.json({ success: false, message: "Server error" }, { status: 500 });
   }

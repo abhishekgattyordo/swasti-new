@@ -1,7 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { sendPasswordResetEmail } from '@/lib/api/email';
-import crypto from 'crypto';
+import { createHash, createHmac, randomBytes } from 'crypto';
+
+function hashPasswordResetToken(token: string): string {
+  const secret = process.env.INVITE_TOKEN_SECRET?.trim();
+  if (secret) {
+    return createHmac("sha256", secret).update(token, "utf8").digest("hex");
+  }
+  return createHash("sha256").update(token, "utf8").digest("hex");
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -31,7 +39,8 @@ export async function POST(req: NextRequest) {
     const user = userResult.rows[0];
 
     // Generate a unique token
-    const token = crypto.randomBytes(32).toString('hex');
+    const token = randomBytes(32).toString('hex');
+    const tokenHash = hashPasswordResetToken(token);
     const expiresAt = new Date();
     expiresAt.setHours(expiresAt.getHours() + 1); // 1 hour expiry
 
@@ -39,7 +48,7 @@ export async function POST(req: NextRequest) {
     await query(
       `INSERT INTO password_resets (user_id, token, expires_at)
        VALUES ($1, $2, $3)`,
-      [user.id, token, expiresAt]
+      [user.id, tokenHash, expiresAt]
     );
 const baseURL = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_API_URL;
     // Create reset link (adjust domain as needed)

@@ -39,13 +39,12 @@ async function hasUsersColumn(
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
-    const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
     const token = typeof body.token === "string" ? body.token.trim() : "";
     const password = typeof body.password === "string" ? body.password : "";
 
-    if (!email || !token || !password) {
+    if (!token || !password) {
       return NextResponse.json(
-        { success: false, message: "email, token, and password are required" },
+        { success: false, message: "token and password are required" },
         { status: 400 }
       );
     }
@@ -92,14 +91,13 @@ export async function POST(request: NextRequest) {
               failed_login_attempts = 0,
               locked_until = NULL,
               updated_at = NOW()
-            WHERE email = $2
-              AND role = 'ADMIN'
-              AND password_reset_token = $3
+            WHERE role IN ('ADMIN', 'admin')
+              AND password_reset_token = $2
               AND password_reset_expires IS NOT NULL
               AND password_reset_expires > NOW()
             RETURNING id
           `,
-          [passwordHash, email, tokenHash]
+          [passwordHash, tokenHash]
         );
 
         if (result.rows.length === 0) {
@@ -125,5 +123,59 @@ export async function POST(request: NextRequest) {
       { success: false, message: `Failed to set password: ${message}` },
       { status: 500 }
     );
+  }
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    const token = request.nextUrl.searchParams.get("token")?.trim() || "";
+    if (!token) {
+      return NextResponse.json({ valid: false, message: "Missing token" }, { status: 400 });
+    }
+
+    const tenantContext = await requireTenant();
+    const pool = new Pool({
+      connectionString: tenantContext.tenant.databaseUrl,
+      connectionTimeoutMillis: 10000,
+    });
+
+    try {
+      const client = await pool.connect();
+      try {
+        await client.query("SET statement_timeout = 15000");
+        if (tenantContext.tenant.schemaName) {
+          await client.query(
+            `SET search_path = "${tenantContext.tenant.schemaName.replace(/"/g, '""')}", public`
+          );
+        }
+
+        const tokenHash = hashInviteToken(token);
+        const result = await client.query<{ id: string }>(
+          `
+            SELECT id
+            FROM users
+            WHERE role IN ('ADMIN', 'admin')
+              AND password_reset_token = $1
+              AND password_reset_expires IS NOT NULL
+              AND password_reset_expires > NOW()
+            LIMIT 1
+          `,
+          [tokenHash]
+        );
+
+        if (result.rows.length === 0) {
+          return NextResponse.json({ valid: false, message: "Invalid or expired setup link" }, { status: 400 });
+        }
+
+        return NextResponse.json({ valid: true });
+      } finally {
+        client.release();
+      }
+    } finally {
+      await pool.end();
+    }
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    return NextResponse.json({ valid: false, message }, { status: 500 });
   }
 }
