@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { z } from 'zod';
+import { authErrorResponse,requireRole } from '@/lib/auth/guards';
 
 const UpdateDoctorSchema = z.object({
   firstName: z.string().min(1).optional(),
@@ -37,6 +38,7 @@ export async function GET(
   console.log('📥 GET /api/doctors/[id] - Starting request');
   
   try {
+         requireRole(req, ['admin','helpdesk']);
     const { id } = await params;
     console.log('📦 Received ID:', id);
     
@@ -94,6 +96,12 @@ export async function GET(
 
   } catch (error) {
     console.error('Error fetching doctor:', error);
+       const authResponse=authErrorResponse(error);
+
+if(authResponse){
+  return authResponse
+}
+
     return NextResponse.json(
       { success: false, message: 'Failed to fetch doctor' },
       { status: 500 }
@@ -106,6 +114,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+       requireRole(req, ['admin']);
     const { id } = await params;
     const doctorId = parseInt(id);
 
@@ -257,6 +266,12 @@ export async function PUT(
 
   } catch (error) {
     console.error('Error updating doctor:', error);
+        const authResponse=authErrorResponse(error);
+
+if(authResponse){
+  return authResponse
+}
+
     return NextResponse.json(
       { success: false, message: 'Failed to update doctor' },
       { status: 500 }
@@ -269,6 +284,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+         requireRole(req, ['admin']);
     const { id } = await params;
     const doctorId = parseInt(id);
 
@@ -298,6 +314,11 @@ export async function DELETE(
 
   } catch (error) {
     console.error('Error deleting doctor:', error);
+       const authResponse=authErrorResponse(error);
+
+if(authResponse){
+  return authResponse
+}
     return NextResponse.json(
       { success: false, message: 'Failed to delete doctor' },
       { status: 500 }

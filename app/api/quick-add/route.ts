@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { authErrorResponse,requireRole } from '@/lib/auth/guards';
 
 export async function POST(req: NextRequest) {
   try {
+      requireRole(req, ['pharmacy']);
     const body = await req.json();
 
     const {
@@ -117,6 +119,10 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     await query('ROLLBACK').catch(() => {});
     console.error('Quick add error:', error);
+        const authResponse=authErrorResponse(error);
+if(authResponse){
+  return authResponse
+}
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }

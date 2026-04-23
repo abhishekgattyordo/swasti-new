@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { authErrorResponse,requireRole } from '@/lib/auth/guards';
 
 export async function GET(req: NextRequest) {
   try {
+       requireRole(req, ['admin']);
     console.log('📥 GET /api/bed-config/summary - Fetching bed summary');
 
     // Get counts by status
@@ -113,6 +115,11 @@ export async function GET(req: NextRequest) {
 
   } catch (error) {
     console.error('❌ Error fetching bed summary:', error);
+       const authResponse=authErrorResponse(error);
+
+if(authResponse){
+  return authResponse
+}
     return NextResponse.json(
       { 
         success: false, 

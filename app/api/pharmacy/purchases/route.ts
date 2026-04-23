@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, transaction } from '@/lib/db';
 import { PurchaseSchema } from '@/lib/validations/purchase';
+import { authErrorResponse,requireRole } from '@/lib/auth/guards';
 
 // GET /api/pharmacy/purchases – list all purchases (with pagination)
 export async function GET(req: NextRequest) {
   try {
+      requireRole(req, ['pharmacy']);
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
@@ -29,6 +31,10 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error('Error fetching purchases:', error);
+        const authResponse=authErrorResponse(error);
+if(authResponse){
+  return authResponse
+}
     return NextResponse.json(
       { success: false, message: 'Failed to fetch purchases' },
       { status: 500 }
@@ -39,6 +45,7 @@ export async function GET(req: NextRequest) {
 // POST /api/pharmacy/purchases – create a new purchase
 export async function POST(req: NextRequest) {
   try {
+      requireRole(req, ['pharmacy']);
     const body = await req.json();
     const validation = PurchaseSchema.safeParse(body);
     if (!validation.success) {
@@ -108,6 +115,10 @@ export async function POST(req: NextRequest) {
     );
   } catch (error) {
     console.error('Error creating purchase:', error);
+        const authResponse=authErrorResponse(error);
+if(authResponse){
+  return authResponse
+}
     return NextResponse.json(
       { success: false, message: 'Failed to create purchase' },
       { status: 500 }

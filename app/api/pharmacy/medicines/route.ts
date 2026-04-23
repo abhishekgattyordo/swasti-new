@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { MedicineSchema } from '@/lib/validations/medicine';
+import { authErrorResponse,requireRole } from '@/lib/auth/guards';
 
 // GET /api/pharmacy/medicines – list all medicines (with optional filters & pagination)
 export async function GET(req: NextRequest) {
   try {
+    requireRole(req, ['pharmacy']);
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
@@ -43,6 +45,10 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error('Error fetching medicines:', error);
+       const authResponse=authErrorResponse(error);
+if(authResponse){
+  return authResponse
+}
     return NextResponse.json(
       { success: false, message: 'Failed to fetch medicines' },
       { status: 500 }
@@ -53,6 +59,7 @@ export async function GET(req: NextRequest) {
 // POST /api/pharmacy/medicines – create a new medicine
 export async function POST(req: NextRequest) {
   try {
+    requireRole(req, ['pharmacy']);
     const body = await req.json();
     const validation = MedicineSchema.safeParse(body);
     if (!validation.success) {
@@ -96,6 +103,10 @@ export async function POST(req: NextRequest) {
     );
   } catch (error) {
     console.error('Error creating medicine:', error);
+       const authResponse=authErrorResponse(error);
+if(authResponse){
+  return authResponse
+}
     return NextResponse.json(
       { success: false, message: 'Failed to create medicine' },
       { status: 500 }

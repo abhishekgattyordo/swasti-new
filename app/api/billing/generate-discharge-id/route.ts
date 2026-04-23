@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { authErrorResponse,requireRole } from '@/lib/auth/guards';
 
 export async function POST(req: NextRequest) {
   const { admissionId } = await req.json();
@@ -10,6 +11,7 @@ export async function POST(req: NextRequest) {
 
   try {
     // 1. Verify admission exists and is active
+         requireRole(req, ['billing']);
     const admissionRes = await query(
       `SELECT id, discharge_id FROM admissions WHERE id = $1 AND status = 'active'`,
       [admissionId]
@@ -47,6 +49,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, data: { dischargeId } });
   } catch (error: any) {
     console.error('Error generating discharge ID:', error);
+    const authResponse=authErrorResponse(error);
+
+if(authResponse){
+  return authResponse
+}
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }
 }

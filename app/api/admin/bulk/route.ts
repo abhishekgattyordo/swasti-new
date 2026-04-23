@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { z } from 'zod';
 import { createPatientUser } from '@/lib/auth/user-provisioning';
+import { authErrorResponse,requireRole } from '@/lib/auth/guards';
 
 // Validation schema matching the fields sent from the PatientImport component
 const BulkPatientSchema = z.object({
@@ -39,6 +40,7 @@ function generatePatientId(): string {
 export async function POST(req: NextRequest) {
   try {
     const { patients } = await req.json();
+    requireRole(req, ['admin']);
 
     if (!Array.isArray(patients) || patients.length === 0) {
       return NextResponse.json(
@@ -161,6 +163,10 @@ export async function POST(req: NextRequest) {
     }
   } catch (error: any) {
     console.error('Bulk import error:', error);
+        const authResponse=authErrorResponse(error);
+        if(authResponse){
+  return authResponse
+}
     return NextResponse.json(
       { success: false, message: error.message || 'Internal server error' },
       { status: 500 }

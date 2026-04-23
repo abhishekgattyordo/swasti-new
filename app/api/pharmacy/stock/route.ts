@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { authErrorResponse,requireRole } from '@/lib/auth/guards';
 
 export async function GET(req: NextRequest) {
   try {
+     requireRole(req, ['pharmacy']);
     const { searchParams } = new URL(req.url);
     const lowStockOnly = searchParams.get('lowStock') === 'true';
     const search = searchParams.get('search') || '';
@@ -46,6 +48,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ success: true, data: result.rows });
   } catch (error) {
     console.error('Error fetching stock:', error);
+        const authResponse=authErrorResponse(error);
+if(authResponse){
+  return authResponse
+}
     return NextResponse.json(
       { success: false, message: 'Failed to fetch stock' },
       { status: 500 }

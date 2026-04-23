@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { z } from 'zod';
+import { authErrorResponse,requireRole } from '@/lib/auth/guards';
 
 const AdmitSchema = z.object({
   patientName: z.string().min(1),
@@ -24,6 +25,7 @@ export async function POST(
     console.log('📦 Bed ID from params:', id);
     
     const bedId = parseInt(id);
+        requireRole(req, ['admin','helpdesk']);
     console.log('🔢 Parsed bed ID:', bedId, 'Type:', typeof bedId);
     
     if (isNaN(bedId)) {
@@ -161,6 +163,11 @@ export async function POST(
     console.error('Error code:', error.code);
     console.error('Error detail:', error.detail);
     console.error('Error stack:', error.stack);
+        const authResponse=authErrorResponse(error);
+
+if(authResponse){
+  return authResponse
+}
     
     return NextResponse.json(
       { 

@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { authErrorResponse,requireRole } from '@/lib/auth/guards';
 
 export async function GET(req: NextRequest) {
   console.log('📥 GET /api/doctors/specialties - Starting request');
   
   try {
+      requireRole(req, ['doctor']);
     const { searchParams } = new URL(req.url);
     const department = searchParams.get('department');
 
@@ -29,6 +31,11 @@ export async function GET(req: NextRequest) {
 
   } catch (error) {
     console.error('Error fetching specialties:', error);
+       const authResponse=authErrorResponse(error);
+
+if(authResponse){
+  return authResponse
+}
     return NextResponse.json(
       { success: false, message: 'Failed to fetch specialties' },
       { status: 500 }

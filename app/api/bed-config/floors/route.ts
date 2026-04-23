@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { z } from 'zod';
+import { authErrorResponse,requireRole } from '@/lib/auth/guards';
 
 const FloorSchema = z.object({
   floor_number: z.number().int().positive(),
   name: z.string().max(100).optional().nullable()
 });
 
-export async function GET() {
+export async function GET(req: NextRequest){
   try {
+    requireRole(req, ['admin','helpdesk']);
     const result = await query(
       'SELECT * FROM floors ORDER BY floor_number'
     );
@@ -18,6 +20,12 @@ export async function GET() {
     });
   } catch (error) {
     console.error('Error fetching floors:', error);
+        const authResponse=authErrorResponse(error);
+
+if(authResponse){
+  return authResponse
+}
+
     return NextResponse.json(
       { success: false, message: 'Failed to fetch floors' },
       { status: 500 }
@@ -27,6 +35,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+        requireRole(req, ['admin','helpdesk']);
     const body = await req.json();
     const validation = FloorSchema.safeParse(body);
 
@@ -67,6 +76,11 @@ export async function POST(req: NextRequest) {
 
   } catch (error) {
     console.error('Error creating floor:', error);
+        const authResponse=authErrorResponse(error);
+
+if(authResponse){
+  return authResponse
+}
     return NextResponse.json(
       { success: false, message: 'Failed to create floor' },
       { status: 500 }

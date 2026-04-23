@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { authErrorResponse,requireRole } from '@/lib/auth/guards';
 
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);
@@ -10,6 +11,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
+           requireRole(req, ['admin','helpdesk']);
     const result = await query(
       `SELECT discharge_id, status FROM admissions WHERE id = $1`,
       [admissionId]
@@ -29,6 +31,11 @@ export async function GET(req: NextRequest) {
     });
   } catch (error: any) {
     console.error('Discharge fetch error:', error);
+        const authResponse=authErrorResponse(error);
+
+if(authResponse){
+  return authResponse
+}
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }
 }

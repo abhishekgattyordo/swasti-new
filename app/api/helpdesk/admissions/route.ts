@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import { randomBytes } from 'crypto';
+import { authErrorResponse,requireRole } from '@/lib/auth/guards';
 
 function generatePatientId(): string {
   const timestamp = Date.now();
@@ -20,6 +21,7 @@ function generateRandomPassword(length = 12): string {
 }
 export async function POST(req: NextRequest) {
   try {
+         requireRole(req, ['helpdesk']);
     const body = await req.json();
     const { mode, patientId, patient, admission, emergency } = body;
 
@@ -164,6 +166,10 @@ export async function POST(req: NextRequest) {
     }
   } catch (error: any) {
     console.error('Admission error:', error);
+        const authResponse=authErrorResponse(error);
+if(authResponse){
+  return authResponse
+}
     return NextResponse.json(
       { success: false, message: error.message || 'Failed to admit patient' },
       { status: 500 }
@@ -175,6 +181,7 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
+         requireRole(req, ['helpdesk']);
     const url = new URL(req.url);
     const status = url.searchParams.get('status');
     const patientId = url.searchParams.get('patientId');
@@ -230,6 +237,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ success: true, data: result.rows });
   } catch (error: any) {
     console.error('Error fetching admissions:', error);
+        const authResponse=authErrorResponse(error);
+if(authResponse){
+  return authResponse
+}
     return NextResponse.json(
       { success: false, message: error.message },
       { status: 500 }

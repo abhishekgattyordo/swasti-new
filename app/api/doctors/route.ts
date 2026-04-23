@@ -5,6 +5,9 @@ import path from 'path';
 import { writeFile, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
 import bcrypt from 'bcryptjs';
+import { authErrorResponse,requireRole } from '@/lib/auth/guards';
+
+
 
 export async function GET(req: NextRequest) {
   try {
@@ -13,6 +16,7 @@ export async function GET(req: NextRequest) {
     const specialty = searchParams.get('specialty');
     const department = searchParams.get('department');
     const search = searchParams.get('search');
+   requireRole(req, ['doctor']);
 
     let sql = `
       SELECT 
@@ -78,11 +82,17 @@ export async function GET(req: NextRequest) {
     });
 
   } catch (error) {
+    const authResponse=authErrorResponse(error);
     console.error('Error fetching doctors:', error);
+if(authResponse){
+  return authResponse
+}
     return NextResponse.json(
       { success: false, message: 'Failed to fetch doctors' },
       { status: 500 }
+
     );
+
   }
 }
 
@@ -92,6 +102,7 @@ export async function POST(req: NextRequest) {
   console.log('📥 POST /api/doctors - Starting request');
 
   try {
+           requireRole(req, ['doctor']);
     let doctorData: any = {};
     let avatarPath: string | null = null;
     const contentType = req.headers.get('content-type') || '';
@@ -267,6 +278,12 @@ export async function POST(req: NextRequest) {
     );
   } catch (error: any) {
     console.error('❌ Error creating doctor:');
+        const authResponse=authErrorResponse(error);
+
+if(authResponse){
+  return authResponse
+}
+
     console.error('Message:', error.message);
     console.error('Stack:', error.stack);
     if (error.code) console.error('Code:', error.code);

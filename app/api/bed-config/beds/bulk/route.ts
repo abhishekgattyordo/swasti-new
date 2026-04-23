@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, transaction } from '@/lib/db';
 import { z } from 'zod';
+import { authErrorResponse,requireRole } from '@/lib/auth/guards';
 
 const BulkBedSchema = z.object({
   ward_id: z.number().int().positive(),
@@ -18,6 +19,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { beds } = body;
+     requireRole(req, ['admin']);
 
     if (!Array.isArray(beds) || beds.length === 0) {
       return NextResponse.json(
@@ -81,6 +83,12 @@ export async function POST(req: NextRequest) {
     });
   } catch (error: unknown) {
     console.error('Bulk import error:', error);
+        const authResponse=authErrorResponse(error);
+
+if(authResponse){
+  return authResponse
+}
+
     const message = error instanceof Error ? error.message : 'Import failed';
     return NextResponse.json(
       { success: false, message },

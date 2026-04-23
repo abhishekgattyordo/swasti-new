@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { authErrorResponse,requireRole } from '@/lib/auth/guards';
 
 export async function GET(
   req: NextRequest,
@@ -16,6 +17,7 @@ export async function GET(
   }
 
   try {
+        requireRole(req, ['admin','helpdesk']);
     const result = await query(
       `SELECT 
          p.full_name_en,
@@ -68,6 +70,12 @@ export async function GET(
     });
   } catch (error: any) {
     console.error("Database error:", error);
+        const authResponse=authErrorResponse(error);
+
+if(authResponse){
+  return authResponse
+}
+
     return NextResponse.json(
       { success: false, message: error.message },
       { status: 500 }

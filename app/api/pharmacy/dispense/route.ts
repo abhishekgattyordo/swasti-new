@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, transaction } from '@/lib/db';
 import { DispenseSchema } from '@/lib/validations/dispense';
+import { authErrorResponse,requireRole } from '@/lib/auth/guards';
 
 // Validation schema
 
@@ -43,6 +44,7 @@ async function deductStock(
 
 export async function POST(req: NextRequest) {
   try {
+     requireRole(req, ['pharmacy']);
     const body = await req.json();
     const validation = DispenseSchema.safeParse(body);
     if (!validation.success) {
@@ -183,6 +185,10 @@ export async function POST(req: NextRequest) {
     );
   } catch (error: any) {
     console.error('Dispense error:', error);
+        const authResponse=authErrorResponse(error);
+if(authResponse){
+  return authResponse
+}
     return NextResponse.json(
       { success: false, message: error.message || 'Failed to dispense' },
       { status: 500 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, transaction } from '@/lib/db';
+import { authErrorResponse,requireRole } from '@/lib/auth/guards';
 
 export async function POST(req: NextRequest) {
   const { billId, amount, paymentMethod, transactionId } = await req.json();
@@ -9,6 +10,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+           requireRole(req, ['billing']);
     await transaction(async (client) => {
       // Lock bill row
       const billRes = await client.query(
@@ -36,6 +38,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, message: 'Payment recorded' });
   } catch (error: any) {
     console.error('Payment error:', error);
+      const authResponse=authErrorResponse(error);
+
+if(authResponse){
+  return authResponse
+}
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }
 }

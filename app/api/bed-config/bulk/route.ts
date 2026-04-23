@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, transaction } from '@/lib/db';
 import { z } from 'zod';
+import { authErrorResponse,requireRole } from '@/lib/auth/guards';
 
 // ========== Zod Schemas ==========
 const BedSchema = z.object({
@@ -42,6 +43,7 @@ interface ImportResults {
 
 export async function POST(req: NextRequest) {
   try {
+        requireRole(req, ['admin']);
     const body = await req.json();
     const { type, data } = body;
 
@@ -192,6 +194,11 @@ export async function POST(req: NextRequest) {
     });
   } catch (error: unknown) {
     console.error('Full bulk import error:', error);
+        const authResponse=authErrorResponse(error);
+
+if(authResponse){
+  return authResponse
+}
     const message = error instanceof Error ? error.message : 'Internal server error';
     return NextResponse.json({ success: false, message }, { status: 500 });
   }

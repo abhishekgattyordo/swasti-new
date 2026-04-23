@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, transaction } from '@/lib/db';
 import { z } from 'zod';
+import { authErrorResponse,requireRole } from '@/lib/auth/guards';
+
 
 const TransferSchema = z.object({
   destinationBedId: z.number().int().positive(),
@@ -16,6 +18,7 @@ export async function POST(
   try {
     const { id } = await params;
     const sourceBedId = parseInt(id);
+      requireRole(req, ['admin','helpdesk']);
     
     if (isNaN(sourceBedId)) {
       return NextResponse.json(
@@ -183,6 +186,11 @@ export async function POST(
     });
   } catch (error: any) {
     console.error('Error transferring patient:', error);
+       const authResponse=authErrorResponse(error);
+
+if(authResponse){
+  return authResponse
+}
     return NextResponse.json(
       { success: false, message: error.message || 'Failed to transfer patient' },
       { status: 500 }

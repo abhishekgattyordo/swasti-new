@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-
+import { authErrorResponse,requireRole } from '@/lib/auth/guards';
 
 
 
@@ -12,6 +12,7 @@ export async function GET(
   { params }: { params: Promise<{ patientId: string }> }
 ) {
   try {
+         requireRole(req, ['helpdesk','admin']);
     const { patientId } = await params;
 
     const result = await query(
@@ -45,6 +46,10 @@ export async function GET(
     });
   } catch (error: any) {
     console.error('Fetch patient error:', error);
+     const authResponse=authErrorResponse(error);
+if(authResponse){
+  return authResponse
+}
     return NextResponse.json(
       { success: false, message: error.message },
       { status: 500 }

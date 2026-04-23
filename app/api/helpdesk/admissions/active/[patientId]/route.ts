@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { authErrorResponse,requireRole } from '@/lib/auth/guards';
 
 export async function GET(req: NextRequest) {
   try {
     // Extract patientId from URL path or query parameter
+        requireRole(req, ['helpdesk','admin']);
     const url = new URL(req.url);
     const pathParts = url.pathname.split('/');
     let patientId = pathParts[pathParts.length - 1];
@@ -48,6 +50,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ success: true, data: result.rows[0] });
   } catch (error: any) {
     console.error('API error:', error);
+      const authResponse=authErrorResponse(error);
+if(authResponse){
+  return authResponse
+}
     return NextResponse.json(
       { success: false, message: error.message },
       { status: 500 }

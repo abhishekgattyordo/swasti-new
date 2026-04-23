@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { z } from 'zod';
+import { authErrorResponse,requireRole } from '@/lib/auth/guards';
 
 const BedUpdateSchema = z.object({
   bed_number: z.string().min(1).max(50).optional(),
@@ -18,6 +19,7 @@ export async function GET(
   console.log('📥 GET /api/bed-config/beds/[id] - Starting request');
   
   try {
+      requireRole(req, ['admin','helpdesk']);
     const { id } = await params;
     console.log('📦 Received params:', { id });
     
@@ -68,6 +70,11 @@ export async function GET(
 
   } catch (error) {
     console.error('❌ Error fetching bed:', error);
+      const authResponse=authErrorResponse(error);
+
+if(authResponse){
+  return authResponse
+}
     return NextResponse.json(
       { success: false, message: 'Failed to fetch bed' },
       { status: 500 }
@@ -82,8 +89,10 @@ export async function PUT(
   console.log('📥 PUT /api/bed-config/beds/[id] - Starting request');
   
   try {
+      requireRole(req, ['admin','helpdesk']);
     const { id } = await params;
     console.log('📦 Received params:', { id });
+    
     
     const bedId = parseInt(id);
     console.log('🔢 Parsed bed ID:', bedId, 'Type:', typeof bedId);
@@ -199,6 +208,11 @@ export async function PUT(
 
   } catch (error) {
     console.error('❌ Error updating bed:', error);
+      const authResponse=authErrorResponse(error);
+
+if(authResponse){
+  return authResponse
+}
     return NextResponse.json(
       { success: false, message: 'Failed to update bed' },
       { status: 500 }
@@ -213,6 +227,7 @@ export async function DELETE(
   console.log('📥 DELETE /api/bed-config/beds/[id] - Starting request');
   
   try {
+      requireRole(req, ['admin','helpdesk']);
     const { id } = await params;
     console.log('📦 Received params:', { id });
     
@@ -277,6 +292,11 @@ export async function DELETE(
 
   } catch (error) {
     console.error('❌ Error deleting bed:', error);
+        const authResponse=authErrorResponse(error);
+
+if(authResponse){
+  return authResponse
+}
     return NextResponse.json(
       { success: false, message: 'Failed to delete bed' },
       { status: 500 }
@@ -291,6 +311,7 @@ export async function PATCH(
   console.log('📥 PATCH /api/bed-config/beds/[id] - Starting request');
   
   try {
+      requireRole(req, ['admin','helpdesk']);
     const { id } = await params;
     console.log('📦 Received params:', { id });
     
@@ -359,6 +380,11 @@ export async function PATCH(
 
   } catch (error) {
     console.error('❌ Error updating bed:', error);
+        const authResponse=authErrorResponse(error);
+
+if(authResponse){
+  return authResponse
+}
     return NextResponse.json(
       { success: false, message: 'Failed to update bed' },
       { status: 500 }

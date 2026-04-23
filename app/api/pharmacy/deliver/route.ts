@@ -1,163 +1,9 @@
-// import { NextRequest, NextResponse } from 'next/server';
-// import { query, transaction } from '@/lib/db';
-// import { z } from 'zod';
 
-// const DeliverItemSchema = z.object({
-//   saleItemId: z.number(),          // ID from sale_items table
-//   medicineId: z.number(),
-//   quantity: z.number().positive(),
-//   batchNo: z.string().optional(),  // optional – if not provided, FIFO will be used
-// });
-
-// const DeliverSchema = z.object({
-//   saleId: z.number(),
-//   items: z.array(DeliverItemSchema),
-// });
-
-// // Helper: deduct stock using FIFO (oldest expiry first)
-// async function deductStockFIFO(
-//   medicineId: number,
-//   requiredQty: number,
-//   client: any
-// ): Promise<{ batchNo: string; quantity: number }[]> {
-//   const batches = await client.query(
-//     `SELECT id, batch_no, quantity FROM stock 
-//      WHERE medicine_id = $1 AND quantity > 0 
-//      ORDER BY expiry_date ASC`,
-//     [medicineId]
-//   );
-
-//   let remaining = requiredQty;
-//   const allocations: { batchNo: string; quantity: number }[] = [];
-
-//   for (const batch of batches.rows) {
-//     if (remaining <= 0) break;
-//     const deduct = Math.min(batch.quantity, remaining);
-//     await client.query(
-//       `UPDATE stock SET quantity = quantity - $1 WHERE id = $2`,
-//       [deduct, batch.id]
-//     );
-//     allocations.push({ batchNo: batch.batch_no, quantity: deduct });
-//     remaining -= deduct;
-//   }
-
-//   if (remaining > 0) {
-//     throw new Error(`Insufficient stock for medicine ID ${medicineId}. Needed ${requiredQty}, available ${requiredQty - remaining}`);
-//   }
-
-//   return allocations;
-// }
-
-// export async function POST(req: NextRequest) {
-//   try {
-//     const body = await req.json();
-//     const validation = DeliverSchema.safeParse(body);
-//     if (!validation.success) {
-//       return NextResponse.json(
-//         { success: false, errors: validation.error.flatten().fieldErrors },
-//         { status: 400 }
-//       );
-//     }
-
-//     const { saleId, items } = validation.data;
-
-//     // Start transaction
-//     await transaction(async (client) => {
-//       // 1. Verify sale exists and is not already delivered
-//       const saleCheck = await client.query(
-//         `SELECT stock_updated FROM sales WHERE id = $1`,
-//         [saleId]
-//       );
-//       if (saleCheck.rows.length === 0) {
-//         throw new Error('Sale not found');
-//       }
-//       if (saleCheck.rows[0].stock_updated) {
-//         throw new Error('Sale already delivered');
-//       }
-
-//       // 2. Process each item
-//       for (const item of items) {
-//         let allocations: { batchNo: string; quantity: number }[];
-
-//         if (item.batchNo) {
-//           // Deduct from specified batch
-//           const batch = await client.query(
-//             `SELECT quantity FROM stock WHERE medicine_id = $1 AND batch_no = $2`,
-//             [item.medicineId, item.batchNo]
-//           );
-//           if (batch.rows.length === 0 || batch.rows[0].quantity < item.quantity) {
-//             throw new Error(`Insufficient stock in batch ${item.batchNo} for medicine ID ${item.medicineId}`);
-//           }
-//           await client.query(
-//             `UPDATE stock SET quantity = quantity - $1 WHERE medicine_id = $2 AND batch_no = $3`,
-//             [item.quantity, item.medicineId, item.batchNo]
-//           );
-//           allocations = [{ batchNo: item.batchNo, quantity: item.quantity }];
-//         } else {
-//           // FIFO
-//           allocations = await deductStockFIFO(item.medicineId, item.quantity, client);
-//         }
-
-//         // Update the corresponding sale_item(s)
-//         // If multiple batches were used, we may need to split the sale_item into multiple rows.
-//         // For simplicity, we'll update the existing sale_item with the first batch and insert additional rows if needed.
-//         // Here we assume one sale_item per medicine (as created initially). If FIFO splits across batches,
-//         // we need to create new sale_item rows for each batch.
-//         // This implementation handles splitting by deleting the original and inserting per batch.
-
-//         // First, get the original sale_item(s) for this medicine (there could be multiple if already split)
-//         const existingItems = await client.query(
-//           `SELECT id, quantity, unit_price, tax_percent FROM sale_items 
-//            WHERE sale_id = $1 AND medicine_id = $2`,
-//           [saleId, item.medicineId]
-//         );
-
-//         if (existingItems.rows.length === 0) {
-//           throw new Error(`No sale item found for medicine ID ${item.medicineId}`);
-//         }
-
-//         // We'll delete the existing items and recreate with batch info
-//         await client.query(
-//           `DELETE FROM sale_items WHERE sale_id = $1 AND medicine_id = $2`,
-//           [saleId, item.medicineId]
-//         );
-
-//         // Insert new rows per batch allocation
-//         for (const alloc of allocations) {
-//           const unitPrice = existingItems.rows[0].unit_price; // assume same price
-//           const taxPercent = existingItems.rows[0].tax_percent;
-//           const total = alloc.quantity * unitPrice * (1 + taxPercent / 100);
-//           await client.query(
-//             `INSERT INTO sale_items (sale_id, medicine_id, batch_no, quantity, unit_price, tax_percent, total)
-//              VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-//             [saleId, item.medicineId, alloc.batchNo, alloc.quantity, unitPrice, taxPercent, total]
-//           );
-//         }
-//       }
-
-//       // 3. Mark sale as delivered
-//       await client.query(
-//         `UPDATE sales SET stock_updated = true WHERE id = $1`,
-//         [saleId]
-//       );
-//     });
-
-//     return NextResponse.json({
-//       success: true,
-//       message: 'Sale delivered and stock updated',
-//     });
-//   } catch (error: any) {
-//     console.error('Delivery error:', error);
-//     return NextResponse.json(
-//       { success: false, message: error.message || 'Failed to deliver sale' },
-//       { status: 500 }
-//     );
-//   }
-// }
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query, transaction } from '@/lib/db';
 import { z } from 'zod';
+import { authErrorResponse,requireRole } from '@/lib/auth/guards';
 
 const DeliverItemSchema = z.object({
   saleItemId: z.number(),
@@ -209,6 +55,7 @@ async function deductStockFIFO(
 
 export async function POST(req: NextRequest) {
   try {
+       requireRole(req, ['pharmacy']);
     const body = await req.json();
     const validation = DeliverSchema.safeParse(body);
     if (!validation.success) {
@@ -381,6 +228,10 @@ export async function POST(req: NextRequest) {
     });
   } catch (error: any) {
     console.error('Delivery error:', error);
+      const authResponse=authErrorResponse(error);
+if(authResponse){
+  return authResponse
+}
     return NextResponse.json(
       { success: false, message: error.message || 'Failed to deliver sale' },
       { status: 500 }

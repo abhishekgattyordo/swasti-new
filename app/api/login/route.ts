@@ -10,6 +10,7 @@ import {
   signAccessToken,
   signRefreshToken,
 } from '@/lib/auth/jwt';
+import { authErrorResponse,requireRole } from '@/lib/auth/guards';
 
 function sha256(value: string): string {
   return createHash('sha256').update(value, 'utf8').digest('hex');
@@ -50,6 +51,7 @@ function setTokenCookies(response: NextResponse, accessToken: string, refreshTok
 
 export async function POST(req: NextRequest) {
   try {
+       requireRole(req, ['laboratory','admin','billing','doctor','helpdesk','patient','pharmacy']);
     await ensureRefreshTokensTable();
     const { email, password } = await req.json();
 
@@ -124,6 +126,10 @@ export async function POST(req: NextRequest) {
     return response;
   } catch (error: unknown) {
     console.error('Login error:', error);
+        const authResponse=authErrorResponse(error);
+if(authResponse){
+  return authResponse
+}
     const message = error instanceof Error ? error.message : 'Server error';
     return NextResponse.json(
       { success: false, message },

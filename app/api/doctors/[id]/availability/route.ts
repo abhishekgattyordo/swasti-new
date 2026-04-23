@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { authErrorResponse,requireRole } from '@/lib/auth/guards';
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    requireRole(req, ['doctor','helpdesk','admin']);
     const { id } = await params;
     const doctorId = parseInt(id);
 
@@ -37,6 +39,11 @@ export async function GET(
 
   } catch (error) {
     console.error('Error fetching availability:', error);
+      const authResponse=authErrorResponse(error);
+
+if(authResponse){
+  return authResponse
+}
     return NextResponse.json(
       { success: false, message: 'Failed to fetch availability' },
       { status: 500 }
@@ -49,6 +56,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+         requireRole(req, ['helpdesk']);
     const { id } = await params;
     const doctorId = parseInt(id);
     const body = await req.json();
@@ -95,6 +103,11 @@ export async function POST(
 
   } catch (error) {
     console.error('Error saving availability:', error);
+      const authResponse=authErrorResponse(error);
+
+if(authResponse){
+  return authResponse
+}
     return NextResponse.json(
       { success: false, message: 'Failed to save availability' },
       { status: 500 }

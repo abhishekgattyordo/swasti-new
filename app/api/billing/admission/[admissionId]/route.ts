@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { authErrorResponse,requireRole } from '@/lib/auth/guards';
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ admissionId: string }> }
 ) {
   try {
+       requireRole(req, ['billing']);
     const { admissionId } = await params;
     const admissionIdNum = parseInt(admissionId);
 
@@ -77,6 +79,11 @@ export async function GET(
     return NextResponse.json({ success: true, data: consolidatedBill });
   } catch (error: any) {
     console.error('Error fetching consolidated bill:', error);
+        const authResponse=authErrorResponse(error);
+
+if(authResponse){
+  return authResponse
+}
     return NextResponse.json(
       { success: false, message: error.message },
       { status: 500 }

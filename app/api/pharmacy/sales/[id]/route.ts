@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, transaction } from '@/lib/db';
+import { authErrorResponse,requireRole } from '@/lib/auth/guards';
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+      requireRole(req, ['pharmacy']);
     const { id } = await params;
     const parsedId = parseInt(id);
     if (isNaN(parsedId)) {
@@ -44,6 +46,11 @@ export async function GET(
     });
   } catch (error) {
     console.error('Error fetching sale:', error);
+        const authResponse=authErrorResponse(error);
+if(authResponse){
+  return authResponse
+}
+
     return NextResponse.json(
       { success: false, message: 'Failed to fetch sale' },
       { status: 500 }
@@ -57,6 +64,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+      requireRole(req, ['pharmacy']);
     const { id } = await params;
     const parsedId = parseInt(id);
     if (isNaN(parsedId)) {
@@ -153,6 +161,10 @@ export async function PATCH(
     return NextResponse.json({ success: true, message: 'Sale delivery status updated' });
   } catch (error: any) {
     console.error('Error updating sale delivery:', error);
+        const authResponse=authErrorResponse(error);
+if(authResponse){
+  return authResponse
+}
     return NextResponse.json(
       { success: false, message: error.message || 'Failed to update' },
       { status: 500 }

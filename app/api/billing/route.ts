@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { authErrorResponse,requireRole } from '@/lib/auth/guards';
 
 export async function GET(req: NextRequest) {
   try {
+           requireRole(req, ['billing']);
     const url = new URL(req.url);
     const patientId = url.searchParams.get('patientId');
     const admissionId = url.searchParams.get('admissionId');
@@ -205,6 +207,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ success: true, data: bills });
   } catch (error: any) {
     console.error('Billing API error:', error);
+      const authResponse=authErrorResponse(error);
+
+if(authResponse){
+  return authResponse
+}
     return NextResponse.json(
       { success: false, message: error.message },
       { status: 500 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { z } from 'zod';
+import { authErrorResponse,requireRole } from '@/lib/auth/guards';
 
 const FloorUpdateSchema = z.object({
   floor_number: z.number().int().positive().optional(),
@@ -15,6 +16,7 @@ export async function GET(
   
   try {
     // AWAIT the params - this is the critical fix
+        requireRole(req, ['admin','helpdesk']);
     const { id } = await params;
     console.log('📦 Received params:', { id });
     
@@ -56,6 +58,11 @@ export async function GET(
 
   } catch (error) {
     console.error('❌ Error fetching floor:', error);
+        const authResponse=authErrorResponse(error);
+
+if(authResponse){
+  return authResponse
+}
     return NextResponse.json(
       { success: false, message: 'Failed to fetch floor' },
       { status: 500 }
@@ -71,6 +78,7 @@ export async function PUT(
   
   try {
     // AWAIT the params - this is the critical fix
+             requireRole(req, ['admin','helpdesk']);
     const { id } = await params;
     console.log('📦 Received params:', { id });
     
@@ -162,6 +170,11 @@ export async function PUT(
 
   } catch (error) {
     console.error('❌ Error updating floor:', error);
+        const authResponse=authErrorResponse(error);
+
+if(authResponse){
+  return authResponse
+}
     return NextResponse.json(
       { success: false, message: 'Failed to update floor' },
       { status: 500 }
@@ -179,6 +192,7 @@ export async function DELETE(
   
   try {
     // AWAIT the params - this is the critical fix
+          requireRole(req, ['admin','helpdesk']);
     const { id } = await params;
     console.log('📦 Received params:', { id });
     
@@ -236,6 +250,11 @@ export async function DELETE(
 
   } catch (error) {
     console.error('❌ Error deleting floor:', error);
+        const authResponse=authErrorResponse(error);
+
+if(authResponse){
+  return authResponse
+}
     return NextResponse.json(
       { success: false, message: 'Failed to delete floor' },
       { status: 500 }

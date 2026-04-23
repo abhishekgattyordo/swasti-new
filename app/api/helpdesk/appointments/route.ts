@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { authErrorResponse,requireRole } from '@/lib/auth/guards';
 
 // Helper to generate a numeric patient ID (same as quick-add)
 function generatePatientId(): string {
@@ -10,6 +11,7 @@ function generatePatientId(): string {
 
 export async function POST(req: NextRequest) {
   try {
+      requireRole(req, ['helpdesk','admin']);
     const body = await req.json();
 
     const {
@@ -156,6 +158,10 @@ export async function POST(req: NextRequest) {
     }
   } catch (error) {
     console.error('Error creating appointment:', error);
+       const authResponse=authErrorResponse(error);
+if(authResponse){
+  return authResponse
+}
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }

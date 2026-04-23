@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { z } from 'zod';
+import { authErrorResponse,requireRole } from '@/lib/auth/guards';
 
 // Define schema directly in the file to avoid import issues
 const BulkBedSchema = z.object({
@@ -13,11 +14,14 @@ const BulkBedSchema = z.object({
 });
 
 export async function GET(req: NextRequest) {
+  
   try {
     const { searchParams } = new URL(req.url);
     const wardId = searchParams.get('wardId');
     const roomId = searchParams.get('roomId');
     const status = searchParams.get('status');
+     requireRole(req, ['admin','helpdesk']);
+
 
     let queryStr = `
       SELECT b.*, w.name as ward_name, w.type as ward_type, r.room_number 
@@ -48,6 +52,12 @@ export async function GET(req: NextRequest) {
 
   } catch (error) {
     console.error('Error fetching beds:', error);
+       const authResponse=authErrorResponse(error);
+
+if(authResponse){
+  return authResponse
+}
+
     return NextResponse.json(
       { success: false, message: 'Failed to fetch beds' },
       { status: 500 }
@@ -61,6 +71,7 @@ export async function POST(req: NextRequest) {
     
     const body = await req.json();
     console.log('Request body:', JSON.stringify(body, null, 2));
+    requireRole(req, ['admin','helpdesk']);
     
     // Manual validation as fallback
     if (!body.ward_id) {
@@ -80,6 +91,7 @@ export async function POST(req: NextRequest) {
     // Try Zod validation
     try {
       const validation = BulkBedSchema.safeParse(body);
+    
       if (!validation.success) {
         console.log('❌ Validation failed:', validation.error.flatten().fieldErrors);
         return NextResponse.json(
@@ -205,6 +217,12 @@ export async function POST(req: NextRequest) {
       detail: error.detail,
       stack: error.stack
     });
+       const authResponse=authErrorResponse(error);
+
+if(authResponse){
+  return authResponse
+}
+
     
     // Handle specific database errors
     if (error.code === '42P01') {

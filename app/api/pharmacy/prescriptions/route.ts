@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { authErrorResponse,requireRole } from '@/lib/auth/guards';
 
 export async function GET(req: NextRequest) {
   try {
+      requireRole(req, ['pharmacy']);
     const { searchParams } = new URL(req.url);
     const status = searchParams.get('status') || 'pending';
     const page = parseInt(searchParams.get('page') || '1');
@@ -74,6 +76,10 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error('Error fetching prescriptions:', error);
+        const authResponse=authErrorResponse(error);
+if(authResponse){
+  return authResponse
+}
     return NextResponse.json(
       { success: false, message: 'Failed to fetch prescriptions' },
       { status: 500 }

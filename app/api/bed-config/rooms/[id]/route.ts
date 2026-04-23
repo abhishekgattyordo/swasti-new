@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { z } from 'zod';
+import { authErrorResponse,requireRole } from '@/lib/auth/guards';
 
 const RoomUpdateSchema = z.object({
   room_number: z.string().min(1).max(50).optional(),
@@ -15,6 +16,7 @@ export async function GET(
   console.log('📥 GET /api/bed-config/rooms/[id] - Starting request');
   
   try {
+        requireRole(req, ['admin','helpdesk']);
     const { id } = await params;
     console.log('📦 Received params:', { id });
     
@@ -73,6 +75,7 @@ export async function PUT(
   console.log('📥 PUT /api/bed-config/rooms/[id] - Starting request');
   
   try {
+         requireRole(req, ['admin','helpdesk']);
     const { id } = await params;
     console.log('📦 Received params:', { id });
     
@@ -183,6 +186,7 @@ export async function DELETE(
   console.log('📥 DELETE /api/bed-config/rooms/[id] - Starting request');
   
   try {
+         requireRole(req, ['admin','helpdesk']);
     const { id } = await params;
     console.log('📦 Received params:', { id });
     
@@ -260,6 +264,7 @@ export async function PATCH(
   console.log('📥 PATCH /api/bed-config/rooms/[id] - Starting request');
   
   try {
+         requireRole(req, ['admin','helpdesk']);
     const { id } = await params;
     console.log('📦 Received params:', { id });
     

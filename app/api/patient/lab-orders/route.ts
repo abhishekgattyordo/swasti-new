@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { authErrorResponse,requireRole } from '@/lib/auth/guards';
 
 export async function GET(req: NextRequest) {
   try {
+       requireRole(req, ['patient']);
     const url = new URL(req.url);
     const patientId = url.searchParams.get('patientId');
     const status = url.searchParams.get('status');      
@@ -72,6 +74,10 @@ export async function GET(req: NextRequest) {
     });
   } catch (error: any) {
     console.error('Error fetching lab orders:', error);
+        const authResponse=authErrorResponse(error);
+if(authResponse){
+  return authResponse
+}
     return NextResponse.json(
       { success: false, message: error.message || 'Internal server error' },
       { status: 500 }

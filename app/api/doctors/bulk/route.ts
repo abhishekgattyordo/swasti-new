@@ -142,9 +142,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { CreateDoctorSchema } from '@/lib/validations/doctor'; 
+import { authErrorResponse,requireRole } from '@/lib/auth/guards';
 
 export async function POST(req: NextRequest) {
   try {
+      requireRole(req, ['admin']);
     const { doctors } = await req.json();
 
     if (!Array.isArray(doctors) || doctors.length === 0) {
@@ -246,6 +248,12 @@ export async function POST(req: NextRequest) {
     }
   } catch (error) {
     console.error('Bulk import error:', error);
+       const authResponse=authErrorResponse(error);
+
+if(authResponse){
+  return authResponse
+}
+
     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     return NextResponse.json(
       { success: false, message: errorMessage },

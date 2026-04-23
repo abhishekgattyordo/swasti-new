@@ -1,6 +1,7 @@
 // app/api/patient/inpatient-summary/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { authErrorResponse,requireRole } from '@/lib/auth/guards';
 
 // --- Type definitions ---
 interface TimelineEvent {
@@ -214,6 +215,7 @@ async function getSummaryByAdmissionId(admissionIdNum: number) {
 // --- Main GET handler ---
 export async function GET(req: NextRequest) {
   try {
+       requireRole(req, ['patient']);
     const url = new URL(req.url);
     const patientId = url.searchParams.get('patientId');
     const dateParam = url.searchParams.get('date');
@@ -263,6 +265,10 @@ export async function GET(req: NextRequest) {
     return getSummaryByAdmissionId(foundAdmissionId);
   } catch (error: unknown) {
     console.error('Inpatient summary error:', error);
+        const authResponse=authErrorResponse(error);
+if(authResponse){
+  return authResponse
+}
     const message = error instanceof Error ? error.message : 'Internal server error';
     return NextResponse.json(
       { success: false, message },

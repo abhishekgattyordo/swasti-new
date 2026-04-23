@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, transaction } from '@/lib/db';
+import { authErrorResponse,requireRole } from '@/lib/auth/guards';
 
 export async function POST(req: NextRequest) {
   const { admissionId, dischargeId, dischargeNotes } = await req.json();
@@ -14,6 +15,7 @@ export async function POST(req: NextRequest) {
   const today = new Date().toISOString().split('T')[0];
 
   try {
+         requireRole(req, ['helpdesk']);
     await transaction(async (client) => {
       // 1. Get admission details
       const admissionRes = await client.query(
@@ -114,6 +116,10 @@ export async function POST(req: NextRequest) {
     });
   } catch (error: unknown) {
     console.error('Discharge error:', error);
+      const authResponse=authErrorResponse(error);
+if(authResponse){
+  return authResponse
+}
     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     return NextResponse.json({ success: false, message: errorMessage }, { status: 500 });
   }
@@ -132,6 +138,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
+         requireRole(req, ['helpdesk']);
     const result = await query(
       `SELECT 
         id,
@@ -168,6 +175,10 @@ export async function GET(req: NextRequest) {
     });
   } catch (error: any) {
     console.error('Error fetching discharge details:', error);
+      const authResponse=authErrorResponse(error);
+if(authResponse){
+  return authResponse
+}
     return NextResponse.json(
       { success: false, message: error.message },
       { status: 500 }

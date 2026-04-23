@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, transaction } from '@/lib/db';
 import { z } from 'zod';
+import { authErrorResponse,requireRole } from '@/lib/auth/guards';
 
 // Validation schema for the request body
 const AdjustmentSchema = z.object({
@@ -13,6 +14,7 @@ const AdjustmentSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
+      requireRole(req, ['pharmacy']);
     const body = await req.json();
     const validation = AdjustmentSchema.safeParse(body);
     if (!validation.success) {
@@ -65,6 +67,10 @@ export async function POST(req: NextRequest) {
     );
   } catch (error: any) {
     console.error('Stock adjustment error:', error);
+        const authResponse=authErrorResponse(error);
+if(authResponse){
+  return authResponse
+}
     return NextResponse.json(
       { success: false, message: error.message || 'Internal server error' },
       { status: 500 }
