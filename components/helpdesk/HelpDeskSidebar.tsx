@@ -371,7 +371,6 @@ export default function HelpDeskSidebar({
   isOpen,
   onClose,
   onBillingClick,
-  onRoomAvailabilityClick,
   onDoctorSlotsClick,
 }: HelpDeskSidebarProps) {
   const pathname = usePathname();
@@ -385,7 +384,7 @@ export default function HelpDeskSidebar({
   
   // Get tenant name from tenant object
   const tenantName = tenant?.name || "";
-  const tenantSlug = tenant?.slug || "";
+ 
 
   useEffect(() => {
     const userStr = localStorage.getItem('user');

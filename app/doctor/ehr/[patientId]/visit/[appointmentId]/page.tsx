@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 // Types (copy from your layout)
@@ -31,7 +30,6 @@ interface Medication {
 export default function PastVisitPage() {
   const params = useParams();
   const router = useRouter();
-  const patientId = params.patientId as string;
   const appointmentId = params.appointmentId as string;
 
   const [vitals, setVitals] = useState<Vital[]>([]);
@@ -64,7 +62,7 @@ export default function PastVisitPage() {
         if (medsData.success) {
           setMedications(medsData.data);
         }
-      } catch (err) {
+      } catch {
         setError("Failed to load visit details");
       } finally {
         setLoading(false);

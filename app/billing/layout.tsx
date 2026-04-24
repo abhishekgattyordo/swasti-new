@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import BillingSidebar from '@/components/billing/BillingSidebar';
-import { Menu, X } from 'lucide-react';
+import { Menu} from 'lucide-react';
 
 export default function BillingLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);

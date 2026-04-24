@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Calendar } from "lucide-react";
+import { X} from "lucide-react";
 import { doctorsApi } from "@/lib/api/doctors";
 import { appointmentsApi } from "@/lib/api/appointments";
 import toast from "react-hot-toast";

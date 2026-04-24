@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
     const active = searchParams.get("active");
     
     let sql = `SELECT * FROM lab_tests ORDER BY created_at DESC`;
-    let params: any[] = [];
+    const params: any[] = [];
     
     if (active === "true") {
       sql = `SELECT * FROM lab_tests WHERE active = true ORDER BY created_at DESC`;

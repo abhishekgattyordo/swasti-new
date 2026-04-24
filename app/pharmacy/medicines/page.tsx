@@ -69,7 +69,7 @@ useEffect(() => {
   if (!tenantLoading && !isMedicineEnabled) {
     router.push("/unauthorized");
   }
-}, [tenantLoading]);
+}, [tenantLoading,isMedicineEnabled,router]);
   // Fetch medicines – memoized with useCallback
   const fetchMedicines = useCallback(async () => {
  

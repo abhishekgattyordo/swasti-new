@@ -15,20 +15,10 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
-import {
-  Heart,
-  Thermometer,
-  Droplets,
-  Activity,
-  User,
-  Clock,
-  AlertTriangle,
-} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FaBed } from "react-icons/fa6";
-import Image from "next/image";
 import { TbBedOff } from "react-icons/tb";
-import { GiBroom } from "react-icons/gi";
+
 
 interface BedCardProps {
   bed: Bed;

@@ -261,7 +261,7 @@ export default function MedicalRecordsPage() {
   const [activeTab, setActiveTab] = useState("all");
   const [columnFilters, setColumnFilters] = useState<ColumnFilter[]>([]);
   const [dateFilters, setDateFilters] = useState<Record<string, DateRangeFilter>>({});
-  const [sortConfig, setSortConfig] = useState<{ key: keyof MedicalRecord; direction: "asc" | "desc" }>({
+  const [sortConfig] = useState<{ key: keyof MedicalRecord; direction: "asc" | "desc" }>({
     key: "date",
     direction: "desc",
   });
@@ -331,7 +331,7 @@ export default function MedicalRecordsPage() {
 
   // Filtering and sorting (fixed for undefined values)
   const filteredRecords = useMemo(() => {
-    let filtered = records.filter((record) => {
+    const filtered = records.filter((record) => {
       const matchesSearch =
         record.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         record.orderId.toLowerCase().includes(searchQuery.toLowerCase());

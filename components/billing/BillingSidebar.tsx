@@ -241,11 +241,7 @@ import {
   LayoutDashboard,
   Users,
   Receipt,
-  CreditCard,
-  FileText,
-  TrendingUp,
   Calendar,
-  AlertCircle,
   ChevronLeft,
   ChevronRight,
   LogOut,
@@ -270,7 +266,6 @@ export default function BillingSidebar({ isOpen, onClose }: SidebarProps) {
   
   // Get tenant name from tenant object
   const tenantName = tenant?.name || "";
-  const tenantSlug = tenant?.slug || "";
 
   // Lazy initialization – read from localStorage once, no effect needed
   const [userName] = useState(() => {

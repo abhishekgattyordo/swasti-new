@@ -1,4 +1,4 @@
-import { Bed, statusColors, statusLabels, type BedStatus } from "@/data/wardData";
+import { Bed, statusLabels, type BedStatus } from "@/data/wardData";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useEffect, useState } from "react";

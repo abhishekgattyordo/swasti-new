@@ -1,5 +1,3 @@
-
-
 "use client";
 
 import {
@@ -10,7 +8,6 @@ import {
   UserPlus,
   ChevronDown,
   LogOut,
-  Settings,
   Bell,
   Heart,
   Stethoscope,
@@ -83,7 +80,6 @@ export default function Header() {
   const router = useRouter();
 const { tenant, isLoading } = useTenant();
 const tenantName = tenant?.name ;
-const tenantSlug = tenant?.slug || "";
   useEffect(() => {
     const loadUser = () => {
       const storedUser = localStorage.getItem("user");

@@ -20,7 +20,7 @@ export function Footer() {
   const currentYear = new Date().getFullYear();
   const { tenant, isLoading } = useTenant();
   const tenantName = tenant?.name || "";
-const tenantSlug = tenant?.slug || "";
+
 
   const quickLinks = [
     { href: "/", label: "Home" },

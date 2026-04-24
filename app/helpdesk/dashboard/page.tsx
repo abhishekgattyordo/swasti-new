@@ -9,13 +9,10 @@ import {
   Users,
   Clock,
   DollarSign,
-  TrendingUp,
- 
 } from "lucide-react";
 import HelpDeskSidebar from "@/components/helpdesk/HelpDeskSidebar";
 import HelpDeskStats from "@/components/helpdesk/HelpDeskStats";
 import { appointmentsApi } from "@/lib/api/appointments";
-
 import toast from "react-hot-toast";
 
 type Appointment = {
@@ -36,14 +33,48 @@ export default function HelpDeskDashboard() {
   const [upcomingAppointments, setUpcomingAppointments] = useState<
     Appointment[]
   >([]);
+  
+  // ✅ Revenue state from invoices API
+  const [todayRevenue, setTodayRevenue] = useState(0);
+  const [todayPaidRevenue, setTodayPaidRevenue] = useState(0);
 
   const handleBillingClick = () => router.push("/helpdesk/billing");
   const handleRoomAvailabilityClick = () =>
     router.push("/helpdesk/room-availability");
   const handleDoctorSlotsClick = () => router.push("/helpdesk/doctor-slots");
 
+  // ✅ Fetch revenue from invoices API
+  const fetchRevenue = async () => {
+    try {
+      const today = new Date().toISOString().split("T")[0];
+      const response = await fetch(`/api/helpdesk/invoices?startDate=${today}&endDate=${today}`);
+      const data = await response.json();
+      
+      if (data.success && Array.isArray(data.data)) {
+        const invoices = data.data;
+        
+        // Total revenue (all invoices for today)
+        const total = invoices.reduce(
+          (sum: number, inv: any) => sum + (inv.amount || 0),
+          0
+        );
+        
+        // Paid revenue (only paid invoices)
+        const paid = invoices
+          .filter((inv: any) => inv.status === "paid")
+          .reduce((sum: number, inv: any) => sum + (inv.amount || 0), 0);
+        
+        setTodayRevenue(total);
+        setTodayPaidRevenue(paid);
+      }
+    } catch (error) {
+      console.error("Error fetching revenue:", error);
+    }
+  };
+
   useEffect(() => {
     fetchDashboardData();
+    fetchRevenue(); // ✅ Fetch revenue on mount
   }, []);
 
   const fetchDashboardData = async () => {
@@ -84,46 +115,37 @@ export default function HelpDeskDashboard() {
     }
   };
 
-  // Mock data for stats that aren't yet backed by API
+  // ✅ Quick Stats with real revenue data
   const quickStats = [
     {
       title: "Patients Today",
       value: patientsTodayCount,
-      change: "+12%", // can be calculated if we have yesterday's data
+      change: "",
       icon: <Users className="w-5 h-5 text-blue-600" />,
       bgColor: "bg-blue-100",
     },
     {
       title: "Appointments",
       value: todayAppointmentsCount,
-      change: "+5",
+      change: "",
       icon: <Calendar className="w-5 h-5 text-emerald-600" />,
       bgColor: "bg-emerald-100",
     },
     {
       title: "Avg. Wait Time",
-      value: "14 min", // mock
-      change: "-2 min",
+      value: "", // Mock or calculate from API
+      change: "",
       icon: <Clock className="w-5 h-5 text-amber-600" />,
       bgColor: "bg-amber-100",
     },
     {
       title: "Revenue Today",
-      value: "$2,450", // mock
-      change: "+18%",
+      value: `₹${todayRevenue.toFixed(2)}`,
+      change: "",
       icon: <DollarSign className="w-5 h-5 text-purple-600" />,
       bgColor: "bg-purple-100",
     },
   ];
-
-  // Recent activities can be derived from today's appointments or a separate activity log API
-  const recentActivities = upcomingAppointments.map((apt, index) => ({
-    id: index,
-    action: "Appointment booked",
-    patient: apt.patientName,
-    time: apt.appointmentTime,
-    color: "bg-blue-500",
-  }));
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -170,19 +192,12 @@ export default function HelpDeskDashboard() {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">
-                  Welcome back, Jane!
+                  Welcome back
                 </h1>
                 <p className="text-sm text-gray-500 mt-1">
-                  Here's what's happening at the help desk today.
+                  This is what is happening at the help desk today.
                 </p>
               </div>
-              {/* <button
-                onClick={() => router.push('/helpdesk/appointments/new')}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 text-sm whitespace-nowrap"
-              >
-                <UserPlus className="w-4 h-4" />
-                New Appointment
-              </button> */}
             </div>
 
             {/* Quick Stats Cards */}
@@ -211,7 +226,6 @@ export default function HelpDeskDashboard() {
                         {stat.icon}
                       </div>
                       <span className="text-xs font-medium text-green-600 bg-green-50 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
-                        <TrendingUp className="w-2.5 h-2.5" />
                         {stat.change}
                       </span>
                     </div>
@@ -236,7 +250,6 @@ export default function HelpDeskDashboard() {
 
             {/* Two Column Layout */}
             <div className="grid grid-cols-2 lg:grid-cols-1 gap-6">
-           
               <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
                 <h2 className="text-lg font-semibold text-gray-800 mb-4">
                   Quick Actions

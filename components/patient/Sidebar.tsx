@@ -10,12 +10,10 @@ import {
   FolderShared,
   Medication,
   ReceiptLong,
-  Settings,
   Person,
   ChevronLeft,
   ChevronRight,
   Logout,
-  EventNote,
 } from '@mui/icons-material';
 import { CalendarDays } from 'lucide-react';
 

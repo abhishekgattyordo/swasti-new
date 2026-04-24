@@ -315,7 +315,7 @@ export default function LandingPage() {
           <div className="text-center mb-12">
             <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">Why Choose Us</h2>
             <p className="text-lg text-green-100 max-w-2xl mx-auto">
-              We're committed to providing the best healthcare experience
+              We are committed to providing the best healthcare experience
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -351,7 +351,7 @@ export default function LandingPage() {
                     <Star key={i} className="w-5 h-5 text-yellow-500 fill-yellow-500" />
                   ))}
                 </div>
-                <p className="text-gray-600 mb-4 italic">"{testimonial.feedback}"</p>
+                <p className="text-gray-600 mb-4 italic">&quot;{testimonial.feedback}&quot;</p>
                 <p className="font-semibold text-gray-900">{testimonial.name}</p>
               </Card>
             ))}

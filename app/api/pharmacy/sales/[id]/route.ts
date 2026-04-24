@@ -140,6 +140,7 @@ export async function PATCH(
         );
 
         for (const item of items.rows) {
+           console.log(item);
           // We need to add back the quantity to the same batch(es) – but we don't know which batches were used.
           // This is complex; for simplicity, we could disallow reverting, or we could store batch info in sale_items.
           // To keep it simple, we'll just throw an error – reverting a sale after delivery is not allowed.

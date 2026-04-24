@@ -4,7 +4,7 @@ import { authErrorResponse,requireRole } from '@/lib/auth/guards';
 
 export async function POST(req: NextRequest) {
   try {
-      requireRole(req, ['pharmacy']);
+      requireRole(req, ['doctor']);
     const body = await req.json();
 
     const {

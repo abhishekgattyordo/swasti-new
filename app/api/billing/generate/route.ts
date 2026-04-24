@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
 
   try {
     // 1. Get admission details
-           requireRole(req, ['billing']);
+        
     const admissionRes = await query(
       `SELECT a.*, p.patient_id, p.full_name_en
        FROM admissions a
@@ -27,7 +27,6 @@ export async function POST(req: NextRequest) {
     }
 
     const admission = admissionRes.rows[0];
-    const admissionDate = new Date(admission.admission_date);
     const dischargeDate = admission.discharge_date ? new Date(admission.discharge_date) : new Date();
 
     // Exclusive end date for billing (day after last occupied day)
@@ -290,11 +289,9 @@ export async function POST(req: NextRequest) {
     });
   } catch (error: unknown) {
     console.error('Bill generation error:', error);
-    const authResponse=authErrorResponse(error);
+  
 
-if(authResponse){
-  return authResponse
-}
+
     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     return NextResponse.json({ success: false, message: errorMessage }, { status: 500 });
   }

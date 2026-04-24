@@ -60,7 +60,7 @@ useEffect(() => {
    
     return;
   }
-}, [tenantLoading]);
+}, [tenantLoading,isDoctorSlotsEnabled,router]);
 
   useEffect(() => {
     fetchDoctors();

@@ -405,17 +405,15 @@ import React, { useState, useEffect, useRef } from "react";
 import Sidebar from "@/components/patient/Sidebar";
 import {
   ReceiptLong,
-  FilterList,
   Warning,
   Schedule,
   Filter,
-  X,
   LocalHospital,
   Bed,
   LocalPharmacy,
 } from "@mui/icons-material";
 import { Menu, X as XIcon } from "lucide-react";
-import apiClient from '@/lib/api/client';
+
 
 export default function PatientBillingPage() {
   const [activeTab, setActiveTab] = useState("all");
@@ -649,7 +647,7 @@ export default function PatientBillingPage() {
             {/* Category Filter Chips */}
             <div className="flex flex-wrap gap-2 border-b pb-3">
               {categories.map(cat => {
-                const Icon = cat.icon;
+              
                 const isActive = categoryFilter === cat.key;
                 const activeClass = isActive
                   ? `bg-${cat.color}-600 text-white`

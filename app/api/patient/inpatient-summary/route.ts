@@ -183,7 +183,7 @@ async function getSummaryByAdmissionId(admissionIdNum: number) {
       icon: r.icon,
       fileUrl: r.file_url,
     }));
-  } catch (err) {
+  } catch  {
     console.warn('Medical records table not found');
   }
 

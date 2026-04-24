@@ -91,7 +91,7 @@ useEffect(() => {
   if (!tenantLoading && !isDashboardEnabled) {
     router.push("/unauthorized");
   }
-}, [tenantLoading]);
+}, [tenantLoading,isDashboardEnabled,router]);
 
   // Fetch all data on mount
   useEffect(() => {

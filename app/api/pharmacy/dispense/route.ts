@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query, transaction } from '@/lib/db';
+import { transaction } from '@/lib/db';
 import { DispenseSchema } from '@/lib/validations/dispense';
 import { authErrorResponse,requireRole } from '@/lib/auth/guards';
 

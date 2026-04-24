@@ -58,8 +58,8 @@ export interface Appointment {
 
 export default function SchedulePage() {
   const { appointments, setAppointments } = useDoctor();
-  const [viewMode, setViewMode] = useState<ViewMode>("day");
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [viewMode] = useState<ViewMode>("day");
+  const [currentDate] = useState(new Date());
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [showNewModal, setShowNewModal] = useState(false);
@@ -89,7 +89,7 @@ useEffect(() => {
   if (!tenantLoading && !isScheduleEnabled) {
     router.push("/unauthorized");
   }
-}, [tenantLoading]);
+}, [tenantLoading,isScheduleEnabled,router]);
 
 useEffect(() => {
   const fetchDoctorId = async () => {
@@ -167,7 +167,7 @@ useEffect(() => {
     if (doctorId && currentDate) {
       fetchAvailableSlots();
     }
-  }, [doctorId, currentDate]);
+  }, [doctorId, currentDate ]);
 
   const handleViewSlots = async () => {
     console.log("Clicked View Slots");
@@ -259,7 +259,7 @@ useEffect(() => {
         throw new Error(response.message || "Cancel failed");
       }
       toast.success("Appointment cancelled");
-    } catch (error) {
+    } catch {
       toast.error("Failed to cancel appointment");
       // Rollback optimistic update
       setAppointments(previousAppointments);
@@ -285,20 +285,9 @@ useEffect(() => {
     setShowNewModal(true);
   };
 
-  const timeSlots = Array.from(
-    { length: 24 },
-    (_, i) => i.toString().padStart(2, "0") + ":00",
-  );
 
-  const dailySchedule = useMemo(() => {
-    if (viewMode !== "day") return [];
-    const bookedMap = new Map();
-    appointments.forEach((appt) => bookedMap.set(appt.time, appt));
-    return timeSlots.map((time) => ({
-      time,
-      appointment: bookedMap.get(time),
-    }));
-  }, [viewMode, timeSlots, appointments]);
+
+  
 
   // Filtering and sorting
   type FilterableColumn = "name" | "type" | "status";
@@ -327,7 +316,7 @@ useEffect(() => {
   };
 
   const filteredAppointments = useMemo(() => {
-    let filtered = appointments.filter((appointment) => {
+    const filtered = appointments.filter((appointment) => {
       return columnFilters.every((filter) => {
         const val = appointment[filter.column];
         return val
@@ -455,7 +444,7 @@ useEffect(() => {
                 <Calendar className="w-5 h-5 text-amber-600" />
               </div>
               <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider">
-                TODAY'S APPOINTMENTS
+                TODAYS APPOINTMENTS
               </p>
             </div>
             <p className="text-2xl sm:text-3xl font-bold mt-1 text-gray-800">

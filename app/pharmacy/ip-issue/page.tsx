@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import Sidebar from "@/components/pharmacy/Sidebar";
-import { admissionsApi } from "@/lib/api/admissions"; // adjust the import path as needed
+import { admissionsApi } from "@/lib/api/admissions";
 import { useTenant } from "@/contexts/TenantContext";
 import { MODULE_KEYS, PHARMACY_FEATURES } from "@/lib/feature";
 
@@ -40,7 +40,7 @@ interface IPOrderItem {
 
 interface IPOrder {
   id: number;
-  patientId?: string; // <-- new field
+  patientId?: string;
   patientName: string;
   admissionDate: string;
   admissionId: string;
@@ -54,6 +54,40 @@ interface IPOrder {
   stock_updated: boolean;
 }
 
+interface SalesItem {
+  id: number;
+  medicineId: number;
+  medicineName: string;
+  quantity: number;
+  dispensedQuantity?: number;
+  dispensedQty?: number;
+}
+
+interface SalesData {
+  id: number;
+  patient_id?: string;
+  patient_name?: string;
+  walkin_name: string | null;
+  date: string;
+  stock_updated: boolean;
+  items: SalesItem[];
+}
+
+interface StockItem {
+  id: number;
+  medicine_id: number;
+  medicineName: string;
+  availableQty: number;
+  delivered: string;
+}
+
+interface AdmissionData {
+  admission_id: number;
+  admission_date: string;
+  ward_name: string;
+  bed_number: string;
+}
+
 export default function IPIssuePage() {
   const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -63,21 +97,49 @@ export default function IPIssuePage() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [issueQtys, setIssueQtys] = useState<Record<number, number>>({});
   const [submitting, setSubmitting] = useState(false);
-  const [loadingAdmission, setLoadingAdmission] = useState(false); // <-- new state
+  const [loadingAdmission, setLoadingAdmission] = useState(false);
   const { tenant, isMicroFeatureEnabled, isLoading: tenantLoading } = useTenant();
 
-const isIpIssueEnabled = isMicroFeatureEnabled(
-  MODULE_KEYS.PHARMACY,
-  PHARMACY_FEATURES.IP_ISSUE
-);
+  const isIpIssueEnabled = isMicroFeatureEnabled(
+    MODULE_KEYS.PHARMACY,
+    PHARMACY_FEATURES.IP_ISSUE
+  );
 
-useEffect(() => {
-  if (!tenantLoading && !isIpIssueEnabled) {
-    router.push("/unauthorized");
-  }
-}, [tenantLoading]);
+  useEffect(() => {
+    if (!tenantLoading && !isIpIssueEnabled) {
+      router.push("/unauthorized");
+    }
+  }, [tenantLoading, isIpIssueEnabled, router]);
 
   const order = orders.find((o) => o.id === selectedId);
+
+  // Stock cache to avoid multiple API calls
+  let stockCache: StockItem[] | null = null;
+
+  const fetchStockForMedicine = async (medicineId: number): Promise<number> => {
+    try {
+      if (!stockCache) {
+        const res = await fetch("/api/pharmacy/stock");
+        const data = await res.json() as { success: boolean; data: StockItem[] };
+        
+        if (data.success && Array.isArray(data.data)) {
+          stockCache = data.data;
+        } else {
+          return 0;
+        }
+      }
+      
+      const stockItem = stockCache.find(
+        (item) => item.medicine_id === medicineId
+      );
+      
+      const availableQty = stockItem?.availableQty ?? Number(stockItem?.delivered ?? 0);
+      return availableQty;
+    } catch (error) {
+      console.error(`Failed to fetch stock for medicine ${medicineId}`, error);
+      return 0;
+    }
+  };
 
   // Fetch sales and filter for registered patients
   useEffect(() => {
@@ -85,35 +147,46 @@ useEffect(() => {
       setLoading(true);
       try {
         const res = await fetch("/api/pharmacy/sales?delivered=false");
-        const data = await res.json();
+        const data = await res.json() as { success: boolean; data: SalesData[] };
+        
         if (data.success) {
-          // Only registered patients (walkin_name is null)
-          const registeredSales = data.data.filter((s: any) => !s.walkin_name);
-
-          const mapped: IPOrder[] = registeredSales.map((s: any) => ({
-            id: s.id,
-            patientId: s.patient_id, // <-- store patient ID
-            patientName: s.patient_name || "Unknown",
-            admissionId: "N/A",
-            admissionDate: "",
-            ward: "N/A",
-            bed: "N/A",
-            date: s.date || "",
-            issueType: "Regular",
-            status: s.stock_updated ? "Completed" : "Pending",
-            items: Array.isArray(s.items)
-              ? s.items.map((it: any) => ({
-                  id: it.id,
-                  medicineId: it.medicineId,
-                  medicineName: it.medicineName,
-                  prescribedQty: it.quantity,
-                  dispensedQty: 0,
-                  availableQty: it.availableQty || 0,
-                }))
-              : [],
-            walkin_name: s.walkin_name,
-            stock_updated: s.stock_updated,
-          }));
+          const registeredSales = data.data.filter((s) => !s.walkin_name);
+          
+          const mapped: IPOrder[] = await Promise.all(
+            registeredSales.map(async (s) => {
+              const itemsWithStock = await Promise.all(
+                (s.items || []).map(async (it) => {
+                  const currentStock = await fetchStockForMedicine(it.medicineId);
+                  
+                  return {
+                    id: it.id,
+                    medicineId: it.medicineId,
+                    medicineName: it.medicineName,
+                    prescribedQty: it.quantity,
+                    dispensedQty: it.dispensedQuantity ?? it.dispensedQty ?? 0,
+                    availableQty: currentStock,
+                  };
+                })
+              );
+              
+              return {
+                id: s.id,
+                patientId: s.patient_id,
+                patientName: s.patient_name ?? "Unknown",
+                admissionId: "N/A",
+                admissionDate: "",
+                ward: "N/A",
+                bed: "N/A",
+                date: s.date ?? "",
+                issueType: "Regular" as const,
+                status: s.stock_updated ? "Completed" : "Pending",
+                items: itemsWithStock,
+                walkin_name: s.walkin_name,
+                stock_updated: s.stock_updated,
+              };
+            })
+          );
+          
           setOrders(mapped);
         } else {
           toast.error("Failed to load IP orders");
@@ -126,72 +199,87 @@ useEffect(() => {
       }
     };
     fetchOrders();
+    // Reset stock cache when component remounts
+    return () => {
+      stockCache = null;
+    };
   }, []);
 
   // Select an order and fetch its admission details
   const selectOrder = async (id: number) => {
-  const o = orders.find((ord) => ord.id === id);
-  if (!o || o.status !== "Pending") return;
+    const o = orders.find((ord) => ord.id === id);
+    if (!o || o.status !== "Pending") return;
 
-  setSelectedId(id);
+    setSelectedId(id);
 
-  // Reset issue quantities to full prescribed amount
-  const qtys: Record<number, number> = {};
-  o.items.forEach((item) => {
-    qtys[item.medicineId] = item.prescribedQty;
-  });
-  setIssueQtys(qtys);
+    const qtys: Record<number, number> = {};
+    o.items.forEach((item) => {
+      qtys[item.medicineId] = item.prescribedQty;
+    });
+    setIssueQtys(qtys);
 
-  // Fetch admission details if we have a patientId
-  if (o.patientId) {
-    setLoadingAdmission(true);
-    try {
-      // ✅ Admission data is directly returned (no response.success)
-      const admissionData = await admissionsApi.getActiveAdmission(o.patientId);
-      console.log("Fetched admission data:", admissionData);
-
-      // Check if we got valid data (admission_id exists)
-      if (admissionData && admissionData.admission_id) {
-        setOrders((prev) =>
-          prev.map((order) =>
-            order.id === id
-              ? {
-                  ...order,
-                  admissionId: admissionData.admission_id.toString(),
-                  admissionDate: admissionData.admission_date
-                    ? new Date(admissionData.admission_date).toLocaleDateString("en-CA")
-                    : "N/A",
-                  ward: admissionData.ward_name,
-                  bed: admissionData.bed_number || "N/A",
-                }
-              : order
-          )
-        );
-      } else {
-        console.warn("No active admission for patient", o.patientId);
+    if (o.patientId) {
+      setLoadingAdmission(true);
+      try {
+        const admissionData = await admissionsApi.getActiveAdmission(o.patientId) as AdmissionData;
+        
+        if (admissionData && admissionData.admission_id) {
+          setOrders((prev) =>
+            prev.map((order) =>
+              order.id === id
+                ? {
+                    ...order,
+                    admissionId: admissionData.admission_id.toString(),
+                    admissionDate: admissionData.admission_date
+                      ? new Date(admissionData.admission_date).toLocaleDateString("en-CA")
+                      : "N/A",
+                    ward: admissionData.ward_name ?? "N/A",
+                    bed: admissionData.bed_number ?? "N/A",
+                  }
+                : order
+            )
+          );
+        }
+      } catch (error) {
+        console.error("Failed to fetch admission details:", error);
+        toast.error("Could not load ward/bed information");
+      } finally {
+        setLoadingAdmission(false);
       }
-    } catch (error) {
-      console.error("Failed to fetch admission details:", error);
-      toast.error("Could not load ward/bed information");
-    } finally {
-      setLoadingAdmission(false);
     }
-  }
-};
+  };
 
-  useEffect(() => {
-    console.log("🧾 Orders updated:", orders);
-  }, [orders]);
+  const refreshStockForOrder = async () => {
+    if (!order) return;
+    
+    // Reset cache to get fresh data
+    stockCache = null;
+    
+    const updatedItems = await Promise.all(
+      order.items.map(async (item) => {
+        const currentStock = await fetchStockForMedicine(item.medicineId);
+        return { ...item, availableQty: currentStock };
+      })
+    );
+    
+    setOrders((prev) =>
+      prev.map((o) =>
+        o.id === order.id ? { ...o, items: updatedItems } : o
+      )
+    );
+    
+    toast.success("Stock levels refreshed");
+  };
 
   const handleIssue = async () => {
     if (!order) return;
 
     const itemsToDeliver = order.items
-      .filter((item) => (issueQtys[item.medicineId] || 0) > 0)
+      .filter((item) => (issueQtys[item.medicineId] ?? 0) > 0)
       .map((item) => ({
         saleItemId: item.id,
         medicineId: item.medicineId,
-        quantity: issueQtys[item.medicineId],
+        quantity: issueQtys[item.medicineId] ?? 0,
       }));
 
     if (itemsToDeliver.length === 0) {
@@ -211,7 +299,7 @@ useEffect(() => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const result = await res.json();
+      const result = await res.json() as { success: boolean; message?: string };
 
       if (result.success) {
         setOrders((prev) =>
@@ -222,18 +310,17 @@ useEffect(() => {
                   status: "Completed",
                   items: o.items.map((item) => ({
                     ...item,
-                    dispensedQty:
-                      item.dispensedQty + (issueQtys[item.medicineId] || 0),
+                    dispensedQty: item.dispensedQty + (issueQtys[item.medicineId] ?? 0),
                   })),
                 }
-              : o,
-          ),
+              : o
+          )
         );
         setConfirmOpen(false);
         toast.success("Medicines issued successfully");
         setSelectedId(null);
       } else {
-        toast.error(result.message || "Failed to issue medicines");
+        toast.error(result.message ?? "Failed to issue medicines");
       }
     } catch (error) {
       console.error(error);
@@ -250,32 +337,28 @@ useEffect(() => {
       </div>
     );
   }
-if (!tenantLoading && !isIpIssueEnabled) {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="text-center">
-        <div className="text-red-500 text-6xl mb-4">🔒</div>
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h1>
-        <p className="text-gray-600">
-          Pharmacy IP Issue feature is not enabled for {tenant?.name}.
-        </p>
+
+  if (!tenantLoading && !isIpIssueEnabled) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="text-red-500 text-6xl mb-4">🔒</div>
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h1>
+          <p className="text-gray-600">
+            Pharmacy IP Issue feature is not enabled for {tenant?.name}.
+          </p>
+        </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Mobile menu button and sidebar */}
       <button
         className="lg:hidden fixed bottom-20 right-6 z-50 p-2.5 bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow border border-gray-200 dark:border-gray-700"
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
       >
-        {isSidebarOpen ? (
-          <X className="h-5 w-5" />
-        ) : (
-          <Menu className="h-5 w-5" />
-        )}
+        {isSidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
       </button>
 
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
@@ -297,7 +380,7 @@ if (!tenantLoading && !isIpIssueEnabled) {
                   IP Medicine Issue (Registered Sales)
                 </h1>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Registered patient sales – ward/bed info not available
+                  Registered patient sales – Stock levels shown from inventory
                 </p>
               </div>
             </div>
@@ -308,9 +391,14 @@ if (!tenantLoading && !isIpIssueEnabled) {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Order List */}
             <div className="space-y-3">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Pending Orders (Registered Patients)
-              </h2>
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Pending Orders
+                </h2>
+                <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
+                  Refresh
+                </Button>
+              </div>
               <div className="space-y-3">
                 {orders
                   .filter((o) => o.status === "Pending")
@@ -329,13 +417,7 @@ if (!tenantLoading && !isIpIssueEnabled) {
                           <span className="font-semibold text-gray-900 dark:text-white">
                             {o.patientName}
                           </span>
-                          <Badge
-                            className={
-                              o.status === "Pending"
-                                ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400"
-                                : "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                            }
-                          >
+                          <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
                             {o.status}
                           </Badge>
                         </div>
@@ -377,6 +459,12 @@ if (!tenantLoading && !isIpIssueEnabled) {
                   {/* Patient Info */}
                   <Card>
                     <CardContent className="p-4">
+                      <div className="flex justify-between items-center mb-2">
+                        <h3 className="font-semibold">Patient Information</h3>
+                        <Button variant="ghost" size="sm" onClick={refreshStockForOrder} className="text-xs">
+                          Refresh Stock
+                        </Button>
+                      </div>
                       {loadingAdmission ? (
                         <div className="flex justify-center py-4">
                           <Loader2 className="h-5 w-5 animate-spin text-green-600" />
@@ -384,30 +472,20 @@ if (!tenantLoading && !isIpIssueEnabled) {
                       ) : (
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
                           <div>
-                            <p className="text-xs text-gray-500">
-                              Admission ID
-                            </p>
-                            <p className="font-semibold text-gray-900">
-                              {order.admissionId}
-                            </p>
+                            <p className="text-xs text-gray-500">Patient Name</p>
+                            <p className="font-semibold text-gray-900">{order.patientName}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-500">Admission ID</p>
+                            <p className="font-semibold text-gray-900">{order.admissionId}</p>
                           </div>
                           <div>
                             <p className="text-xs text-gray-500">Ward / Bed</p>
-                            <p className="font-semibold text-gray-900">
-                              {order.ward} / {order.bed}
-                            </p>
+                            <p className="font-semibold text-gray-900">{order.ward} / {order.bed}</p>
                           </div>
                           <div>
                             <p className="text-xs text-gray-500">Issue Type</p>
-                            <Badge className="bg-blue-100 text-blue-800">
-                              {order.issueType}
-                            </Badge>
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-500">Date</p>
-                            <p className="font-semibold text-gray-900">
-                              {order.admissionDate}
-                            </p>
+                            <Badge className="bg-blue-100 text-blue-800">{order.issueType}</Badge>
                           </div>
                         </div>
                       )}
@@ -429,61 +507,46 @@ if (!tenantLoading && !isIpIssueEnabled) {
                       </thead>
                       <tbody className="divide-y">
                         {order.items.map((item) => {
-                          const remaining =
-                            item.prescribedQty - item.dispensedQty;
+                          const remaining = item.prescribedQty - item.dispensedQty;
+                          const maxIssue = Math.min(remaining, item.availableQty);
                           const insufficient = item.availableQty < remaining;
+                          const outOfStock = item.availableQty === 0;
+                          
                           return (
-                            <tr
-                              key={item.id}
-                              className={insufficient ? "bg-amber-50" : ""}
-                            >
-                              <td className="px-4 py-3 font-medium">
-                                {item.medicineName}
-                              </td>
-                              <td className="px-4 py-3">
-                                {item.prescribedQty}
-                              </td>
-                              <td className="px-4 py-3 text-gray-500">
-                                {item.dispensedQty}
-                              </td>
-                              <td
-                                className={`px-4 py-3 ${
-                                  item.availableQty === 0
-                                    ? "text-red-600 font-bold"
-                                    : ""
-                                }`}
-                              >
+                            <tr key={item.id} className={insufficient ? "bg-amber-50 dark:bg-amber-950/20" : ""}>
+                              <td className="px-4 py-3 font-medium">{item.medicineName}</td>
+                              <td className="px-4 py-3">{item.prescribedQty}</td>
+                              <td className="px-4 py-3 text-gray-500">{item.dispensedQty}</td>
+                              <td className={`px-4 py-3 font-bold ${
+                                outOfStock ? "text-red-600" : insufficient ? "text-amber-600" : "text-green-600"
+                              }`}>
                                 {item.availableQty}
                               </td>
                               <td className="px-4 py-3">
                                 <Input
                                   type="number"
                                   min={0}
-                                  max={Math.min(remaining, item.availableQty)}
-                                  value={issueQtys[item.medicineId] || 0}
-                                  onChange={(e) =>
-                                    setIssueQtys({
-                                      ...issueQtys,
-                                      [item.medicineId]: Number(e.target.value),
-                                    })
-                                  }
+                                  max={maxIssue}
+                                  value={issueQtys[item.medicineId] ?? 0}
+                                  onChange={(e) => {
+                                    const val = Number(e.target.value);
+                                    if (val <= maxIssue) {
+                                      setIssueQtys({ ...issueQtys, [item.medicineId]: val });
+                                    }
+                                  }}
                                   className="w-20"
-                                  disabled={order.status !== "Pending"}
+                                  disabled={order.status !== "Pending" || outOfStock}
                                 />
                               </td>
                               <td className="px-4 py-3">
-                                {item.availableQty === 0 ? (
-                                  <Badge className="bg-red-100 text-red-800">
-                                    No Stock
-                                  </Badge>
+                                {outOfStock ? (
+                                  <Badge className="bg-red-100 text-red-800">Out of Stock</Badge>
                                 ) : insufficient ? (
                                   <Badge className="bg-amber-100 text-amber-800 flex items-center gap-1">
-                                    <AlertTriangle size={12} /> Low
+                                    <AlertTriangle size={12} /> Limited Stock
                                   </Badge>
                                 ) : (
-                                  <Badge className="bg-green-100 text-green-800">
-                                    OK
-                                  </Badge>
+                                  <Badge className="bg-green-100 text-green-800">In Stock</Badge>
                                 )}
                               </td>
                             </tr>
@@ -496,19 +559,9 @@ if (!tenantLoading && !isIpIssueEnabled) {
                   {/* Action Buttons */}
                   {order.status === "Pending" && (
                     <div className="flex justify-end gap-3 pt-4">
-                      <Button
-                        variant="outline"
-                        onClick={() => setSelectedId(null)}
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        onClick={() => setConfirmOpen(true)}
-                        disabled={submitting}
-                      >
-                        {submitting && (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        )}
+                      <Button variant="outline" onClick={() => setSelectedId(null)}>Cancel</Button>
+                      <Button onClick={() => setConfirmOpen(true)} disabled={submitting}>
+                        {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Issue Medicines
                       </Button>
                     </div>
@@ -517,9 +570,7 @@ if (!tenantLoading && !isIpIssueEnabled) {
                   {order.status === "Completed" && (
                     <div className="flex items-center justify-center gap-2 p-4 bg-green-50 rounded-lg">
                       <CheckCircle2 size={20} className="text-green-600" />
-                      <span className="text-sm text-gray-600">
-                        This order has been completed
-                      </span>
+                      <span className="text-sm text-gray-600">This order has been completed</span>
                     </div>
                   )}
                 </div>
@@ -536,40 +587,26 @@ if (!tenantLoading && !isIpIssueEnabled) {
               {order && (
                 <div className="space-y-3">
                   <p className="text-sm text-gray-500">
-                    Issue to:{" "}
-                    <span className="font-medium text-gray-900">
-                      {order.patientName}
-                    </span>
+                    Issue to: <span className="font-medium text-gray-900">{order.patientName}</span>
                   </p>
                   <div className="space-y-2">
                     {order.items.map((item) => {
-                      const qty = issueQtys[item.medicineId] || 0;
+                      const qty = issueQtys[item.medicineId] ?? 0;
                       if (qty === 0) return null;
                       return (
-                        <div
-                          key={item.id}
-                          className="flex justify-between text-sm border-b pb-2"
-                        >
-                          <span className="text-gray-600">
-                            {item.medicineName}
-                          </span>
-                          <span className="font-medium text-gray-900">
-                            × {qty}
-                          </span>
+                        <div key={item.id} className="flex justify-between text-sm border-b pb-2">
+                          <span className="text-gray-600">{item.medicineName}</span>
+                          <span className="font-medium text-gray-900">× {qty}</span>
                         </div>
                       );
                     })}
                   </div>
                 </div>
               )}
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setConfirmOpen(false)}>
-                  Cancel
-                </Button>
+              <DialogFooter className="gap-2">
+                <Button variant="outline" onClick={() => setConfirmOpen(false)}>Cancel</Button>
                 <Button onClick={handleIssue} disabled={submitting}>
-                  {submitting && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
+                  {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Confirm Issue
                 </Button>
               </DialogFooter>

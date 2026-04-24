@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
       WHERE status IN ('Ordered', 'Collected')
       ORDER BY created_at DESC
     `;
-    let params: any[] = [];
+    const params: any[] = [];
     
     if (status === "ordered") {
       sql = `

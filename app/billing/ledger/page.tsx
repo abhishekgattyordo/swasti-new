@@ -12,7 +12,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Loader2, Search, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTenant } from "@/contexts/TenantContext";

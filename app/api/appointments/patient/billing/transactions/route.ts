@@ -8,20 +8,21 @@ export async function GET(req: NextRequest) {
     if (!patientId) {
       return NextResponse.json({ success: false, message: 'Patient ID required' }, { status: 400 });
     }
-    // Remove any whitespace or newline characters
     patientId = patientId.trim();
 
-    // 1. Fetch inpatient bills – cast patient_id to text for safe comparison
+    // 1. Fetch inpatient bills
     const inpatientRes = await query(
       `SELECT 
         b.id, b.bill_number, b.total_amount, b.paid_amount, b.status, b.created_at,
         a.admission_date, a.discharge_date,
-        COALESCE(json_agg(json_build_object(
-          'medicine_name', bi.medicine_name,
-          'quantity', bi.quantity,
-          'unit_price', bi.unit_price,
-          'total_price', bi.total_price
-        )), '[]') as items
+        COALESCE(json_agg(
+          json_build_object(
+            'medicine_name', bi.medicine_name,
+            'quantity', bi.quantity,
+            'unit_price', bi.unit_price,
+            'total_price', bi.total_price
+          )
+        ), '[]') as items
        FROM ip_bills b
        LEFT JOIN admissions a ON b.admission_id = a.id
        LEFT JOIN ip_bill_items bi ON b.id = bi.bill_id
@@ -32,23 +33,31 @@ export async function GET(req: NextRequest) {
     );
     const inpatientBills = inpatientRes.rows;
 
-    // 2. Fetch pharmacy purchases – also cast patient_id to text
+    // 2. Fetch pharmacy purchases - filter out those already in inpatient bills
     const pharmacyRes = await query(
       `SELECT 
         s.id, 
         s.created_at as date, 
         s.grand_total as total_amount,
         0 as paid_amount,
-        COALESCE(json_agg(json_build_object(
-          'medicine_name', m.name,
-          'quantity', si.quantity,
-          'unit_price', si.unit_price,
-          'total_price', si.total
-        )), '[]') as items
+        COALESCE(json_agg(
+          json_build_object(
+            'medicine_name', m.name,
+            'quantity', si.quantity,
+            'unit_price', si.unit_price,
+            'total_price', si.total
+          )
+        ), '[]') as items
        FROM sales s
        JOIN sale_items si ON s.id = si.sale_id
        JOIN medicines m ON si.medicine_id = m.id
-       WHERE s.patient_id::text = $1 AND s.walkin_name IS NULL
+       WHERE s.patient_id::text = $1 
+         AND s.walkin_name IS NULL
+         AND NOT EXISTS (
+           SELECT 1 FROM ip_bill_items ibi 
+           WHERE ibi.medicine_name = m.name 
+           AND ibi.bill_id IN (SELECT id FROM ip_bills WHERE patient_id::text = $1)
+         )
        GROUP BY s.id
        ORDER BY s.created_at DESC`,
       [patientId]

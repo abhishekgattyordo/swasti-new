@@ -4,7 +4,7 @@ import { authErrorResponse,requireRole } from '@/lib/auth/guards';
 
 export async function GET(req: NextRequest) {
   try {
-       requireRole(req, ['admin']);
+       requireRole(req, ['admin','helpdesk']);
     console.log('📥 GET /api/bed-config/summary - Fetching bed summary');
 
     // Get counts by status

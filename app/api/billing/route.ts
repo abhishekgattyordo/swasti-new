@@ -184,7 +184,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Case 3: No parameters – return all inpatient bills (like original GET /api/billing/bills)
-    let sql = `
+    const sql = `
       SELECT 
         b.id, b.bill_number, b.sale_id, b.patient_id, p.full_name_en as patient_name,
         b.admission_id, b.total_amount, b.paid_amount, b.status, b.created_at

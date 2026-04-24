@@ -294,7 +294,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   
   // Get tenant name from tenant object
   const tenantName = tenant?.name || "";
-  const tenantSlug = tenant?.slug || "";
+
 
   useEffect(() => {
     const userStr = localStorage.getItem('user');
@@ -307,7 +307,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         console.error('Failed to parse user', e);
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []); // empty dependency array – run once after mount
 
   const toggleCollapse = () => setIsCollapsed(!isCollapsed);

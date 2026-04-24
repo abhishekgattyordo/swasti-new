@@ -12,7 +12,7 @@ const RoomSchema = z.object({
 
 export async function GET(req: NextRequest) {
   try {
-        requireRole(req, ['admin']);
+        requireRole(req, ['admin','helpdesk']);
     const { searchParams } = new URL(req.url);
     const wardId = searchParams.get('wardId');
 

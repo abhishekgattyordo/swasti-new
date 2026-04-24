@@ -181,7 +181,7 @@ if(authResponse){
 
 export async function GET(req: NextRequest) {
   try {
-         requireRole(req, ['helpdesk']);
+         requireRole(req, ['billing']);
     const url = new URL(req.url);
     const status = url.searchParams.get('status');
     const patientId = url.searchParams.get('patientId');

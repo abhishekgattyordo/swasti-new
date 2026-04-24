@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 // Helper to convert empty string to undefined, then to number
-const toNumber = (val: any) => {
+const toNumber = (val: unknown) => {
   if (val === '' || val === null || val === undefined) return undefined;
   const num = Number(val);
   return isNaN(num) ? undefined : num;

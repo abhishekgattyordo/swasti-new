@@ -3,7 +3,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Heart, Thermometer, Droplets, Activity, Clock, User, Phone, AlertCircle, FileText } from "lucide-react";
+import { Heart, Thermometer, Droplets, Activity, Clock, User, Phone, AlertCircle} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface BedDetailPanelProps {

@@ -396,15 +396,10 @@
 "use client";
 
 import React, { useState, createContext, useContext, useEffect } from "react";
-import { usePathname } from "next/navigation";
 import DoctorSidebar from "@/components/doctor/DoctorSidebar";
 import {
   Menu,
   X,
-  Calendar,
-  LayoutDashboard,
-  Users,
-  CreditCard,
   User,
 } from "lucide-react";
 import { appointmentsApi } from "@/lib/api/appointments";
@@ -473,8 +468,7 @@ export default function DoctorLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const pathname = usePathname();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -553,7 +547,7 @@ export default function DoctorLayout({
               try {
                 const birthDate = new Date(item.patient_dob);
                 age = new Date().getFullYear() - birthDate.getFullYear();
-              } catch (e) {
+              } catch  {
                 console.warn("Invalid DOB:", item.patient_dob);
               }
             }
@@ -703,7 +697,7 @@ export default function DoctorLayout({
     }
   };
 
-  const activeSection = pathname.split("/")[2] || "schedule";
+
 
   return (
     <DoctorContext.Provider

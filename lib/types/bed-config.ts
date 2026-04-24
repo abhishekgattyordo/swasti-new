@@ -41,7 +41,7 @@ export interface Bed {
   floor_number: number;
   status: BedStatus;
   patient_category: PatientCategory;
-  attributes?: Record<string, any>;
+ attributes?: Record<string, string | number | boolean | null | undefined | object>;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -53,5 +53,5 @@ export interface BulkBedCreate {
   count: number;
   prefix?: string;
   patient_category?: PatientCategory;
-  attributes?: Record<string, any>;
+ attributes?: Record<string, string | number | boolean | null | undefined | object>;
 }

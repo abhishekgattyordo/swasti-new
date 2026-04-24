@@ -231,6 +231,9 @@
 //   );
 // }
 
+
+
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -418,7 +421,7 @@ export default function LaboratoryDashboard() {
                 <p className="text-3xl font-bold text-emerald-600">
                   {stats.completedToday}
                 </p>
-                <p className="text-xs text-emerald-600 mt-2">Today's reports</p>
+               <p className="text-xs text-emerald-600 mt-2">Todays reports</p>
               </div>
               <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
                 <span className="text-2xl">✅</span>
@@ -448,8 +451,8 @@ export default function LaboratoryDashboard() {
                 {recentOrders.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
-                      No orders found. Create your first order!
-                    </td>
+  No orders found. Create a new order!
+</td>
                   </tr>
                 ) : (
                   recentOrders.map((order) => {

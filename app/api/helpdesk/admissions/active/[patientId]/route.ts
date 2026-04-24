@@ -5,7 +5,7 @@ import { authErrorResponse,requireRole } from '@/lib/auth/guards';
 export async function GET(req: NextRequest) {
   try {
     // Extract patientId from URL path or query parameter
-        requireRole(req, ['helpdesk','admin']);
+        requireRole(req, ['helpdesk','admin','pharmacy']);
     const url = new URL(req.url);
     const pathParts = url.pathname.split('/');
     let patientId = pathParts[pathParts.length - 1];

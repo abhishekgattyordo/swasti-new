@@ -11,7 +11,6 @@ import {
   ChevronLeft,
   ChevronRight,
   User,
-  Menu,
   X,
   Activity,
   LogOut,
@@ -54,7 +53,7 @@ const { isMicroFeatureEnabled } = useTenant();
         console.error('Failed to parse user', e);
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []); // run once after mount
 
   const isDashboardEnabled = isMicroFeatureEnabled(MODULE_KEYS.DOCTOR, DOCTOR_FEATURES.DASHBOARD);

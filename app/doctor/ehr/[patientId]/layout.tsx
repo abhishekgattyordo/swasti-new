@@ -14,7 +14,7 @@ import VisitHistoryModal from "@/components/doctor/VisitHistoryModal";
 import AddVitalsModal from "@/components/doctor/AddVitalsModal";
 
 // Import API clients
-import { patientsApi } from "@/lib/api/registration";
+
 import { currentVisitApi } from "@/lib/api/ehr"; // ✅ new import
 import AddMedicationModal, { NewMedicationData } from "@/components/doctor/AddMedicationModal";
 import toast from "react-hot-toast";

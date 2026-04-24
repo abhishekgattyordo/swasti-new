@@ -12,8 +12,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Loader2, Search, Download, Calendar, Building2, Bed, User } from 'lucide-react';
+import { Loader2, Search, Download, Calendar, Building2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTenant } from "@/contexts/TenantContext";
 import { MODULE_KEYS, BILLING_FEATURES } from "@/lib/feature";

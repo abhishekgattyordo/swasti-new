@@ -21,7 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Plus, Trash2, Save, Menu, X } from 'lucide-react';
+import { Plus, Trash2, Menu, X } from 'lucide-react';
 import { toast } from 'sonner';
 import Sidebar from '@/components/pharmacy/Sidebar';
 import { purchasesApi } from '@/lib/api/purchasesApi';
@@ -62,7 +62,7 @@ const emptyLine = (id: number): LineItem => ({
 export default function PurchaseEntryPage() {
   const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading] = useState(false);
   const [medicines, setMedicines] = useState<any[]>([]);
 const [medicinesLoading, setMedicinesLoading] = useState(false);
 
@@ -83,7 +83,7 @@ useEffect(() => {
   if (!tenantLoading && !isMedicineEnabled) {
     router.push("/unauthorized");
   }
-}, [tenantLoading]);
+}, [tenantLoading,isMedicineEnabled,router]);
 
   const updateLine = (id: number, field: keyof LineItem, value: string) => {
     setLines((prev) => prev.map((l) => l.id === id ? { ...l, [field]: value } : l));

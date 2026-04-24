@@ -458,7 +458,7 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+  import { useEffect, useState, useCallback } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { currentVisitApi } from "@/lib/api/ehr";
 import toast from "react-hot-toast";
@@ -511,35 +511,39 @@ export default function VitalsPage() {
   };
 
   // Fetch vitals – reusable function
-  const fetchVitals = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await currentVisitApi.getVitalsByDate(patientId, targetDate);
-      console.log("Vitals response:", response);
+  
 
-      let vitalsData: Vital[] = [];
-      if (Array.isArray(response)) {
-        vitalsData = response;
-      } else if (response?.data && Array.isArray(response.data)) {
-        vitalsData = response.data;
-      } else {
-        vitalsData = [];
-      }
-      setVitals(vitalsData);
-    } catch (err) {
-      console.error("Error fetching vitals:", err);
-      setError("Failed to load vitals");
-      setVitals([]);
-    } finally {
-      setLoading(false);
+
+
+// Then wrap fetchVitals with useCallback
+const fetchVitals = useCallback(async () => {
+  setLoading(true);
+  setError(null);
+  try {
+    const response = await currentVisitApi.getVitalsByDate(patientId, targetDate);
+    console.log("Vitals response:", response);
+
+    let vitalsData: Vital[] = [];
+    if (Array.isArray(response)) {
+      vitalsData = response;
+    } else if (response?.data && Array.isArray(response.data)) {
+      vitalsData = response.data;
+    } else {
+      vitalsData = [];
     }
-  };
-
-  // Initial fetch
-  useEffect(() => {
-    fetchVitals();
-  }, [patientId, targetDate]);
+    setVitals(vitalsData);
+  } catch (err) {
+    console.error("Error fetching vitals:", err);
+    setError("Failed to load vitals");
+    setVitals([]);
+  } finally {
+    setLoading(false);
+  }
+}, [patientId, targetDate]);  // ✅ Dependencies for useCallback
+ 
+useEffect(() => {
+  fetchVitals();
+}, [fetchVitals]);  // ✅ Now only depends on fetchVitals (stable reference)
 
   const handleSaveVitals = async (vitalsData: NewVitalsForm) => {
     try {

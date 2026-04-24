@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
+
 import {
   Table,
   TableBody,
@@ -113,7 +113,7 @@ useEffect(() => {
   if (!tenantLoading && !isCurrentStockEnabled) {
     router.push("/unauthorized");
   }
-}, [tenantLoading]);
+}, [tenantLoading,isCurrentStockEnabled,router]);
 
   // Fetch stock data
   useEffect(() => {
@@ -133,7 +133,7 @@ useEffect(() => {
         } else {
           setError("Failed to load stock");
         }
-      } catch (err) {
+      } catch  {
         setError("An error occurred");
       } finally {
         setLoading(false);

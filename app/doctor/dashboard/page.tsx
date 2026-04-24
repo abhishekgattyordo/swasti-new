@@ -107,12 +107,9 @@ useEffect(() => {
                   apt.status === 'Checked-in' ? 'bg-yellow-500' : 'bg-blue-500'
                 }`}></div>
                 <div className="flex-1">
-                  <Link
-                    href={`/ehr/${apt.id}`}
-                    className="text-sm font-medium text-gray-900 hover:text-blue-600 hover:underline cursor-pointer"
-                  >
-                    {apt.name}
-                  </Link>
+                <div className="text-sm font-medium text-gray-900">
+  {apt.name}
+</div>
                   <p className="text-xs text-gray-500">{apt.reason}</p>
                 </div>
               </div>

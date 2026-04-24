@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useRef } from 'react';
 import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
-import Image from 'next/image';
+
 
 export default function HealthConcernsSection() {
   const [currentIndex, setCurrentIndex] = useState(0);

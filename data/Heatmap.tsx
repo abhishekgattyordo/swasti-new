@@ -1,5 +1,5 @@
 import { wards } from "../data/wardData";
-import { cn } from "@/lib/utils";
+
 
 export function OccupancyHeatmap() {
   return (

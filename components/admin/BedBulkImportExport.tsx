@@ -13,76 +13,12 @@ interface BedBulkImportExportProps {
 
 export function BedBulkImportExport({ wardId, onImportSuccess }: BedBulkImportExportProps) {
   const [importing, setImporting] = useState(false);
-  const [exporting, setExporting] = useState(false);
 
-  // ---------- Ward‑specific Export (requires ward) ----------
-  const getBeds = async () => {
-    if (!wardId) throw new Error("No ward selected");
-    const url = `/api/bed-config/beds/?ward_id=${wardId}`;
-    const res = await fetch(url);
-    const json = await res.json();
-    if (!res.ok) throw new Error(json.message || "Failed to fetch beds");
-    return Array.isArray(json.data) ? json.data : Array.isArray(json) ? json : [];
-  };
 
-  const handleExport = async () => {
-    if (!wardId) {
-      toast.error("Please select a ward first to export beds.");
-      return;
-    }
-    setExporting(true);
-    try {
-      const wardsRes = await fetch(`/api/bed-config/wards/`);
-      const wardsJson = await wardsRes.json();
-      const wardsList = wardsJson.data || wardsJson;
-      const ward = wardsList.find((w: any) => w.id === wardId);
-      if (!ward) throw new Error("Ward not found");
 
-      const floorsRes = await fetch(`/api/bed-config/floors/`);
-      const floorsJson = await floorsRes.json();
-      const floorsList = floorsJson.data || floorsJson;
-      const floor = floorsList.find((f: any) => f.id === ward.floor_id);
-      if (!floor) throw new Error("Floor not found");
 
-      const beds = await getBeds();
-      if (beds.length === 0) {
-       toast("No beds to export");
-        return;
-      }
 
-      const headers = [
-        "Floor Number",
-        "Ward Name",
-        "Daily Rate (₹)",
-        "Bed Number",
-        "Type",
-        "Patient Category",
-        "Room Number",
-        "Status",
-      ];
-
-      const rows = beds.map((bed: any) => [
-        floor.floor_number,
-        ward.name,
-        ward.daily_rate,
-        bed.bed_number,
-        bed.type,
-        bed.patient_category || "Mixed",
-        bed.attributes?.room_number || "",
-        bed.status,
-      ]);
-
-      const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Beds");
-      XLSX.writeFile(wb, `beds_ward_${wardId}_${new Date().toISOString().slice(0, 19)}.xlsx`);
-      toast.success("Export complete");
-    } catch (err: any) {
-      toast.error(err.message || "Export failed");
-    } finally {
-      setExporting(false);
-    }
-  };
+  
 
   const downloadTemplate = () => {
     const headers = [

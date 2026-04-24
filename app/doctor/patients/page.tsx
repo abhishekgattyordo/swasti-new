@@ -24,7 +24,7 @@ useEffect(() => {
   if (!tenantLoading && !isPatientsEnabled) {
     router.push("/unauthorized");
   }
-}, [tenantLoading]);
+}, [tenantLoading, isPatientsEnabled, router]);;
 
   useEffect(() => {
     console.log("Patients response:", patients);
@@ -35,9 +35,7 @@ useEffect(() => {
     p.condition.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleRowClick = (patientId: string) => {
-    router.push(`/doctor/ehr/${patientId}/current-visit`);
-  };
+
 
   // const handleViewEHRClick = (e: React.MouseEvent, patientId: string) => {
   //   e.stopPropagation();

@@ -132,7 +132,7 @@ useEffect(() => {
   if (!tenantLoading && !isNewAdmissionEnabled) {
     router.push("/unauthorized");
   }
-}, [tenantLoading]);
+}, [tenantLoading,isNewAdmissionEnabled,router]);
 
   // Load wards
   useEffect(() => {
@@ -220,34 +220,36 @@ useEffect(() => {
 
   // Search patient
   const searchPatient = async () => {
-    if (!phoneSearch.trim()) {
-      toast.error("Please enter phone number");
-      return;
-    }
-    setLoadingPatient(true);
-    try {
-      const res = await admissionsApi.searchPatient(phoneSearch);
-      // FIX 1: API returns array directly, not wrapped in { data: ... }
-      const patients = Array.isArray(res.data) ? res.data : [];
-      console.log("Patients found:", patients);
+  if (!phoneSearch.trim()) {
+    toast.error("Please enter phone number");
+    return;
+  }
+  setLoadingPatient(true);
+  try {
+    const res = await admissionsApi.searchPatient(phoneSearch);
+    // FIX 1: API returns array directly, not wrapped in { data: ... }
+    const patients = Array.isArray(res.data) ? res.data : [];
+    console.log("Patients found:", patients);
 
-      if (patients.length === 1) {
-        selectPatient(patients[0]);
-      } else if (patients.length > 1) {
-        setSearchResults(patients);
-        setShowPatientModal(true);
-        console.log("Modal should open now, results count:", patients.length);
-      } else {
-        toast.error("Patient not found");
-        setPatientData(null);
-      }
-    } catch (error) {
-      console.error(error);
-      toast.error("Error searching patient");
-    } finally {
-      setLoadingPatient(false);
+    if (patients.length === 1) {
+      selectPatient(patients[0]);
+    } else if (patients.length > 1) {
+      setSearchResults(patients);
+      setShowPatientModal(true);
+      console.log("Modal should open now, results count:", patients.length);
+    } else {
+      toast.error("Patient not found");
+      setPatientData(null);
     }
-  };
+  } catch (error: any) {
+    console.error(error);
+    // ✅ Show the actual error message from the API response
+    const errorMessage = error?.response?.data?.message || error?.message || "Error searching patient";
+    toast.error(errorMessage);
+  } finally {
+    setLoadingPatient(false);
+  }
+};
 
   const selectPatient = (patient: Patient) => {
     console.log("Selected patient:", patient);
@@ -391,7 +393,7 @@ try {
         ...saved,
         admissionDate: new Date().toISOString().split("T")[0], // ✅ force today's date
       });
-    } catch (e) {}
+    } catch  {}
   }
 }, []);
 

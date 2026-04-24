@@ -52,7 +52,7 @@ useEffect(() => {
   if (!tenantLoading && !isExpiryReportEnabled) {
     router.push("/unauthorized");
   }
-}, [tenantLoading]);
+}, [tenantLoading,isExpiryReportEnabled,router]);
 
   // Fetch stock data on mount
   useEffect(() => {

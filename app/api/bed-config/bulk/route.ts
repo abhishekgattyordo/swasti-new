@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query, transaction } from '@/lib/db';
+import {  transaction } from '@/lib/db';
 import { z } from 'zod';
 import { authErrorResponse,requireRole } from '@/lib/auth/guards';
 
@@ -27,8 +27,6 @@ const FloorSchema = z.object({
 });
 
 // Infer TypeScript types
-type BedInput = z.infer<typeof BedSchema>;
-type WardInput = z.infer<typeof WardSchema>;
 type FloorInput = z.infer<typeof FloorSchema>;
 
 // Result counters type

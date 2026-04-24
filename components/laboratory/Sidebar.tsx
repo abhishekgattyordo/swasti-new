@@ -307,7 +307,7 @@ interface LabSidebarProps {
   onClose?: () => void;
 }
 
-export function LabSidebar({ collapsed, onToggle, isOpen, onClose }: LabSidebarProps) {
+export function LabSidebar({ collapsed, onToggle, onClose }: LabSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [userName, setUserName] = useState('Lab Technician');
@@ -318,7 +318,7 @@ export function LabSidebar({ collapsed, onToggle, isOpen, onClose }: LabSidebarP
   
   // Get tenant name from tenant object
   const tenantName = tenant?.name || "";
-  const tenantSlug = tenant?.slug || "";
+
 
   useEffect(() => {
     const userStr = localStorage.getItem('user');

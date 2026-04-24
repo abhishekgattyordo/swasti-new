@@ -357,7 +357,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect , useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Menu, X, Filter } from "lucide-react";
 import HelpDeskSidebar from "@/components/helpdesk/HelpDeskSidebar";
@@ -423,13 +423,9 @@ export default function HelpDeskPage() {
       return;
     }
     fetchDoctors();
-  }, [tenantLoading]);
+  }, [tenantLoading,isAppointmentsEnabled,router]);
 
-  useEffect(() => {
-    if (isAppointmentsEnabled) {
-      fetchAppointments(selectedDate);
-    }
-  }, [selectedDate, isAppointmentsEnabled]);
+ 
 
   const fetchDoctors = async () => {
     try {
@@ -447,7 +443,7 @@ export default function HelpDeskPage() {
     }
   };
 
-  const fetchAppointments = async (date: string) => {
+const fetchAppointments = useCallback(async (date: string) => {
     setLoadingAppointments(true);
     
     try {
@@ -491,7 +487,14 @@ export default function HelpDeskPage() {
     } finally {
       setLoadingAppointments(false);
     }
-  };
+ }, []);
+
+
+  useEffect(() => {
+  if (isAppointmentsEnabled) {
+    fetchAppointments(selectedDate);
+  }
+}, [selectedDate, isAppointmentsEnabled, fetchAppointments]);
 
   const searchPatientByPhone = async (phone: string): Promise<Patient[]> => {
     if (!phone || phone.trim().length < 10) return [];

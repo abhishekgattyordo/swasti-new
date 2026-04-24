@@ -6,7 +6,7 @@ export async function GET(req: NextRequest) {
   console.log('📥 GET /api/doctors/specialties - Starting request');
   
   try {
-      requireRole(req, ['doctor']);
+      requireRole(req, ['admin']);
     const { searchParams } = new URL(req.url);
     const department = searchParams.get('department');
 

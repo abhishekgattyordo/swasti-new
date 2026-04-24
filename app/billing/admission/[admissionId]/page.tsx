@@ -457,6 +457,8 @@
 //   );
 // }
 
+
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -537,7 +539,7 @@ export default function AdmissionBillPage() {
   // New discharge ID generation (for fully paid admission that was not discharged yet)
   const [dischargeId, setDischargeId] = useState<string | null>(null);
   const [showDischargeIdDialog, setShowDischargeIdDialog] = useState(false);
-  const [generatingDischargeId, setGeneratingDischargeId] = useState(false);
+
   const hasGeneratedIdRef = useRef(false);
 
   // Fetch bill data
@@ -623,7 +625,7 @@ export default function AdmissionBillPage() {
   const generateDischargeId = async () => {
     if (hasGeneratedIdRef.current) return;
     hasGeneratedIdRef.current = true;
-    setGeneratingDischargeId(true);
+  
     try {
       const res = await fetch('/api/billing/generate-discharge-id', {
         method: 'POST',
@@ -642,7 +644,6 @@ export default function AdmissionBillPage() {
       console.error(error);
       toast.error('Failed to generate discharge ID');
     } finally {
-      setGeneratingDischargeId(false);
     }
   };
 

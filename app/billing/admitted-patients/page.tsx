@@ -4,7 +4,6 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Loader2, Filter, Calendar, Building2, Bed, User, Download } from 'lucide-react';
 import { toast } from 'sonner';
@@ -56,7 +55,7 @@ useEffect(() => {
   if (!tenantLoading && !isAdmittedBillingEnabled) {
     router.push("/unauthorized");
   }
-}, [tenantLoading]);
+}, [tenantLoading,isAdmittedBillingEnabled,router]);
 
   useEffect(() => {
     fetchAdmissions();
@@ -80,7 +79,7 @@ useEffect(() => {
       const res = await fetch('/api/helpdesk/admissions?status=active');
       const data = await res.json();
       if (data.success) {
-        let admissionsList: Admission[] = data.data;
+        const admissionsList: Admission[] = data.data;
         const admissionsWithBillStatus = await Promise.all(
           admissionsList.map(async (adm) => {
             try {

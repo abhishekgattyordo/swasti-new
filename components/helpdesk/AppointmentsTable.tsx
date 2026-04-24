@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from "react";
-import { Clock, User, CheckCircle2, XCircle, Filter, CalendarX, Eye, Edit, Trash2 } from "lucide-react";
+import { Clock, User,  XCircle, Filter, CalendarX, Eye, Edit} from "lucide-react";
 
 export type Appointment = {
   id: string;
@@ -38,8 +38,6 @@ interface AppointmentsTableProps {
 export default function AppointmentsTable({
   appointments = [],
   doctors,
-  onConfirm,
-  onComplete,
   onEdit,
   onCancel,
   getStatusColor,

@@ -74,7 +74,7 @@ useEffect(() => {
   if (!tenantLoading && !isStockAdjustmentEnabled) {
     router.push("/unauthorized");
   }
-}, [tenantLoading]);
+}, [tenantLoading,isStockAdjustmentEnabled,router]);
 
   // Fetch stock data on mount
   useEffect(() => {

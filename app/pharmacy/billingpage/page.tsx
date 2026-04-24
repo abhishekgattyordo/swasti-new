@@ -106,7 +106,7 @@ useEffect(() => {
   if (!tenantLoading && !isBillingEnabled) {
     router.push("/unauthorized");
   }
-}, [tenantLoading]);
+}, [tenantLoading,isBillingEnabled,router]);
   // Fetch medicines with proper error handling
   useEffect(() => {
     const fetchStock = async () => {

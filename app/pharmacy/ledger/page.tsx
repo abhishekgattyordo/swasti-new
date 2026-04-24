@@ -82,7 +82,7 @@ useEffect(() => {
   if (!tenantLoading && !isLedgerEnabled) {
     router.push("/unauthorized");
   }
-}, [tenantLoading]);
+}, [tenantLoading,isLedgerEnabled,router]);
 
   // Fetch all data once
   useEffect(() => {

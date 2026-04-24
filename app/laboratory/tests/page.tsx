@@ -789,7 +789,7 @@ export default function LabTestsPage() {
         <div className="grid grid-cols-1 gap-4">
           {tests.length === 0 ? (
             <Card className="p-8 text-center">
-              <p className="text-gray-500">No tests found. Click "Add New Test" to create one.</p>
+              <p className="text-gray-500">No tests found. Click Add New Test to create one.</p>
             </Card>
           ) : (
             tests.map((test) => (
