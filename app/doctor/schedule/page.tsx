@@ -12,10 +12,6 @@ import {
   Calendar,
   Clock,
   User,
-  CheckCircle2,
-  Users,
-  UserCircle,
-  Edit,
   ChevronUp,
   ChevronDown,
   Video,
@@ -25,13 +21,6 @@ import { useDoctor } from "../layout";
 import ColumnFilterPopover from "@/components/doctor/ColumnFilterPopover";
 import {
   format,
-  addDays,
-  startOfWeek,
-  endOfWeek,
-  addWeeks,
-  subWeeks,
-  addMonths,
-  subMonths,
 } from "date-fns";
 import { useTenant } from "@/contexts/TenantContext";
 import { MODULE_KEYS, DOCTOR_FEATURES } from "@/lib/feature";

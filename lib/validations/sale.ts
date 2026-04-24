@@ -60,28 +60,3 @@ export const SaleSchema = z.object({
 
 export type SaleInput = z.infer<typeof SaleSchema>;
 
-
-// import { z } from 'zod';
-
-// export const SaleSchema = z.object({
-//   patientId: z.string().optional(),
-//   patientName: z.string().optional(),
-//   doctorName: z.string().min(1, 'Doctor name is required'),
-//   walkinName: z.string().nullable().optional(),      // ← allows null
-//   walkinPhone: z.string().nullable().optional(),     // ← allows null
-//   walkinAddress: z.string().nullable().optional(),   // ← allows null
-//   saleDate: z.string(),
-//   subtotal: z.number(),
-//   taxTotal: z.number(),
-//   discountTotal: z.number(),
-//   grandTotal: z.number(),
-//   paymentMode: z.string(),
-//   items: z.array(
-//     z.object({
-//       medicineId: z.number(),
-//       quantity: z.number(),
-//       unitPrice: z.number(),
-//       taxPercent: z.number(),
-//     })
-//   ),
-// });

@@ -47,7 +47,7 @@ export default function QuickAddPatientPage() {
           console.error("User is not a doctor or missing ID");
           toast.error("Invalid doctor information");
         }
-      } catch (e) {
+      } catch  {
         toast.error("Failed to load user info");
       }
     } else {

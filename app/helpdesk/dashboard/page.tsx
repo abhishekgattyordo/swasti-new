@@ -9,14 +9,13 @@ import {
   Users,
   Clock,
   DollarSign,
-  ArrowRight,
   TrendingUp,
-  UserPlus,
+ 
 } from "lucide-react";
 import HelpDeskSidebar from "@/components/helpdesk/HelpDeskSidebar";
 import HelpDeskStats from "@/components/helpdesk/HelpDeskStats";
 import { appointmentsApi } from "@/lib/api/appointments";
-import { patientsApi } from "@/lib/api/registration";
+
 import toast from "react-hot-toast";
 
 type Appointment = {

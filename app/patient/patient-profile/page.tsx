@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/patient/Sidebar';
 import {
@@ -14,10 +13,8 @@ import {
   Wc,
   Bloodtype,
   LocalHospital,
-  ContactEmergency,
   Info,
   Medication,
-  Healing
 } from '@mui/icons-material';
 import { Menu, X } from 'lucide-react';
 import { patientsApi } from '@/lib/api/registration'; // adjust path

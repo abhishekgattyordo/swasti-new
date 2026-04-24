@@ -48,23 +48,13 @@ interface Doctor {
 const getFullName = (doctor: Doctor) => `${doctor.firstName} ${doctor.lastName}`;
 
 export default function LandingPage() {
-  const [user, setUser] = useState<any>(null);
+ 
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Fetch user from localStorage (existing)
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser);
-      } catch (e) {
-        console.error("Error parsing user:", e);
-      }
-    }
-  }, []);
+
 
   // Fetch doctors from API
   useEffect(() => {

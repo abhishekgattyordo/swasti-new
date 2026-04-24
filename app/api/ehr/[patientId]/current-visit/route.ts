@@ -45,7 +45,7 @@ export async function GET(
   { params }: { params: Promise<{ patientId: string }> }
 ) {
   try {
-       requireRole(req, ['doctor']);
+       requireRole(req, ['patient']);
     const { patientId } = await params;
 
     const url = new URL(req.url);
@@ -139,7 +139,7 @@ export async function POST(
   { params }: { params: Promise<{ patientId: string }> }
 ) {
   try {
-       requireRole(req, ['doctor']);
+       requireRole(req, ['patient']);
     const { patientId } = await params;
     const body = await req.json();
 

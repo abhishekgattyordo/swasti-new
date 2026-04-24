@@ -38,7 +38,7 @@ export async function GET(
   console.log('📥 GET /api/doctors/[id] - Starting request');
   
   try {
-         requireRole(req, ['admin','helpdesk']);
+         requireRole(req, ['patient']);
     const { id } = await params;
     console.log('📦 Received ID:', id);
     

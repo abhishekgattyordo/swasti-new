@@ -6,7 +6,7 @@ import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Clock, User, Video, Phone, Loader2, ArrowLeft } from 'lucide-react';
+import { Calendar, Clock, User, Video, Phone, Loader2 } from 'lucide-react';
 import { appointmentsApi } from '@/lib/api/appointments';
 import toast from 'react-hot-toast';
 

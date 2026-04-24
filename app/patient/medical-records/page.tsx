@@ -10,7 +10,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,10 +20,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import {
-  Calendar,
+
   FlaskConical,
-  HeartPulse,
-  Pill,
   ChevronUp,
   ChevronDown,
   Menu,
@@ -261,7 +258,6 @@ export default function MedicalRecordsPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [dateFilter, setDateFilter] = useState("last6months");
-  const [categoryFilter, setCategoryFilter] = useState("all");
   const [activeTab, setActiveTab] = useState("all");
   const [columnFilters, setColumnFilters] = useState<ColumnFilter[]>([]);
   const [dateFilters, setDateFilters] = useState<Record<string, DateRangeFilter>>({});
@@ -391,12 +387,7 @@ export default function MedicalRecordsPage() {
     return filtered;
   }, [records, searchQuery, activeTab, columnFilters, dateFilters, sortConfig]);
 
-  const handleSort = (key: keyof MedicalRecord) => {
-    setSortConfig((prev) => ({
-      key,
-      direction: prev.key === key && prev.direction === "asc" ? "desc" : "asc",
-    }));
-  };
+
 
   const SortIcon = ({ columnKey }: { columnKey: keyof MedicalRecord }) => {
     if (sortConfig.key !== columnKey) return null;
@@ -430,7 +421,6 @@ export default function MedicalRecordsPage() {
     setColumnFilters([]);
     setDateFilters({});
     setSearchQuery("");
-    setCategoryFilter("all");
     setActiveTab("all");
   };
 

@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
     const specialty = searchParams.get('specialty');
     const department = searchParams.get('department');
     const search = searchParams.get('search');
-   requireRole(req, ['doctor']);
+  
 
     let sql = `
       SELECT 
@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
   console.log('📥 POST /api/doctors - Starting request');
 
   try {
-           requireRole(req, ['doctor']);
+           requireRole(req, ['admin']);
     let doctorData: any = {};
     let avatarPath: string | null = null;
     const contentType = req.headers.get('content-type') || '';

@@ -28,16 +28,7 @@ const emailOrPatientIdSchema = z.string()
  * - Minimum 6 characters
  * - Can add more rules as needed
  */
-const passwordSchema = z.string()
-  .min(6, "Password must be at least 6 characters")
-  .max(50, "Password must be less than 50 characters")
-  .refine(
-    (val) => /[A-Za-z]/.test(val) && /[0-9]/.test(val),
-    {
-      message: "Password must contain at least one letter and one number"
-    }
-  )
-  .optional();
+
 
 // ==================== LOGIN SCHEMA ====================
 
