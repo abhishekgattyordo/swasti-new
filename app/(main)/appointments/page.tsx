@@ -1,4 +1,6 @@
 
+
+
 // "use client";
 
 // import { useState, useMemo, useEffect } from "react";
@@ -62,86 +64,6 @@
 //   nextAvailable: string;
 // }
 
-// // Mock data with valid image URLs
-// const mockDoctors: Doctor[] = [
-//   {
-//     id: "sarah",
-//     name: "Dr. Sarah Smith",
-//     specialty: "Cardiology",
-//     experience: 8,
-//     rating: 4.9,
-//     reviewCount: 120,
-//     isVerified: true,
-//     isOnline: true,
-//     isPremium: true,
-//     imageUrl:
-//       "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=400&h=400&fit=crop&crop=face",
-//     profilePhoto:
-//       "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=400&h=400&fit=crop&crop=face",
-//     nextAvailableSlots: [{ time: "10:00 AM" }, { time: "2:00 PM" }],
-//     consultationFee: 1500,
-//     price: 1500,
-//     nextAvailable: "Today, 2:00 PM",
-//   },
-//   {
-//     id: "john",
-//     name: "Dr. John Doe",
-//     specialty: "General Practice",
-//     experience: 12,
-//     rating: 4.7,
-//     reviewCount: 85,
-//     isVerified: true,
-//     isOnline: false,
-//     isPremium: false,
-//     imageUrl:
-//       "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=400&h=400&fit=crop&crop=face",
-//     profilePhoto:
-//       "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=400&h=400&fit=crop&crop=face",
-//     nextAvailableSlots: [{ time: "11:00 AM" }, { time: "3:00 PM" }],
-//     consultationFee: 1200,
-//     price: 1200,
-//     nextAvailable: "Tomorrow, 11:00 AM",
-//   },
-//   {
-//     id: "priya",
-//     name: "Dr. Priya Sharma",
-//     specialty: "Dermatology",
-//     experience: 6,
-//     rating: 4.8,
-//     reviewCount: 92,
-//     isVerified: true,
-//     isOnline: true,
-//     isPremium: true,
-//     imageUrl:
-//       "https://images.unsplash.com/photo-1594824434340-7e7dfc37cabb?w=400&h=400&fit=crop&crop=face",
-//     profilePhoto:
-//       "https://images.unsplash.com/photo-1594824434340-7e7dfc37cabb?w=400&h=400&fit=crop&crop=face",
-//     nextAvailableSlots: [{ time: "9:00 AM" }, { time: "1:00 PM" }],
-//     consultationFee: 1800,
-//     price: 1800,
-//     nextAvailable: "Tomorrow, 9:00 AM",
-//   },
-//   {
-//     id: "robert",
-//     name: "Dr. Robert Kim",
-//     specialty: "Neurology",
-//     experience: 15,
-//     rating: 4.9,
-//     reviewCount: 156,
-//     isVerified: true,
-//     isOnline: true,
-//     isPremium: true,
-//     imageUrl:
-//       "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=400&h=400&fit=crop&crop=face",
-//     profilePhoto:
-//       "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=400&h=400&fit=crop&crop=face",
-//     nextAvailableSlots: [{ time: "11:00 AM" }, { time: "4:00 PM" }],
-//     consultationFee: 2000,
-//     price: 2000,
-//     nextAvailable: "Today, 4:00 PM",
-//   },
-// ];
-
 // const specialties = [
 //   "Cardiology",
 //   "Dermatology",
@@ -153,7 +75,7 @@
 //   "Ophthalmology",
 // ];
 
-// // Default placeholder image
+// // Default placeholder image (only for image loading errors)
 // const DEFAULT_AVATAR = "https://via.placeholder.com/400x400?text=Doctor";
 
 // export default function AppointmentBookingPage() {
@@ -167,10 +89,13 @@
 //   const [doctors, setDoctors] = useState<Doctor[]>([]);
 //   const [isLoading, setIsLoading] = useState(true);
 //   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
+//   const [error, setError] = useState<string | null>(null);
 
 //   useEffect(() => {
 //     const fetchDoctors = async () => {
 //       setIsLoading(true);
+//       setError(null);
+      
 //       try {
 //         const res = await doctorsApi.getDoctors();
 //         console.log("API Response:", res.data);
@@ -180,23 +105,20 @@
 //         if (res.data && Array.isArray(res.data) && res.data.length > 0) {
 //           formattedDoctors = res.data.map((doc: any) => {
 //             // Validate and construct proper image URL
-//             let profilePhoto = DEFAULT_AVATAR;
+//             let profilePhoto = "";
 //             if (doc.avatar) {
 //               // Check if avatar is already a full URL
 //               if (doc.avatar.startsWith('http')) {
 //                 profilePhoto = doc.avatar;
-//              } else {
-//   const avatarPath = doc.avatar.startsWith('/')
-//     ? doc.avatar
-//     : `/${doc.avatar}`;
-
-//   const baseURL =
-//     typeof window !== "undefined"
-//       ? window.location.origin
-//       : process.env.NEXT_PUBLIC_API_URL;
-
-//   profilePhoto = `${baseURL}${avatarPath}`;
-// }
+//               } else {
+//                 const avatarPath = doc.avatar.startsWith('/')
+//                   ? doc.avatar
+//                   : `/${doc.avatar}`;
+//                 const baseURL = typeof window !== "undefined"
+//                   ? window.location.origin
+//                   : process.env.NEXT_PUBLIC_API_URL;
+//                 profilePhoto = `${baseURL}${avatarPath}`;
+//               }
 //             }
 
 //             return {
@@ -204,26 +126,32 @@
 //               name: `Dr. ${doc.firstName || ''} ${doc.lastName || ''}`.trim(),
 //               specialty: doc.specialty || 'General Practice',
 //               experience: doc.experience || 5,
-//               rating: 4.5,
-//               reviewCount: 20,
-//               isVerified: true,
-//               isOnline: true,
-//               isPremium: false,
+//               rating: doc.rating || 4.5,
+//               reviewCount: doc.reviewCount || 20,
+//               isVerified: doc.isVerified !== undefined ? doc.isVerified : true,
+//               isOnline: doc.isOnline !== undefined ? doc.isOnline : true,
+//               isPremium: doc.isPremium || false,
 //               profilePhoto: profilePhoto,
 //               imageUrl: profilePhoto,
 //               nextAvailableSlots: [{ time: "10:00 AM" }],
-//               consultationFee: 500,
-//               price: 500,
-//               nextAvailable: "Today",
+//               consultationFee: doc.consultationFee || 500,
+//               price: doc.price || doc.consultationFee || 500,
+//               nextAvailable: doc.nextAvailable || "Today",
 //             };
 //           });
 //         }
 
-//         setDoctors(formattedDoctors.length > 0 ? formattedDoctors : mockDoctors);
+//         if (formattedDoctors.length === 0) {
+//           setError("No doctors found in the system. Please check back later.");
+//           setDoctors([]);
+//         } else {
+//           setDoctors(formattedDoctors);
+//         }
 //       } catch (error) {
 //         console.error("Error fetching doctors:", error);
-//         toast.error("Failed to load doctors. Showing sample data.");
-//         setDoctors(mockDoctors);
+//         setError("Failed to load doctors. Please try again later.");
+//         toast.error("Failed to load doctors. Please try again.");
+//         setDoctors([]);
 //       } finally {
 //         setIsLoading(false);
 //       }
@@ -483,23 +411,69 @@
 //               </div>
 //             </div>
 
-//             {filteredAndSortedDoctors.length === 0 ? (
+//             {/* Error State - No Doctors in System */}
+//             {error && doctors.length === 0 && (
+//               <Card className="p-12 text-center border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+//                 <div className="w-20 h-20 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
+//                   <UserX className="w-10 h-10 text-red-500" />
+//                 </div>
+//                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+//                   No Doctors Available
+//                 </h3>
+//                 <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
+//                   {error}
+//                 </p>
+//                 <Button
+//                   onClick={() => window.location.reload()}
+//                   className="bg-green-600 hover:bg-green-700 text-white"
+//                 >
+//                   Try Again
+//                 </Button>
+//               </Card>
+//             )}
+
+//             {/* No Results After Filtering */}
+//             {!error && filteredAndSortedDoctors.length === 0 && doctors.length > 0 && (
 //               <Card className="p-12 text-center border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
 //                 <UserX className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
 //                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-//                   No doctors found
+//                   No doctors match your filters
 //                 </h3>
 //                 <p className="text-gray-600 dark:text-gray-400 mb-6">
-//                   Try adjusting your filters or search criteria
+//                   Try adjusting your search criteria or clear the filters
 //                 </p>
 //                 <Button
 //                   onClick={clearFilters}
 //                   className="bg-green-600 hover:bg-green-700 text-white"
 //                 >
-//                   Clear Filters
+//                   Clear All Filters
 //                 </Button>
 //               </Card>
-//             ) : (
+//             )}
+
+//             {/* No Doctors in System at All */}
+//             {!error && doctors.length === 0 && !isLoading && (
+//               <Card className="p-12 text-center border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+//                 <div className="w-20 h-20 bg-yellow-100 dark:bg-yellow-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
+//                   <Stethoscope className="w-10 h-10 text-yellow-500" />
+//                 </div>
+//                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+//                   No Doctors Found
+//                 </h3>
+//                 <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
+//                   There are currently no doctors registered in the system. Please check back later or contact support.
+//                 </p>
+//                 <Button
+//                   onClick={() => window.location.reload()}
+//                   className="bg-green-600 hover:bg-green-700 text-white"
+//                 >
+//                   Refresh
+//                 </Button>
+//               </Card>
+//             )}
+
+//             {/* Display Doctors */}
+//             {filteredAndSortedDoctors.length > 0 && (
 //               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 //                 {filteredAndSortedDoctors.map((doctor) => (
 //                   <Card
@@ -508,9 +482,9 @@
 //                   >
 //                     <div className="flex flex-col sm:flex-row">
 //                       <div className="relative sm:w-40 h-48 sm:h-auto flex-shrink-0 bg-gray-100 dark:bg-gray-800">
-//                         {!imageErrors[doctor.id] ? (
+//                         {doctor.profilePhoto && !imageErrors[doctor.id] ? (
 //                           <Image
-//                             src={doctor.profilePhoto || DEFAULT_AVATAR}
+//                             src={doctor.profilePhoto}
 //                             alt={doctor.name}
 //                             fill
 //                             sizes="(max-width: 640px) 160px, 160px"
@@ -603,8 +577,6 @@
 //   );
 // }
 
-
-
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -687,7 +659,6 @@ export default function AppointmentBookingPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSpecialty, setSelectedSpecialty] = useState<string>("");
   const [onlineOnly, setOnlineOnly] = useState(false);
-  const [premiumOnly, setPremiumOnly] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>("recommended");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
@@ -776,9 +747,8 @@ export default function AppointmentBookingPage() {
         doctor.specialty.toLowerCase() === selectedSpecialty.toLowerCase();
 
       const matchesOnline = !onlineOnly || doctor.isOnline;
-      const matchesPremium = !premiumOnly || doctor.isPremium;
 
-      return matchesSearch && matchesSpecialty && matchesOnline && matchesPremium;
+      return matchesSearch && matchesSpecialty && matchesOnline;
     });
 
     return filtered.sort((a, b) => {
@@ -795,13 +765,12 @@ export default function AppointmentBookingPage() {
           return 0;
       }
     });
-  }, [doctors, searchQuery, selectedSpecialty, onlineOnly, premiumOnly, sortBy]);
+  }, [doctors, searchQuery, selectedSpecialty, onlineOnly, sortBy]);
 
   const clearFilters = () => {
     setSearchQuery("");
     setSelectedSpecialty("");
     setOnlineOnly(false);
-    setPremiumOnly(false);
     setSortBy("recommended");
   };
 
@@ -873,18 +842,6 @@ export default function AppointmentBookingPage() {
             <span className="text-sm text-gray-700 dark:text-gray-300 flex items-center gap-2">
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
               Online Doctors Only
-            </span>
-          </label>
-          <label className="flex items-center gap-3 cursor-pointer p-2 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors">
-            <input
-              type="checkbox"
-              checked={premiumOnly}
-              onChange={(e) => setPremiumOnly(e.target.checked)}
-              className="w-4 h-4 text-green-600 rounded focus:ring-2 focus:ring-green-500"
-            />
-            <span className="text-sm text-gray-700 dark:text-gray-300 flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-yellow-500" />
-              Premium Doctors Only
             </span>
           </label>
         </div>
