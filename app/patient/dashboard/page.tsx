@@ -1298,7 +1298,7 @@ if (!tenantLoading && !isDashboardEnabled) {
                 onChange={(e) => setSelectedDate(e.target.value)}
                 className="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-800"
               />
-              <Link href="/doctor-selection">
+              <Link href="/appointments">
                 <button className="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 shadow-sm transition-colors whitespace-nowrap">
                   <span className="material-icons text-lg">add</span>
                   Book New

@@ -356,44 +356,28 @@ export default function AppointmentConfirmationPage() {
           {/* Right Column - Actions */}
           <div className="lg:col-span-1 space-y-4">
             {/* Action Buttons */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Actions
-              </h3>
-              <div className="space-y-3">
-                <button
-                  onClick={handleDownloadReceipt}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
-                >
-                  <Download className="w-4 h-4" />
-                  Download Receipt
-                </button>
+           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+    Actions
+  </h3>
+  <div className="space-y-3">
+    <button
+      onClick={handleShare}
+      className="w-full flex items-center justify-center gap-2 px-4 py-3 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
+    >
+      <Share2 className="w-4 h-4" />
+      Share
+    </button>
 
-                <button
-                  onClick={handlePrint}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                >
-                  <Printer className="w-4 h-4" />
-                  Print Details
-                </button>
-
-                <button
-                  onClick={handleShare}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                >
-                  <Share2 className="w-4 h-4" />
-                  Share
-                </button>
-
-                <button
-                  onClick={handleAddToCalendar}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                >
-                  <Calendar className="w-4 h-4" />
-                  Add to Calendar
-                </button>
-              </div>
-            </div>
+    <button
+      onClick={handleAddToCalendar}
+      className="w-full flex items-center justify-center gap-2 px-4 py-3 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
+    >
+      <Calendar className="w-4 h-4" />
+      Add to Calendar
+    </button>
+  </div>
+</div>
 
             {/* Need Help? */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
