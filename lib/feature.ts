@@ -65,11 +65,11 @@ export const DOCTOR_FEATURES = {
 
 // Laboratory Microfeature Keys
 export const LABARATORY_FEATURES = {
-  DASHBOARD: 'labaratory_dashboard',
-  TEST_CATALOG: 'labaratory_test_catalog',
-  LAB_ORDERS: 'labaratory_lab_orders',
-  SAMPLE_COLLECTION: 'labaratory_sample_collection',
-  REPORTS: 'labaratory_reports',
+  DASHBOARD: 'dashboard',
+  TEST_CATALOG: 'test-catalog',
+  LAB_ORDERS: 'lab-orders',
+  SAMPLE_COLLECTION: 'sample_collection',
+  REPORTS: 'reports-',
 } as const;
 
 // Admin Microfeature Keys

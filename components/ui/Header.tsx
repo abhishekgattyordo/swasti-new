@@ -18,6 +18,7 @@ import {
   Activity,
   DoorOpen, 
   Receipt,  // 👈 added for Room Availability
+    FlaskConical,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -27,7 +28,7 @@ import { useTenant } from "@/contexts/TenantContext";
 interface User {
   id: number;
   email: string;
-  role: "admin" | "doctor" | "patient" | "helpdesk" | string;
+  role: "admin" | "doctor" | "patient" | "helpdesk" | "pharmacy" | "laboratory" | string;
   full_name_en?: string;
   name?: string;
   patient_id?: string | null;
@@ -63,6 +64,12 @@ const roleNavConfig = {
     { href: "/pharmacy/stock", label: "Current Stock", icon: ClipboardList },
     { href: "/pharmacy/ledger", label: "Ledger", icon: Receipt },
   ],
+   laboratory: [
+    { href: "/laboratory/orders", label: "Dashboard", icon: Activity },
+    { href: "/laboratory/reports", label: "Lab Orders", icon: ClipboardList },
+    { href: "/laboratory/test", label: "Reports", icon: FileText },
+    { href: "/laboratory/samples", label: "Sample Collection", icon: FlaskConical },
+  ],
 };
 
 const roleHomePage = {
@@ -71,6 +78,7 @@ const roleHomePage = {
   patient: "/patient/dashboard",
   helpdesk: "/helpdesk/dashboard",
   pharmacy: "/pharmacy/dashboard",
+  laboratory: "/laboratory/dashboard", 
 };
 
 export default function Header() {
@@ -108,7 +116,7 @@ const tenantName = tenant?.name ;
 
   const isLoggedIn = !!user;
   const role = user?.role as string;
-  const currentRole = (role === "admin" || role === "doctor" || role === "patient" || role === "helpdesk"  || role === "pharmacy")
+  const currentRole = (role === "admin" || role === "doctor" || role === "patient" || role === "helpdesk"  || role === "pharmacy" || role === "laboratory")
     ? role
     : "patient";
 
