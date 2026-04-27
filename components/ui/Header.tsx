@@ -43,7 +43,7 @@ const roleNavConfig = {
     { href: "/admin/healthcaredashboard", label: "Dashboard", icon: Activity },
     { href: "/admin/bed-management", label: "Room Availability", icon: DoorOpen },
     { href: "/admin/patientmanagement", label: "Patients", icon: Users },
-    { href: "/admin/doctorstaffmanagement", label: "Doctors", icon: Stethoscope },
+    { href: "/admin/doctorsmanagement", label: "Doctors", icon: Stethoscope },
   ],
   doctor: [
     { href: "/doctor/dashboard", label: "Dashboard", icon: Activity },

@@ -528,7 +528,7 @@ const handleImportSuccess = () => {
                   <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
                     <div className="flex-1">
                       <h1 className="text-slate-900 dark:text-white text-xl md:text-2xl font-bold tracking-tight">
-                        Doctor & Staff Management
+                        Doctor
                       </h1>
                       <p className="text-slate-500 dark:text-slate-400 text-xs md:text-sm mt-1">
                         Central hub for practitioner credentials, status updates,
@@ -829,7 +829,7 @@ const handleImportSuccess = () => {
                                   className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors cursor-pointer"
                                   onClick={() =>
                                     router.push(
-                                      `/admin/doctorstaffmanagement/${doctor.id}`,
+                                      `/admin/doctorsmanagement/${doctor.id}`,
                                     )
                                   }
                                 >
@@ -882,7 +882,7 @@ const handleImportSuccess = () => {
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           router.push(
-                                            `/admin/doctorstaffmanagement/${doctor.id}`,
+                                            `/admin/doctorsmanagement/${doctor.id}`,
                                           );
                                         }}
                                       >
@@ -894,7 +894,7 @@ const handleImportSuccess = () => {
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           router.push(
-                                            `/admin/doctorstaffmanagement/edit/${doctor.id}`,
+                                            `/admin/doctorsmanagement/edit/${doctor.id}`,
                                           );
                                         }}
                                       >

@@ -76,7 +76,7 @@ export default function DoctorDetailsPage() {
   const doctorId = Number(params.id);
   if (isNaN(doctorId)) {
     toast.error("Invalid doctor ID");
-    router.push("/admin/doctorstaffmanagement");
+    router.push("/admin/doctorsmanagement");
     return;
   }
 
@@ -102,7 +102,7 @@ export default function DoctorDetailsPage() {
       if (!doctorData) {
         console.error('Unexpected API response:', response.data);
         toast.error('Failed to load doctor details: unexpected response format');
-        router.push("/admin/doctorstaffmanagement");
+        router.push("/admin/doctorsmanagement");
         return;
       }
 
@@ -136,7 +136,7 @@ export default function DoctorDetailsPage() {
     } catch (error) {
       console.error("Error fetching doctor:", error);
       toast.error("Failed to load doctor details");
-      router.push("/admin/doctorstaffmanagement");
+      router.push("/admin/doctorsmanagement");
     } finally {
       setLoading(false);
     }

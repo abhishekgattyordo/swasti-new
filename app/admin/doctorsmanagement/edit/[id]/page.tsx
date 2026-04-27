@@ -267,7 +267,7 @@ export default function EditDoctorPage() {
 
       if (response.success) {
         toast.success(response.message || "Doctor updated successfully!");
-        router.push("/admin/doctorstaffmanagement");
+        router.push("/admin/doctormanagement");
       } else {
         if (response.errors) {
           setErrors(response.errors);
