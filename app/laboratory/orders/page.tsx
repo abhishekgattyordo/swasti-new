@@ -1,5 +1,4 @@
 
-
 // "use client";
 
 // import { useState, useEffect } from "react";
@@ -81,20 +80,17 @@
 //   const [admissionInfo, setAdmissionInfo] = useState<AdmissionInfo | null>(null);
 //   const [checkingAdmission, setCheckingAdmission] = useState(false);
 
-//   // Check if Lab Orders feature is enabled
 //   const isLabOrdersEnabled = isMicroFeatureEnabled(
 //     MODULE_KEYS.LABARATORY,
 //     LABARATORY_FEATURES.LAB_ORDERS
 //   );
 
-//   // Redirect if feature is not enabled
 //   useEffect(() => {
 //     if (!tenantLoading && !isLabOrdersEnabled) {
 //       router.push("/unauthorized");
 //     }
 //   }, [tenantLoading, isLabOrdersEnabled, router]);
 
-//   // Fetch data only if feature is enabled
 //   useEffect(() => {
 //     if (isLabOrdersEnabled) {
 //       fetchData();
@@ -104,7 +100,6 @@
 //   const fetchData = async () => {
 //     setLoading(true);
 //     try {
-//       // Fetch active tests
 //       const testsResponse = await fetch("/api/laboratory/tests?active=true");
 //       const testsResult = await testsResponse.json();
       
@@ -112,7 +107,6 @@
 //         setAvailableTests(testsResult.data);
 //       }
 
-//       // Fetch orders
 //       const ordersResponse = await fetch("/api/laboratory/orders");
 //       const ordersResult = await ordersResponse.json();
       
@@ -126,10 +120,10 @@
 //     }
 //   };
 
-//   // Check admission status
 //   const checkAdmissionStatus = async (patientId: string) => {
 //     setCheckingAdmission(true);
 //     try {
+//       console.log("Checking admission for patient:", patientId);
 //       const response = await fetch(`/api/lab/admission-status?patientId=${patientId}`);
 //       const result = await response.json();
       
@@ -138,10 +132,12 @@
 //       if (result.success && result.data?.isAdmitted) {
 //         setAdmissionInfo(result.data);
 //         setSelectedVisitType("IP");
+//         console.log("Patient is admitted. Admission details:", result.data);
 //         return true;
 //       } else {
 //         setAdmissionInfo(null);
 //         setSelectedVisitType("OP");
+//         console.log("Patient is not admitted");
 //         return false;
 //       }
 //     } catch (error) {
@@ -153,7 +149,6 @@
 //     }
 //   };
 
-//   // Search patient by phone number
 //   const searchPatientByPhone = async () => {
 //     const cleanPhone = phoneSearch.replace(/\s/g, '').replace(/-/g, '');
     
@@ -217,7 +212,6 @@
 //     await checkAdmissionStatus(patient.id);
 //   };
 
-//   // Create order via API
 //   const handleOrderTest = async () => {
 //     if (!selectedPatient || selectedTests.length === 0) {
 //       alert("Please select a patient and at least one test");
@@ -227,8 +221,11 @@
 //     const selectedTestsData = availableTests.filter((t) =>
 //       selectedTests.includes(t.id)
 //     );
-
-//     const totalAmount = selectedTestsData.reduce((sum, t) => sum + t.price, 0);
+    
+//     const totalAmount = selectedTestsData.reduce((sum, t) => {
+//       const price = typeof t.price === 'number' ? t.price : Number(t.price) || 0;
+//       return sum + price;
+//     }, 0);
 
 //     const year = new Date().getFullYear();
 //     const randomNum = Math.floor(Math.random() * 1000);
@@ -238,9 +235,12 @@
 //     let visitId = "";
 //     let admissionData = {};
 
-//     console.log("=== CHECKING ADMISSION STATUS ===");
-//     console.log("selectedVisitType:", selectedVisitType);
-//     console.log("admissionInfo:", admissionInfo);
+//     // IMPORTANT: Check admission status again before creating order
+//     console.log("=== CREATING ORDER ===");
+//     console.log("Selected Visit Type:", selectedVisitType);
+//     console.log("Admission Info:", admissionInfo);
+//     console.log("Is Admitted:", admissionInfo?.isAdmitted);
+//     console.log("Admission Details:", admissionInfo?.admission);
 
 //     if (selectedVisitType === "IP" && admissionInfo?.isAdmitted && admissionInfo.admission) {
 //       visitId = `IP-${admissionInfo.admission.id}`;
@@ -259,7 +259,7 @@
 //     const testsForDb = selectedTestsData.map((t) => ({
 //       id: t.id,
 //       name: t.test_name,
-//       price: t.price,
+//       price: typeof t.price === 'number' ? t.price : Number(t.price),
 //     }));
 
 //     const orderData = {
@@ -312,12 +312,11 @@
 //       setSelectedVisitType("OP");
 //       setAdmissionInfo(null);
 //     } catch (error) {
-//       console.error("❌ Error creating order:", error);
+//       console.error("Error creating order:", error);
 //       alert("Error creating order. Please try again.");
 //     }
 //   };
 
-//   // Cancel order via API
 //   const cancelOrder = async (orderId: string) => {
 //     const orderToCancel = orders.find((o) => o.id === orderId);
 //     if (!orderToCancel) return;
@@ -371,9 +370,11 @@
 //   const selectedTestsData = availableTests.filter((t) =>
 //     selectedTests.includes(t.id)
 //   );
-//   const totalAmount = selectedTestsData.reduce((sum, t) => sum + t.price, 0);
+//   const totalAmount = selectedTestsData.reduce((sum, t) => {
+//     const price = typeof t.price === 'number' ? t.price : Number(t.price) || 0;
+//     return sum + price;
+//   }, 0);
 
-//   // Show loading state while checking tenant and feature flags
 //   if (tenantLoading) {
 //     return (
 //       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -385,7 +386,6 @@
 //     );
 //   }
 
-//   // Show unauthorized if feature is not enabled
 //   if (!isLabOrdersEnabled) {
 //     return (
 //       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -562,7 +562,6 @@
 //               </div>
 
 //               <div className="space-y-4">
-//                 {/* Patient Search by Phone */}
 //                 <div className="relative">
 //                   <label className="block text-sm font-medium text-gray-700 mb-2">
 //                     Search Patient by Phone Number *
@@ -595,7 +594,6 @@
 //                     <p className="text-sm text-red-600 mt-1">{searchError}</p>
 //                   )}
                   
-//                   {/* Patient Dropdown */}
 //                   {showPatientDropdown && patientList.length > 0 && (
 //                     <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
 //                       {patientList.map((patient) => (
@@ -609,13 +607,8 @@
 //                             ID: {patient.id}
 //                           </div>
 //                           {patient.registration_id && (
-//                             <div className="text-xs text-gray-400 mt-0.5">
-//                               Reg ID: {patient.registration_id}
-//                             </div>
-//                           )}
-//                           {patient.dob && (
 //                             <div className="text-xs text-gray-400">
-//                               DOB: {patient.dob} • {patient.gender || 'N/A'}
+//                               Reg ID: {patient.registration_id}
 //                             </div>
 //                           )}
 //                         </button>
@@ -624,32 +617,28 @@
 //                   )}
 //                 </div>
 
-//                 {/* Selected Patient Details */}
 //                 {selectedPatient && (
 //                   <div className="bg-green-50 border border-green-200 rounded-lg p-4">
 //                     <p className="text-sm font-medium text-green-900 mb-2">
 //                       ✅ Patient Selected
 //                     </p>
-//                     <div className="space-y-1">
+//                     <p className="text-sm">
+//                       <span className="font-medium">Name:</span> {selectedPatient.name}
+//                     </p>
+//                     <p className="text-sm">
+//                       <span className="font-medium">Phone:</span> {selectedPatient.phone}
+//                     </p>
+//                     <p className="text-sm">
+//                       <span className="font-medium">Patient ID:</span> {selectedPatient.id}
+//                     </p>
+//                     {selectedPatient.registration_id && (
 //                       <p className="text-sm">
-//                         <span className="font-medium">Name:</span> {selectedPatient.name}
+//                         <span className="font-medium">Registration ID:</span> {selectedPatient.registration_id}
 //                       </p>
-//                       <p className="text-sm">
-//                         <span className="font-medium">Phone:</span> {selectedPatient.phone}
-//                       </p>
-//                       <p className="text-sm">
-//                         <span className="font-medium">Patient ID:</span> {selectedPatient.id}
-//                       </p>
-//                       {selectedPatient.registration_id && (
-//                         <p className="text-sm">
-//                           <span className="font-medium">Registration ID:</span> {selectedPatient.registration_id}
-//                         </p>
-//                       )}
-//                     </div>
+//                     )}
 //                   </div>
 //                 )}
 
-//                 {/* Admission Status Display */}
 //                 {checkingAdmission && (
 //                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
 //                     <p className="text-sm text-blue-600">Checking admission status...</p>
@@ -679,7 +668,6 @@
 //                   </div>
 //                 )}
 
-//                 {/* Visit Type */}
 //                 {selectedPatient && (
 //                   <div>
 //                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -723,7 +711,6 @@
 //                   </div>
 //                 )}
 
-//                 {/* Select Tests */}
 //                 {selectedPatient && (
 //                   <div>
 //                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -784,7 +771,6 @@
 //                   </div>
 //                 )}
 
-//                 {/* Selected Tests Summary */}
 //                 {selectedTests.length > 0 && (
 //                   <div className="border-t border-gray-200 pt-4">
 //                     <div className="flex justify-between items-center mb-2">
@@ -845,7 +831,7 @@
 //       )}
 //     </div>
 //   );
-// } 
+// }
 
 "use client";
 
@@ -897,12 +883,10 @@ interface Patient {
 interface AdmissionInfo {
   isAdmitted: boolean;
   admission: {
-    id: number;
-    admissionDate: string;
-    wardId: number;
-    bedId: number;
-    reason: string;
-    diagnosis: string | null;
+    admission_id: string | number;
+    admission_date: string;
+    ward_name?: string;
+    bed_number?: string;
     status: string;
   } | null;
 }
@@ -971,16 +955,33 @@ export default function LabOrdersPage() {
   const checkAdmissionStatus = async (patientId: string) => {
     setCheckingAdmission(true);
     try {
+      console.log("Checking admission for patient:", patientId);
       const response = await fetch(`/api/lab/admission-status?patientId=${patientId}`);
       const result = await response.json();
       
-      if (result.success && result.data?.isAdmitted) {
-        setAdmissionInfo(result.data);
+      console.log("Admission status response:", result);
+      
+      // Handle your API response structure
+      if (result.success && result.data) {
+        // Patient has active admission
+        setAdmissionInfo({
+          isAdmitted: true,
+          admission: {
+            admission_id: result.data.admission_id,
+            admission_date: result.data.admission_date,
+            ward_name: result.data.ward_name,
+            bed_number: result.data.bed_number,
+            status: result.data.status,
+          }
+        });
         setSelectedVisitType("IP");
+        console.log("Patient is admitted. Admission details:", result.data);
         return true;
       } else {
+        // No active admission
         setAdmissionInfo(null);
         setSelectedVisitType("OP");
+        console.log("Patient is not admitted");
         return false;
       }
     } catch (error) {
@@ -1078,16 +1079,25 @@ export default function LabOrdersPage() {
     let visitId = "";
     let admissionData = {};
 
+    console.log("=== CREATING ORDER ===");
+    console.log("Selected Visit Type:", selectedVisitType);
+    console.log("Admission Info:", admissionInfo);
+
+    // Use admission data from your API response
     if (selectedVisitType === "IP" && admissionInfo?.isAdmitted && admissionInfo.admission) {
-      visitId = `IP-${admissionInfo.admission.id}`;
+      visitId = `IP-${admissionInfo.admission.admission_id}`;
       admissionData = {
-        admission_id: String(admissionInfo.admission.id),
-        admission_date: admissionInfo.admission.admissionDate,
-        ward_id: Number(admissionInfo.admission.wardId),
-        bed_id: Number(admissionInfo.admission.bedId),
+        admission_id: String(admissionInfo.admission.admission_id),
+        admission_date: admissionInfo.admission.admission_date,
+        // Note: Your API doesn't return ward_id and bed_id as numbers, 
+        // so we'll use null or extract from ward_name/bed_number if needed
+        ward_id: null,
+        bed_id: null,
       };
+      console.log("✅ IP Visit - Adding admission data:", admissionData);
     } else {
       visitId = selectedPatient.registration_id || `OP-${Date.now()}`;
+      console.log("❌ OP Visit - No admission data");
     }
 
     const testsForDb = selectedTestsData.map((t) => ({
@@ -1110,6 +1120,9 @@ export default function LabOrdersPage() {
       ...admissionData,
     };
 
+    console.log("=== FINAL ORDER DATA ===");
+    console.log(JSON.stringify(orderData, null, 2));
+
     try {
       const response = await fetch("/api/laboratory/orders", {
         method: "POST",
@@ -1118,6 +1131,8 @@ export default function LabOrdersPage() {
       });
       
       const result = await response.json();
+      console.log("=== API RESPONSE ===");
+      console.log(result);
       
       if (!result.success) {
         throw new Error(result.error);
@@ -1126,7 +1141,13 @@ export default function LabOrdersPage() {
       let message = `✅ Order Created Successfully!\n\nOrder ID: ${orderId}\nPatient: ${selectedPatient.name}\nTotal Amount: ₹${totalAmount}`;
       
       if (selectedVisitType === "IP" && admissionInfo?.isAdmitted && admissionInfo.admission) {
-        message += `\n\n🏥 Admission Details:\nAdmission ID: ${admissionInfo.admission.id}\nWard: ${admissionInfo.admission.wardId}\nBed: ${admissionInfo.admission.bedId}`;
+        message += `\n\n🏥 Admission Details:\nAdmission ID: ${admissionInfo.admission.admission_id}\nAdmission Date: ${admissionInfo.admission.admission_date}`;
+        if (admissionInfo.admission.ward_name) {
+          message += `\nWard: ${admissionInfo.admission.ward_name}`;
+        }
+        if (admissionInfo.admission.bed_number) {
+          message += `\nBed: ${admissionInfo.admission.bed_number}`;
+        }
       }
 
       alert(message);
@@ -1320,7 +1341,7 @@ export default function LabOrdersPage() {
                   </p>
                   {order.visit_type === "IP" && order.admission_id && (
                     <p className="text-xs text-blue-600 mb-2">
-                      🏥 Admission ID: {order.admission_id} | Ward: {order.ward_id} | Bed: {order.bed_id}
+                      🏥 Admission ID: {order.admission_id}
                     </p>
                   )}
                   <div className="flex flex-wrap gap-2">
@@ -1435,6 +1456,11 @@ export default function LabOrdersPage() {
                           <div className="text-sm text-gray-500 mt-0.5">
                             ID: {patient.id}
                           </div>
+                          {patient.registration_id && (
+                            <div className="text-xs text-gray-400">
+                              Reg ID: {patient.registration_id}
+                            </div>
+                          )}
                         </button>
                       ))}
                     </div>
@@ -1455,6 +1481,11 @@ export default function LabOrdersPage() {
                     <p className="text-sm">
                       <span className="font-medium">Patient ID:</span> {selectedPatient.id}
                     </p>
+                    {selectedPatient.registration_id && (
+                      <p className="text-sm">
+                        <span className="font-medium">Registration ID:</span> {selectedPatient.registration_id}
+                      </p>
+                    )}
                   </div>
                 )}
 
@@ -1469,12 +1500,24 @@ export default function LabOrdersPage() {
                     <p className="text-sm font-medium text-purple-900 mb-2">
                       🏥 Patient is Currently Admitted
                     </p>
-                    <p className="text-sm">
-                      <span className="font-medium">Admission ID:</span> {admissionInfo.admission.id}
-                    </p>
-                    <p className="text-sm">
-                      <span className="font-medium">Admission Date:</span> {admissionInfo.admission.admissionDate}
-                    </p>
+                    <div className="space-y-1">
+                      <p className="text-sm">
+                        <span className="font-medium">Admission ID:</span> {admissionInfo.admission.admission_id}
+                      </p>
+                      <p className="text-sm">
+                        <span className="font-medium">Admission Date:</span> {admissionInfo.admission.admission_date}
+                      </p>
+                      {admissionInfo.admission.ward_name && (
+                        <p className="text-sm">
+                          <span className="font-medium">Ward:</span> {admissionInfo.admission.ward_name}
+                        </p>
+                      )}
+                      {admissionInfo.admission.bed_number && (
+                        <p className="text-sm">
+                          <span className="font-medium">Bed:</span> {admissionInfo.admission.bed_number}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 )}
 
@@ -1508,8 +1551,16 @@ export default function LabOrdersPage() {
                           className="mr-2"
                         />
                         IP Admission
+                        {admissionInfo?.isAdmitted && (
+                          <span className="ml-2 text-xs text-green-600">(Auto-selected - Patient admitted)</span>
+                        )}
                       </label>
                     </div>
+                    {admissionInfo?.isAdmitted && selectedVisitType === "OP" && (
+                      <p className="text-xs text-amber-600 mt-1">
+                        Note: This patient is currently admitted. IP admission is recommended.
+                      </p>
+                    )}
                   </div>
                 )}
 
