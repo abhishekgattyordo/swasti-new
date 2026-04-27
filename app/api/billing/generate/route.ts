@@ -2,7 +2,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { authErrorResponse,requireRole } from '@/lib/auth/guards';
+
 
 export async function POST(req: NextRequest) {
   const { admissionId } = await req.json();

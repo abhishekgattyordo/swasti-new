@@ -68,7 +68,7 @@ export const LABARATORY_FEATURES = {
   DASHBOARD: 'dashboard',
   TEST_CATALOG: 'test-catalog',
   LAB_ORDERS: 'lab-orders',
-  SAMPLE_COLLECTION: 'sample_collection',
+  SAMPLE_COLLECTION: 'sample-collection',
   REPORTS: 'reports-',
 } as const;
 

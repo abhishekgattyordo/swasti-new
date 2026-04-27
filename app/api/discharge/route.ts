@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-           requireRole(req, ['admin','helpdesk']);
+           requireRole(req, ['admin','billing']);
     const result = await query(
       `SELECT discharge_id, status FROM admissions WHERE id = $1`,
       [admissionId]

@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { authErrorResponse, requireRole } from '@/lib/auth/guards';
 
 export async function GET(request: NextRequest) {
   try {
+    // ✅ Add role check for laboratory
+    requireRole(request, ['laboratory', 'admin']);
+    
     const searchParams = request.nextUrl.searchParams;
     const patientId = searchParams.get("patientId");
 
@@ -12,12 +16,15 @@ export async function GET(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Call your existing admission-status API
+    // ✅ Forward the authorization token
+    const authHeader = request.headers.get('authorization');
+    
     const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/patient/admission-status?patientId=${patientId}`;
     
     const response = await fetch(apiUrl, {
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': authHeader || '',  // ✅ Forward the token
       },
     });
 
@@ -29,6 +36,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(data);
   } catch (error: any) {
     console.error('Error in lab admission-status proxy:', error);
+    
+    // ✅ Handle auth errors properly
+    const authResponse = authErrorResponse(error);
+    if (authResponse) {
+      return authResponse;
+    }
+    
     return NextResponse.json(
       { success: false, message: error.message || 'Internal server error' },
       { status: 500 }
