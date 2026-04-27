@@ -57,7 +57,11 @@
 
 //  const navItems = [
 //   { icon: Dashboard, label: 'Dashboard', href: '/admin/healthcaredashboard', color: 'from-blue-500 to-blue-700', isEnabled: isDashboardEnabled },
+<<<<<<< HEAD
 //   { icon: People, label: 'Doctors', href: '/admin/doctorsmanagement', badge: 3, color: 'from-emerald-500 to-emerald-700', isEnabled: isDoctorsEnabled },
+=======
+//   { icon: People, label: 'Doctors', href: '/admin/doctorstaffmanagement', badge: 3, color: 'from-emerald-500 to-emerald-700', isEnabled: isDoctorsEnabled },
+>>>>>>> 2407f6f3cf0933e7c57946d122d7741273baaf11
 //   { icon: Person, label: 'Patients', href: '/admin/patientmanagement', badge: 8, color: 'from-purple-500 to-purple-700', isEnabled: isPatientsEnabled },
 //   { icon: Domain, label: 'Bed Management', href: '/admin/bed-management', color: 'from-amber-500 to-amber-700', isEnabled: isBedConfigEnabled },
 //   { icon: Hotel, label: 'Bed Configuration', href: '/admin/bed-configuration', color: 'from-indigo-500 to-indigo-700', isEnabled: isBedConfigEnabled },
@@ -261,7 +265,6 @@
 // }
 
 
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -293,14 +296,30 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [userName, setUserName] = useState('Admin');
   const [userRole, setUserRole] = useState('Administrator');
-  const { isMicroFeatureEnabled } = useTenant();
+  
+  // Get tenant data from context
+  const { tenant, isLoading: isTenantLoading, isMicroFeatureEnabled } = useTenant();
+  
+  // Get tenant name from tenant object
+  const tenantName = tenant?.name || "";
+  const tenantSlug = tenant?.slug || "";
+
+  // Function to capitalize first letter of each word in a name
+  const capitalizeName = (name: string) => {
+    if (!name) return 'Admin';
+    return name
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+  };
 
   useEffect(() => {
     const userStr = localStorage.getItem('user');
     if (userStr) {
       try {
         const user = JSON.parse(userStr);
-        setUserName(user.full_name_en || user.name || 'Admin');
+        const rawName = user.full_name_en || user.name || 'Admin';
+        setUserName(capitalizeName(rawName));
         setUserRole(user.role === 'admin' ? 'System Administrator' : 'Administrator');
       } catch (e) {
         console.error('Failed to parse user', e);
@@ -316,13 +335,11 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const isDoctorsEnabled = isMicroFeatureEnabled(MODULE_KEYS.ADMIN, ADMIN_FEATURES.DOCTORS);
   const isPatientsEnabled = isMicroFeatureEnabled(MODULE_KEYS.ADMIN, ADMIN_FEATURES.PATIENTS);
   const isBedConfigEnabled = isMicroFeatureEnabled(MODULE_KEYS.ADMIN, ADMIN_FEATURES.BED_CONFIGURATION);
-  const isStaffEnabled = isMicroFeatureEnabled(MODULE_KEYS.ADMIN, ADMIN_FEATURES.STAFF);
 
   const navItems = [
     { icon: Dashboard, label: 'Dashboard', href: '/admin/healthcaredashboard', color: 'from-blue-500 to-blue-700', isEnabled: isDashboardEnabled },
-    { icon: People, label: 'Doctors', href: '/admin/doctorsmanagement', color: 'from-emerald-500 to-emerald-700', isEnabled: isDoctorsEnabled },
-    { icon: Badge, label: 'Staff Management', href: '/admin/staffmanagement', color: 'from-cyan-500 to-cyan-700', isEnabled: isStaffEnabled },
-    { icon: Person, label: 'Patients', href: '/admin/patientmanagement', color: 'from-purple-500 to-purple-700', isEnabled: isPatientsEnabled },
+    { icon: People, label: 'Doctors', href: '/admin/doctorstaffmanagement', badge: 3, color: 'from-emerald-500 to-emerald-700', isEnabled: isDoctorsEnabled },
+    { icon: Person, label: 'Patients', href: '/admin/patientmanagement', badge: 8, color: 'from-purple-500 to-purple-700', isEnabled: isPatientsEnabled },
     { icon: Domain, label: 'Bed Management', href: '/admin/bed-management', color: 'from-amber-500 to-amber-700', isEnabled: isBedConfigEnabled },
     { icon: Hotel, label: 'Bed Configuration', href: '/admin/bed-configuration', color: 'from-indigo-500 to-indigo-700', isEnabled: isBedConfigEnabled },
   ];
@@ -348,6 +365,41 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   };
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
+
+  // Show loading state while tenant is being fetched
+  if (isTenantLoading) {
+    return (
+      <aside
+        className={`${
+          isOpen ? 'translate-x-0' : '-translate-x-full'
+        } lg:translate-x-0 fixed lg:sticky top-0 z-40 ${
+          isCollapsed ? 'w-20' : 'w-80'
+        } flex-shrink-0 border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 flex flex-col transition-all duration-300 ease-out shadow-xl lg:shadow-none h-screen`}
+      >
+        {/* Logo Section with Loading Skeleton */}
+        <div className={`p-6 flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} border-b border-gray-100 dark:border-gray-800 relative`}>
+          {!isCollapsed && (
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-xl flex items-center justify-center animate-pulse">
+                <HealthAndSafety className="text-2xl text-gray-400" />
+              </div>
+              <div className="animate-pulse">
+                <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-32 mb-1"></div>
+                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-48"></div>
+              </div>
+            </div>
+          )}
+          {isCollapsed && (
+            <div className="flex items-center justify-center w-full">
+              <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-xl flex items-center justify-center animate-pulse">
+                <HealthAndSafety className="text-2xl text-gray-400" />
+              </div>
+            </div>
+          )}
+        </div>
+      </aside>
+    );
+  }
 
   return (
     <aside
@@ -375,7 +427,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               <HealthAndSafety className="text-2xl" />
             </div>
             <div>
-              <h1 className="text-xl font-bold tracking-tight">HealthSync</h1>
+              <h1 className="text-xl font-bold tracking-tight dark:text-white">{tenantName || 'HealthSync'}</h1>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Multi-Facility Management System</p>
             </div>
           </Link>
@@ -401,44 +453,46 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       {/* Navigation */}
       <div className="flex-1 flex flex-col min-h-0">
         <nav className="flex-1 overflow-y-auto px-4 py-8">
-          <div className="mb-6">
-            {!isCollapsed && <p className="text-xs font-medium text-gray-400 uppercase tracking-wider px-4 mb-3">Main Navigation</p>}
-            <div className="space-y-2">
-              {visibleNavItems.map((item) => {
-                const active = isActive(item.href);
-                return (
-                  <Link
-                    key={item.label}
-                    href={item.href}
-                    onClick={handleLinkClick}
-                    className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between gap-4'} px-4 py-3 rounded-xl transition-all group relative ${
-                      active
-                        ? 'bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/20 text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-800/30 shadow-sm'
-                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50'
-                    }`}
-                    title={isCollapsed ? item.label : ''}
-                  >
-                    <div className={`flex items-center ${isCollapsed ? '' : 'gap-4'}`}>
-                      <div className={`w-8 h-8 flex items-center justify-center rounded-lg ${
-                        active ? 'bg-blue-500 text-white' : `bg-gradient-to-br ${item.color} text-white`
-                      }`}>
-                        <item.icon className="text-lg" />
+          {visibleNavItems.length > 0 && (
+            <div className="mb-6">
+              {!isCollapsed && <p className="text-xs font-medium text-gray-400 uppercase tracking-wider px-4 mb-3">Main Navigation</p>}
+              <div className="space-y-2">
+                {visibleNavItems.map((item) => {
+                  const active = isActive(item.href);
+                  return (
+                    <Link
+                      key={item.label}
+                      href={item.href}
+                      onClick={handleLinkClick}
+                      className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between gap-4'} px-4 py-3 rounded-xl transition-all group relative ${
+                        active
+                          ? 'bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/20 text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-800/30 shadow-sm'
+                          : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50'
+                      }`}
+                      title={isCollapsed ? item.label : ''}
+                    >
+                      <div className={`flex items-center ${isCollapsed ? '' : 'gap-4'}`}>
+                        <div className={`w-8 h-8 flex items-center justify-center rounded-lg ${
+                          active ? 'bg-blue-500 text-white' : `bg-gradient-to-br ${item.color} text-white`
+                        }`}>
+                          <item.icon className="text-lg" />
+                        </div>
+                        {!isCollapsed && <span className="text-sm font-medium">{item.label}</span>}
                       </div>
-                      {!isCollapsed && <span className="text-sm font-medium">{item.label}</span>}
-                    </div>
-                    {!isCollapsed && item.badge && (
-                      <span className={`text-xs font-bold px-2 py-1 rounded-full ${active ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'}`}>
-                        {item.badge}
-                      </span>
-                    )}
-                    {isCollapsed && item.badge && (
-                      <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white dark:ring-gray-900"></span>
-                    )}
-                  </Link>
-                );
-              })}
+                      {!isCollapsed && item.badge && (
+                        <span className={`text-xs font-bold px-2 py-1 rounded-full ${active ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'}`}>
+                          {item.badge}
+                        </span>
+                      )}
+                      {isCollapsed && item.badge && (
+                        <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white dark:ring-gray-900"></span>
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          )}
 
           {!isCollapsed && (
             <div className="pt-8">
@@ -480,17 +534,18 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           )}
         </nav>
 
-        {/* User Info + Logout */}
+        {/* User Info (non‑clickable) + Logout icon */}
         <div className="mt-auto border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900">
           <div className="p-4">
             {!isCollapsed ? (
+              // Expanded view: profile and logout on the same row
               <div className="flex items-center justify-between gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-semibold text-sm">
                     {userName.charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold truncate">{userName}</p>
+                    <p className="text-sm font-semibold truncate dark:text-white">{userName}</p>
                     <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{userRole}</p>
                   </div>
                 </div>
@@ -503,6 +558,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 </button>
               </div>
             ) : (
+              // Collapsed view: avatar centered, logout icon below
               <div className="flex flex-col items-center gap-2">
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-semibold text-sm">
                   {userName.charAt(0).toUpperCase()}
@@ -514,6 +570,11 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 >
                   <Logout className="text-2xl" />
                 </button>
+              </div>
+            )}
+            {!isCollapsed && (
+              <div className="mt-3 px-3">
+                <p className="text-xs text-gray-400 dark:text-gray-500">Admin Portal v1.0.0</p>
               </div>
             )}
           </div>
