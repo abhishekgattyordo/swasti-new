@@ -2,6 +2,9 @@
 // "use client";
 
 // import { useState, useEffect } from "react";
+// import { useRouter } from "next/navigation";
+// import { useTenant } from "@/contexts/TenantContext";
+// import { MODULE_KEYS, LABARATORY_FEATURES } from "@/lib/feature";
 // import Card from "@/components/laboratory/Card";
 
 // interface CompletedReport {
@@ -17,16 +20,34 @@
 // }
 
 // export default function ReportsPage() {
+//   const router = useRouter();
+//   const { tenant, isMicroFeatureEnabled, isLoading: tenantLoading } = useTenant();
+  
 //   const [selectedReport, setSelectedReport] = useState<CompletedReport | null>(null);
 //   const [filter, setFilter] = useState("");
 //   const [reports, setReports] = useState<CompletedReport[]>([]);
 //   const [viewMode, setViewMode] = useState<"table" | "cards">("table");
 //   const [loading, setLoading] = useState(true);
 
-//   // ✅ FETCH COMPLETED REPORTS FROM API
+//   // Check if Reports feature is enabled
+//   const isReportsEnabled = isMicroFeatureEnabled(
+//     MODULE_KEYS.LABARATORY,
+//     LABARATORY_FEATURES.REPORTS
+//   );
+
+//   // Redirect if feature is not enabled
 //   useEffect(() => {
-//     fetchReports();
-//   }, []);
+//     if (!tenantLoading && !isReportsEnabled) {
+//       router.push("/unauthorized");
+//     }
+//   }, [tenantLoading, isReportsEnabled, router]);
+
+//   // Fetch reports only if feature is enabled
+//   useEffect(() => {
+//     if (isReportsEnabled) {
+//       fetchReports();
+//     }
+//   }, [isReportsEnabled]);
 
 //   const fetchReports = async () => {
 //     setLoading(true);
@@ -79,6 +100,39 @@
 //     URL.revokeObjectURL(url);
 //   };
 
+//   // Show loading state while checking tenant and feature flags
+//   if (tenantLoading) {
+//     return (
+//       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+//         <div className="text-center">
+//           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+//           <p className="mt-4 text-gray-600">Loading...</p>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   // Show unauthorized if feature is not enabled
+//   if (!isReportsEnabled) {
+//     return (
+//       <div className="min-h-screen flex items-center justify-center bg-gray-50">
+//         <div className="text-center">
+//           <div className="text-red-500 text-6xl mb-4">🔒</div>
+//           <h1 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h1>
+//           <p className="text-gray-600">
+//             Lab Reports feature is not enabled for {tenant?.name}.
+//           </p>
+//           <button
+//             onClick={() => router.push("/dashboard")}
+//             className="mt-4 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+//           >
+//             Go to Dashboard
+//           </button>
+//         </div>
+//       </div>
+//     );
+//   }
+
 //   if (loading) {
 //     return (
 //       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -97,6 +151,11 @@
 //           <div>
 //             <h1 className="text-2xl font-semibold text-gray-900">Lab Reports</h1>
 //             <p className="text-sm text-gray-500 mt-1">View completed test reports</p>
+//             {tenant && (
+//               <p className="text-xs text-gray-400 mt-1">
+//                 Tenant: {tenant.name}
+//               </p>
+//             )}
 //           </div>
 //           <div className="flex items-center space-x-3">
 //             {/* View Toggle */}
@@ -505,7 +564,7 @@ export default function ReportsPage() {
       const result = await response.json();
       
       if (result.success) {
-        setReports(result.data);
+        setReports(result.data || []);
       }
     } catch (error) {
       console.error("Error fetching reports:", error);
@@ -521,6 +580,14 @@ export default function ReportsPage() {
         r.patient_id.toLowerCase().includes(filter.toLowerCase())
       )
     : reports;
+
+  // Calculate total revenue - FIXED: convert to number properly
+  const totalRevenue = filteredReports.reduce((sum, report) => {
+    const amount = typeof report.total_amount === 'number' 
+      ? report.total_amount 
+      : Number(report.total_amount) || 0;
+    return sum + amount;
+  }, 0);
 
   const handlePrint = () => {
     window.print();
@@ -733,7 +800,7 @@ export default function ReportsPage() {
                   </span>
                   <span className="text-sm text-gray-600">
                     Total Revenue: <span className="font-semibold text-primary">
-                      ₹{filteredReports.reduce((sum, r) => sum + r.total_amount, 0).toLocaleString()}
+                      ₹{totalRevenue.toLocaleString()}
                     </span>
                   </span>
                 </div>
@@ -744,66 +811,84 @@ export default function ReportsPage() {
 
         {/* Card View */}
         {viewMode === "cards" && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {filteredReports.map((report) => (
-              <Card
-                key={report.id}
-                className="overflow-hidden hover:shadow-lg transition-all duration-300"
-              >
-                <div className="p-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">
-                        {report.patient_name}
-                      </h3>
-                      <p className="text-sm text-gray-500 mt-1">
-                        {report.order_id} • {report.patient_id}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm text-gray-500">
-                        Completed: {report.completed_date}
-                      </p>
-                      <p className="text-lg font-bold text-primary mt-1">
-                        ₹{report.total_amount}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3 mb-4">
-                    {report.tests.slice(0, 3).map((test, idx) => (
-                      <div key={idx} className="border-l-2 border-primary pl-3">
-                        <p className="text-sm font-medium text-gray-900">
-                          {test.name}
-                        </p>
-                        <p className="text-xs text-gray-600 mt-1 line-clamp-2">
-                          {test.result || "No result recorded"}
+          <>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {filteredReports.map((report) => (
+                <Card
+                  key={report.id}
+                  className="overflow-hidden hover:shadow-lg transition-all duration-300"
+                >
+                  <div className="p-6">
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          {report.patient_name}
+                        </h3>
+                        <p className="text-sm text-gray-500 mt-1">
+                          {report.order_id} • {report.patient_id}
                         </p>
                       </div>
-                    ))}
-                    {report.tests.length > 3 && (
-                      <p className="text-xs text-gray-400">
-                        +{report.tests.length - 3} more tests
-                      </p>
-                    )}
-                  </div>
+                      <div className="text-right">
+                        <p className="text-sm text-gray-500">
+                          Completed: {report.completed_date}
+                        </p>
+                        <p className="text-lg font-bold text-primary mt-1">
+                          ₹{report.total_amount}
+                        </p>
+                      </div>
+                    </div>
 
-                  <button
-                    onClick={() => setSelectedReport(report)}
-                    className="w-full mt-2 px-4 py-2 bg-gray-50 text-primary hover:bg-primary hover:text-white rounded-lg transition-colors text-sm font-medium"
-                  >
-                    View Full Report
-                  </button>
-                </div>
-              </Card>
-            ))}
+                    <div className="space-y-3 mb-4">
+                      {report.tests.slice(0, 3).map((test, idx) => (
+                        <div key={idx} className="border-l-2 border-primary pl-3">
+                          <p className="text-sm font-medium text-gray-900">
+                            {test.name}
+                          </p>
+                          <p className="text-xs text-gray-600 mt-1 line-clamp-2">
+                            {test.result || "No result recorded"}
+                          </p>
+                        </div>
+                      ))}
+                      {report.tests.length > 3 && (
+                        <p className="text-xs text-gray-400">
+                          +{report.tests.length - 3} more tests
+                        </p>
+                      )}
+                    </div>
+
+                    <button
+                      onClick={() => setSelectedReport(report)}
+                      className="w-full mt-2 px-4 py-2 bg-gray-50 text-primary hover:bg-primary hover:text-white rounded-lg transition-colors text-sm font-medium"
+                    >
+                      View Full Report
+                    </button>
+                  </div>
+                </Card>
+              ))}
+              
+              {filteredReports.length === 0 && (
+                <Card className="p-8 text-center col-span-2">
+                  <p className="text-gray-500">No completed reports found</p>
+                </Card>
+              )}
+            </div>
             
-            {filteredReports.length === 0 && (
-              <Card className="p-8 text-center col-span-2">
-                <p className="text-gray-500">No completed reports found</p>
-              </Card>
+            {/* Summary Row for Card View */}
+            {filteredReports.length > 0 && (
+              <div className="mt-6 px-6 py-4 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">
+                    Total Reports: <span className="font-semibold text-gray-900">{filteredReports.length}</span>
+                  </span>
+                  <span className="text-sm text-gray-600">
+                    Total Revenue: <span className="font-semibold text-primary">
+                      ₹{totalRevenue.toLocaleString()}
+                    </span>
+                  </span>
+                </div>
+              </div>
             )}
-          </div>
+          </>
         )}
       </div>
 
