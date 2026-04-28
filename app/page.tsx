@@ -22,6 +22,10 @@ import {
   Zap,
   Star,
   CheckCircle2,
+  Heart,
+  Stethoscope,
+  Ambulance,
+  Microscope,
 } from 'lucide-react';
 import Header from '@/components/ui/Header';
 import { Footer } from '@/components/ui/Footer';
@@ -37,24 +41,19 @@ interface Doctor {
   email: string;
   phone: string;
   status: 'active' | 'on-leave' | 'inactive';
-  // optional fields that might be used
-  rating?: number;      // might not exist in API, we'll use default
-  reviewCount?: number; // might not exist
-  profilePhoto?: string; // might not exist, we'll use placeholder
-  isOnline?: boolean;   // we might derive from status
+  rating?: number;
+  reviewCount?: number;
+  profilePhoto?: string;
+  isOnline?: boolean;
 }
 
 // Helper to get full name
 const getFullName = (doctor: Doctor) => `${doctor.firstName} ${doctor.lastName}`;
 
 export default function LandingPage() {
- 
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // Fetch user from localStorage (existing)
-
 
   // Fetch doctors from API
   useEffect(() => {
@@ -64,7 +63,6 @@ export default function LandingPage() {
         const res = await fetch('/api/doctors');
         const data = await res.json();
         if (data.success && Array.isArray(data.data)) {
-          // Filter only active doctors and map to UI-friendly structure
           const activeDoctors = data.data.filter((d: any) => d.status === 'active');
           const mapped = activeDoctors.map((doc: any) => ({
             id: doc.id,
@@ -75,11 +73,10 @@ export default function LandingPage() {
             email: doc.email,
             phone: doc.phone,
             status: doc.status,
-            // Provide defaults for missing UI fields
-            rating: doc.rating || 4.8, // placeholder
+            rating: doc.rating || 4.8,
             reviewCount: doc.reviewCount || Math.floor(Math.random() * 100) + 50,
             profilePhoto: doc.profilePhoto || getRandomDoctorImage(doc.id),
-            isOnline: doc.status === 'active', // active doctors are online
+            isOnline: doc.status === 'active',
           }));
           setDoctors(mapped);
         } else {
@@ -96,38 +93,37 @@ export default function LandingPage() {
     fetchDoctors();
   }, []);
 
-  // Helper to get a random image for each doctor (if none provided)
   const getRandomDoctorImage = (id: number) => {
     const images = [
-      'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
-      'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
+      'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=400&h=400&fit=crop&crop=face',
+      'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=400&h=400&fit=crop&crop=face',
       'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=400&h=400&fit=crop&crop=face',
-      'https://images.unsplash.com/photo-1594824434340-d2d9d2fc5b4c?w=400&h=400&fit=crop&crop=face',
+      'https://images.unsplash.com/photo-1594824434340-7e7dfc37cabb?w=400&h=400&fit=crop&crop=face',
     ];
     return images[id % images.length];
   };
 
-  const featuredDoctors = doctors.slice(0, 4); // show first 4 active doctors
+  const featuredDoctors = doctors.slice(0, 4);
 
   const services = [
-    { icon: Video, title: 'Online Consultation', description: 'Connect with doctors via video call from anywhere' },
-    { icon: Calendar, title: 'Book Appointments', description: 'Schedule in-hospital visits with ease' },
-    { icon: Activity, title: 'Emergency Care', description: '24/7 emergency medical assistance' },
-    { icon: FlaskConical, title: 'Lab Tests', description: 'Book lab tests and get reports online' },
-    { icon: Pill, title: 'Pharmacy', description: 'Order medicines with prescription' },
+    { icon: Video, title: 'Online Consultation', description: 'Connect with doctors via video call from anywhere', color: 'from-blue-500 to-blue-700' },
+    { icon: Calendar, title: 'Book Appointments', description: 'Schedule in-hospital visits with ease', color: 'from-emerald-500 to-emerald-700' },
+    { icon: Ambulance, title: 'Emergency Care', description: '24/7 emergency medical assistance', color: 'from-red-500 to-red-700' },
+    { icon: Microscope, title: 'Lab Tests', description: 'Book lab tests and get reports online', color: 'from-purple-500 to-purple-700' },
+    { icon: Pill, title: 'Pharmacy', description: 'Order medicines with prescription', color: 'from-cyan-500 to-cyan-700' },
   ];
 
   const steps = [
-    { icon: Search, title: 'Search Doctor', description: 'Find by specialty or name' },
-    { icon: Calendar, title: 'Choose Slot', description: 'Select date and time' },
-    { icon: FileText, title: 'Consult', description: 'Get expert advice' },
+    { icon: Search, title: 'Search Doctor', description: 'Find by specialty or name', color: 'from-blue-500 to-blue-700' },
+    { icon: Calendar, title: 'Choose Slot', description: 'Select date and time', color: 'from-emerald-500 to-emerald-700' },
+    { icon: Stethoscope, title: 'Consult', description: 'Get expert advice', color: 'from-purple-500 to-purple-700' },
   ];
 
   const features = [
-    { icon: CheckCircle2, title: 'Verified Doctors', description: 'All doctors are certified and experienced' },
-    { icon: DollarSign, title: 'Affordable Pricing', description: 'Quality healthcare at reasonable rates' },
-    { icon: Lock, title: 'Secure & Private', description: 'Your data is protected and confidential' },
-    { icon: Zap, title: 'Fast Booking', description: 'Book appointments in seconds' },
+    { icon: CheckCircle2, title: 'Verified Doctors', description: 'All doctors are certified and experienced', color: 'from-emerald-500 to-emerald-700' },
+    { icon: DollarSign, title: 'Affordable Pricing', description: 'Quality healthcare at reasonable rates', color: 'from-blue-500 to-blue-700' },
+    { icon: Lock, title: 'Secure & Private', description: 'Your data is protected and confidential', color: 'from-purple-500 to-purple-700' },
+    { icon: Zap, title: 'Fast Booking', description: 'Book appointments in seconds', color: 'from-amber-500 to-amber-700' },
   ];
 
   const testimonials = [
@@ -137,49 +133,50 @@ export default function LandingPage() {
   ];
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
       <Header />
-      {/* Hero Section */}
-      <section className="pt-24 pb-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-green-50 via-white to-emerald-50">
+      
+      {/* Hero Section - Matching Nurse Sidebar Colors */}
+      <section className="pt-24 pb-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-50 via-white to-cyan-50 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm font-medium mb-6">
+              <div className="inline-flex items-center gap-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-4 py-2 rounded-full text-sm font-medium mb-6">
                 <Shield className="w-4 h-4" />
                 Trusted by 50,000+ Patients
               </div>
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white mb-6 leading-tight">
                 Consult Trusted Doctors{' '}
-                <span className="text-green-600">Anytime, Anywhere</span>
+                <span className="text-blue-600 dark:text-blue-400">Anytime, Anywhere</span>
               </h1>
-              <p className="text-lg text-gray-600 mb-8 max-w-2xl">
+              <p className="text-lg text-gray-600 dark:text-gray-300 mb-8 max-w-2xl">
                 Online & in-hospital consultations with verified specialists. Get expert medical
                 advice from the comfort of your home.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <Link href="/appointments">
-                  <Button size="lg" className="w-full sm:w-auto bg-green-600 hover:bg-green-700">
+                  <Button size="lg" className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white">
                     Find Doctor
                   </Button>
                 </Link>
                 <Link href="/appointments">
-                  <Button variant="outline" size="lg" className="w-full sm:w-auto border-green-600 text-green-600 hover:bg-green-50">
+                  <Button variant="outline" size="lg" className="w-full sm:w-auto border-blue-600 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400">
                     Consult Online
                   </Button>
                 </Link>
               </div>
               <div className="flex flex-wrap gap-6 mt-8 justify-center lg:justify-start">
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-green-600" />
-                  <span className="text-sm text-gray-600">Certified Doctors</span>
+                  <CheckCircle2 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  <span className="text-sm text-gray-600 dark:text-gray-300">Certified Doctors</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Lock className="w-5 h-5 text-green-600" />
-                  <span className="text-sm text-gray-600">Secure Consultations</span>
+                  <Lock className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  <span className="text-sm text-gray-600 dark:text-gray-300">Secure Consultations</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-green-600" />
-                  <span className="text-sm text-gray-600">24/7 Support</span>
+                  <Clock className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  <span className="text-sm text-gray-600 dark:text-gray-300">24/7 Support</span>
                 </div>
               </div>
             </div>
@@ -197,22 +194,22 @@ export default function LandingPage() {
       </section>
 
       {/* Services Section */}
-      <section id="services" className="py-16 px-4 sm:px-6 lg:px-8 bg-white">
+      <section id="services" className="py-16 px-4 sm:px-6 lg:px-8 bg-white dark:bg-slate-900">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">Our Services</h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">Our Services</h2>
+            <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
               Comprehensive healthcare services designed for your convenience
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
             {services.map((service, index) => (
-              <Card key={index} className="p-6 text-center hover:shadow-lg transition-shadow border border-gray-200">
-                <div className="bg-gradient-to-br from-green-100 to-emerald-100 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <service.icon className="w-8 h-8 text-green-600" />
+              <Card key={index} className="p-6 text-center hover:shadow-lg transition-shadow border border-gray-200 dark:border-gray-800 bg-white dark:bg-slate-900">
+                <div className={`bg-gradient-to-br ${service.color} w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg`}>
+                  <service.icon className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="font-semibold text-gray-900 mb-2">{service.title}</h3>
-                <p className="text-sm text-gray-600">{service.description}</p>
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{service.title}</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{service.description}</p>
               </Card>
             ))}
           </div>
@@ -220,26 +217,26 @@ export default function LandingPage() {
       </section>
 
       {/* How It Works Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-slate-950">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">How It Works</h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">How It Works</h2>
+            <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
               Book your appointment in three simple steps
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {steps.map((step, index) => (
               <div key={index} className="relative">
-                <Card className="p-8 text-center h-full border border-gray-200">
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-green-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm">
+                <Card className="p-8 text-center h-full border border-gray-200 dark:border-gray-800 bg-white dark:bg-slate-900">
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm">
                     {index + 1}
                   </div>
-                  <div className="bg-gradient-to-br from-green-100 to-emerald-100 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <step.icon className="w-8 h-8 text-green-600" />
+                  <div className={`bg-gradient-to-br ${step.color} w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg`}>
+                    <step.icon className="w-8 h-8 text-white" />
                   </div>
-                  <h3 className="font-semibold text-xl text-gray-900 mb-2">{step.title}</h3>
-                  <p className="text-gray-600">{step.description}</p>
+                  <h3 className="font-semibold text-xl text-gray-900 dark:text-white mb-2">{step.title}</h3>
+                  <p className="text-gray-600 dark:text-gray-400">{step.description}</p>
                 </Card>
               </div>
             ))}
@@ -248,19 +245,19 @@ export default function LandingPage() {
       </section>
 
       {/* Featured Doctors Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white">
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white dark:bg-slate-900">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">
               Featured Doctors
             </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
               Meet our highly qualified and experienced medical professionals
             </p>
           </div>
           {loading ? (
             <div className="flex justify-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
             </div>
           ) : error ? (
             <div className="text-center text-red-500 py-12">{error}</div>
@@ -268,7 +265,7 @@ export default function LandingPage() {
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 {featuredDoctors.map((doctor) => (
-                  <Card key={doctor.id} className="overflow-hidden hover:shadow-lg transition-shadow border border-gray-200">
+                  <Card key={doctor.id} className="overflow-hidden hover:shadow-lg transition-shadow border border-gray-200 dark:border-gray-800 bg-white dark:bg-slate-900">
                     <div className="relative h-48 w-full">
                       <Image
                         src={doctor.profilePhoto!}
@@ -276,22 +273,25 @@ export default function LandingPage() {
                         fill
                         className="object-cover"
                       />
+                      {doctor.isOnline && (
+                        <div className="absolute top-3 right-3 bg-green-500 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 bg-white rounded-full"></span>
+                          Online
+                        </div>
+                      )}
                     </div>
                     <div className="p-5">
                       <div className="flex items-center justify-between mb-2">
-                        <h3 className="font-semibold text-gray-900">{getFullName(doctor)}</h3>
-                        {doctor.isOnline && (
-                          <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                        )}
+                        <h3 className="font-semibold text-gray-900 dark:text-white">{getFullName(doctor)}</h3>
                       </div>
-                      <p className="text-sm text-green-600 mb-2">{doctor.specialty}</p>
+                      <p className="text-sm text-blue-600 dark:text-blue-400 mb-2">{doctor.specialty}</p>
                       <div className="flex items-center gap-1 mb-3">
                         <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                        <span className="text-sm font-medium text-gray-900">{doctor.rating}</span>
-                        <span className="text-sm text-gray-500">({doctor.reviewCount})</span>
+                        <span className="text-sm font-medium text-gray-900 dark:text-white">{doctor.rating}</span>
+                        <span className="text-sm text-gray-500 dark:text-gray-400">({doctor.reviewCount})</span>
                       </div>
                       <Link href={`/booking/${doctor.id}`}>
-                        <Button className="w-full bg-green-600 hover:bg-green-700">Book Now</Button>
+                        <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">Book Now</Button>
                       </Link>
                     </div>
                   </Card>
@@ -299,7 +299,7 @@ export default function LandingPage() {
               </div>
               <div className="text-center">
                 <Link href="/appointments">
-                  <Button variant="outline" size="lg" className="border-green-600 text-green-600 hover:bg-green-50">
+                  <Button variant="outline" size="lg" className="border-blue-600 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400">
                     View All Doctors
                   </Button>
                 </Link>
@@ -309,23 +309,23 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Why Choose Us Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-green-600 to-emerald-600">
+      {/* Why Choose Us Section - Matching Sidebar Gradient */}
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-600 to-cyan-600">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">Why Choose Us</h2>
-            <p className="text-lg text-green-100 max-w-2xl mx-auto">
+            <p className="text-lg text-blue-100 max-w-2xl mx-auto">
               We are committed to providing the best healthcare experience
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {features.map((feature, index) => (
               <div key={index} className="bg-white/10 backdrop-blur-sm rounded-xl p-6 text-center">
-                <div className="bg-white/20 w-14 h-14 rounded-xl flex items-center justify-center mx-auto mb-4">
+                <div className={`bg-gradient-to-br ${feature.color} w-14 h-14 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg`}>
                   <feature.icon className="w-7 h-7 text-white" />
                 </div>
                 <h3 className="font-semibold text-white mb-2">{feature.title}</h3>
-                <p className="text-sm text-green-100">{feature.description}</p>
+                <p className="text-sm text-blue-100">{feature.description}</p>
               </div>
             ))}
           </div>
@@ -333,26 +333,26 @@ export default function LandingPage() {
       </section>
 
       {/* Testimonials Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-slate-950">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">
               Patient Testimonials
             </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
               Hear what our patients have to say
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {testimonials.map((testimonial) => (
-              <Card key={testimonial.id} className="p-6 hover:shadow-lg transition-shadow border border-gray-200">
+              <Card key={testimonial.id} className="p-6 hover:shadow-lg transition-shadow border border-gray-200 dark:border-gray-800 bg-white dark:bg-slate-900">
                 <div className="flex gap-1 mb-3">
                   {[...Array(testimonial.rating)].map((_, i) => (
                     <Star key={i} className="w-5 h-5 text-yellow-500 fill-yellow-500" />
                   ))}
                 </div>
-                <p className="text-gray-600 mb-4 italic">&quot;{testimonial.feedback}&quot;</p>
-                <p className="font-semibold text-gray-900">{testimonial.name}</p>
+                <p className="text-gray-600 dark:text-gray-300 mb-4 italic">"{testimonial.feedback}"</p>
+                <p className="font-semibold text-gray-900 dark:text-white">{testimonial.name}</p>
               </Card>
             ))}
           </div>
@@ -360,21 +360,22 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section id="contact" className="py-16 px-4 sm:px-6 lg:px-8 bg-white">
+      <section id="contact" className="py-16 px-4 sm:px-6 lg:px-8 bg-white dark:bg-slate-900">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">
             Ready to Get Started?
           </h2>
-          <p className="text-lg text-gray-600 mb-8">
+          <p className="text-lg text-gray-600 dark:text-gray-300 mb-8">
             Book your appointment with our experienced doctors today
           </p>
           <Link href="/appointments">
-            <Button size="lg" className="bg-green-600 hover:bg-green-700">
+            <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white">
               Find Your Doctor Now
             </Button>
           </Link>
         </div>
       </section>
+      
       <Footer />
     </div>
   );

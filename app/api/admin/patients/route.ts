@@ -83,7 +83,7 @@ function validateAdminData(data: any, isUpdate = false): ValidationResult {
 
 export async function GET(req: Request) {
   try {
-        requireRole(req, ['admin']);
+        requireRole(req, ['admin',"doctor"]);
     const { searchParams } = new URL(req.url);
     const patientId = searchParams.get('patientId');
     const listAll = searchParams.get('list') === 'true';

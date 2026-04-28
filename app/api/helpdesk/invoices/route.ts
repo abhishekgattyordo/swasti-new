@@ -7,7 +7,7 @@ import { authErrorResponse,requireRole } from '@/lib/auth/guards';
 
 export async function GET(req: NextRequest) {
   try {
-       requireRole(req, ['helpdesk']);
+       requireRole(req, ['helpdesk',"doctor"]);
     const url = new URL(req.url);
     const doctorId = url.searchParams.get('doctorId');
     const startDate = url.searchParams.get('startDate');

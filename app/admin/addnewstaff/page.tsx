@@ -21,7 +21,7 @@ import {
 } from "@mui/icons-material";
 import { useTenant } from "@/contexts/TenantContext";
 import { MODULE_KEYS, ADMIN_FEATURES } from "@/lib/feature";
-
+import toast from "react-hot-toast";
 // Mock data for roles and departments
 const roleOptions = [
   "Nurse",
