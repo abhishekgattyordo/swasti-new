@@ -22,8 +22,11 @@ import {
 import { useTenant } from "@/contexts/TenantContext";
 import { MODULE_KEYS, ADMIN_FEATURES } from "@/lib/feature";
 import toast from "react-hot-toast";
+import { staffApi } from "@/lib/api/staff";
+
 // Mock data for roles and departments
 const roleOptions = [
+  "Helpdesk",
   "Nurse",
   "Receptionist",
   "Lab Technician",
@@ -80,18 +83,18 @@ export default function AddNewStaffPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-const { tenant, isMicroFeatureEnabled, isLoading: tenantLoading } = useTenant();
+  const { tenant, isMicroFeatureEnabled, isLoading: tenantLoading } = useTenant();
 
-const isDoctorsEnabled = isMicroFeatureEnabled(
-  MODULE_KEYS.ADMIN,
-  ADMIN_FEATURES.DOCTORS
-);
+  const isDoctorsEnabled = isMicroFeatureEnabled(
+    MODULE_KEYS.ADMIN,
+    ADMIN_FEATURES.DOCTORS
+  );
 
-useEffect(() => {
-  if (!tenantLoading && !isDoctorsEnabled) {
-    router.push("/unauthorized");
-  }
-}, [tenantLoading]);
+  useEffect(() => {
+    if (!tenantLoading && !isDoctorsEnabled) {
+      router.push("/unauthorized");
+    }
+  }, [tenantLoading]);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -116,6 +119,19 @@ useEffect(() => {
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        toast.error('Please upload a JPG, PNG, or WebP image');
+        return;
+      }
+
+      // Validate file size (2MB max)
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error('File size must be less than 2MB');
+        return;
+      }
+
       setFormData((prev) => ({ ...prev, avatar: file }));
 
       // Create preview
@@ -173,30 +189,76 @@ useEffect(() => {
     return newErrors;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const validationErrors = validateForm();
+ const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
+  const validationErrors = validateForm();
+  if (Object.keys(validationErrors).length > 0) {
+    setErrors(validationErrors);
+    return;
+  }
+
+  try {
+    setIsSubmitting(true);
+
+    // Filter out empty qualifications
+    const filteredQualifications = formData.qualifications.filter(q => q.trim() !== "");
+
+    // Create FormData to send both JSON data and file together
+    const formDataToSend = new FormData();
+    
+    // Append all text fields
+    formDataToSend.append('firstName', formData.firstName);
+    formDataToSend.append('lastName', formData.lastName);
+    formDataToSend.append('email', formData.email);
+    formDataToSend.append('phone', formData.phone);
+    formDataToSend.append('role', formData.role);
+    formDataToSend.append('department', formData.department);
+    formDataToSend.append('employeeId', formData.employeeId);
+    formDataToSend.append('dateOfBirth', formData.dateOfBirth || '');
+    formDataToSend.append('dateJoined', formData.dateJoined);
+    formDataToSend.append('address', formData.address || '');
+    formDataToSend.append('city', formData.city || '');
+    formDataToSend.append('state', formData.state || '');
+    formDataToSend.append('zipCode', formData.zipCode || '');
+    formDataToSend.append('country', formData.country || '');
+    formDataToSend.append('experience', (formData.experience ? Number(formData.experience) : 0).toString());
+    formDataToSend.append('bio', formData.bio || '');
+    formDataToSend.append('status', formData.status);
+    
+    // Append qualifications as JSON string
+    formDataToSend.append('qualifications', JSON.stringify(filteredQualifications));
+    
+    // Append avatar file if selected
+    if (formData.avatar) {
+      formDataToSend.append('avatar', formData.avatar);
+      console.log('Avatar file appended:', formData.avatar.name);
     }
 
-    setIsSubmitting(true);
-    setErrors({});
+    console.log('Sending form data with avatar:', formData.avatar ? 'Yes' : 'No');
 
-    // Simulate API call
-    setTimeout(() => {
-      console.log("Staff data to submit:", formData);
-      toast.success("Staff member added successfully!");
-      router.push("/admin/staffmanagement");
-      setIsSubmitting(false);
-    }, 1000);
-  };
+    // Send using fetch with FormData (not JSON)
+    const response = await fetch('/api/admin/staff', {
+      method: 'POST',
+      body: formDataToSend,
+    });
 
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
+    const result = await response.json();
+
+    if (!result?.success) {
+      throw new Error(result?.message || "Failed to add staff");
+    }
+
+    toast.success("Staff member added successfully!");
+    router.push("/admin/staffmanagement");
+
+  } catch (err: any) {
+    console.error("Error:", err);
+    toast.error(err.message || "Something went wrong");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   if (!tenantLoading && !isDoctorsEnabled) {
     return (

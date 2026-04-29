@@ -247,13 +247,47 @@ FROM patients p
 LEFT JOIN insurance_details i ON p.patient_id = i.patient_id
 LEFT JOIN registrations r ON p.patient_id = r.patient_id;
 
+-- Create staff table
+CREATE TABLE IF NOT EXISTS staff (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    phone VARCHAR(20),
+    role VARCHAR(50) NOT NULL,
+    department VARCHAR(100) NOT NULL,
+    employee_id VARCHAR(50) UNIQUE,
+    date_of_birth DATE,
+    date_joined DATE NOT NULL,
+    address TEXT,
+    city VARCHAR(100),
+    state VARCHAR(100),
+    zip_code VARCHAR(20),
+    country VARCHAR(100),
+    qualifications JSONB DEFAULT '[]',
+    experience INTEGER,
+    bio TEXT,
+    status VARCHAR(20) DEFAULT 'active',
+    avatar_url VARCHAR(500),
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Create index for faster lookups
+CREATE INDEX idx_staff_email ON staff(email);
+CREATE INDEX idx_staff_employee_id ON staff(employee_id);
+CREATE INDEX idx_staff_role ON staff(role);
+CREATE INDEX idx_staff_department ON staff(department);
+CREATE INDEX idx_staff_status ON staff(status);
+
 -- Users table
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     email VARCHAR(100) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
     full_name_en VARCHAR(100) NOT NULL,
-    role VARCHAR(50) NOT NULL CHECK (role IN ('patient', 'doctor', 'admin', 'pharmacy', 'helpdesk', 'billing')),
+    role VARCHAR(50) NOT NULL CHECK (role IN ('patient', 'doctor', 'admin', 'pharmacy', 'helpdesk', 'billing','nurse')),
     patient_id VARCHAR(50) UNIQUE,
     auth_user_id UUID UNIQUE,
     doctor_id BIGINT,
@@ -758,15 +792,6 @@ CREATE TABLE IF NOT EXISTS auth_refresh_tokens (
 CREATE INDEX IF NOT EXISTS idx_auth_refresh_tokens_user_id ON auth_refresh_tokens(user_id);
 CREATE INDEX IF NOT EXISTS idx_auth_refresh_tokens_expires_at ON auth_refresh_tokens(expires_at);
 
--- =====================================================
--- Insert test users (passwords: text123, doctor456, help123)
--- =====================================================
 
-INSERT INTO users (email, password, full_name_en, role, patient_id) VALUES
-('admin@gmail.com', crypt('text123', gen_salt('bf')), 'Admin User', 'admin', NULL),
-('patient@gmail.com', crypt('text123', gen_salt('bf')), 'John Doe', 'patient', '17719220477275068'),
-('doctor@example.com', crypt('doctor456', gen_salt('bf')), 'Dr. Sarah Smith', 'doctor', NULL),
-('pharmacy@gmail.com', crypt('text123', gen_salt('bf')), 'MedPlus Pharmacy', 'pharmacy', NULL),
-('helpdesk@hospital.com', crypt('help123', gen_salt('bf')), 'Help Desk Support', 'helpdesk', NULL),
-('billing@hospital.com', crypt('text123', gen_salt('bf')), 'Billing User', 'billing', NULL)
-ON CONFLICT (email) DO NOTHING;
+
+
