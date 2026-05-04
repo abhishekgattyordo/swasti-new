@@ -95,6 +95,37 @@ export default function PatientDetailPage() {
     }
   };
 
+  const getVitalStatusColor = (value: number, type: string) => {
+  switch (type) {
+    case 'bp_systolic':
+      if (value > 140) return 'text-red-600 dark:text-red-400 font-semibold';
+      if (value > 120) return 'text-orange-500 dark:text-orange-400 font-semibold';
+      return 'text-green-600 dark:text-green-400';
+    case 'bp_diastolic':
+      if (value > 90) return 'text-red-600 dark:text-red-400 font-semibold';
+      if (value > 80) return 'text-orange-500 dark:text-orange-400 font-semibold';
+      return 'text-green-600 dark:text-green-400';
+    case 'hr':
+      if (value > 100 || value < 60) return 'text-red-600 dark:text-red-400 font-semibold';
+      if (value > 90 || value < 65) return 'text-orange-500 dark:text-orange-400 font-semibold';
+      return 'text-green-600 dark:text-green-400';
+    case 'temp':
+      if (value > 38.5 || value < 36) return 'text-red-600 dark:text-red-400 font-semibold';
+      if (value > 37.5 || value < 36.5) return 'text-orange-500 dark:text-orange-400 font-semibold';
+      return 'text-green-600 dark:text-green-400';
+    case 'rr':
+      if (value > 24 || value < 12) return 'text-red-600 dark:text-red-400 font-semibold';
+      if (value > 20 || value < 14) return 'text-orange-500 dark:text-orange-400 font-semibold';
+      return 'text-green-600 dark:text-green-400';
+    case 'spo2':
+      if (value < 90) return 'text-red-600 dark:text-red-400 font-semibold';
+      if (value < 95) return 'text-orange-500 dark:text-orange-400 font-semibold';
+      return 'text-green-600 dark:text-green-400';
+    default:
+      return 'text-gray-700 dark:text-gray-300';
+  }
+};
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-slate-950 flex items-center justify-center">
@@ -182,23 +213,94 @@ export default function PatientDetailPage() {
 
             {/* Vitals Tab */}
             {activeTab === 'vitals' && (
-              <div className="space-y-2 max-h-96 overflow-y-auto">
-                {vitals.length === 0 ? <p className="text-gray-500 text-center py-8">No vitals recorded</p> : (
-                  vitals.map((v: any, i: number) => (
-                    <div key={i} className={`p-3 rounded-lg border ${getStatusColor(v.status || 'stable')}`}>
-                      <div className="flex justify-between text-xs text-gray-500 mb-1"><span>{v.timestamp || v.recorded_at}</span><span>{v.recordedBy}</span></div>
-                      <div className="grid grid-cols-5 gap-2 text-center text-sm">
-                        <span><strong>{v.systolic}/{v.diastolic}</strong><br/><span className="text-xs">BP</span></span>
-                        <span><strong>{v.heartRate}</strong><br/><span className="text-xs">HR</span></span>
-                        <span><strong>{v.temperature}°C</strong><br/><span className="text-xs">Temp</span></span>
-                        <span><strong>{v.respiratoryRate}</strong><br/><span className="text-xs">RR</span></span>
-                        <span><strong>{v.spO2}%</strong><br/><span className="text-xs">SpO₂</span></span>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            )}
+  <div className="overflow-x-auto">
+    {vitals.length === 0 ? (
+      <p className="text-gray-500 text-center py-8">No vitals recorded</p>
+    ) : (
+      <table className="w-full text-sm">
+        <thead className="bg-gray-50 dark:bg-slate-800 rounded-lg">
+          <tr>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
+              Date & Time
+            </th>
+            <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
+              BP (mmHg)
+            </th>
+            <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
+              HR (bpm)
+            </th>
+            <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
+              Temp (°C)
+            </th>
+            <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
+              RR (breaths/min)
+            </th>
+            <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
+              SpO₂ (%)
+            </th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
+              Status
+            </th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
+              Recorded By
+            </th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-200 dark:divide-slate-700">
+          {vitals.map((v: any, i: number) => (
+            <tr 
+              key={i} 
+              className="hover:bg-gray-50 dark:hover:bg-slate-800/50 transition-colors"
+            >
+              <td className="px-4 py-3 text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                <div className="flex items-center gap-2">
+                  <Clock size={14} className="text-gray-400" />
+                  <span>{v.timestamp || v.recorded_at || new Date(v.recordedAt).toLocaleTimeString()}</span>
+                </div>
+                <div className="text-xs text-gray-400 mt-0.5">
+                  {new Date(v.fullTimestamp || v.recordedAt).toLocaleDateString()}
+                </div>
+              </td>
+              <td className="px-4 py-3 text-center font-medium">
+                <span className={getVitalStatusColor(v.systolic, 'bp_systolic')}>
+                  {v.systolic}/{v.diastolic}
+                </span>
+              </td>
+              <td className="px-4 py-3 text-center font-medium">
+                <span className={getVitalStatusColor(v.heartRate, 'hr')}>
+                  {v.heartRate}
+                </span>
+              </td>
+              <td className="px-4 py-3 text-center font-medium">
+                <span className={getVitalStatusColor(parseFloat(v.temperature), 'temp')}>
+                  {v.temperature}°C
+                </span>
+              </td>
+              <td className="px-4 py-3 text-center font-medium">
+                <span className={getVitalStatusColor(v.respiratoryRate, 'rr')}>
+                  {v.respiratoryRate}
+                </span>
+              </td>
+              <td className="px-4 py-3 text-center font-medium">
+                <span className={getVitalStatusColor(v.spO2, 'spo2')}>
+                  {v.spO2}%
+                </span>
+              </td>
+              <td className="px-4 py-3">
+                <span className={`px-2 py-1 rounded-full text-xs font-medium capitalize ${getStatusColor(v.status || 'stable')}`}>
+                  {v.status || 'stable'}
+                </span>
+              </td>
+              <td className="px-4 py-3 text-gray-600 dark:text-gray-400">
+                {v.recordedBy?.split('(')[0]?.trim() || v.recorded_by || 'Unknown'}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    )}
+  </div>
+)}
 
             {/* Medications Tab */}
             {activeTab === 'medications' && (

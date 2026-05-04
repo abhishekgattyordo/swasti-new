@@ -11,7 +11,7 @@ import toast from "react-hot-toast";
 
 const getTaskTypeIcon = (taskType: string) => {
   switch (taskType) {
-    case "vitals": return "❤️";
+    case "vitals": return "";
     case "medication": return "💊";
     case "lab": return "🔬";
     case "dressing": return "🏥";
