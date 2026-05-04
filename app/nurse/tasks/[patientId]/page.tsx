@@ -90,20 +90,32 @@ export default function PatientTasksPage() {
 
   useEffect(() => { fetchTasks(); }, [fetchTasks]);
 
-  const handleUpdateTask = async (taskId: string, status: string, result?: string) => {
-    try {
-      const nurseName = localStorage.getItem('userName') || 'Nurse';
-      const res = await nurseApi.updateTask(taskId, { status, result, completedBy: nurseName });
-      
-      if (res?.success) {
-        toast.success(status === 'completed' ? 'Task completed!' : 'Task started!');
-        fetchTasks();
-        setShowTaskModal(false);
-      } else {
-        toast.error(res?.message || 'Failed');
-      }
-    } catch (err: any) { toast.error(err.message || 'Failed'); }
-  };
+const handleUpdateTask = async (taskId: string, status: string, result?: string) => {
+  try {
+    const nurseName = localStorage.getItem('userName') || 'Nurse';
+    const res = await nurseApi.updateTask(taskId, { status, result, completedBy: nurseName });
+    
+    console.log('Update task response:', res); // Debug log
+    
+    // ✅ Check for success in multiple formats
+    const isSuccess = 
+      res?.success === true ||      // Standard format
+      res?.id ||                     // Direct data return
+      res?.data?.id ||              // Wrapped in data
+      (res && !res?.error);          // Any response without error
+    
+    if (isSuccess) {
+      toast.success(status === 'completed' ? 'Task completed!' : 'Task started!');
+      await fetchTasks();
+      setShowTaskModal(false);
+    } else {
+      toast.error(res?.message || 'Failed to update task');
+    }
+  } catch (err: any) { 
+    console.error('Update task error:', err);
+    toast.error(err.message || 'Failed to update task'); 
+  }
+};
 
   const filteredTasks = tasks.filter(task => {
     const matchesStatus = statusFilter === 'all' || task.status === statusFilter;
