@@ -27,6 +27,7 @@ import { staffApi } from "@/lib/api/staff";
 
 // Mock data for roles and departments
 const roleOptions = [
+  "nurse",
   "Helpdesk",
   "Receptionist",
   "Lab Technician",
@@ -63,6 +64,8 @@ export default function EditStaffPage() {
   
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [wards, setWards] = useState<any[]>([]);
+  const [wardId, setWardId] = useState('');
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -94,6 +97,27 @@ export default function EditStaffPage() {
     MODULE_KEYS.ADMIN,
     ADMIN_FEATURES.DOCTORS
   );
+
+  // Fetch wards
+  const fetchWards = async () => {
+    try {
+      const response = await fetch('/api/bed-config/wards');
+      const result = await response.json();
+      if (result?.success && result?.data) {
+        setWards(result.data);
+      } else if (Array.isArray(result)) {
+        setWards(result);
+      } else if (result?.data) {
+        setWards(result.data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch wards:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchWards();
+  }, []);
 
   useEffect(() => {
     if (!tenantLoading && !isDoctorsEnabled) {
@@ -151,6 +175,11 @@ export default function EditStaffPage() {
         avatar: null,
         avatarUrl: staffData.avatar_url || "",
       });
+
+      // Set ward if exists
+      if (staffData.ward_id) {
+        setWardId(staffData.ward_id.toString());
+      }
 
       // Set avatar preview if exists
       if (staffData.avatar_url) {
@@ -298,6 +327,7 @@ export default function EditStaffPage() {
         formDataToSend.append('experience', formData.experience || '');
         formDataToSend.append('bio', formData.bio || '');
         formDataToSend.append('status', formData.status);
+        formDataToSend.append('wardId', wardId);
         formDataToSend.append('qualifications', JSON.stringify(filteredQualifications));
         formDataToSend.append('avatar', formData.avatar as File);
 
@@ -337,6 +367,7 @@ export default function EditStaffPage() {
           experience: formData.experience ? Number(formData.experience) : null,
           bio: formData.bio || null,
           status: formData.status,
+          wardId: wardId || null,
         };
 
         console.log('Updating staff without avatar...');
@@ -693,6 +724,26 @@ export default function EditStaffPage() {
                               {errors.department}
                             </p>
                           )}
+                        </div>
+
+                        {/* Ward - NEW */}
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                            Ward
+                          </label>
+                          <select
+                            name="wardId"
+                            value={wardId}
+                            onChange={(e) => setWardId(e.target.value)}
+                            className="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-[#137fec] focus:ring-2 focus:ring-blue-500/20 transition-colors"
+                          >
+                            <option value="">Select Ward</option>
+                            {wards.map((ward: any) => (
+                              <option key={ward.id} value={ward.id}>
+                                {ward.name} ({ward.type || 'N/A'})
+                              </option>
+                            ))}
+                          </select>
                         </div>
 
                         {/* Years of Experience */}

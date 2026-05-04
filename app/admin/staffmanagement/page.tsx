@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { 
   Users, UserCheck, UserX, FileCheck, 
-  Eye, Edit, Trash2, Plus, Loader2 
+  Eye, Edit, Trash2, Plus, Loader2, Save, X, Building2
 } from "lucide-react";
 
 import { staffApi } from "@/lib/api/staff";
@@ -27,6 +27,8 @@ export interface Staff {
   employeeId: string;
   qualifications: string[];
   experience: number;
+  wardId?: number | null;
+  wardName?: string;
 }
 
 // Status Badge Component
@@ -62,8 +64,31 @@ const StaffManagementPage: React.FC = () => {
   const [departmentOptions, setDepartmentOptions] = useState<string[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [wards, setWards] = useState<any[]>([]);
+  
+  // Inline editing states
+  const [editingStatusId, setEditingStatusId] = useState<number | null>(null);
+  const [editingWardId, setEditingWardId] = useState<number | null>(null);
+  const [savingField, setSavingField] = useState<string | null>(null);
 
   const router = useRouter();
+
+  // Fetch wards
+  const fetchWards = async () => {
+    try {
+      const response = await fetch('/api/bed-config/wards');
+      const result = await response.json();
+      if (result?.success && result?.data) {
+        setWards(result.data);
+      } else if (Array.isArray(result)) {
+        setWards(result);
+      } else if (result?.data) {
+        setWards(result.data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch wards:', err);
+    }
+  };
 
   // Fetch all staff
   const fetchStaff = async () => {
@@ -74,7 +99,6 @@ const StaffManagementPage: React.FC = () => {
       const response = await staffApi.getAllStaff();
       console.log("Staff data fetched:", response);
 
-      // Handle both array response and wrapped response
       const staffData = Array.isArray(response) ? response : response.data || [];
       
       const mappedData = staffData.map((s: any) => ({
@@ -91,15 +115,14 @@ const StaffManagementPage: React.FC = () => {
         employeeId: s.employee_id,
         qualifications: s.qualifications || [],
         experience: s.experience || 0,
+        wardId: s.ward_id || null,
+        wardName: s.ward_name || null,
       }));
 
       setStaff(mappedData);
       
-      // Extract unique roles and departments for filters
       const roles = [...new Set(mappedData.map((s: Staff) => s.role))] as string[];
-      const departments = [...new Set(mappedData.map((s: Staff) => s.department))] as string[];
       setRoleOptions(roles);
-      setDepartmentOptions(departments);
 
     } catch (err: any) {
       console.error("Fetch error:", err);
@@ -113,7 +136,47 @@ const StaffManagementPage: React.FC = () => {
 
   useEffect(() => {
     fetchStaff();
+    fetchWards();
   }, []);
+
+  // Quick update staff field (status or ward)
+  const quickUpdateStaff = async (staffId: number, field: string, value: any) => {
+    setSavingField(`${field}-${staffId}`);
+    try {
+      const payload: any = {};
+      if (field === 'status') {
+        payload.status = value;
+      } else if (field === 'wardId') {
+        payload.wardId = value;
+      }
+
+      const response = await staffApi.updateStaff(staffId, payload);
+      
+      if (response?.success) {
+        // Update local state
+        setStaff(prev => prev.map(s => {
+          if (s.id === staffId) {
+            if (field === 'status') {
+              return { ...s, status: value };
+            } else if (field === 'wardId') {
+              const ward = wards.find(w => w.id === parseInt(value));
+              return { ...s, wardId: value ? parseInt(value) : null, wardName: ward?.name || null };
+            }
+          }
+          return s;
+        }));
+        toast.success(`${field === 'status' ? 'Status' : 'Ward'} updated successfully`);
+      } else {
+        toast.error(response?.message || 'Update failed');
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Update failed');
+    } finally {
+      setSavingField(null);
+      setEditingStatusId(null);
+      setEditingWardId(null);
+    }
+  };
 
   // Stats Calculation
   const totalStaff = staff.length;
@@ -141,36 +204,21 @@ const StaffManagementPage: React.FC = () => {
     try {
       const toastId = toast.loading(`Deleting ${name}...`);
       
-      const response = await staffApi.deleteStaff(id);
-      console.log('Delete response:', response);
+      await staffApi.deleteStaff(id);
       
-      // Remove from local state immediately for better UX
       setStaff(prev => prev.filter(s => s.id !== id));
       
       toast.dismiss(toastId);
-      toast.success(`${name} has been deleted successfully`, {
-        description: response.message || "The staff member has been removed from the system.",
-        duration: 3000,
-      });
+      toast.success(`${name} has been deleted successfully`);
       
     } catch (err: any) {
       console.error("Delete failed:", err);
       
-      // Handle specific error cases
       if (err.response?.status === 404) {
-        toast.error("Staff member not found", {
-          description: "They may have been already deleted. Refreshing the list...",
-        });
-        fetchStaff(); // Refresh the list
+        toast.error("Staff member not found");
+        fetchStaff();
       } else {
-        const errorMessage = err.response?.data?.message || 
-                            err.message || 
-                            "Failed to delete staff member";
-        
-        toast.error(errorMessage, {
-          description: "Please try again or contact support if the issue persists.",
-          duration: 5000,
-        });
+        toast.error(err.response?.data?.message || err.message || "Failed to delete staff member");
       }
     } finally {
       setDeletingId(null);
@@ -306,7 +354,6 @@ const StaffManagementPage: React.FC = () => {
                 <h3 className="uppercase text-xs font-bold tracking-widest text-slate-500">Filters</h3>
               </div>
 
-              {/* Search Input */}
               <input
                 type="text"
                 placeholder="Search by name, email, role, department or employee ID..."
@@ -315,7 +362,6 @@ const StaffManagementPage: React.FC = () => {
                 className="w-full px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 focus:ring-2 focus:ring-[#137fec]"
               />
 
-              {/* Role Filter Buttons */}
               <div className="flex flex-wrap gap-2">
                 {filterButtons.map((filter) => (
                   <button
@@ -333,36 +379,21 @@ const StaffManagementPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Staff Table with Enhanced Borders */}
+            {/* Staff Table */}
             <div className="bg-white dark:bg-slate-900 rounded-xl border-2 border-slate-300 dark:border-slate-600 overflow-hidden shadow-md">
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
                     <tr className="bg-gradient-to-r from-slate-100 to-slate-50 dark:from-slate-800 dark:to-slate-850 border-b-2 border-slate-300 dark:border-slate-600">
-                      <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700">
-                        Staff Member
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700">
-                        Employee ID
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700">
-                        Role
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700">
-                        Department
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700">
-                        Contact
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700">
-                        Date Joined
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700">
-                        Status
-                      </th>
-                      <th className="px-6 py-4 text-right text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                        Actions
-                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700">Staff Member</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700">Employee ID</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700">Role</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700">Department</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700">Ward</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700">Contact</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700">Joined</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700">Status</th>
+                      <th className="px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -370,66 +401,130 @@ const StaffManagementPage: React.FC = () => {
                       filteredStaff.map((member, index) => (
                         <tr
                           key={member.id}
-                          className={`hover:bg-blue-50 dark:hover:bg-slate-700/50 transition-all duration-200 cursor-pointer border-b border-slate-200 dark:border-slate-700 ${
+                          className={`hover:bg-blue-50 dark:hover:bg-slate-700/50 transition-all duration-200 border-b border-slate-200 dark:border-slate-700 ${
                             index % 2 === 0 ? 'bg-white dark:bg-slate-900' : 'bg-slate-50/50 dark:bg-slate-800/50'
                           }`}
-                          onClick={() => router.push(`/admin/staffmanagement/${member.id}`)}
                         >
-                          <td className="px-6 py-4 border-r border-slate-200 dark:border-slate-700">
-                            <div className="flex items-center gap-3">
-                              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/30 dark:to-blue-800/30 flex-shrink-0 overflow-hidden border-2 border-blue-200 dark:border-blue-700">
+                          {/* Staff Member */}
+                          <td className="px-4 py-3 border-r border-slate-200 dark:border-slate-700">
+                            <div className="flex items-center gap-2">
+                              <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex-shrink-0 overflow-hidden border border-blue-200">
                                 {member.avatar ? (
                                   <img src={member.avatar} alt="" className="h-full w-full object-cover" />
                                 ) : (
-                                  <div className="h-full w-full flex items-center justify-center text-blue-600 dark:text-blue-300 font-semibold text-sm">
+                                  <div className="h-full w-full flex items-center justify-center text-blue-600 font-semibold text-xs">
                                     {member.firstName[0]}{member.lastName[0]}
                                   </div>
                                 )}
                               </div>
                               <div>
-                                <p className="font-semibold text-slate-900 dark:text-slate-100">{member.firstName} {member.lastName}</p>
-                                <p className="text-sm text-slate-500 dark:text-slate-400">{member.email}</p>
+                                <p className="font-semibold text-sm text-slate-900 dark:text-slate-100">{member.firstName} {member.lastName}</p>
+                                <p className="text-xs text-slate-500">{member.email}</p>
                               </div>
                             </div>
                           </td>
-                          <td className="px-6 py-4 font-mono text-sm text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700">
-                            <span className="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-xs">
-                              {member.employeeId}
-                            </span>
+                          
+                          {/* Employee ID */}
+                          <td className="px-4 py-3 font-mono text-xs text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700">
+                            <span className="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">{member.employeeId}</span>
                           </td>
-                          <td className="px-6 py-4 border-r border-slate-200 dark:border-slate-700">
-                            <span className="inline-flex px-3 py-1 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 text-xs font-medium border border-purple-200 dark:border-purple-700">
+                          
+                          {/* Role */}
+                          <td className="px-4 py-3 border-r border-slate-200 dark:border-slate-700">
+                            <span className="inline-flex px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 text-xs font-medium">
                               {member.role}
                             </span>
                           </td>
-                          <td className="px-6 py-4 text-sm text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700">
-                            <span className="inline-flex items-center gap-1">
-                              <span className="w-2 h-2 rounded-full bg-blue-400"></span>
-                              {member.department}
-                            </span>
+                          
+                          {/* Department */}
+                          <td className="px-4 py-3 text-xs text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700">
+                            {member.department}
                           </td>
-                          <td className="px-6 py-4 text-sm font-medium text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700">
-                            <div className="flex items-center gap-1">
-                              <svg className="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                              </svg>
-                              {member.phone}
-                            </div>
+                          
+                          {/* Ward - EDITABLE */}
+                          <td className="px-4 py-3 border-r border-slate-200 dark:border-slate-700" onClick={e => e.stopPropagation()}>
+                            {editingWardId === member.id ? (
+                              <div className="flex items-center gap-1">
+                                <select
+                                  defaultValue={member.wardId || ''}
+                                  onChange={(e) => quickUpdateStaff(member.id, 'wardId', e.target.value)}
+                                  className="w-full px-1 py-0.5 text-xs border border-blue-300 rounded bg-white dark:bg-slate-800"
+                                  autoFocus
+                                >
+                                  <option value="">None</option>
+                                  {wards.map((ward: any) => (
+                                    <option key={ward.id} value={ward.id}>{ward.name}</option>
+                                  ))}
+                                </select>
+                                <button onClick={() => setEditingWardId(null)} className="p-0.5 hover:bg-gray-200 rounded">
+                                  <X size={12} />
+                                </button>
+                              </div>
+                            ) : (
+                              <div 
+                                className="flex items-center gap-1 cursor-pointer hover:bg-blue-50 dark:hover:bg-slate-700 rounded px-1 py-0.5 group"
+                                onClick={() => setEditingWardId(member.id)}
+                              >
+                                {savingField === `wardId-${member.id}` ? (
+                                  <Loader2 size={12} className="animate-spin text-blue-500" />
+                                ) : member.wardName ? (
+                                  <span className="text-xs flex items-center gap-1">
+                                    <Building2 size={10} className="text-slate-400" />
+                                    {member.wardName}
+                                  </span>
+                                ) : (
+                                  <span className="text-xs text-slate-400 italic">Not assigned</span>
+                                )}
+                                <Edit size={10} className="text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                              </div>
+                            )}
                           </td>
-                          <td className="px-6 py-4 text-sm text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700">
-                            <div className="flex items-center gap-1">
-                              <svg className="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                              </svg>
-                              {member.dateJoined}
-                            </div>
+                          
+                          {/* Contact */}
+                          <td className="px-4 py-3 text-xs text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700">
+                            {member.phone}
                           </td>
-                          <td className="px-6 py-4 border-r border-slate-200 dark:border-slate-700">
-                            <StatusBadge status={member.status} />
+                          
+                          {/* Date Joined */}
+                          <td className="px-4 py-3 text-xs text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700">
+                            {member.dateJoined}
                           </td>
-                          <td className="px-6 py-4 text-right">
-                            <div className="flex items-center justify-end gap-1" onClick={e => e.stopPropagation()}>
-                             
+                          
+                          {/* Status - EDITABLE */}
+                          <td className="px-4 py-3 border-r border-slate-200 dark:border-slate-700" onClick={e => e.stopPropagation()}>
+                            {editingStatusId === member.id ? (
+                              <div className="flex items-center gap-1">
+                                <select
+                                  defaultValue={member.status}
+                                  onChange={(e) => quickUpdateStaff(member.id, 'status', e.target.value)}
+                                  className="w-full px-1 py-0.5 text-xs border border-blue-300 rounded bg-white dark:bg-slate-800"
+                                  autoFocus
+                                >
+                                  <option value="active">Active</option>
+                                  <option value="on-leave">On Leave</option>
+                                  <option value="inactive">Inactive</option>
+                                </select>
+                                <button onClick={() => setEditingStatusId(null)} className="p-0.5 hover:bg-gray-200 rounded">
+                                  <X size={12} />
+                                </button>
+                              </div>
+                            ) : (
+                              <div 
+                                className="cursor-pointer hover:opacity-80"
+                                onClick={() => setEditingStatusId(member.id)}
+                              >
+                                {savingField === `status-${member.id}` ? (
+                                  <Loader2 size={14} className="animate-spin text-blue-500" />
+                                ) : (
+                                  <StatusBadge status={member.status} />
+                                )}
+                              </div>
+                            )}
+                          </td>
+                          
+                          {/* Actions */}
+                          <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
+                            <div className="flex items-center justify-end gap-1">
                               <Button
                                 variant="ghost"
                                 size="icon"
@@ -442,7 +537,7 @@ const StaffManagementPage: React.FC = () => {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-900/20 border border-transparent hover:border-rose-200 dark:hover:border-rose-800"
+                                className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-900/20"
                                 onClick={() => handleDelete(member.id, `${member.firstName} ${member.lastName}`)}
                                 disabled={deletingId === member.id}
                                 title="Delete Staff"
@@ -459,15 +554,12 @@ const StaffManagementPage: React.FC = () => {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={8} className="px-6 py-16 text-center border-t border-slate-200 dark:border-slate-700">
+                        <td colSpan={9} className="px-6 py-16 text-center">
                           <div className="flex flex-col items-center gap-3">
                             <div className="p-4 bg-slate-100 dark:bg-slate-800 rounded-full">
                               <Users className="h-8 w-8 text-slate-400 dark:text-slate-500" />
                             </div>
-                            <div>
-                              <p className="text-lg font-semibold text-slate-700 dark:text-slate-300">No staff members found</p>
-                              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Try adjusting your search or filter criteria</p>
-                            </div>
+                            <p className="text-lg font-semibold text-slate-700 dark:text-slate-300">No staff members found</p>
                           </div>
                         </td>
                       </tr>
@@ -476,7 +568,7 @@ const StaffManagementPage: React.FC = () => {
                 </table>
               </div>
               
-              {/* Table Footer with Border */}
+              {/* Table Footer */}
               <div className="border-t-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-6 py-3">
                 <div className="flex items-center justify-between text-sm text-slate-600 dark:text-slate-400">
                   <span>Showing {filteredStaff.length} of {staff.length} staff members</span>

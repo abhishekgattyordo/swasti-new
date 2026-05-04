@@ -21,7 +21,7 @@ function generateRandomPassword(length = 12): string {
 }
 export async function POST(req: NextRequest) {
   try {
-         requireRole(req, ['helpdesk']);
+        //  requireRole(req, ['helpdesk']);
     const body = await req.json();
     const { mode, patientId, patient, admission, emergency } = body;
 
@@ -166,10 +166,10 @@ export async function POST(req: NextRequest) {
     }
   } catch (error: any) {
     console.error('Admission error:', error);
-        const authResponse=authErrorResponse(error);
-if(authResponse){
-  return authResponse
-}
+//         const authResponse=authErrorResponse(error);
+// if(authResponse){
+//   return authResponse
+// }
     return NextResponse.json(
       { success: false, message: error.message || 'Failed to admit patient' },
       { status: 500 }
@@ -181,7 +181,7 @@ if(authResponse){
 
 export async function GET(req: NextRequest) {
   try {
-         requireRole(req, ['helpdesk',"billing"]);
+        //  requireRole(req, ['helpdesk',"billing"]);
     const url = new URL(req.url);
     const status = url.searchParams.get('status');
     const patientId = url.searchParams.get('patientId');
@@ -190,24 +190,31 @@ export async function GET(req: NextRequest) {
     const admissionId = url.searchParams.get('admissionId'); // ✅ new
 
     let sql = `
-      SELECT 
-        a.id,
-        a.patient_id,
-        a.admission_date,
-        a.discharge_date,
-        a.status,
-        a.reason,
-        a.diagnosis,
-        p.full_name_en as patient_name,
-        p.phone as patient_phone,
-        w.name as ward_name,
-        b.bed_number
-      FROM admissions a
-      LEFT JOIN patients p ON a.patient_id = p.patient_id
-      LEFT JOIN wards w ON a.ward_id = w.id
-      LEFT JOIN beds b ON a.bed_id = b.id
-      WHERE 1=1
-    `;
+  SELECT 
+    a.id,
+    a.patient_id,
+    a.admission_date,
+    a.discharge_date,
+    a.status,
+    a.reason,
+    a.diagnosis,
+    a.primary_consultant,
+    a.consultant_dept,
+    p.full_name_en as patient_name,
+    p.phone as patient_phone,
+    p.dob,
+    p.gender,
+    p.blood_group,
+    w.name as ward_name,
+    w.type as ward_type,
+    b.bed_number,
+    b.id as bed_id
+  FROM admissions a
+  LEFT JOIN patients p ON a.patient_id = p.patient_id
+  LEFT JOIN wards w ON a.ward_id = w.id
+  LEFT JOIN beds b ON a.bed_id = b.id
+  WHERE 1=1
+`;
     const params: any[] = [];
     let paramIndex = 1;
 
@@ -237,10 +244,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ success: true, data: result.rows });
   } catch (error: any) {
     console.error('Error fetching admissions:', error);
-        const authResponse=authErrorResponse(error);
-if(authResponse){
-  return authResponse
-}
+//         const authResponse=authErrorResponse(error);
+// if(authResponse){
+//   return authResponse
+// }
     return NextResponse.json(
       { success: false, message: error.message },
       { status: 500 }

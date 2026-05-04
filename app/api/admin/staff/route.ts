@@ -1,8 +1,12 @@
+
+
 // app/api/admin/staff/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from "@/lib/db";
 import bcrypt from 'bcrypt';
-import { validateStaffForm, StaffFormData } from '@/lib/validations/staffValidation';
+import { writeFile, mkdir } from 'fs/promises';
+import { join } from 'path';
+import fs from 'fs';
 
 // Helper function to generate employee ID
 function generateEmployeeId(role: string, department: string): string {
@@ -33,10 +37,12 @@ export async function GET(request: NextRequest) {
         s.department, s.employee_id, s.date_of_birth, s.date_joined, 
         s.address, s.city, s.state, s.zip_code, s.country,
         s.qualifications, s.experience, s.bio, s.status, s.avatar_url,
+        s.ward_id, w.name as ward_name,
         s.created_at, s.updated_at,
         u.id as user_id
       FROM staff s
       LEFT JOIN users u ON s.user_id = u.id
+      LEFT JOIN wards w ON s.ward_id = w.id
       WHERE 1=1
     `;
     
@@ -86,7 +92,6 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Create new staff member
 // POST - Create new staff member (handles both JSON and FormData)
 export async function POST(request: NextRequest) {
   try {
@@ -95,6 +100,7 @@ export async function POST(request: NextRequest) {
     let body: any = {};
     let avatarFile: File | null = null;
     let avatarUrl: string | null = null;
+    let wardId: number | null = null;
 
     // Check if request is FormData (with file) or JSON
     if (contentType.includes('multipart/form-data')) {
@@ -119,6 +125,10 @@ export async function POST(request: NextRequest) {
       body.bio = formData.get('bio') as string;
       body.status = formData.get('status') as string;
       
+      // Parse wardId
+      const wardIdStr = formData.get('wardId') as string;
+      wardId = wardIdStr && wardIdStr !== '' ? parseInt(wardIdStr) : null;
+      
       // Parse qualifications from JSON string
       const qualificationsStr = formData.get('qualifications') as string;
       body.qualifications = qualificationsStr ? JSON.parse(qualificationsStr) : [];
@@ -128,10 +138,6 @@ export async function POST(request: NextRequest) {
       
       // Save avatar file if present
       if (avatarFile && avatarFile.size > 0) {
-        const { writeFile, mkdir } = await import('fs/promises');
-        const { join } = await import('path');
-        const fs = await import('fs');
-        
         const uploadDir = join(process.cwd(), 'public', 'uploads', 'avatars');
         if (!fs.existsSync(uploadDir)) {
           await mkdir(uploadDir, { recursive: true });
@@ -151,10 +157,12 @@ export async function POST(request: NextRequest) {
     } else {
       // JSON request (no file)
       body = await request.json();
+      wardId = body.wardId && body.wardId !== '' ? parseInt(body.wardId) : null;
     }
     
     console.log('Processed body:', { 
       ...body, 
+      wardId,
       avatarFile: avatarFile ? `${avatarFile.name} (${avatarFile.size} bytes)` : 'none',
       avatarUrl 
     });
@@ -225,14 +233,14 @@ export async function POST(request: NextRequest) {
 
       const userId = userResult.rows[0].id;
 
-      // Insert into staff table WITH avatar_url
+      // Insert into staff table WITH ward_id and avatar_url
       const staffResult = await query(
         `INSERT INTO staff (
           user_id, first_name, last_name, email, phone, role, department,
           employee_id, date_of_birth, date_joined, address, city, state,
           zip_code, country, qualifications, experience, bio, status, 
-          avatar_url, created_at, updated_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, NOW(), NOW())
+          ward_id, avatar_url, created_at, updated_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, NOW(), NOW())
         RETURNING *`,
         [
           userId, 
@@ -254,7 +262,8 @@ export async function POST(request: NextRequest) {
           experience,
           body.bio || null, 
           body.status || 'active',
-          avatarUrl  // This will have the file path if avatar was uploaded
+          wardId,  // ✅ ADDED: ward_id
+          avatarUrl
         ]
       );
 
@@ -265,6 +274,7 @@ export async function POST(request: NextRequest) {
 
       console.log('Staff created successfully:', {
         id: staffId,
+        ward_id: wardId,
         avatar_url: avatarUrl,
       });
 
@@ -283,6 +293,7 @@ export async function POST(request: NextRequest) {
           status: body.status || 'active',
           experience: experience,
           qualifications: qualifications,
+          wardId: wardId,
           avatarUrl: avatarUrl,
         },
       });

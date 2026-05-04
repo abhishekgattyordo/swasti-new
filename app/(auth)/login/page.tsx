@@ -113,12 +113,39 @@ export default function LoginPage() {
         return;
       }
 
-      localStorage.setItem("user", JSON.stringify(data.user));
+          localStorage.setItem("user", JSON.stringify(data.user));
 
-      // Store access token with the key expected by the interceptor
+      // Store access token
       if (data.token) {
         localStorage.setItem("accessToken", data.token);
       }
+
+      // Store basic user info
+      localStorage.setItem("userId", data.user?.id?.toString() || '');
+      localStorage.setItem("userName", data.user?.full_name_en || '');
+      localStorage.setItem("userRole", data.user?.role || '');
+
+      // If nurse, fetch and store staff ID
+      if (data.user?.role === 'nurse') {
+        try {
+          const staffRes = await fetch('/api/admin/staff');
+          const staffData = await staffRes.json();
+          
+          if (staffData?.success && staffData?.data) {
+            const staffRecord = staffData.data.find(
+              (s: any) => s.user_id === data.user.id
+            );
+            
+            if (staffRecord) {
+              localStorage.setItem('staffId', staffRecord.id.toString());
+              console.log('✅ Staff ID stored:', staffRecord.id);
+            }
+          }
+        } catch (err) {
+          console.error('Failed to fetch staff ID:', err);
+        }
+      }
+
       console.log("✅ Login successful for:", data.user.email, "Role:", data.user.role);
 
       switch (data.user.role) {

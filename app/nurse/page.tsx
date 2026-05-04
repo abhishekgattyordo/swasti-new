@@ -12,13 +12,13 @@ export default function Dashboard() {
   ];
 
   const navItems = [
-    { href: '/patients', label: 'My Patients', icon: Users },
-    { href: '/vitals', label: 'Vitals Entry', icon: BarChart3 },
-    { href: '/medications', label: 'Medications', icon: Pill },
-    { href: '/nursing-notes', label: 'Nursing Notes', icon: FileText },
-    { href: '/tasks', label: 'Tasks', icon: CheckSquare },
-    { href: '/alerts', label: 'Alerts', icon: Bell },
-    { href: '/handover', label: 'Shift Handover', icon: BookOpen },
+    { href: '/nurse/patients', label: 'My Patients', icon: Users },
+    { href: '/nurse/vitals', label: 'Vitals Entry', icon: BarChart3 },
+    { href: '/nurse/medications', label: 'Medications', icon: Pill },
+    { href: '/nurse/nursing-notes', label: 'Nursing Notes', icon: FileText },
+    { href: '/nurse/tasks', label: 'Tasks', icon: CheckSquare },
+    { href: '/nurse/alerts', label: 'Alerts', icon: Bell },
+    { href: '/nurse/handover', label: 'Shift Handover', icon: BookOpen },
   ];
 
   return (

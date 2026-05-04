@@ -1,34 +1,107 @@
 'use client';
 
 import Link from 'next/link';
-import { Search, Filter, ArrowLeft, User, ChevronRight, ChevronDown } from 'lucide-react';
-import { useState } from 'react';
+import { Search, Filter, User, ChevronRight, Loader2, RefreshCw } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { nurseApi, Patient } from '@/lib/api/nurse';
+
+interface Admission {
+  id: number;
+  patient_id: string;
+  admission_date: string;
+  discharge_date: string | null;
+  status: string;
+  reason: string;
+  diagnosis: string | null;
+  patient_name: string;
+  patient_phone: string;
+  ward_name: string;
+  bed_number: string;
+}
 
 export default function PatientsPage() {
+  const [patients, setPatients] = useState<Admission[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [openFilter, setOpenFilter] = useState<string | null>(null);
 
-  const patients = [
-    { id: 'P001', name: 'John Doe', age: 45, bed: 'ICU-101', status: 'critical', doctor: 'Dr. Smith', diagnosis: 'Pneumonia', admittedDate: '2026-04-25' },
-    { id: 'P002', name: 'Mary Smith', age: 32, bed: 'GEN-205', status: 'recovering', doctor: 'Dr. Johnson', diagnosis: 'Appendectomy', admittedDate: '2026-04-27' },
-    { id: 'P003', name: 'Robert Wilson', age: 67, bed: 'GEN-206', status: 'stable', doctor: 'Dr. Smith', diagnosis: 'Hypertension', admittedDate: '2026-04-20' },
-    { id: 'P004', name: 'Sarah Davis', age: 28, bed: 'OBS-301', status: 'serious', doctor: 'Dr. Patel', diagnosis: 'Pregnancy Complications', admittedDate: '2026-04-26' },
-    { id: 'P005', name: 'James Brown', age: 52, bed: 'ICU-102', status: 'critical', doctor: 'Dr. Williams', diagnosis: 'Heart Failure', admittedDate: '2026-04-28' },
-    { id: 'P006', name: 'Emily Wilson', age: 24, bed: 'GEN-207', status: 'recovering', doctor: 'Dr. Johnson', diagnosis: 'Fractured Arm', admittedDate: '2026-04-29' },
-  ];
+  // Fetch patients using the API client
+  const fetchPatients = useCallback(async () => {
+  try {
+    setLoading(true);
+    setError(null);
+    
+    const staffId = localStorage.getItem('staffId');
+    const userId = localStorage.getItem('userId');
+    
+    console.log('staffId:', staffId, 'userId:', userId);
+    
+    if (!staffId) {
+      setError('Staff ID not found. Please log in again.');
+      setLoading(false);
+      return;
+    }
+    
+    const result = await nurseApi.getMyWardPatients(staffId, { status: 'active' });
+    console.log("Ward patients result:", result);
+    
+    // FIX: Handle different response structures
+    if (result && result.success && result.data) {
+      setPatients(result.data);
+    } else if (Array.isArray(result)) {
+      setPatients(result);  // ✅ Direct array
+    } else if (result && result.data) {
+      setPatients(result.data);
+    } else {
+      setPatients([]);
+    }
+  } catch (err: any) {
+    console.error('Failed to fetch ward patients:', err);
+    setError(err.message || 'Failed to fetch patients');
+  } finally {
+    setLoading(false);
+  }
+}, []);
+
+  useEffect(() => {
+    fetchPatients();
+  }, [fetchPatients]);
+
+  // Determine patient condition
+  const getPatientStatus = (patient: Admission): string => {
+    if (patient.status === 'discharged') return 'discharged';
+    
+    const reason = patient.reason?.toLowerCase() || '';
+    
+    if (reason.includes('emergency') || reason.includes('critical')) {
+      return 'critical';
+    }
+    if (reason.includes('surgery') || reason.includes('fracture')) {
+      return 'serious';
+    }
+    if (patient.status === 'active') {
+      return 'recovering';
+    }
+    return 'stable';
+  };
 
   const getStatusColor = (status: string) => {
     switch(status) {
       case 'critical': return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
       case 'serious': return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400';
       case 'recovering': return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
+      case 'discharged': return 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400';
       default: return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    switch(status) {
+  const getStatusBadge = (patient: Admission) => {
+    if (patient.status === 'discharged') return '✅ Discharged';
+    
+    const condition = getPatientStatus(patient);
+    switch(condition) {
       case 'critical': return '🔴 Critical';
       case 'serious': return '🟡 Serious';
       case 'recovering': return '🔵 Recovering';
@@ -37,19 +110,28 @@ export default function PatientsPage() {
   };
 
   const filteredPatients = patients.filter(patient => {
-    const matchesSearch = patient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          patient.id.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = 
+      patient.patient_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      patient.patient_id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      patient.ward_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      patient.bed_number?.toLowerCase().includes(searchQuery.toLowerCase());
+    
     const matchesStatus = statusFilter === 'all' || patient.status === statusFilter;
+    
     return matchesSearch && matchesStatus;
   });
 
-  // Filter options for each column
+  // Stats
+  const activePatients = patients.filter(p => p.status === 'active');
+  const dischargedPatients = patients.filter(p => p.status === 'discharged');
+  const criticalPatients = patients.filter(p => getPatientStatus(p) === 'critical');
+
+  // Dynamic filter options
   const columnFilters = {
-    patient: ['John Doe', 'Mary Smith', 'Robert Wilson', 'Sarah Davis', 'James Brown', 'Emily Wilson'],
-    bed: ['ICU-101', 'GEN-205', 'GEN-206', 'OBS-301', 'ICU-102', 'GEN-207'],
-    doctor: ['Dr. Smith', 'Dr. Johnson', 'Dr. Patel', 'Dr. Williams'],
-    diagnosis: ['Pneumonia', 'Appendectomy', 'Hypertension', 'Pregnancy Complications', 'Heart Failure', 'Fractured Arm'],
-    status: ['critical', 'serious', 'recovering', 'stable'],
+    patient: [...new Set(patients.map(p => p.patient_name))],
+    bed: [...new Set(patients.map(p => p.bed_number))],
+    ward: [...new Set(patients.map(p => p.ward_name))],
+    reason: [...new Set(patients.map(p => p.reason || 'N/A'))],
   };
 
   const FilterPopover = ({ column, options }: { column: string; options: string[] }) => {
@@ -66,11 +148,11 @@ export default function PatientsPage() {
         {isOpen && (
           <div className="absolute left-0 top-6 mt-1 z-50 w-48 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-gray-200 dark:border-slate-700 p-2">
             <div className="max-h-48 overflow-y-auto">
-              {options.map((opt) => (
+              {options.filter(Boolean).map((opt) => (
                 <button
                   key={opt}
                   onClick={() => {
-                    console.log(`Filter ${column} by ${opt}`);
+                    setSearchQuery(opt);
                     setOpenFilter(null);
                   }}
                   className="w-full text-left px-3 py-1.5 text-xs hover:bg-gray-100 dark:hover:bg-slate-700 rounded transition-colors text-gray-700 dark:text-gray-300"
@@ -85,13 +167,50 @@ export default function PatientsPage() {
     );
   };
 
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-950 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto" />
+          <p className="mt-2 text-gray-500">Loading patients...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-950 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-500 text-4xl mb-4">⚠️</div>
+          <p className="text-gray-700 dark:text-gray-300 mb-4">{error}</p>
+          <button
+            onClick={fetchPatients}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            <RefreshCw size={16} />
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
       {/* Header */}
       <header className="border-b border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 sticky top-0 z-40 shadow-sm">
-        <div className="px-4 sm:px-6 lg:px-8 py-4 flex items-center gap-4">
-      
+        <div className="px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">My Patients</h1>
+          <button
+            onClick={fetchPatients}
+            className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+            title="Refresh"
+          >
+            <RefreshCw size={18} className="text-gray-500" />
+          </button>
         </div>
       </header>
 
@@ -103,16 +222,16 @@ export default function PatientsPage() {
             <p className="text-sm text-gray-500 dark:text-gray-400">Total Patients</p>
           </div>
           <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-4 shadow-sm">
-            <p className="text-2xl font-bold text-red-600">{patients.filter(p => p.status === 'critical').length}</p>
+            <p className="text-2xl font-bold text-blue-600">{activePatients.length}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Active</p>
+          </div>
+          <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-4 shadow-sm">
+            <p className="text-2xl font-bold text-red-600">{criticalPatients.length}</p>
             <p className="text-sm text-gray-500 dark:text-gray-400">Critical</p>
           </div>
           <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-4 shadow-sm">
-            <p className="text-2xl font-bold text-amber-600">{patients.filter(p => p.status === 'serious').length}</p>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Serious</p>
-          </div>
-          <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-4 shadow-sm">
-            <p className="text-2xl font-bold text-emerald-600">{patients.filter(p => p.status === 'stable' || p.status === 'recovering').length}</p>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Stable/Recovering</p>
+            <p className="text-2xl font-bold text-gray-600">{dischargedPatients.length}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Discharged</p>
           </div>
         </div>
 
@@ -122,7 +241,7 @@ export default function PatientsPage() {
             <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
-              placeholder="Search by name or ID..."
+              placeholder="Search by name, ID, ward or bed..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -134,10 +253,8 @@ export default function PatientsPage() {
             className="px-4 py-2 border border-gray-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="all">All Status</option>
-            <option value="critical">Critical</option>
-            <option value="serious">Serious</option>
-            <option value="recovering">Recovering</option>
-            <option value="stable">Stable</option>
+            <option value="active">Active</option>
+            <option value="discharged">Discharged</option>
           </select>
         </div>
 
@@ -155,27 +272,21 @@ export default function PatientsPage() {
                   </th>
                   <th className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider border border-gray-200 dark:border-slate-700">
                     <div className="flex items-center gap-1">
-                      Bed
+                      Bed/Ward
                       <FilterPopover column="bed" options={columnFilters.bed} />
                     </div>
                   </th>
                   <th className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider border border-gray-200 dark:border-slate-700">
                     <div className="flex items-center gap-1">
-                      Doctor
-                      <FilterPopover column="doctor" options={columnFilters.doctor} />
+                      Reason
+                      <FilterPopover column="reason" options={columnFilters.reason} />
                     </div>
                   </th>
                   <th className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider border border-gray-200 dark:border-slate-700">
-                    <div className="flex items-center gap-1">
-                      Diagnosis
-                      <FilterPopover column="diagnosis" options={columnFilters.diagnosis} />
-                    </div>
+                    Admitted
                   </th>
                   <th className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider border border-gray-200 dark:border-slate-700">
-                    <div className="flex items-center gap-1">
-                      Status
-                      <FilterPopover column="status" options={columnFilters.status} />
-                    </div>
+                    Status
                   </th>
                   <th className="px-4 sm:px-6 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider border border-gray-200 dark:border-slate-700">
                     Action
@@ -187,32 +298,41 @@ export default function PatientsPage() {
                   <tr key={patient.id} className="hover:bg-gray-50 dark:hover:bg-slate-800/50 transition">
                     <td className="px-4 sm:px-6 py-4 border border-gray-200 dark:border-slate-700">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                        <div className="w-9 h-9 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
                           <User size={16} className="text-blue-600 dark:text-blue-400" />
                         </div>
                         <div>
-                          <p className="font-medium text-gray-900 dark:text-white">{patient.name}</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">{patient.id} • {patient.age} yrs</p>
+                          <p className="font-medium text-gray-900 dark:text-white">{patient.patient_name}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {patient.patient_id} • {patient.patient_phone}
+                          </p>
                         </div>
                       </div>
                     </td>
                     <td className="px-4 sm:px-6 py-4 border border-gray-200 dark:border-slate-700">
-                      <span className="text-sm font-mono text-gray-900 dark:text-white">{patient.bed}</span>
+                      <div>
+                        <p className="text-sm font-mono text-gray-900 dark:text-white">{patient.bed_number}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">{patient.ward_name}</p>
+                      </div>
                     </td>
                     <td className="px-4 sm:px-6 py-4 border border-gray-200 dark:border-slate-700">
-                      <p className="text-sm text-gray-900 dark:text-white">{patient.doctor}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 capitalize">{patient.reason || patient.diagnosis || 'N/A'}</p>
+                    </td>
+                    <td className="px-4 sm:px-6 py-4 border border-gray-200 dark:border-slate-700 text-sm text-gray-600 dark:text-gray-400">
+                      {new Date(patient.admission_date).toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'short', 
+                        day: 'numeric' 
+                      })}
                     </td>
                     <td className="px-4 sm:px-6 py-4 border border-gray-200 dark:border-slate-700">
-                      <p className="text-sm text-gray-600 dark:text-gray-400">{patient.diagnosis}</p>
-                    </td>
-                    <td className="px-4 sm:px-6 py-4 border border-gray-200 dark:border-slate-700">
-                      <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(patient.status)}`}>
-                        {getStatusBadge(patient.status)}
+                      <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(getPatientStatus(patient))}`}>
+                        {getStatusBadge(patient)}
                       </span>
                     </td>
                     <td className="px-4 sm:px-6 py-4 text-right border border-gray-200 dark:border-slate-700">
                       <Link
-                        href={`/nurse/patients/${patient.id}`}
+                        href={`/nurse/patients/${patient.patient_id}`}
                         className="inline-flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:underline"
                       >
                         View Details

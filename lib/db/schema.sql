@@ -269,6 +269,7 @@ CREATE TABLE IF NOT EXISTS staff (
     experience INTEGER,
     bio TEXT,
     status VARCHAR(20) DEFAULT 'active',
+    ward_id INTEGER REFERENCES wards(id),
     avatar_url VARCHAR(500),
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
@@ -769,7 +770,71 @@ CREATE TABLE IF NOT EXISTS lab_orders (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Password resets table
+-- Drop existing if needed
+-- DROP TABLE IF EXISTS nursing_notes;
+
+CREATE TABLE IF NOT EXISTS nursing_notes (
+    id SERIAL PRIMARY KEY,
+    patient_id VARCHAR(50) NOT NULL,
+    patient_name VARCHAR(255),
+    bed VARCHAR(50),
+    note_type VARCHAR(50) NOT NULL DEFAULT 'progress' 
+        CHECK (note_type IN ('admission', 'progress', 'critical', 'discharge', 'post-op', 'intervention')),
+    title VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    priority VARCHAR(20) NOT NULL DEFAULT 'routine' 
+        CHECK (priority IN ('routine', 'urgent', 'critical')),
+    tags JSONB DEFAULT '[]'::jsonb,
+    assessment_findings TEXT,
+    interventions TEXT,
+    patient_response TEXT,
+    follow_up_required BOOLEAN DEFAULT false,
+    created_by VARCHAR(255),
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+
+
+CREATE INDEX IF NOT EXISTS idx_nursing_notes_patient_id ON nursing_notes(patient_id);
+CREATE INDEX IF NOT EXISTS idx_nursing_notes_note_type ON nursing_notes(note_type);
+CREATE INDEX IF NOT EXISTS idx_nursing_notes_priority ON nursing_notes(priority);
+CREATE INDEX IF NOT EXISTS idx_nursing_notes_created_at ON nursing_notes(created_at);
+
+
+
+CREATE TABLE IF NOT EXISTS medication_administrations (
+    id SERIAL PRIMARY KEY,
+    patient_id VARCHAR(50) NOT NULL,
+    medication_name VARCHAR(255) NOT NULL,
+    dosage VARCHAR(100) NOT NULL,
+    route VARCHAR(50) NOT NULL,
+    frequency VARCHAR(10),
+    scheduled_time TIME NOT NULL,
+    duration_days INTEGER,
+    administered_time TIMESTAMP,
+    administered_by VARCHAR(255),
+    administered_by_id VARCHAR(50),
+    prescribed_by VARCHAR(255),
+    prescribed_by_id VARCHAR(50),
+    status VARCHAR(20) DEFAULT 'administered' 
+        CHECK (status IN ('pending', 'administered', 'missed', 'refused')),
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+
+
+-- Create indexes for faster lookups
+CREATE INDEX IF NOT EXISTS idx_med_admin_patient_id ON medication_administrations(patient_id);
+CREATE INDEX IF NOT EXISTS idx_med_admin_status ON medication_administrations(status);
+CREATE INDEX IF NOT EXISTS idx_med_admin_created_at ON medication_administrations(created_at);
+CREATE INDEX IF NOT EXISTS idx_med_admin_administered_by ON medication_administrations(administered_by);
+CREATE INDEX IF NOT EXISTS idx_med_admin_prescribed_by ON medication_administrations(prescribed_by);
+CREATE INDEX IF NOT EXISTS idx_med_admin_frequency ON medication_administrations(frequency);
+
+
 CREATE TABLE IF NOT EXISTS password_resets (
     id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -795,3 +860,28 @@ CREATE INDEX IF NOT EXISTS idx_auth_refresh_tokens_expires_at ON auth_refresh_to
 
 
 
+
+
+CREATE TABLE IF NOT EXISTS nurse_tasks (
+    id SERIAL PRIMARY KEY,
+    patient_id VARCHAR(50) NOT NULL,
+    task_type VARCHAR(50) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    priority VARCHAR(20) DEFAULT 'medium' CHECK (priority IN ('high', 'medium', 'low')),
+    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'in-progress', 'completed', 'overdue')),
+    due_date DATE NOT NULL,
+    due_time TIME NOT NULL,
+    assigned_to VARCHAR(255),
+    assigned_by VARCHAR(255),
+    result TEXT,
+    notes TEXT,
+    completed_at TIMESTAMP,
+    completed_by VARCHAR(255),
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_nurse_tasks_patient_id ON nurse_tasks(patient_id);
+CREATE INDEX IF NOT EXISTS idx_nurse_tasks_status ON nurse_tasks(status);
+CREATE INDEX IF NOT EXISTS idx_nurse_tasks_assigned_to ON nurse_tasks(assigned_to);
