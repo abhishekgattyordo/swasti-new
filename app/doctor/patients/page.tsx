@@ -1,12 +1,15 @@
+
+
+
 // "use client";
 
 // import React, { useState, useEffect } from "react";
+// import Link from "next/link";
 // import { useRouter } from "next/navigation";
 // import { Search, Plus } from "lucide-react";
 // import { useDoctor } from "../layout";
 // import { useTenant } from "@/contexts/TenantContext";
 // import { MODULE_KEYS, DOCTOR_FEATURES } from "@/lib/feature";
-
 
 // export default function PatientsPage() {
 //   const router = useRouter();
@@ -15,16 +18,16 @@
 
 //   const { tenant, isMicroFeatureEnabled, isLoading: tenantLoading } = useTenant();
 
-// const isPatientsEnabled = isMicroFeatureEnabled(
-//   MODULE_KEYS.DOCTOR,
-//   DOCTOR_FEATURES.PATIENTS
-// );
+//   const isPatientsEnabled = isMicroFeatureEnabled(
+//     MODULE_KEYS.DOCTOR,
+//     DOCTOR_FEATURES.PATIENTS
+//   );
 
-// useEffect(() => {
-//   if (!tenantLoading && !isPatientsEnabled) {
-//     router.push("/unauthorized");
-//   }
-// }, [tenantLoading, isPatientsEnabled, router]);;
+//   useEffect(() => {
+//     if (!tenantLoading && !isPatientsEnabled) {
+//       router.push("/unauthorized");
+//     }
+//   }, [tenantLoading, isPatientsEnabled, router]);
 
 //   useEffect(() => {
 //     console.log("Patients response:", patients);
@@ -35,25 +38,19 @@
 //     p.condition.toLowerCase().includes(searchTerm.toLowerCase())
 //   );
 
-
-
-//   // const handleViewEHRClick = (e: React.MouseEvent, patientId: string) => {
-//   //   e.stopPropagation();
-//   //   router.push(`/doctor/ehr/${patientId}/current-visit`);
-//   // };
-// if (!tenantLoading && !isPatientsEnabled) {
-//   return (
-//     <div className="min-h-screen flex items-center justify-center bg-gray-50">
-//       <div className="text-center">
-//         <div className="text-red-500 text-6xl mb-4">🔒</div>
-//         <h1 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h1>
-//         <p className="text-gray-600">
-//           Doctor Patients feature is not enabled for {tenant?.name}.
-//         </p>
+//   if (!tenantLoading && !isPatientsEnabled) {
+//     return (
+//       <div className="min-h-screen flex items-center justify-center bg-gray-50">
+//         <div className="text-center">
+//           <div className="text-red-500 text-6xl mb-4">🔒</div>
+//           <h1 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h1>
+//           <p className="text-gray-600">
+//             Doctor Patients feature is not enabled for {tenant?.name}.
+//           </p>
+//         </div>
 //       </div>
-//     </div>
-//   );
-// }
+//     );
+//   }
 
 //   return (
 //     <div className="space-y-4 sm:space-y-6">
@@ -99,7 +96,6 @@
 //               {filteredPatients.map((patient) => (
 //                 <tr
 //                   key={patient.id}
-//                   // onClick={() => handleRowClick(patient.id)}
 //                   className="hover:bg-gray-50 cursor-pointer transition-colors"
 //                 >
 //                   <td className="p-3 sm:p-4 border border-gray-200">
@@ -133,12 +129,11 @@
 //                     </span>
 //                   </td>
 //                   <td className="p-3 sm:p-4 border border-gray-200">
-//                     <button
-//                       // onClick={(e) => handleViewEHRClick(e, patient.id)}
-//                       className="text-blue-600 text-sm hover:text-blue-800 hover:underline whitespace-nowrap"
-//                     >
-                   
-//                     </button>
+//                     <Link href={`/doctor/ehr/${patient.id}`}>
+//                       <button className="text-blue-600 text-sm hover:text-blue-800 hover:underline whitespace-nowrap">
+//                         View EHR
+//                       </button>
+//                     </Link>
 //                   </td>
 //                 </tr>
 //               ))}
@@ -279,7 +274,7 @@ export default function PatientsPage() {
                     </span>
                   </td>
                   <td className="p-3 sm:p-4 border border-gray-200">
-                    <Link href={`/doctor/ehr/${patient.id}`}>
+                    <Link href={`/doctor/patient-summary/${patient.id}`}>
                       <button className="text-blue-600 text-sm hover:text-blue-800 hover:underline whitespace-nowrap">
                         View EHR
                       </button>
