@@ -885,3 +885,64 @@ CREATE TABLE IF NOT EXISTS nurse_tasks (
 CREATE INDEX IF NOT EXISTS idx_nurse_tasks_patient_id ON nurse_tasks(patient_id);
 CREATE INDEX IF NOT EXISTS idx_nurse_tasks_status ON nurse_tasks(status);
 CREATE INDEX IF NOT EXISTS idx_nurse_tasks_assigned_to ON nurse_tasks(assigned_to);
+
+
+-- =====================================================
+-- Emergency Assessment Tables with Author Tracking
+-- =====================================================
+-- Add any missing columns to emergency_assessments (safe to run multiple times)
+
+-- Add all missing columns including updated_at
+ALTER TABLE emergency_assessments 
+ADD COLUMN IF NOT EXISTS uhid VARCHAR(50),
+ADD COLUMN IF NOT EXISTS patient_name VARCHAR(255),
+ADD COLUMN IF NOT EXISTS age INTEGER,
+ADD COLUMN IF NOT EXISTS gender VARCHAR(20),
+ADD COLUMN IF NOT EXISTS arrival_at TIMESTAMP,
+ADD COLUMN IF NOT EXISTS systolic INTEGER,
+ADD COLUMN IF NOT EXISTS diastolic INTEGER,
+ADD COLUMN IF NOT EXISTS heart_rate INTEGER,
+ADD COLUMN IF NOT EXISTS respiratory_rate INTEGER,
+ADD COLUMN IF NOT EXISTS temperature DECIMAL(4,1),
+ADD COLUMN IF NOT EXISTS temp_unit VARCHAR(1) DEFAULT 'C',
+ADD COLUMN IF NOT EXISTS spo2 INTEGER,
+ADD COLUMN IF NOT EXISTS pain_score INTEGER DEFAULT 0,
+ADD COLUMN IF NOT EXISTS gcs INTEGER,
+ADD COLUMN IF NOT EXISTS rbs INTEGER,
+ADD COLUMN IF NOT EXISTS upt VARCHAR(20),
+ADD COLUMN IF NOT EXISTS ecg_done VARCHAR(3),
+ADD COLUMN IF NOT EXISTS ecg_report_attached BOOLEAN DEFAULT FALSE,
+ADD COLUMN IF NOT EXISTS cxr_done VARCHAR(3),
+ADD COLUMN IF NOT EXISTS cxr_report_attached BOOLEAN DEFAULT FALSE,
+ADD COLUMN IF NOT EXISTS usg_done VARCHAR(3),
+ADD COLUMN IF NOT EXISTS usg_findings TEXT,
+ADD COLUMN IF NOT EXISTS labs JSONB DEFAULT '[]',
+ADD COLUMN IF NOT EXISTS chief_complaints TEXT,
+ADD COLUMN IF NOT EXISTS complaint_duration VARCHAR(100),
+ADD COLUMN IF NOT EXISTS past_history TEXT,
+ADD COLUMN IF NOT EXISTS provisional_diagnosis TEXT,
+ADD COLUMN IF NOT EXISTS exam_findings TEXT,
+ADD COLUMN IF NOT EXISTS er_interventions TEXT,
+ADD COLUMN IF NOT EXISTS disposition_decision VARCHAR(50),
+ADD COLUMN IF NOT EXISTS main_doctor VARCHAR(255),
+ADD COLUMN IF NOT EXISTS referral VARCHAR(100),
+ADD COLUMN IF NOT EXISTS duty_doctor_name VARCHAR(255),
+ADD COLUMN IF NOT EXISTS created_by_name VARCHAR(255),
+ADD COLUMN IF NOT EXISTS ip_address INET,
+ADD COLUMN IF NOT EXISTS user_agent TEXT,
+ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+
+-- Create trigger for auto-updating updated_at
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS update_emergency_assessments_updated_at ON emergency_assessments;
+CREATE TRIGGER update_emergency_assessments_updated_at
+    BEFORE UPDATE ON emergency_assessments
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();

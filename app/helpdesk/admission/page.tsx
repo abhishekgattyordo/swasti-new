@@ -1,5 +1,6 @@
 
 
+
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -11,7 +12,6 @@ import { admissionsApi } from "@/lib/api/admissions";
 
 import { useTenant } from "@/contexts/TenantContext";
 import { MODULE_KEYS, HELPDESK_FEATURES } from "@/lib/feature";
-
 
 // Types
 interface Patient {
@@ -36,7 +36,7 @@ interface Bed {
   id: number;
   bed_number: string;
   room_id: number | null;
-    ward_id?: number;   // add this
+  ward_id?: number;
 }
 
 interface Doctor {
@@ -45,6 +45,16 @@ interface Doctor {
   lastName: string;
   department: string;
   specialty?: string;
+}
+
+interface EmergencyAssessment {
+  id: string;
+  patientName: string;
+  uhid: string;
+  age: number | null;
+  gender: string | null;
+  chiefComplaints: string | null;
+  createdAt: string;
 }
 
 export default function AdmissionForm() {
@@ -60,9 +70,18 @@ export default function AdmissionForm() {
   const [showDoctorDropdown, setShowDoctorDropdown] = useState(false);
   const doctorDropdownRef = useRef<HTMLDivElement>(null);
 
-  // Patient selection modal
+  // Patient selection modal (from phone search)
   const [searchResults, setSearchResults] = useState<Patient[]>([]);
   const [showPatientModal, setShowPatientModal] = useState(false);
+
+  // Emergency assessment integration
+  const [showAssessmentModal, setShowAssessmentModal] = useState(false);
+  const [completedAssessments, setCompletedAssessments] = useState<EmergencyAssessment[]>([]);
+  const [loadingAssessments, setLoadingAssessments] = useState(false);
+  const [selectedAssessmentId, setSelectedAssessmentId] = useState<string | null>(null);
+  // ✅ New: store the patient_id from the loaded emergency assessment
+  const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
+
   const { tenant, isMicroFeatureEnabled, isLoading: tenantLoading } = useTenant();
 
   // Form state
@@ -93,46 +112,45 @@ export default function AdmissionForm() {
   const [beds, setBeds] = useState<Bed[]>([]);
 
   const isNewAdmissionEnabled = isMicroFeatureEnabled(
-  MODULE_KEYS.HELPDESK,
-  HELPDESK_FEATURES.NEW_ADMISSION
-);
-
+    MODULE_KEYS.HELPDESK,
+    HELPDESK_FEATURES.NEW_ADMISSION
+  );
 
   const resetForm = () => {
-  setForm({
-    fullName: "",
-    dob: "",
-    gender: "",
-    address: "",
-    city: "",
-    pincode: "",
-    phone: "",
-    email: "",
-    emergencyName: "",
-    emergencyRelation: "",
-    emergencyPhone: "",
-    reason: "",
-    department: "",
-    physician: "",
-    ward: "",
-    bed: "",
-    admissionDate: new Date().toISOString().split("T")[0],
-    diagnosis: "",
-    state: "",
-  });
-  setPatientData(null);
-  setPhoneSearch("");
-  setMode("new");
-  setDoctorSearch("");
-  // Optionally clear doctor dropdown selection
-  
-};
+    setForm({
+      fullName: "",
+      dob: "",
+      gender: "",
+      address: "",
+      city: "",
+      pincode: "",
+      phone: "",
+      email: "",
+      emergencyName: "",
+      emergencyRelation: "",
+      emergencyPhone: "",
+      reason: "",
+      department: "",
+      physician: "",
+      ward: "",
+      bed: "",
+      admissionDate: new Date().toISOString().split("T")[0],
+      diagnosis: "",
+      state: "",
+    });
+    setPatientData(null);
+    setPhoneSearch("");
+    setMode("new");
+    setDoctorSearch("");
+    setSelectedAssessmentId(null);
+    setSelectedPatientId(null); // ✅ also reset patient ID
+  };
 
-useEffect(() => {
-  if (!tenantLoading && !isNewAdmissionEnabled) {
-    router.push("/unauthorized");
-  }
-}, [tenantLoading,isNewAdmissionEnabled,router]);
+  useEffect(() => {
+    if (!tenantLoading && !isNewAdmissionEnabled) {
+      router.push("/unauthorized");
+    }
+  }, [tenantLoading, isNewAdmissionEnabled, router]);
 
   // Load wards
   useEffect(() => {
@@ -146,36 +164,32 @@ useEffect(() => {
   }, []);
 
   // Load beds when ward changes
-useEffect(() => {
-  if (form.ward) {
-    const wardId = parseInt(form.ward);
-    admissionsApi
-     .getBeds({ ward_id: wardId, status: "available" })
-      .then((res: any) => {
-        // Safely extract beds array from different response structures
-        let bedsData: Bed[] = [];
-        if (res?.data?.data && Array.isArray(res.data.data)) {
-          bedsData = res.data.data;
-        } else if (res?.data && Array.isArray(res.data)) {
-          bedsData = res.data;
-        } else if (Array.isArray(res)) {
-          bedsData = res;
-        } else if (res?.beds && Array.isArray(res.beds)) {
-          bedsData = res.beds;
-        }
-        
-        // Filter by ward_id (in case API returns all beds)
-       bedsData = bedsData.filter((bed) => bed.ward_id === wardId);
-        
-        setBeds(bedsData);
-        setForm((prev) => ({ ...prev, bed: "" }));
-      })
-      .catch((err) => console.error("Failed to load beds", err));
-  } else {
-    setBeds([]);
-    setForm((prev) => ({ ...prev, bed: "" }));
-  }
-}, [form.ward]);
+  useEffect(() => {
+    if (form.ward) {
+      const wardId = parseInt(form.ward);
+      admissionsApi
+        .getBeds({ ward_id: wardId, status: "available" })
+        .then((res: any) => {
+          let bedsData: Bed[] = [];
+          if (res?.data?.data && Array.isArray(res.data.data)) {
+            bedsData = res.data.data;
+          } else if (res?.data && Array.isArray(res.data)) {
+            bedsData = res.data;
+          } else if (Array.isArray(res)) {
+            bedsData = res;
+          } else if (res?.beds && Array.isArray(res.beds)) {
+            bedsData = res.beds;
+          }
+          bedsData = bedsData.filter((bed) => bed.ward_id === wardId);
+          setBeds(bedsData);
+          setForm((prev) => ({ ...prev, bed: "" }));
+        })
+        .catch((err) => console.error("Failed to load beds", err));
+    } else {
+      setBeds([]);
+      setForm((prev) => ({ ...prev, bed: "" }));
+    }
+  }, [form.ward]);
 
   // Load doctors
   useEffect(() => {
@@ -218,43 +232,98 @@ useEffect(() => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Search patient
-  const searchPatient = async () => {
-  if (!phoneSearch.trim()) {
-    toast.error("Please enter phone number");
-    return;
-  }
-  setLoadingPatient(true);
-  try {
-    const res = await admissionsApi.searchPatient(phoneSearch);
-    // FIX 1: API returns array directly, not wrapped in { data: ... }
-    const patients = Array.isArray(res.data) ? res.data : [];
-    console.log("Patients found:", patients);
-
-    if (patients.length === 1) {
-      selectPatient(patients[0]);
-    } else if (patients.length > 1) {
-      setSearchResults(patients);
-      setShowPatientModal(true);
-      console.log("Modal should open now, results count:", patients.length);
-    } else {
-      toast.error("Patient not found");
-      setPatientData(null);
+  // Fetch completed emergency assessments (list)
+  const fetchCompletedAssessments = async () => {
+    setLoadingAssessments(true);
+    try {
+     const res = await fetch("/api/emergency/assessments?status=Completed&linked=null");
+      const data = await res.json();
+      if (data.success) {
+        setCompletedAssessments(data.data);
+        setShowAssessmentModal(true);
+      } else {
+        toast.error("Failed to load emergency assessments");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Error loading assessments");
+    } finally {
+      setLoadingAssessments(false);
     }
-  } catch (error: any) {
-    console.error(error);
-    // ✅ Show the actual error message from the API response
-    const errorMessage = error?.response?.data?.message || error?.message || "Error searching patient";
-    toast.error(errorMessage);
-  } finally {
-    setLoadingPatient(false);
-  }
-};
+  };
+
+  // Fetch full assessment details by ID
+  const fetchFullAssessment = async (id: string) => {
+    try {
+      const res = await fetch(`/api/emergency/assessments?id=${id}`);
+      const data = await res.json();
+      if (data.success) {
+        return data.data;
+      } else {
+        toast.error("Failed to load assessment details");
+        return null;
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Error loading assessment details");
+      return null;
+    }
+  };
+
+  // Select an emergency assessment and pre‑fill the form with full data
+  const selectEmergencyAssessment = async (assessment: EmergencyAssessment) => {
+    toast.loading("Loading assessment details...");
+    const full = await fetchFullAssessment(assessment.id);
+    toast.dismiss();
+    if (!full) {
+      toast.error("Could not load assessment details");
+      return;
+    }
+
+    setForm((prev) => ({
+      ...prev,
+      fullName: full.patientName || "",
+      dob: full.age ? `${new Date().getFullYear() - full.age}-01-01` : "",
+      gender: full.gender?.toLowerCase() || "",
+      reason: full.chiefComplaints || "",
+      physician: full.mainDoctor || "",
+    }));
+    setDoctorSearch(full.mainDoctor || "");
+    setSelectedPatientId(full.patient_id);        // ✅ store the existing patient_id
+    setSelectedAssessmentId(assessment.id);
+    setShowAssessmentModal(false);
+    toast.success(`Loaded assessment for ${full.patientName}`);
+  };
+
+  // Search patient (existing)
+  const searchPatient = async () => {
+    if (!phoneSearch.trim()) {
+      toast.error("Please enter phone number");
+      return;
+    }
+    setLoadingPatient(true);
+    try {
+      const res = await admissionsApi.searchPatient(phoneSearch);
+      const patients = Array.isArray(res.data) ? res.data : [];
+      if (patients.length === 1) {
+        selectPatient(patients[0]);
+      } else if (patients.length > 1) {
+        setSearchResults(patients);
+        setShowPatientModal(true);
+      } else {
+        toast.error("Patient not found");
+        setPatientData(null);
+      }
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.message || error?.message || "Error searching patient";
+      toast.error(errorMessage);
+    } finally {
+      setLoadingPatient(false);
+    }
+  };
 
   const selectPatient = (patient: Patient) => {
-    console.log("Selected patient:", patient);
     setPatientData(patient);
-    // FIX 2: Handle missing fields gracefully
     setForm((prev) => ({
       ...prev,
       fullName: patient.full_name_en || "",
@@ -272,11 +341,6 @@ useEffect(() => {
     toast.success("Patient selected");
   };
 
-  // Debug: log form changes
-  useEffect(() => {
-    console.log("Form updated:", form);
-  }, [form]);
-
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
@@ -290,23 +354,32 @@ useEffect(() => {
   e.preventDefault();
   setSubmitting(true);
 
-  const payload = {
-    mode,
-    ...(mode === "existing"
-      ? { patientId: patientData?.patient_id }
-      : {
-          patient: {
-            fullName: form.fullName,
-            dob: form.dob,
-            gender: form.gender,
-            phone: form.phone,
-            email: form.email,
-            address: form.address,
-            city: form.city,
-            pincode: form.pincode,
-            state: form.state,
-          },
-        }),
+  // ✅ Determine the correct patient reference
+  let patientPayload;
+  if (selectedPatientId) {
+    // Coming from "Load from Emergency" – use existing patient ID
+    patientPayload = { patientId: selectedPatientId };
+  } else if (mode === "existing") {
+    patientPayload = { patientId: patientData?.patient_id };
+  } else {
+    patientPayload = {
+      patient: {
+        fullName: form.fullName,
+        dob: form.dob,
+        gender: form.gender,
+        phone: form.phone,
+        email: form.email,
+        address: form.address,
+        city: form.city,
+        pincode: form.pincode,
+        state: form.state,
+      },
+    };
+  }
+
+  const payload: any = {
+    mode: selectedPatientId ? "existing" : mode,
+    ...patientPayload,
     admission: {
       admissionDate: form.admissionDate,
       wardId: form.ward ? parseInt(form.ward) : null,
@@ -314,7 +387,7 @@ useEffect(() => {
       bedId: form.bed ? parseInt(form.bed) : null,
       reason: form.reason,
       diagnosis: form.diagnosis,
-       primary_consultant: form.physician || null,
+      primary_consultant: form.physician || null,
     },
     emergency: {
       name: form.emergencyName,
@@ -323,57 +396,46 @@ useEffect(() => {
     },
   };
 
-try {
-  const res = await admissionsApi.createAdmission(payload);
-
-  console.log("API RESPONSE:", res);
-
-  if (res?.data?.admissionId) {
-    let successMessage = "Patient admitted successfully";
-
-    if (mode === "new" && res?.generatedPassword) {
-      successMessage += ` Password: ${res.generatedPassword}`;
-      toast.success(successMessage, { duration: 10000 });
-    } else {
-      toast.success(successMessage);
-    }
-      resetForm();
-  } else {
-    toast.error("Failed to admit patient");
+  // If coming from an emergency assessment, include its ID
+  if (selectedAssessmentId) {
+    payload.emergencyAssessmentId = selectedAssessmentId;
   }
-} catch (error) {
-  console.error(error);
-  toast.error("Failed to admit patient");
-} finally {
-  setSubmitting(false);
-}
+
+  // 🔍 Debug logs
+  console.log("=== SUBMITTING ADMISSION ===");
+  console.log("selectedPatientId:", selectedPatientId);
+  console.log("mode (final):", payload.mode);
+  console.log("selectedAssessmentId:", selectedAssessmentId);
+  console.log("Full payload:", JSON.stringify(payload, null, 2));
+
+  try {
+    const res = await admissionsApi.createAdmission(payload);
+    console.log("Response:", res);
+    if (res?.data?.admissionId) {
+      let successMessage = "Patient admitted successfully";
+      if (!selectedPatientId && mode === "new" && res?.generatedPassword) {
+        successMessage += ` Password: ${res.generatedPassword}`;
+        toast.success(successMessage, { duration: 10000 });
+      } else {
+        toast.success(successMessage);
+      }
+      resetForm();
+      // Optionally refresh the emergency assessments list or redirect
+
+    } else {
+      toast.error("Failed to admit patient");
+    }
+  } catch (error) {
+    console.error(error);
+    toast.error("Failed to admit patient");
+  } finally {
+    setSubmitting(false);
+  }
 };
 
   const handleDiscard = () => {
     if (confirm("Discard all changes?")) {
-      setForm({
-        fullName: "",
-        dob: "",
-        gender: "",
-        address: "",
-        city: "",
-        pincode: "",
-        phone: "",
-        email: "",
-        emergencyName: "",
-        emergencyRelation: "",
-        emergencyPhone: "",
-        reason: "",
-        department: "",
-        physician: "",
-        ward: "",
-        bed: "",
-        admissionDate: new Date().toISOString().split("T")[0],
-        diagnosis: "",
-        state: "",
-      });
-      setPhoneSearch("");
-      setMode("new");
+      resetForm();
       toast.info("Form cleared");
     }
   };
@@ -384,75 +446,100 @@ try {
   };
 
   // Load draft
- useEffect(() => {
-  const draft = localStorage.getItem("admissionDraft");
-  if (draft) {
-    try {
-      const saved = JSON.parse(draft);
-      setForm({
-        ...saved,
-        admissionDate: new Date().toISOString().split("T")[0], // ✅ force today's date
-      });
-    } catch  {}
-  }
-}, []);
+  useEffect(() => {
+    const draft = localStorage.getItem("admissionDraft");
+    if (draft) {
+      try {
+        const saved = JSON.parse(draft);
+        setForm({
+          ...saved,
+          admissionDate: new Date().toISOString().split("T")[0],
+        });
+      } catch {}
+    }
+  }, []);
 
   const handleBillingClick = () => router.push("/helpdesk/billing");
-  const handleRoomAvailabilityClick = () =>
-    router.push("/admin/bed-management");
+  const handleRoomAvailabilityClick = () => router.push("/admin/bed-management");
   const handleDoctorSlotsClick = () => router.push("/helpdesk/doctor-slots");
 
-  // Patient modal (with portal)
-  const PatientModal = () => {
-    console.log("PatientModal rendering");
-    return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] border-4 border-red-500">
-        <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-xl">
-          <h3 className="text-lg font-bold mb-4">Select Patient</h3>
+  // Patient modal (from phone search)
+  const PatientModal = () => (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
+      <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-xl">
+        <h3 className="text-lg font-bold mb-4">Select Patient</h3>
+        <div className="space-y-2 max-h-96 overflow-y-auto">
+          {searchResults.map((patient) => (
+            <button
+              key={patient.patient_id}
+              onClick={() => selectPatient(patient)}
+              className="w-full text-left p-3 rounded-lg hover:bg-gray-100 transition-colors border border-gray-200"
+            >
+              <p className="font-medium">{patient.full_name_en || "Unknown"}</p>
+              <p className="text-sm text-gray-500">
+                DOB: {patient.dob || "N/A"} • ID: {patient.patient_id}
+              </p>
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={() => setShowPatientModal(false)}
+          className="mt-4 w-full py-2 text-gray-500 hover:text-gray-700"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+
+  // Emergency Assessment modal
+  const AssessmentModal = () => (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
+      <div className="bg-white rounded-xl p-6 max-w-2xl w-full mx-4 shadow-xl">
+        <h3 className="text-lg font-bold mb-4">Select Completed Emergency Assessment</h3>
+        {loadingAssessments ? (
+          <div className="text-center py-8">Loading assessments...</div>
+        ) : completedAssessments.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">No completed assessments found.</div>
+        ) : (
           <div className="space-y-2 max-h-96 overflow-y-auto">
-            {searchResults.map((patient) => (
+            {completedAssessments.map((assessment) => (
               <button
-                key={patient.patient_id}
-                onClick={() => {
-                  console.log("Clicked patient:", patient);
-                  selectPatient(patient);
-                }}
+                key={assessment.id}
+                onClick={() => selectEmergencyAssessment(assessment)}
                 className="w-full text-left p-3 rounded-lg hover:bg-gray-100 transition-colors border border-gray-200"
               >
-                <p className="font-medium">
-                  {patient.full_name_en || "Unknown"}
-                </p>
+                <p className="font-medium">{assessment.patientName}</p>
                 <p className="text-sm text-gray-500">
-                  DOB: {patient.dob || "N/A"} • ID: {patient.patient_id}
+                  ID: {assessment.id} • UHID: {assessment.uhid} • Age: {assessment.age || "N/A"} • Chief: {assessment.chiefComplaints || "—"}
                 </p>
               </button>
             ))}
           </div>
-          <button
-            onClick={() => setShowPatientModal(false)}
-            className="mt-4 w-full py-2 text-gray-500 hover:text-gray-700"
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-    );
-  };
-
-  // Add this before any other return statements
-if (!tenantLoading && !isNewAdmissionEnabled) {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="text-center">
-        <div className="text-red-500 text-6xl mb-4">🔒</div>
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h1>
-        <p className="text-gray-600">
-          New Admission feature is not enabled for {tenant?.name}.
-        </p>
+        )}
+        <button
+          onClick={() => setShowAssessmentModal(false)}
+          className="mt-4 w-full py-2 text-gray-500 hover:text-gray-700"
+        >
+          Cancel
+        </button>
       </div>
     </div>
   );
-}
+
+  if (!tenantLoading && !isNewAdmissionEnabled) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="text-red-500 text-6xl mb-4">🔒</div>
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h1>
+          <p className="text-gray-600">
+            New Admission feature is not enabled for {tenant?.name}.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -464,7 +551,6 @@ if (!tenantLoading && !isNewAdmissionEnabled) {
         onDoctorSlotsClick={handleDoctorSlotsClick}
       />
 
-      {/* FIX 3: Remove overflow-hidden to allow modal */}
       <div className="flex-1 flex flex-col min-h-screen">
         <header className="lg:hidden bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3">
           <button
@@ -483,78 +569,79 @@ if (!tenantLoading && !isNewAdmissionEnabled) {
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-label="Toggle menu"
         >
-          {mobileMenuOpen ? (
-            <X className="w-5 h-5" />
-          ) : (
-            <Menu className="w-5 h-5" />
-          )}
+          {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
 
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
           <div className="space-y-6">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                Patient Admission
-              </h1>
+              <h1 className="text-2xl font-bold text-gray-900">Patient Admission</h1>
               <p className="text-sm text-gray-500 mt-1">
                 Admit new or existing patients
               </p>
             </div>
 
-            <div className="bg-gray-50 p-1.5 rounded-xl inline-flex items-center gap-1">
+            <div className="flex flex-wrap gap-3 items-center">
+              <div className="bg-gray-50 p-1.5 rounded-xl inline-flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setMode("new")}
+                  className={`px-6 py-2 font-bold rounded-lg shadow-sm text-sm transition-colors ${
+                    mode === "new"
+                      ? "bg-white text-blue-600"
+                      : "text-gray-500 hover:text-blue-600"
+                  }`}
+                >
+                  New Admission
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMode("existing")}
+                  className={`px-6 py-2 font-medium rounded-lg text-sm transition-colors ${
+                    mode === "existing"
+                      ? "bg-white text-blue-600 font-bold shadow-sm"
+                      : "text-gray-500 hover:text-blue-600"
+                  }`}
+                >
+                  Existing Patient
+                </button>
+              </div>
+
               <button
                 type="button"
-                onClick={() => setMode("new")}
-                className={`px-6 py-2 font-bold rounded-lg shadow-sm text-sm transition-colors ${
-                  mode === "new"
-                    ? "bg-white text-blue-600"
-                    : "text-gray-500 hover:text-blue-600"
-                }`}
+                onClick={fetchCompletedAssessments}
+                className="px-6 py-2 bg-green-600 text-white rounded-xl font-medium hover:bg-green-700 transition-colors"
               >
-                New Admission
-              </button>
-              <button
-                type="button"
-                onClick={() => setMode("existing")}
-                className={`px-6 py-2 font-medium rounded-lg text-sm transition-colors ${
-                  mode === "existing"
-                    ? "bg-white text-blue-600 font-bold shadow-sm"
-                    : "text-gray-500 hover:text-blue-600"
-                }`}
-              >
-                Existing Patient
+                Load from Emergency
               </button>
             </div>
- {mode === "existing" && (
-  <div className="mb-6 p-6 bg-gray-50 rounded-2xl">
-    <div className="flex flex-row items-end gap-4">
-      
-      {/* Input */}
-      <div className="flex-1">
-        <label className="text-xs font-bold text-gray-600 ml-1 uppercase tracking-wider hidden md:block">
-          Search by Phone Number
-        </label>
-        <input
-          type="tel"
-          value={phoneSearch}
-          onChange={(e) => setPhoneSearch(e.target.value)}
-          placeholder="Enter patient phone number"
-          className="w-full bg-white border border-gray-200 rounded-xl px-4 h-12 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition"
-        />
-      </div>
 
-      {/* Button */}
-      <button
-        onClick={searchPatient}
-        disabled={loadingPatient}
-        className="px-6 h-12 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 whitespace-nowrap"
-      >
-        {loadingPatient ? "Searching..." : "Search"}
-      </button>
+            {mode === "existing" && (
+              <div className="mb-6 p-6 bg-gray-50 rounded-2xl">
+                <div className="flex flex-row items-end gap-4">
+                  <div className="flex-1">
+                    <label className="text-xs font-bold text-gray-600 ml-1 uppercase tracking-wider hidden md:block">
+                      Search by Phone Number
+                    </label>
+                    <input
+                      type="tel"
+                      value={phoneSearch}
+                      onChange={(e) => setPhoneSearch(e.target.value)}
+                      placeholder="Enter patient phone number"
+                      className="w-full bg-white border border-gray-200 rounded-xl px-4 h-12 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition"
+                    />
+                  </div>
+                  <button
+                    onClick={searchPatient}
+                    disabled={loadingPatient}
+                    className="px-6 h-12 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 whitespace-nowrap"
+                  >
+                    {loadingPatient ? "Searching..." : "Search"}
+                  </button>
+                </div>
+              </div>
+            )}
 
-    </div>
-  </div>
-)}
             <form onSubmit={handleSubmit} className="space-y-12">
               {/* Section 1: Demographics */}
               <section>
@@ -813,9 +900,7 @@ if (!tenantLoading && !isNewAdmissionEnabled) {
                                   ...prev,
                                   physician: `${doc.firstName} ${doc.lastName}`,
                                 }));
-                                setDoctorSearch(
-                                  `${doc.firstName} ${doc.lastName}`,
-                                );
+                                setDoctorSearch(`${doc.firstName} ${doc.lastName}`);
                                 setShowDoctorDropdown(false);
                               }}
                               className="px-4 py-3 hover:bg-blue-50 cursor-pointer text-sm"
@@ -908,10 +993,8 @@ if (!tenantLoading && !isNewAdmissionEnabled) {
         </main>
       </div>
 
-      {/* FIX 4: Modal rendering with portal */}
       {showPatientModal && <PatientModal />}
+      {showAssessmentModal && <AssessmentModal />}
     </div>
   );
 }
-
-

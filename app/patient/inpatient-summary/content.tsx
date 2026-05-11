@@ -1,15 +1,21 @@
+
+
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Sidebar from '@/components/patient/Sidebar';
-import { Menu, X, Loader2, Calendar, AlertCircle, FileText } from 'lucide-react';
+import { 
+  Menu, X, Loader2, Calendar, AlertCircle, FileText, 
+  Activity, ChevronDown, ChevronUp, ExternalLink, User,
+  Stethoscope, Heart, Thermometer, Droplets, Clock
+} from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function InPatientSummaryContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const dateParam = searchParams.get('date'); // YYYY-MM-DD
+  const dateParam = searchParams.get('date');
   const patientIdParam = searchParams.get('patientId');
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -21,46 +27,57 @@ export default function InPatientSummaryContent() {
   const [manualPatientId, setManualPatientId] = useState('');
   const [showManualInput, setShowManualInput] = useState(false);
   const [noAdmission, setNoAdmission] = useState(false);
+  
+  // Emergency summary states
+  const [emergencySummary, setEmergencySummary] = useState<any>(null);
+  const [showEmergencyDetails, setShowEmergencyDetails] = useState(false);
+  const [loadingEmergency, setLoadingEmergency] = useState(false);
 
   // Sync selectedDate with URL dateParam
   useEffect(() => {
     if (dateParam) setSelectedDate(dateParam);
   }, [dateParam]);
 
-  // Get patient ID from URL or localStorage (no API call)
+  // Get patient ID from URL or localStorage
   useEffect(() => {
-    console.log('🚀 useEffect triggered');
-    console.log('📌 patientIdParam:', patientIdParam);
-
     if (patientIdParam) {
-      console.log('✅ Using patientId from URL:', patientIdParam);
       setPatientId(patientIdParam);
       return;
     }
 
-    console.log('🔍 Checking localStorage for patientId...');
-
     try {
       const stored = localStorage.getItem('patientId');
-      console.log('📦 localStorage value:', stored);
-
       if (stored) {
-        console.log('✅ Using patientId from localStorage:', stored);
         setPatientId(stored);
         return;
-      } else {
-        console.log('⚠️ No patientId found in localStorage');
       }
     } catch (err) {
-      console.warn('❌ localStorage error:', err);
+      console.warn('localStorage error:', err);
     }
 
-    console.log('⚠️ No patientId found anywhere → showing manual input');
-
-    // No patientId found – show manual input
     setShowManualInput(true);
     setLoading(false);
   }, [patientIdParam]);
+
+  // Fetch emergency summary for this patient
+  const fetchEmergencySummary = async (pid: string) => {
+    try {
+      setLoadingEmergency(true);
+      const res = await fetch(`/api/patient/emergency-summary?patientId=${pid}`);
+      const result = await res.json();
+      
+      if (result.success && result.data) {
+        setEmergencySummary(result.data);
+      } else {
+        setEmergencySummary(null);
+      }
+    } catch (error) {
+      console.error('Error fetching emergency summary:', error);
+      setEmergencySummary(null);
+    } finally {
+      setLoadingEmergency(false);
+    }
+  };
 
   const fetchSummaryByDate = async (pid: string, date: string) => {
     try {
@@ -76,7 +93,6 @@ export default function InPatientSummaryContent() {
         setError(null);
         setNoAdmission(false);
       } else {
-        // Check if it's a "no admission found" error
         if (result.message?.includes('No active admission found')) {
           setNoAdmission(true);
           setSummaryData(null);
@@ -112,18 +128,17 @@ export default function InPatientSummaryContent() {
     localStorage.setItem('patientId', manualPatientId);
     setPatientId(manualPatientId);
     setShowManualInput(false);
-    // Reload with new patientId in URL
     const params = new URLSearchParams(searchParams.toString());
     params.set('patientId', manualPatientId);
     router.push(`/patient/inpatient-summary?${params.toString()}`);
   };
 
-  // Load summary when patientId and date are available
+  // Load data when patientId is available
   useEffect(() => {
     if (!patientId) return;
     if (showManualInput) return;
 
-    const loadSummary = async () => {
+    const loadData = async () => {
       let targetDate = dateParam;
       if (!targetDate) {
         const today = new Date().toISOString().split('T')[0];
@@ -134,11 +149,24 @@ export default function InPatientSummaryContent() {
         router.replace(`/patient/inpatient-summary?${params.toString()}`);
         return;
       }
-      await fetchSummaryByDate(patientId, targetDate);
+      
+      await Promise.all([
+        fetchSummaryByDate(patientId, targetDate),
+        fetchEmergencySummary(patientId)
+      ]);
     };
 
-    loadSummary();
+    loadData();
   }, [patientId, dateParam]);
+
+  const getTriageBadge = (triage: string) => {
+    const config: Record<string, string> = {
+      Red: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+      Yellow: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+      Green: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+    };
+    return config[triage] || config.Green;
+  };
 
   // Manual input screen
   if (showManualInput) {
@@ -147,13 +175,13 @@ export default function InPatientSummaryContent() {
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full">
           <h2 className="text-xl font-bold mb-4">Enter Patient ID</h2>
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-            No patient ID found in URL or localStorage. Please enter your patient ID to view the summary.
+            Please enter your patient ID to view the complete patient summary.
           </p>
           <input
             type="text"
             value={manualPatientId}
             onChange={(e) => setManualPatientId(e.target.value)}
-            placeholder="e.g., 17744283791605696"
+            placeholder="e.g., 1778062374665888"
             className="w-full p-2 border rounded mb-4 dark:bg-gray-700 dark:border-gray-600"
           />
           <button
@@ -168,7 +196,7 @@ export default function InPatientSummaryContent() {
   }
 
   // Loading screen
-  if (loading) {
+  if (loading || loadingEmergency) {
     return (
       <div className="flex flex-col md:flex-row min-h-screen bg-gray-50 dark:bg-gray-900">
         <button
@@ -185,7 +213,7 @@ export default function InPatientSummaryContent() {
     );
   }
 
-  // No admission found screen
+  // No admission found but show emergency history
   if (noAdmission) {
     return (
       <div className="flex flex-col md:flex-row min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -201,19 +229,37 @@ export default function InPatientSummaryContent() {
           <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-30 lg:hidden" onClick={() => setIsSidebarOpen(false)} />
         )}
 
-        <main className="flex-1 flex items-center justify-center p-6">
-          <div className="text-center max-w-md">
-            <div className="w-20 h-20 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FileText className="w-10 h-10 text-amber-600 dark:text-amber-400" />
+        <main className="flex-1 overflow-y-auto p-6 md:p-8">
+          {emergencySummary && emergencySummary.latestAssessment ? (
+            <CompletePatientFlow 
+              emergencySummary={emergencySummary}
+              inpatientData={null}
+              showEmergencyDetails={showEmergencyDetails}
+              onToggleEmergencyDetails={() => setShowEmergencyDetails(!showEmergencyDetails)}
+              onViewAssessment={(id) => router.push(`/emergency/assessments/${id}`)}
+              getTriageBadge={getTriageBadge}
+            />
+          ) : (
+            <div className="flex items-center justify-center min-h-[400px]">
+              <div className="text-center max-w-md">
+                <div className="w-20 h-20 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <FileText className="w-10 h-10 text-amber-600 dark:text-amber-400" />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                  No Records Found
+                </h2>
+                <p className="text-gray-600 dark:text-gray-400 mb-6">
+                  No active admission or emergency records found.
+                </p>
+                <button
+                  onClick={() => router.push('/emergency/assessments/new')}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                >
+                  Start Emergency Assessment
+                </button>
+              </div>
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-              No Active Admission
-            </h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
-              You don't have any active admission record 
-            </p>
-       
-          </div>
+          )}
         </main>
       </div>
     );
@@ -244,7 +290,7 @@ export default function InPatientSummaryContent() {
               Something went wrong
             </h2>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
-              {error || 'Unable to load inpatient summary'}
+              {error || 'Unable to load patient summary'}
             </p>
             <div className="flex gap-2 justify-center">
               <button
@@ -253,15 +299,6 @@ export default function InPatientSummaryContent() {
               >
                 Try Again
               </button>
-              <button
-                onClick={() => {
-                  const today = new Date().toISOString().split('T')[0];
-                  handleDateChange(today);
-                }}
-                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
-              >
-                Try Today
-              </button>
             </div>
           </div>
         </main>
@@ -269,16 +306,15 @@ export default function InPatientSummaryContent() {
     );
   }
 
-  // Success screen - show summary data
+  // Success screen - complete flow
   const { patient, timelineEvents, medicalRecords, billing } = summaryData;
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 antialiased">
+    <div className="flex flex-col md:flex-row min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Mobile menu button */}
       <button
-        className="lg:hidden fixed bottom-20 right-6 z-50 p-3 bg-green-600 hover:bg-green-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center"
+        className="lg:hidden fixed bottom-20 right-6 z-50 p-3 bg-green-600 hover:bg-green-700 text-white rounded-full shadow-lg"
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-        aria-label="Toggle menu"
       >
         {isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
       </button>
@@ -290,208 +326,357 @@ export default function InPatientSummaryContent() {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col h-screen overflow-hidden">
-        <div className="flex-1 overflow-y-auto p-6 md:p-8">
-          {/* Date picker */}
-          <div className="mb-6 flex justify-end items-center gap-2">
-            <div className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2">
-              <Calendar className="h-4 w-4 text-green-600" />
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => handleDateChange(e.target.value)}
-                className="bg-transparent text-sm focus:outline-none"
-              />
+      <main className="flex-1 overflow-y-auto p-6 md:p-8">
+        {/* Date picker */}
+        <div className="mb-6 flex justify-end">
+          <div className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2">
+            <Calendar className="h-4 w-4 text-green-600" />
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => handleDateChange(e.target.value)}
+              className="bg-transparent text-sm focus:outline-none"
+            />
+          </div>
+        </div>
+
+        {/* Complete Patient Flow - Single Integrated View */}
+        <CompletePatientFlow 
+          emergencySummary={emergencySummary}
+          inpatientData={{
+            patient,
+            timelineEvents,
+            medicalRecords,
+            billing
+          }}
+          showEmergencyDetails={showEmergencyDetails}
+          onToggleEmergencyDetails={() => setShowEmergencyDetails(!showEmergencyDetails)}
+          onViewAssessment={(id) => router.push(`/emergency/assessments/${id}`)}
+          getTriageBadge={getTriageBadge}
+        />
+
+        {/* Footer */}
+        <footer className="mt-12 text-center">
+          <p className="text-xs text-gray-400 max-w-2xl mx-auto">
+            Disclaimer: This summary is for information management purposes.
+            Always consult official medical records for accurate medical advice.
+          </p>
+        </footer>
+      </main>
+    </div>
+  );
+}
+
+// Complete Patient Flow Component - Single Integrated View
+function CompletePatientFlow({ 
+  emergencySummary, 
+  inpatientData,
+  showEmergencyDetails, 
+  onToggleEmergencyDetails, 
+  onViewAssessment,
+  getTriageBadge
+}: { 
+  emergencySummary: any;
+  inpatientData: any;
+  showEmergencyDetails: boolean;
+  onToggleEmergencyDetails: () => void;
+  onViewAssessment: (id: string) => void;
+  getTriageBadge: (triage: string) => string;
+}) {
+  const hasEmergency = emergencySummary?.latestAssessment;
+  const hasInpatient = inpatientData?.patient;
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      {inpatientData?.patient && (
+        <div className="bg-gradient-to-r from-green-600 to-green-700 rounded-2xl p-6 text-white">
+          <div className="flex justify-between items-start">
+            <div>
+              <h1 className="text-2xl font-bold">{inpatientData.patient.name}</h1>
+              <p className="text-green-100 mt-1">
+                Admission ID: {inpatientData.patient.admissionId}
+              </p>
+            </div>
+            <span className="px-3 py-1 bg-white/20 rounded-full text-sm">
+              {inpatientData.patient.status || 'Admitted'}
+            </span>
+          </div>
+          
+          {/* Quick Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t border-white/20">
+            <div>
+              <p className="text-green-100 text-xs">Primary Consultant</p>
+              <p className="font-semibold">{inpatientData.patient.primaryConsultant || '—'}</p>
+            </div>
+            <div>
+              <p className="text-green-100 text-xs">Ward / Room</p>
+              <p className="font-semibold">{inpatientData.patient.wardRoom || '—'}</p>
+            </div>
+            <div>
+              <p className="text-green-100 text-xs">Admission Date</p>
+              <p className="font-semibold">
+                {inpatientData.patient.admissionDate ? new Date(inpatientData.patient.admissionDate).toLocaleDateString() : '—'}
+              </p>
+            </div>
+            <div>
+              <p className="text-green-100 text-xs">Discharge Date</p>
+              <p className="font-semibold">
+                {inpatientData.patient.dischargeDate ? new Date(inpatientData.patient.dischargeDate).toLocaleDateString() : '—'}
+              </p>
             </div>
           </div>
+        </div>
+      )}
 
-          {/* Patient Summary Card */}
-          <section className="bg-white dark:bg-gray-800 rounded-2xl p-6 lg:p-8 shadow-sm border border-gray-200 dark:border-gray-700 relative overflow-hidden group mb-8">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-green-600/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl pointer-events-none group-hover:bg-green-600/10 transition-colors duration-500"></div>
+      {/* Emergency History Section */}
+      {hasEmergency && (
+        <div className="bg-gradient-to-r from-blue-50 to-green-50 dark:from-blue-950/30 dark:to-green-950/30 rounded-2xl overflow-hidden shadow-sm border border-blue-200 dark:border-blue-800">
+          {/* Header */}
+          <div className="flex items-center justify-between p-6 border-b border-blue-200 dark:border-blue-800">
+            <div className="flex items-center gap-2">
+              <Activity className="h-6 w-6 text-blue-600" />
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                Emergency Department History
+              </h2>
+              <span className="ml-2 px-2 py-1 text-xs font-semibold bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 rounded-full">
+                {emergencySummary.summary?.totalVisits || 0} visit(s)
+              </span>
+            </div>
+            <button
+              onClick={onToggleEmergencyDetails}
+              className="text-blue-600 hover:text-blue-700"
+            >
+              {showEmergencyDetails ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+            </button>
+          </div>
 
-            <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-              <div>
-                <div className="flex items-center gap-3 mb-2">
-                  <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{patient?.name || '—'}</h1>
-                  <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${
-                    patient?.status === 'Discharged'
-                      ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-green-200 dark:border-green-800'
-                      : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-800'
-                  }`}>
-                    {patient?.status || 'Admitted'}
-                  </span>
-                </div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Admission ID: <span className="font-mono text-gray-700 dark:text-gray-300">{patient?.admissionId || '—'}</span>
+          {/* Content */}
+          <div className="p-6">
+            {/* Latest Assessment Summary */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                <p className="text-xs text-gray-500">Last Emergency Visit</p>
+                <p className="text-sm font-semibold flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  {emergencySummary.latestAssessment.date ? new Date(emergencySummary.latestAssessment.date).toLocaleDateString() : 'N/A'}
                 </p>
               </div>
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                <p className="text-xs text-gray-500">Triage Level</p>
+                <span className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${getTriageBadge(emergencySummary.latestAssessment.triage)}`}>
+                  {emergencySummary.latestAssessment.triage || 'N/A'}
+                </span>
+              </div>
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                <p className="text-xs text-gray-500">Decision</p>
+                <p className="text-sm font-semibold">{emergencySummary.latestAssessment.decision || 'N/A'}</p>
+              </div>
             </div>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-8 pt-8 border-t border-dashed border-gray-200 dark:border-gray-700">
-              <div>
-                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Primary Consultant</p>
-                <div className="flex items-center gap-3">
-                  <div className="relative h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
-                    {patient?.primaryConsultant ? (
-                      <div className="h-full w-full flex items-center justify-center text-xs font-bold text-gray-600 dark:text-gray-300">
-                        {patient.primaryConsultant.charAt(0)}
+            {/* Doctors Info */}
+            {emergencySummary.doctors && (
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-4 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4 text-blue-600" />
+                    <div>
+                      <p className="text-xs text-gray-500">Treating Doctor</p>
+                      <p className="text-sm font-semibold">{emergencySummary.doctors.treatingDoctor || 'Not assigned'}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Stethoscope className="h-4 w-4 text-green-600" />
+                    <div>
+                      <p className="text-xs text-gray-500">Assessment Written By</p>
+                      <p className="text-sm font-semibold">{emergencySummary.doctors.assessmentWrittenBy || 'Not assigned'}</p>
+                    </div>
+                  </div>
+                </div>
+                {emergencySummary.doctors.referredTo && emergencySummary.doctors.referredTo !== 'None' && (
+                  <div className="mt-3 pt-3 border-t">
+                    <p className="text-xs text-gray-500">Referred To</p>
+                    <p className="text-sm">{emergencySummary.doctors.referredTo}</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Clinical Details */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 mb-6">
+              <h3 className="font-semibold mb-3 text-gray-900 dark:text-white">Latest Assessment</h3>
+              <div className="space-y-3">
+                <div>
+                  <p className="text-xs text-gray-500">Chief Complaints</p>
+                  <p className="text-sm">{emergencySummary.latestAssessment.chiefComplaints || 'Not recorded'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Diagnosis</p>
+                  <p className="text-sm">{emergencySummary.latestAssessment.diagnosis || 'Not recorded'}</p>
+                </div>
+                
+                {/* Vitals */}
+                {emergencySummary.latestAssessment.vitals && (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3 pt-3 border-t">
+                    {emergencySummary.latestAssessment.vitals.bp && (
+                      <div>
+                        <p className="text-xs text-gray-500">BP</p>
+                        <p className="text-sm font-medium flex items-center gap-1">
+                          <Heart className="h-3 w-3 text-red-500" />
+                          {emergencySummary.latestAssessment.vitals.bp}
+                        </p>
                       </div>
-                    ) : (
-                      <div className="h-full w-full flex items-center justify-center text-gray-400">—</div>
+                    )}
+                    {emergencySummary.latestAssessment.vitals.heartRate && (
+                      <div>
+                        <p className="text-xs text-gray-500">Heart Rate</p>
+                        <p className="text-sm font-medium">{emergencySummary.latestAssessment.vitals.heartRate} bpm</p>
+                      </div>
+                    )}
+                    {emergencySummary.latestAssessment.vitals.temperature && (
+                      <div>
+                        <p className="text-xs text-gray-500">Temperature</p>
+                        <p className="text-sm font-medium flex items-center gap-1">
+                          <Thermometer className="h-3 w-3 text-orange-500" />
+                          {emergencySummary.latestAssessment.vitals.temperature}
+                        </p>
+                      </div>
+                    )}
+                    {emergencySummary.latestAssessment.vitals.spo2 && (
+                      <div>
+                        <p className="text-xs text-gray-500">SpO₂</p>
+                        <p className="text-sm font-medium flex items-center gap-1">
+                          <Droplets className="h-3 w-3 text-blue-500" />
+                          {emergencySummary.latestAssessment.vitals.spo2}%
+                        </p>
+                      </div>
                     )}
                   </div>
-                  <p className="font-medium text-gray-900 dark:text-white">{patient?.primaryConsultant || '—'}</p>
-                </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-11">{patient?.consultantDept || '—'}</p>
-              </div>
-
-              <div>
-                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Ward / Room</p>
-                <div className="flex items-center gap-2 text-gray-900 dark:text-white font-medium">
-                  <span className="text-green-600 dark:text-green-400 text-xl">🏥</span>
-                  <span>{patient?.wardRoom || '—'}</span>
-                </div>
-              </div>
-
-              <div>
-                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Admission Date</p>
-                <div className="flex items-center gap-2 text-gray-900 dark:text-white font-medium">
-                  <span className="text-green-600 dark:text-green-400 text-xl">📅</span>
-                  <span>{patient?.admissionDate ? new Date(patient.admissionDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}</span>
+                )}
+                
+                <div className="grid grid-cols-2 gap-2 pt-2">
+                  <div>
+                    <p className="text-xs text-gray-500">Assessment ID</p>
+                    <p className="text-xs font-mono">{emergencySummary.latestAssessment.id}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Status</p>
+                    <p className="text-xs">{emergencySummary.latestAssessment.status}</p>
+                  </div>
                 </div>
               </div>
-
-              <div>
-                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Discharge Date</p>
-                <div className="flex items-center gap-2 text-gray-900 dark:text-white font-medium">
-                  <span className="text-green-600 dark:text-green-400 text-xl">📅</span>
-                  <span>{patient?.dischargeDate ? new Date(patient.dischargeDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}</span>
-                </div>
-              </div>
+              
             </div>
-          </section>
 
-          {/* Two Column Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Timeline Column */}
-            <div className="lg:col-span-2 space-y-6">
-              <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 lg:p-8 shadow-sm border border-gray-200 dark:border-gray-700">
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-8 flex items-center gap-2">
-                  <span className="w-1.5 h-6 bg-green-600 rounded-full"></span>
-                  Hospital Stay Timeline
-                </h2>
-                <div className="relative pl-4">
-                  <div className="absolute top-2 bottom-6 left-[27px] w-0.5 bg-gradient-to-b from-green-600/80 to-green-600/10"></div>
-                  {timelineEvents?.map((event: any, index: number) => (
-                    <div key={event.id} className={`relative flex gap-6 ${index < timelineEvents.length - 1 ? 'pb-12' : ''} group`}>
-                      <div className="mt-1 flex-shrink-0 relative">
-                        <div className={`h-6 w-6 rounded-full ${
-                          event.type === 'surgery'
-                            ? 'bg-green-600'
-                            : 'bg-white dark:bg-gray-800 border-2 ' +
-                              (event.color === 'green'
-                                ? 'border-green-600 dark:border-green-500'
-                                : 'border-gray-300 dark:border-gray-600')
-                        } z-10 relative flex items-center justify-center`}>
-                          {event.icon && <span className="text-white text-[14px]">{event.icon}</span>}
-                          {!event.icon && event.color === 'green' && <div className="h-2.5 w-2.5 rounded-full bg-green-600"></div>}
-                        </div>
+            {/* All Visits History (expandable) */}
+            {showEmergencyDetails && emergencySummary.allVisits?.length > 1 && (
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
+                <h3 className="font-semibold mb-3 text-gray-900 dark:text-white">All Emergency Visits</h3>
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  {emergencySummary.allVisits.map((visit: any) => (
+                    <div key={visit.id} className="flex justify-between items-center py-2 border-b last:border-0">
+                      <div>
+                        <p className="text-xs font-mono">{visit.id}</p>
+                        <p className="text-xs text-gray-500">{new Date(visit.date).toLocaleDateString()}</p>
                       </div>
-                      <div className="flex-grow">
-                        <span className={`text-xs font-semibold ${
-                          event.color === 'green' ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'
-                        } mb-1 block`}>{event.date}</span>
-                        <h3 className="text-base font-semibold text-gray-900 dark:text-white">{event.title}</h3>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">{event.description}</p>
-                        {event.note && (
-                          <div className="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-3 mt-2 border border-gray-100 dark:border-gray-700">
-                            <p className="text-xs text-gray-600 dark:text-gray-400">{event.note}</p>
-                          </div>
-                        )}
+                      <div className="flex gap-2">
+                        <span className={`px-2 py-0.5 rounded-full text-xs ${getTriageBadge(visit.triage)}`}>
+                          {visit.triage}
+                        </span>
+                        <span className="text-xs text-gray-600">{visit.decision}</span>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
-            </div>
+            )}
+          </div>
+        </div>
+      )}
 
-            {/* Right Column */}
-            <div className="space-y-6">
-              {/* Medical Records */}
-              <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 h-fit">
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-                  <span className="text-green-600 dark:text-green-400 text-xl">📋</span>
-                  Medical Records
-                </h2>
-                <div className="space-y-3">
-                  {medicalRecords?.length > 0 ? (
-                    medicalRecords.map((record: any) => (
-                      <a 
-                        key={record.id} 
-                        href={record.fileUrl || '#'} 
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="group block p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 border border-transparent hover:border-green-200 dark:hover:border-green-900 transition-all duration-200"
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className="h-10 w-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0 group-hover:bg-green-600 group-hover:text-white text-green-600 dark:text-green-400 transition-colors">
-                            <span className="text-xl">📄</span>
-                          </div>
-                          <div className="flex-grow">
-                            <p className="text-sm font-semibold text-gray-900 dark:text-white">{record.title}</p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{record.subtitle}</p>
-                          </div>
-                        </div>
-                      </a>
-                    ))
-                  ) : (
-                    <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">No medical records available</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Billing Summary */}
-              <div className="bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Final Bill Summary</h2>
-                <div className="flex justify-between items-end mb-2">
-                  <span className="text-sm text-gray-500 dark:text-gray-400">Total Amount</span>
-                  <span className="text-xl font-bold text-gray-900 dark:text-white">
-                    ₹{billing?.totalAmount?.toFixed(2) || '0.00'}
-                  </span>
-                </div>
-                <div className="flex justify-between items-end mb-6">
-                  <span className="text-sm text-gray-500 dark:text-gray-400">Insurance Coverage</span>
-                  <span className="text-sm font-medium text-green-600 dark:text-green-400">
-                    - ₹{billing?.insuranceCoverage?.toFixed(2) || '0.00'}
-                  </span>
-                </div>
-                <div className="pt-4 border-t border-dashed border-gray-200 dark:border-gray-700 mb-6">
-                  <div className="flex justify-between items-end">
-                    <span className="text-sm font-bold text-gray-900 dark:text-white">Patient to Pay</span>
-                    <span className="text-2xl font-bold text-green-600 dark:text-green-400">
-                      ₹{billing?.patientPay?.toFixed(2) || '0.00'}
-                    </span>
+      {/* Inpatient Timeline */}
+      {hasInpatient && inpatientData.timelineEvents?.length > 0 && (
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+            <span className="w-1.5 h-6 bg-green-600 rounded-full"></span>
+            Hospital Stay Timeline
+          </h2>
+          <div className="relative pl-4">
+            <div className="absolute top-2 bottom-6 left-[27px] w-0.5 bg-gradient-to-b from-green-600/80 to-green-600/10"></div>
+            {inpatientData.timelineEvents.map((event: any, index: number) => (
+              <div key={event.id} className={`relative flex gap-6 ${index < inpatientData.timelineEvents.length - 1 ? 'pb-8' : ''} group`}>
+                <div className="mt-1 flex-shrink-0 relative">
+                  <div className={`h-6 w-6 rounded-full ${
+                    event.type === 'surgery' ? 'bg-green-600' : 'bg-white dark:bg-gray-800 border-2 border-green-600'
+                  } z-10 relative flex items-center justify-center`}>
+                    {event.icon ? <span className="text-white text-[14px]">{event.icon}</span> : <div className="h-2.5 w-2.5 rounded-full bg-green-600"></div>}
                   </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    Status: <span className={`font-medium ${billing?.status === 'Settled' ? 'text-green-600' : 'text-orange-600'}`}>
-                      {billing?.status || 'Pending'}
-                    </span>
-                  </p>
+                </div>
+                <div className="flex-grow">
+                  <span className="text-xs font-semibold text-green-600 dark:text-green-400 mb-1 block">{event.date}</span>
+                  <h3 className="text-base font-semibold text-gray-900 dark:text-white">{event.title}</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{event.description}</p>
                 </div>
               </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Medical Records & Billing */}
+      {hasInpatient && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Medical Records */}
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <span className="text-xl">📋</span> Medical Records
+            </h2>
+            <div className="space-y-3">
+              {inpatientData.medicalRecords?.length > 0 ? (
+                inpatientData.medicalRecords.map((record: any) => (
+                  <a key={record.id} href={record.fileUrl || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                    <div className="h-10 w-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                      <span className="text-xl">📄</span>
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold">{record.title}</p>
+                      <p className="text-xs text-gray-500">{record.subtitle}</p>
+                    </div>
+                  </a>
+                ))
+              ) : (
+                <p className="text-sm text-gray-500 text-center py-4">No medical records available</p>
+              )}
             </div>
           </div>
 
-          {/* Footer */}
-          <footer className="mt-12 text-center">
-            <p className="text-xs text-gray-400 max-w-2xl mx-auto">
-              Disclaimer: This inpatient summary is for information management purposes.
-              Always consult official medical records and your healthcare provider for accurate medical advice.
-            </p>
-          </footer>
+          {/* Billing Summary */}
+          <div className="bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Billing Summary</h2>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-500">Total Amount</span>
+                <span className="text-xl font-bold">₹{inpatientData.billing?.totalAmount?.toFixed(2) || '0.00'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-500">Insurance Coverage</span>
+                <span className="text-sm font-medium text-green-600">- ₹{inpatientData.billing?.insuranceCoverage?.toFixed(2) || '0.00'}</span>
+              </div>
+              <div className="pt-3 border-t">
+                <div className="flex justify-between">
+                  <span className="text-sm font-bold">Patient to Pay</span>
+                  <span className="text-2xl font-bold text-green-600">₹{inpatientData.billing?.patientPay?.toFixed(2) || '0.00'}</span>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Status: <span className={`font-medium ${inpatientData.billing?.status === 'Settled' ? 'text-green-600' : 'text-orange-600'}`}>
+                    {inpatientData.billing?.status || 'Pending'}
+                  </span>
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
-      </main>
+      )}
     </div>
   );
 }

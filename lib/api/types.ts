@@ -479,3 +479,84 @@ export interface DoctorDepartment {
   name: string;
   description?: string;
 }
+
+
+// lib/types.ts
+export type TriageType = 'Red' | 'Yellow' | 'Green';
+export type GenderType = 'Male' | 'Female' | 'Other';
+export type DecisionType = 'Admit' | 'Observe' | 'Discharge Home' | 'Transfer';
+export type LabStatus = 'Pending' | 'Available' | 'Not Ordered' | 'Not Indicated';
+export type AssessmentStatus = 'Draft' | 'Completed' | 'Converted to Admission';
+
+export interface Lab {
+  name: string;
+  status: LabStatus;
+}
+
+export interface AuthorInfo {
+  id: number;
+  name: string;
+  role: string;
+}
+
+export interface Assessment {
+  id: string;
+  status: AssessmentStatus;
+  linkedAdmissionId?: string;
+  completedAt?: string;
+  
+  // Patient Info
+  uhid: string;
+  patientName: string;
+  age: number | '';
+  gender: GenderType | '';
+  arrivalAt: string;
+  
+  // Triage & Vitals
+  triage: TriageType | '';
+  systolic: number | '';
+  diastolic: number | '';
+  heartRate: number | '';
+  respiratoryRate: number | '';
+  temperature: number | '';
+  tempUnit: 'C' | 'F';
+  spo2: number | '';
+  painScore: number;
+  gcs: number | '';
+  
+  // Point-of-Care
+  rbs: number | '';
+  upt?: 'Positive' | 'Negative' | 'Not Done';
+  ecgDone: 'Yes' | 'No' | '';
+  ecgReportAttached: boolean;
+  cxrDone: 'Yes' | 'No' | '';
+  cxrReportAttached: boolean;
+  usgDone: 'Yes' | 'No' | '';
+  usgFindings: string;
+  
+  // Lab Orders
+  labs: Lab[];
+  
+  // Doctor Assessment
+  chiefComplaints: string;
+  complaintDuration: string;
+  pastHistory: string;
+  provisionalDiagnosis: string;
+  examFindings: string;
+  intervention: string;
+  
+  // Disposition
+  decision: DecisionType | '';
+  mainDoctor: string;
+  referral: string;
+  dutyDoctorName: string;
+  
+  // Author Tracking
+  createdBy?: AuthorInfo;
+  updatedBy?: AuthorInfo;
+  completedBy?: AuthorInfo;
+  convertedBy?: AuthorInfo;
+}
+
+export const DOCTORS = ['Dr. Smith', 'Dr. Jones', 'Dr. Patel', 'Dr. Lee'];
+export const SPECIALTIES = ['None', 'Medicine', 'Surgery', 'Pediatrics', 'Orthopedics', 'Cardiology'];

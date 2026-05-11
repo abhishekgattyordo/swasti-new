@@ -24,6 +24,11 @@ export async function POST(req: NextRequest) {
         //  requireRole(req, ['helpdesk']);
     const body = await req.json();
     const { mode, patientId, patient, admission, emergency } = body;
+    console.log("=== ADMISSION REQUEST ===");
+console.log("mode:", mode);
+console.log("patientId:", patientId);
+console.log("type of patientId:", typeof patientId);
+console.log("patientId length:", patientId?.length);
 
     let actualPatientId: string;
     let plainPassword: string | undefined;

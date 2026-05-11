@@ -362,4 +362,9 @@ updateTask: async (id: string, data: { status: string; result?: string; complete
   return response.data;
 },
 
+getPendingItems: async (patientId: string) => {
+  const response = await api.get('/api/nurse/pending', { params: { patientId } });
+  return response.data;
+},
+
 };
