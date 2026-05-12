@@ -26,7 +26,7 @@ export interface Floor {
   updated_at: string;
 }
 
-export type WardType = "General" | "Semi-Special" | "Special" | "VIP" | "ICU" | "Pediatric";
+export type WardType = "General" | "Semi-Special" | "Special" | "VIP" | "ICU" | "Pediatric" | "Emergency";
 export type PatientCategory = "Male" | "Female" | "Children" | "Mixed";
 export type BedStatus = "available" | "occupied" | "cleaning" | "maintenance" | "reserved";
 

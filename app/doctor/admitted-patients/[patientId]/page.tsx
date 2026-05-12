@@ -192,7 +192,7 @@ export default function DoctorPatientOverviewPage() {
     { 
       label: 'Tasks', 
       count: stats.tasksCount, 
-      route: `/doctor/admitted-patients/${patientId}/tasks`, 
+      route: `/doctor/admitted-patients/${patientId}/assign-task`, 
       icon: CheckSquare, 
       color: 'text-green-500', 
       bg: 'bg-green-50' 

@@ -57,9 +57,9 @@ export default function NurseSidebar({ isOpen, onClose }: SidebarProps) {
     { icon: LayoutDashboard, label: 'Dashboard', href: '/nurse', color: 'from-blue-500 to-blue-700' },
     { icon: Users, label: 'My Patients', href: '/nurse/patients', color: 'from-emerald-500 to-emerald-700' },
     { icon: Activity, label: 'Vitals Entry', href: '/nurse/vitals', color: 'from-cyan-500 to-cyan-700' },
-    { icon: Pill, label: 'Medications', href: '/nurse/medications', badge: 2, color: 'from-purple-500 to-purple-700' },
+    { icon: Pill, label: 'Medications', href: '/nurse/medications', color: 'from-purple-500 to-purple-700' },
     { icon: FileText, label: 'Nursing Notes', href: '/nurse/nursing-notes', color: 'from-amber-500 to-amber-700' },
-    { icon: CheckSquare, label: 'Tasks', href: '/nurse/tasks', badge: 3, color: 'from-orange-500 to-orange-700' },
+    { icon: CheckSquare, label: 'Tasks', href: '/nurse/tasks', color: 'from-orange-500 to-orange-700' },
     // { icon: Bell, label: 'Alerts', href: '/nurse/alerts', badge: 1, color: 'from-red-500 to-red-700' },
     { icon: BookOpen, label: 'Shift Handover', href: '/nurse/handover', color: 'from-indigo-500 to-indigo-700' },
   ];

@@ -9,7 +9,7 @@ import { authErrorResponse,requireRole } from '@/lib/auth/guards';
 const WardSchema = z.object({
   floor_id: z.number().int().positive(),
   name: z.string().min(1).max(100),
-  type: z.enum(['General', 'Semi-Special', 'Special', 'VIP', 'ICU', 'Pediatric']),
+  type: z.enum(['General', 'Semi-Special', 'Special', 'VIP', 'ICU', 'Pediatric','Emergency']),
   patient_category: z.enum(['Male', 'Female', 'Children', 'Mixed']),
   description: z.string().optional().nullable(),
   daily_rate: z.number().min(0).optional().default(0),  // <-- added

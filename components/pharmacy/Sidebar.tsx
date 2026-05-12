@@ -81,14 +81,14 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
   const navItems: NavItem[] = [
     { icon: LayoutDashboard, label: 'Dashboard', href: '/pharmacy/dashboard', color: 'from-blue-500 to-blue-700', isEnabled: isDashboardEnabled },
-    { icon: Pill, label: 'Medicines', href: '/pharmacy/medicines', badge: 2, color: 'from-green-500 to-green-700', isEnabled: isMedicineEnabled },
+    { icon: Pill, label: 'Medicines', href: '/pharmacy/medicines', color: 'from-green-500 to-green-700', isEnabled: isMedicineEnabled },
     { icon: ShoppingCart, label: 'Purchase Entry', href: '/pharmacy/purchase', color: 'from-purple-500 to-purple-700', isEnabled: isPurchaseEntryEnabled },
-    { icon: Package, label: 'Current Stock', href: '/pharmacy/stock', badge: 5, color: 'from-amber-500 to-amber-700', isEnabled: isCurrentStockEnabled },
+    { icon: Package, label: 'Current Stock', href: '/pharmacy/stock',  color: 'from-amber-500 to-amber-700', isEnabled: isCurrentStockEnabled },
     { icon: Receipt, label: 'Billing', href: '/pharmacy/billingpage', color: 'from-teal-500 to-teal-700', isEnabled: isBillingEnabled },
     { icon: ClipboardList, label: 'OP Dispense', href: '/pharmacy/op-dispense', color: 'from-emerald-500 to-emerald-700', isEnabled: isOpDispenseEnabled },
     { icon: Building2, label: 'IP Issue', href: '/pharmacy/ip-issue', color: 'from-indigo-500 to-indigo-700', isEnabled: isIpIssueEnabled },
     { icon: BookOpen, label: 'Ledger', href: '/pharmacy/ledger', color: 'from-cyan-500 to-cyan-700', isEnabled: isLedgerEnabled },
-    { icon: AlertTriangle, label: 'Expiry Report', href: '/pharmacy/expiry-report', badge: 3, color: 'from-red-500 to-red-700', isEnabled: isExpiryReportEnabled },
+    { icon: AlertTriangle, label: 'Expiry Report', href: '/pharmacy/expiry-report', color: 'from-red-500 to-red-700', isEnabled: isExpiryReportEnabled },
     { icon: ArrowLeftRight, label: 'Stock Adjustment', href: '/pharmacy/stock-adjustment', color: 'from-orange-500 to-orange-700', isEnabled: isStockAdjustmentEnabled },
   ];
 

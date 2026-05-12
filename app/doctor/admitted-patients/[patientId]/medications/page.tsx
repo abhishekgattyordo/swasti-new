@@ -224,7 +224,7 @@ export default function MedicationsPage() {
               className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 flex items-center gap-2"
             >
               <Plus size={16} />
-              Administer Medication
+              Prescribed Medication
             </button>
           </div>
         </div>

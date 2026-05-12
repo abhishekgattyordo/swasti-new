@@ -82,10 +82,10 @@ export default function DoctorSidebar({ isOpen, onClose }: DoctorSidebarProps) {
 
  const navItems: NavItem[] = [
   { icon: LayoutDashboard, label: 'Dashboard', href: '/doctor/dashboard', color: 'from-emerald-500 to-emerald-700', featureKey: DOCTOR_FEATURES.DASHBOARD },
-  { icon: Calendar, label: 'Schedule', href: '/doctor/schedule', badge: '12', color: 'from-blue-500 to-blue-700', featureKey: DOCTOR_FEATURES.SCHEDULE },
-  { icon: Users, label: 'Patients', href: '/doctor/patients', badge: '5', color: 'from-purple-500 to-purple-700', featureKey: DOCTOR_FEATURES.PATIENTS },
-  { icon: Users, label: 'Admitted Patients', href: '/doctor/admitted-patients', badge: '5', color: 'from-indigo-500 to-indigo-700', featureKey: 'admitted_patients' },  // ✅ ADD THIS
-  { icon: CreditCard, label: 'Billing', href: '/doctor/billing', badge: '3', color: 'from-amber-500 to-amber-700', featureKey: DOCTOR_FEATURES.BILLING },
+  { icon: Calendar, label: 'Schedule', href: '/doctor/schedule', badge: '', color: 'from-blue-500 to-blue-700', featureKey: DOCTOR_FEATURES.SCHEDULE },
+  { icon: Users, label: 'Patients', href: '/doctor/patients', badge: '', color: 'from-purple-500 to-purple-700', featureKey: DOCTOR_FEATURES.PATIENTS },
+  { icon: Users, label: 'Admitted Patients', href: '/doctor/admitted-patients', badge: '', color: 'from-indigo-500 to-indigo-700', featureKey: 'admitted_patients' },  // ✅ ADD THIS
+  { icon: CreditCard, label: 'Billing', href: '/doctor/billing', badge: '', color: 'from-amber-500 to-amber-700', featureKey: DOCTOR_FEATURES.BILLING },
 ];
   const visibleNavItems = navItems.filter(item => {
   switch (item.featureKey) {

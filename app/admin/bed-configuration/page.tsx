@@ -64,7 +64,8 @@ type WardType =
   | "Special"
   | "VIP"
   | "ICU"
-  | "Pediatric";
+  | "Pediatric"
+  | "Emergency";
 type PatientCategory = "Male" | "Female" | "Children" | "Mixed";
 type BedStatus =
   | "available"
@@ -695,6 +696,7 @@ useEffect(() => {
                             <SelectItem value="VIP">VIP</SelectItem>
                             <SelectItem value="ICU">ICU</SelectItem>
                             <SelectItem value="Pediatric">Pediatric</SelectItem>
+                             <SelectItem value="Emergency">Emergency</SelectItem> 
                           </SelectContent>
                         </Select>
                         <Select
@@ -1046,6 +1048,7 @@ useEffect(() => {
                     <SelectItem value="VIP">VIP</SelectItem>
                     <SelectItem value="ICU">ICU</SelectItem>
                     <SelectItem value="Pediatric">Pediatric</SelectItem>
+                     <SelectItem value="Emergency">Emergency</SelectItem> 
                   </SelectContent>
                 </Select>
               </div>

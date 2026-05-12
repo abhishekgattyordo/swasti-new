@@ -143,7 +143,8 @@ const mapApiTypeToUIType = (apiType: WardType): BedType => {
     'Special': 'General',
     'VIP': 'General',
     'ICU': 'ICU',
-    'Pediatric': 'Pediatric'
+    'Pediatric': 'Pediatric',
+     'Emergency': 'General',
   };
   return typeMap[apiType] || 'General';
 };

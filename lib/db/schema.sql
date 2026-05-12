@@ -332,7 +332,7 @@ CREATE TABLE IF NOT EXISTS wards (
     id SERIAL PRIMARY KEY,
     floor_id INTEGER NOT NULL REFERENCES floors(id) ON DELETE CASCADE,
     name VARCHAR(100) NOT NULL,
-    type VARCHAR(50) NOT NULL CHECK (type IN ('General', 'Semi-Special', 'Special', 'VIP', 'ICU', 'Pediatric')),
+    type VARCHAR(50) NOT NULL CHECK (type IN ('General', 'Semi-Special', 'Special', 'VIP', 'ICU', 'Pediatric','Emergency')),
     patient_category VARCHAR(50) NOT NULL CHECK (patient_category IN ('Male', 'Female', 'Children', 'Mixed')),
     description TEXT,
     daily_rate NUMERIC(10,2) DEFAULT 0 NOT NULL,
@@ -946,3 +946,23 @@ CREATE TRIGGER update_emergency_assessments_updated_at
     BEFORE UPDATE ON emergency_assessments
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
+
+ -- Add discharge_details column to emergency_assessments table
+ALTER TABLE emergency_assessments 
+ADD COLUMN IF NOT EXISTS discharge_details JSONB;
+
+-- Create index for better query performance
+CREATE INDEX IF NOT EXISTS idx_emergency_assessments_discharge 
+ON emergency_assessments USING GIN (discharge_details);
+
+-- Add column to track who discharged the patient
+ALTER TABLE emergency_assessments 
+ADD COLUMN IF NOT EXISTS discharged_by VARCHAR(100);
+
+-- Add column for discharge status
+ALTER TABLE emergency_assessments 
+ADD COLUMN IF NOT EXISTS discharge_status VARCHAR(50);   
+
+-- Add discharge_details column (JSONB)
+ALTER TABLE emergency_assessments 
+ADD COLUMN IF NOT EXISTS discharge_details JSONB;

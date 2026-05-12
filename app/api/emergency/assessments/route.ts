@@ -80,6 +80,47 @@ async function createPatient(patientData: {
 }
 
 // ============================================
+// MRN Generation Helper functions
+// ============================================
+
+function generateMRN(): string {
+  const today = new Date();
+  const year = today.getFullYear().toString().slice(-2);
+  const month = (today.getMonth() + 1).toString().padStart(2, '0');
+  const day = today.getDate().toString().padStart(2, '0');
+  const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+  return `MRN-${year}${month}${day}-${random}`;
+}
+
+async function isMRNUnique(mrn: string): Promise<boolean> {
+  const result = await query(
+    'SELECT COUNT(*) FROM emergency_assessments WHERE uhid = $1',
+    [mrn]
+  );
+  return parseInt(result.rows[0].count) === 0;
+}
+
+async function generateUniqueMRN(): Promise<string> {
+  let mrn = generateMRN();
+  let attempts = 0;
+  let isUnique = await isMRNUnique(mrn);
+  
+  // Try up to 10 times to get unique MRN
+  while (!isUnique && attempts < 10) {
+    mrn = generateMRN();
+    isUnique = await isMRNUnique(mrn);
+    attempts++;
+  }
+  
+  if (!isUnique) {
+    // Fallback to timestamp + random for absolute uniqueness
+    mrn = `MRN-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+  }
+  
+  return mrn;
+}
+
+// ============================================
 // GET /api/emergency/assessments
 // ============================================
 
@@ -90,9 +131,9 @@ export async function GET(request: NextRequest) {
     const triage = searchParams.get('triage');
     const search = searchParams.get('search');
     const assessmentId = searchParams.get('id');
-    const linked = searchParams.get('linked');   // 👈 new
+    const linked = searchParams.get('linked');
 
-    // Single assessment by ID (unchanged)
+    // Single assessment by ID
     if (assessmentId) {
       const result = await query(
         `SELECT 
@@ -154,7 +195,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: true, data: assessment });
     }
 
-    // List assessments with filters
+    // List assessments with filters - UPDATED HERE
     let queryText = `
       SELECT 
         assessment_id as id,
@@ -164,7 +205,10 @@ export async function GET(request: NextRequest) {
         status,
         duty_doctor_name as "dutyDoctorName",
         created_at as "createdAt",
-        updated_at as "updatedAt"
+        updated_at as "updatedAt",
+        disposition_decision as decision,
+        linked_admission_id as "linkedAdmissionId",
+        discharge_details
       FROM emergency_assessments
       WHERE 1=1
     `;
@@ -179,7 +223,6 @@ export async function GET(request: NextRequest) {
       queryText += ` AND triage_category = $${idx++}`;
       params.push(triage);
     }
-    // 👇 New: filter out assessments that already have a linked admission
     if (linked === 'null') {
       queryText += ` AND linked_admission_id IS NULL`;
     }
@@ -190,10 +233,19 @@ export async function GET(request: NextRequest) {
     queryText += ` ORDER BY created_at DESC`;
 
     const result = await query(queryText, params);
+    
+    // Parse discharge_details for each row (if it's a string)
+    const assessments = result.rows.map(row => {
+      if (row.discharge_details && typeof row.discharge_details === 'string') {
+        row.discharge_details = JSON.parse(row.discharge_details);
+      }
+      return row;
+    });
+    
     return NextResponse.json({
       success: true,
-      data: result.rows,
-      count: result.rows.length,
+      data: assessments,
+      count: assessments.length,
     });
   } catch (error) {
     console.error('Error fetching assessments:', error);
@@ -208,8 +260,6 @@ export async function GET(request: NextRequest) {
 // POST /api/emergency/assessments
 // ============================================
 
-
-
 export async function POST(request: NextRequest) {
   try {
     let body = await request.json();
@@ -221,7 +271,7 @@ export async function POST(request: NextRequest) {
     const missingFields: string[] = [];
 
     // Always required (even for draft) – only identification fields
-    const alwaysRequired = ['id', 'uhid', 'patientName'];
+    const alwaysRequired = ['id', 'patientName'];
     for (const field of alwaysRequired) {
       const value = body[field];
       if (value === undefined || value === null || value === '') {
@@ -260,13 +310,12 @@ export async function POST(request: NextRequest) {
         missingFields.push('spo2 (0-100%)');
       }
     } else {
-      // For draft: if age is provided, validate positivity; otherwise, allow null
+      // For draft: if age is provided, validate positivity
       if (body.age !== undefined && body.age !== null && body.age !== '') {
         if (Number(body.age) <= 0) {
           missingFields.push('age (must be > 0)');
         }
       }
-      // gender is completely optional for draft – no validation
     }
 
     if (missingFields.length > 0) {
@@ -294,14 +343,32 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 3. Create a new patient (always use provided name; age/gender may be null for draft)
+    // 3. GENERATE MRN IF NOT PROVIDED OR EMPTY
+    let uhid = body.uhid;
+    if (!uhid || uhid === '') {
+      uhid = await generateUniqueMRN();
+      console.log(`Generated new MRN: ${uhid}`);
+    } else {
+      // Check if provided MRN is unique
+      const existingMRN = await query(
+        'SELECT assessment_id FROM emergency_assessments WHERE uhid = $1 AND assessment_id != $2',
+        [uhid, body.id || '']
+      );
+      if (existingMRN.rows.length > 0) {
+        // MRN already exists, generate a new one
+        uhid = await generateUniqueMRN();
+        console.log(`MRN conflict, generated new MRN: ${uhid}`);
+      }
+    }
+
+    // 4. Create a new patient
     const patient = await createPatient({
       patientName: body.patientName,
       age: body.age,
       gender: body.gender,
     });
 
-    // 4. Insert assessment
+    // 5. Insert assessment with generated UHID
     const result = await query(
       `INSERT INTO emergency_assessments (
         assessment_id, patient_id, uhid, patient_name, age, gender, arrival_at,
@@ -329,7 +396,7 @@ export async function POST(request: NextRequest) {
       [
         body.id,
         patient.patient_id,
-        body.uhid,
+        uhid,
         body.patientName,
         body.age,
         body.gender,
@@ -379,6 +446,7 @@ export async function POST(request: NextRequest) {
         data: {
           assessment_id: result.rows[0].assessment_id,
           patient_id: patient.patient_id,
+          uhid: uhid,
         },
       },
       { status: 201 }
