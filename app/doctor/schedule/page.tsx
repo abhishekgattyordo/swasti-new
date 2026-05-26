@@ -583,17 +583,14 @@ useEffect(() => {
                             </span>
                           </div>
                         </td>
-                        <td className="p-3 sm:p-4 border border-gray-200">
-                          <Link
-                            href={`/ehr/${appointment.id}`}
-                            className="font-bold text-gray-800 hover:text-blue-600 hover:underline"
-                          >
-                            {appointment.name}
-                          </Link>
-                          <p className="text-xs text-gray-500 mt-0.5">
-                            {appointment.meta}
-                          </p>
-                        </td>
+                       <td className="p-3 sm:p-4 border border-gray-200">
+  <div className="font-bold text-gray-800">
+    {appointment.name}
+  </div>
+  <p className="text-xs text-gray-500 mt-0.5">
+    {appointment.meta}
+  </p>
+</td>
                         <td className="p-3 sm:p-4 border border-gray-200">
                           <span className="px-2 py-1 rounded-full text-xs font-medium inline-flex items-center gap-1 bg-gray-100 text-gray-600">
                             {appointment.type === "teleconsultation" ? (

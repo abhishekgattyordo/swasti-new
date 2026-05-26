@@ -205,7 +205,7 @@ export default function CreateNoteModal({ isOpen, onClose, onSave, patientName, 
             <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
               <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Create Nursing Note</h2>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Create Nursing Notee</h2>
           </div>
           <button
             onClick={onClose}
@@ -225,7 +225,7 @@ export default function CreateNoteModal({ isOpen, onClose, onSave, patientName, 
 
           {/* Template Selection */}
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Select Template</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Select Templateee</h3>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
               {Object.entries(NOTE_TEMPLATES).map(([key, template]) => (
                 <button

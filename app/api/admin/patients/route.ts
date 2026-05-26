@@ -400,6 +400,7 @@ export async function PUT(req: Request) {
 
 // ==================== DELETE ====================
 
+
 export async function DELETE(req: Request) {
   try {
     requireRole(req, ['admin']);
@@ -441,18 +442,23 @@ export async function DELETE(req: Request) {
     });
   } catch (error) {
     console.error('Error deleting patient:', error);
-      const authResponse = authErrorResponse(error);
+    
+    const authResponse = authErrorResponse(error);
     if (authResponse) {
       return authResponse;
     }
+    
     const err = error as { message?: string; detail?: string; code?: string };
+    
+    // ✅ CHANGE THIS PART - Return the original database error
     return NextResponse.json(
       { 
         success: false, 
-        message: 'Failed to delete patient',
+        message: err.message || 'Failed to delete patient',  // ← Original error message
         error: err.message || 'Unknown error',
-        detail: err.detail || null,
-        code: err.code || null
+        detail: err.detail || null,      // ← Key (patient_id)=... still referenced from table...
+        code: err.code || null,          // ← 23503 for foreign key violation
+        constraint: (err as any).constraint || null  // ← emergency_assessments_patient_id_fkey
       },
       { status: 500 }
     );

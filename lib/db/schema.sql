@@ -966,3 +966,34 @@ ADD COLUMN IF NOT EXISTS discharge_status VARCHAR(50);
 -- Add discharge_details column (JSONB)
 ALTER TABLE emergency_assessments 
 ADD COLUMN IF NOT EXISTS discharge_details JSONB;
+
+
+
+
+-- Create table
+CREATE TABLE IF NOT EXISTS health_analysis_history (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER,
+    patient_name VARCHAR(100),
+    patient_age INTEGER,
+    patient_gender VARCHAR(20),
+    patient_data JSONB,
+    analysis_report JSONB,
+    summary TEXT,
+    risk_level VARCHAR(20),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create indexes
+CREATE INDEX IF NOT EXISTS idx_health_analysis_user_id ON health_analysis_history(user_id);
+CREATE INDEX IF NOT EXISTS idx_health_analysis_created_at ON health_analysis_history(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_health_analysis_risk_level ON health_analysis_history(risk_level);
+CREATE INDEX IF NOT EXISTS idx_health_analysis_patient_name ON health_analysis_history(patient_name);
+CREATE INDEX IF NOT EXISTS idx_health_analysis_user_created ON health_analysis_history(user_id, created_at DESC);
+
+-- Create GIN indexes for JSONB
+CREATE INDEX IF NOT EXISTS idx_health_analysis_patient_data ON health_analysis_history USING GIN(patient_data);
+CREATE INDEX IF NOT EXISTS idx_health_analysis_analysis_report ON health_analysis_history USING GIN(analysis_report);
+
+SELECT '✅ Table created successfully!' as status;

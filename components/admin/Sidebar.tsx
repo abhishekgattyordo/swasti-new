@@ -74,9 +74,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
   const navItems = [
     { icon: Dashboard, label: 'Dashboard', href: '/admin/healthcaredashboard', color: 'from-blue-500 to-blue-700', isEnabled: isDashboardEnabled },
-    { icon: People, label: 'Doctors', href: '/admin/doctorsmanagement', badge: 3, color: 'from-emerald-500 to-emerald-700', isEnabled: isDoctorsEnabled },
+    { icon: People, label: 'Doctors', href: '/admin/doctorsmanagement', badge: "", color: 'from-emerald-500 to-emerald-700', isEnabled: isDoctorsEnabled },
      { icon: Badge, label: 'Staff', href: '/admin/staffmanagement', color: 'from-cyan-500 to-cyan-700', isEnabled: isStaffEnabled },
-    { icon: Person, label: 'Patients', href: '/admin/patientmanagement', badge: 8, color: 'from-purple-500 to-purple-700', isEnabled: isPatientsEnabled },
+    { icon: Person, label: 'Patients', href: '/admin/patientmanagement', badge: "", color: 'from-purple-500 to-purple-700', isEnabled: isPatientsEnabled },
     { icon: Domain, label: 'Bed Management', href: '/admin/bed-management', color: 'from-amber-500 to-amber-700', isEnabled: isBedConfigEnabled },
     { icon: Hotel, label: 'Bed Configuration', href: '/admin/bed-configuration', color: 'from-indigo-500 to-indigo-700', isEnabled: isBedConfigEnabled },
   ];

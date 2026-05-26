@@ -32,7 +32,7 @@ import { Label } from "@/components/ui/label";
 import { Menu, X } from "lucide-react";
 import { patientsApi } from "@/lib/api/registration";
 import { toast } from "sonner";
-import PatientImport from '@/components/admin/PatientImport';
+import PatientImport from "@/components/admin/PatientImport";
 // ==================== Types & Interfaces ====================
 interface Patient {
   id: string;
@@ -57,7 +57,6 @@ interface Appointment {
   id: number;
   appointment_date: string; // e.g., "2026-03-10T10:00:00Z"
   status: string; // e.g., "completed", "scheduled", "cancelled"
-
 }
 
 interface ColumnFilterProps {
@@ -276,136 +275,85 @@ const PatientManagementPage: React.FC = () => {
 
   // Fetch patients and then their appointments
 
-    const loadPatients = async () => {
-      try {
-        setLoading(true);
-        // 1. Fetch patients list
-        const response = await patientsApi.adminGetAllPatients();
-        console.log("API response:", response);
+  const loadPatients = async () => {
+    try {
+      setLoading(true);
+      // 1. Fetch patients list
+      const response = await patientsApi.adminGetAllPatients();
+      console.log("API response:", response);
 
-        // Extract patient array
-        let patientsArray: any[] = [];
-        if (Array.isArray(response.data)) {
-          patientsArray = response.data;
-        } else if (response.data && Array.isArray(response.data.data)) {
-          patientsArray = response.data.data;
-        } else if (
-          response.data?.success &&
-          Array.isArray(response.data.data)
-        ) {
-          patientsArray = response.data.data;
-        } else {
-          console.error("Unexpected API response format:", response.data);
-          setError("Invalid data format from server");
-          setLoading(false);
-          return;
-        }
+      // Extract patient array
+      let patientsArray: any[] = [];
+      if (Array.isArray(response.data)) {
+        patientsArray = response.data;
+      } else if (response.data && Array.isArray(response.data.data)) {
+        patientsArray = response.data.data;
+      } else if (response.data?.success && Array.isArray(response.data.data)) {
+        patientsArray = response.data.data;
+      } else {
+        console.error("Unexpected API response format:", response.data);
+        setError("Invalid data format from server");
+        setLoading(false);
+        return;
+      }
 
-        // Map to Patient type with placeholder dates
-        const mappedPatients: Patient[] = patientsArray.map((item: any) => {
-          const age = item.dob
-            ? new Date().getFullYear() - new Date(item.dob).getFullYear()
-            : 0;
-          const condition =
-            item.allergies?.[0] ||
-            item.chronicConditions?.[0] ||
-            item.condition ||
-            "No condition";
-          const department = item.department || "General";
-          const status = (item.status || "active") as
-            | "active"
-            | "inactive"
-            | "critical";
-          const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(item.full_name_en || "Patient")}&background=137fec&color=fff&size=128`;
-          const conditionColor =
-            "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300";
+      // Map to Patient type with placeholder dates
+      const mappedPatients: Patient[] = patientsArray.map((item: any) => {
+        const age = item.dob
+          ? new Date().getFullYear() - new Date(item.dob).getFullYear()
+          : 0;
+        const condition =
+          item.allergies?.[0] ||
+          item.chronicConditions?.[0] ||
+          item.condition ||
+          "No condition";
+        const department = item.department || "General";
+        const status = (item.status || "active") as
+          | "active"
+          | "inactive"
+          | "critical";
+        const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(item.full_name_en || "Patient")}&background=137fec&color=fff&size=128`;
+        const conditionColor =
+          "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300";
 
-          return {
-            id: item.patient_id?.toString() || item.id?.toString() || "",
-            name:
-              item.full_name_en ||
-              `${item.firstName || ""} ${item.lastName || ""}`.trim() ||
-              "Unknown",
-            email: item.email || "",
-            avatarUrl,
-            age,
-            gender: item.gender
-              ? ((item.gender.charAt(0).toUpperCase() +
-                  item.gender.slice(1)) as "Male" | "Female" | "Other")
-              : "Other",
-            bloodGroup: item.blood_group || "Unknown",
-            condition,
-            conditionColor,
-            department,
-            contact: item.phone || "",
-            lastVisit: "N/A", // placeholder
-            nextAppointment: "N/A", // placeholder
-            status,
-            statusColor: getStatusColor(status),
-          };
-        });
+        return {
+          id: item.patient_id?.toString() || item.id?.toString() || "",
+          name:
+            item.full_name_en ||
+            `${item.firstName || ""} ${item.lastName || ""}`.trim() ||
+            "Unknown",
+          email: item.email || "",
+          avatarUrl,
+          age,
+          gender: item.gender
+            ? ((item.gender.charAt(0).toUpperCase() + item.gender.slice(1)) as
+                | "Male"
+                | "Female"
+                | "Other")
+            : "Other",
+          bloodGroup: item.blood_group || "Unknown",
+          condition,
+          conditionColor,
+          department,
+          contact: item.phone || "",
+          lastVisit: "N/A", // placeholder
+          nextAppointment: "N/A", // placeholder
+          status,
+          statusColor: getStatusColor(status),
+        };
+      });
 
-        setPatients(mappedPatients);
-        updateStats(mappedPatients);
-        setError(null);
+      setPatients(mappedPatients);
+      updateStats(mappedPatients);
+      setError(null);
 
-        // 2. For each patient, fetch appointments and update lastVisit & nextAppointment
-        const appointmentPromises = mappedPatients.map(async (patient) => {
-          try {
-            const res = await fetch(`/api/appointments/patient/${patient.id}`);
-            if (!res.ok) {
-              console.warn(
-                `Failed to fetch appointments for patient ${patient.id}`,
-              );
-              return {
-                patientId: patient.id,
-                lastVisit: "N/A",
-                nextAppointment: "N/A",
-              };
-            }
-            const json = await res.json();
-            // Handle response format { success: true, data: [...] }
-            const appointments: any[] =
-              json.data || (Array.isArray(json) ? json : []);
-
-            const now = new Date();
-
-            // Past appointments: date before now, exclude cancelled
-            const pastAppointments = appointments
-              .filter((apt) => {
-                const aptDate = new Date(apt.date);
-                return aptDate < now && apt.status !== "CANCELLED";
-              })
-              .sort(
-                (a, b) =>
-                  new Date(b.date).getTime() - new Date(a.date).getTime(),
-              ); // most recent first
-
-            // Future appointments: date after or equal now, exclude cancelled
-            const futureAppointments = appointments
-              .filter((apt) => {
-                const aptDate = new Date(apt.date);
-                return aptDate >= now && apt.status !== "CANCELLED";
-              })
-              .sort(
-                (a, b) =>
-                  new Date(a.date).getTime() - new Date(b.date).getTime(),
-              ); // soonest first
-
-            const lastVisit =
-              pastAppointments.length > 0
-                ? formatDate(pastAppointments[0].date)
-                : "N/A";
-            const nextAppointment =
-              futureAppointments.length > 0
-                ? formatDate(futureAppointments[0].date)
-                : "N/A";
-
-            return { patientId: patient.id, lastVisit, nextAppointment };
-          } catch (err) {
-            console.error(
-              `Error fetching appointments for patient ${patient.id}:`,
-              err,
+      // 2. For each patient, fetch appointments and update lastVisit & nextAppointment
+      const appointmentPromises = mappedPatients.map(async (patient) => {
+        try {
+          const res = await fetch(`/api/appointments/patient/${patient.id}`);
+          if (!res.ok) {
+            console.warn(
+              `Failed to fetch appointments for patient ${patient.id}`,
             );
             return {
               patientId: patient.id,
@@ -413,41 +361,88 @@ const PatientManagementPage: React.FC = () => {
               nextAppointment: "N/A",
             };
           }
-        });
+          const json = await res.json();
+          // Handle response format { success: true, data: [...] }
+          const appointments: any[] =
+            json.data || (Array.isArray(json) ? json : []);
 
-        const appointmentResults =
-          await Promise.allSettled(appointmentPromises);
-        // Update patients with appointment data
-        const updatedPatients = mappedPatients.map((patient) => {
-          const result = appointmentResults.find(
-            (r) => r.status === "fulfilled" && r.value.patientId === patient.id,
+          const now = new Date();
+
+          // Past appointments: date before now, exclude cancelled
+          const pastAppointments = appointments
+            .filter((apt) => {
+              const aptDate = new Date(apt.date);
+              return aptDate < now && apt.status !== "CANCELLED";
+            })
+            .sort(
+              (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+            ); // most recent first
+
+          // Future appointments: date after or equal now, exclude cancelled
+          const futureAppointments = appointments
+            .filter((apt) => {
+              const aptDate = new Date(apt.date);
+              return aptDate >= now && apt.status !== "CANCELLED";
+            })
+            .sort(
+              (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+            ); // soonest first
+
+          const lastVisit =
+            pastAppointments.length > 0
+              ? formatDate(pastAppointments[0].date)
+              : "N/A";
+          const nextAppointment =
+            futureAppointments.length > 0
+              ? formatDate(futureAppointments[0].date)
+              : "N/A";
+
+          return { patientId: patient.id, lastVisit, nextAppointment };
+        } catch (err) {
+          console.error(
+            `Error fetching appointments for patient ${patient.id}:`,
+            err,
           );
-          if (result?.status === "fulfilled") {
-            return {
-              ...patient,
-              lastVisit: result.value.lastVisit,
-              nextAppointment: result.value.nextAppointment,
-            };
-          }
-          return patient; // keep original placeholders
-        });
+          return {
+            patientId: patient.id,
+            lastVisit: "N/A",
+            nextAppointment: "N/A",
+          };
+        }
+      });
 
-        setPatients(updatedPatients);
-      } catch (err) {
-        console.error("Error fetching patients:", err);
-        setError("An error occurred while fetching patients");
-      } finally {
-        setLoading(false);
-      }
-    };
+      const appointmentResults = await Promise.allSettled(appointmentPromises);
+      // Update patients with appointment data
+      const updatedPatients = mappedPatients.map((patient) => {
+        const result = appointmentResults.find(
+          (r) => r.status === "fulfilled" && r.value.patientId === patient.id,
+        );
+        if (result?.status === "fulfilled") {
+          return {
+            ...patient,
+            lastVisit: result.value.lastVisit,
+            nextAppointment: result.value.nextAppointment,
+          };
+        }
+        return patient; // keep original placeholders
+      });
 
-    useEffect(() => {
-  loadPatients();
-}, []);
+      setPatients(updatedPatients);
+    } catch (err) {
+      console.error("Error fetching patients:", err);
+      setError("An error occurred while fetching patients");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-const handleImportSuccess = () => {
-  loadPatients(); // refresh the list
-};
+  useEffect(() => {
+    loadPatients();
+  }, []);
+
+  const handleImportSuccess = () => {
+    loadPatients(); // refresh the list
+  };
 
   // Update stats based on patients
   const updateStats = (patients: Patient[]) => {
@@ -483,47 +478,115 @@ const handleImportSuccess = () => {
   };
 
   const handleDelete = async (patientId: string) => {
-    console.log("🔥 Delete clicked:", patientId);
+  console.log("🔥 Delete clicked:", patientId);
 
-    if (!window.confirm("Are you sure you want to delete this patient?"))
+  if (!window.confirm("Are you sure you want to delete this patient?"))
+    return;
+
+  try {
+    console.log("🚀 Calling API...");
+
+    const response = await patientsApi.adminDeletePatient(patientId);
+
+    console.log("✅ RESPONSE:", response);
+
+    if (!response) {
+      console.log("❌ RESPONSE UNDEFINED");
+      toast.error("No response from server");
       return;
-
-    try {
-      console.log("🚀 Calling API...");
-
-      const response = await patientsApi.adminDeletePatient(patientId);
-
-console.log("✅ RESPONSE:", response);
-
-if (!response) {
-  console.log("❌ RESPONSE UNDEFINED");
-  toast.error("No response from server");
-  return;
-}
-
-if (response.success) {
-  console.log("🎉 SUCCESS BLOCK");
-
-  setPatients(prev => {
-    const updated = prev.filter(p => p.id !== patientId);
-    updateStats(updated);
-    return updated;
-  });
-
-  toast.success(response.message);
-} else {
-  console.log("⚠️ FAILED BLOCK");
-  toast.error(response.message || "Failed to delete patient");
-}
-    } catch (error: any) {
-      console.log("❌ CATCH BLOCK TRIGGERED");
-      console.error("❌ ERROR:", error);
-
-      toast.error(
-        error?.response?.data?.message || "An error occurred while deleting",
-      );
     }
-  };
+
+    if (response.success) {
+      console.log("🎉 SUCCESS BLOCK");
+
+      setPatients((prev) => {
+        const updated = prev.filter((p) => p.id !== patientId);
+        updateStats(updated);
+        return updated;
+      });
+
+      toast.success(response.message);
+    } else {
+      console.log("⚠️ FAILED BLOCK");
+      
+      // 🎯 Handle foreign key constraint error (code 23503)
+      if (response.code === '23503' || response.detail?.includes('still referenced')) {
+        // Extract table name from detail
+        const tableMatch = response.detail?.match(/table "([^"]+)"/);
+        const tableName = tableMatch ? tableMatch[1] : '';
+        
+        // User-friendly messages based on table
+        const getFriendlyMessage = (table: string) => {
+          const messages: Record<string, string> = {
+            'emergency_assessments': 'This patient has emergency assessment records. Please delete their emergency assessments first.',
+            'medical_history': 'This patient has medical history records. Please delete their medical history first.',
+            'insurance_details': 'This patient has insurance details. Please delete their insurance records first.',
+            'registrations': 'This patient has registration records. Please delete their registrations first.',
+            'admissions': 'This patient has admission records. Please discharge them first.',
+            'prescriptions': 'This patient has active prescriptions. Please cancel them first.',
+            'lab_tests': 'This patient has pending lab tests. Please complete or cancel them first.',
+            'bills': 'This patient has unpaid bills. Please settle them first.',
+            'appointments': 'This patient has upcoming appointments. Please cancel them first.',
+          };
+          return messages[table] || `This patient has existing records in "${table}". Please remove those records first.`;
+        };
+        
+        const friendlyMessage = getFriendlyMessage(tableName);
+        toast.error(friendlyMessage);
+        
+        // Log technical details for developers
+        console.error('Delete failed - Foreign key constraint:', {
+          code: response.code,
+          detail: response.detail,
+          constraint: response.constraint
+        });
+      } 
+      // Handle patient not found
+      else if (response.message?.includes('not found') || response.code === '404') {
+        toast.error('Patient not found. It may have been already deleted.');
+        // Refresh the list to remove missing patient
+        fetchPatients();
+      }
+      // Handle other errors
+      else {
+        toast.error(response.message || "Failed to delete patient");
+      }
+    }
+  } catch (error: any) {
+    console.log("❌ CATCH BLOCK TRIGGERED");
+    console.error("❌ ERROR:", error);
+
+    // Handle axios error response
+    if (error?.response?.data) {
+      const errorData = error.response.data;
+      
+      // Check for foreign key constraint in error response
+      if (errorData.code === '23503' || errorData.detail?.includes('still referenced')) {
+        const tableMatch = errorData.detail?.match(/table "([^"]+)"/);
+        const tableName = tableMatch ? tableMatch[1] : '';
+        
+        const messages: Record<string, string> = {
+          'emergency_assessments': 'Cannot delete: Patient has emergency assessment records.',
+          'medical_history': 'Cannot delete: Patient has medical history records.',
+          'insurance_details': 'Cannot delete: Patient has insurance records.',
+          'registrations': 'Cannot delete: Patient has registration records.',
+        };
+        
+        toast.error(messages[tableName] || `Cannot delete: Patient has records in "${tableName}".`);
+      } else {
+        toast.error(errorData.message || "An error occurred while deleting");
+      }
+    } 
+    // Handle network errors
+    else if (error?.message === 'Network Error') {
+      toast.error('Network error. Please check your connection.');
+    }
+    // Generic error fallback
+    else {
+      toast.error("An unexpected error occurred. Please try again.");
+    }
+  }
+};
 
   // Filter patients
   const filteredPatients = patients.filter((patient) => {
@@ -656,7 +719,7 @@ if (response.success) {
                     </p>
                   </div>
                   <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-                      <PatientImport onSuccess={handleImportSuccess} />
+                    <PatientImport onSuccess={handleImportSuccess} />
                     <button
                       onClick={() => router.push("/admin/addnewpatient")}
                       className="flex items-center justify-center gap-1.5 rounded-lg h-9 md:h-10 px-3 md:px-4 bg-[#137fec] text-white text-sm font-semibold shadow-lg shadow-[#137fec]/20 hover:bg-[#137fec]/90 transition-all w-full md:w-auto"

@@ -509,9 +509,9 @@ export default function PrescriptionsPage() {
                                     <th className="px-4 py-3 border border-gray-200 dark:border-gray-700 font-medium">
                                       Doctor
                                     </th>
-                                    <th className="px-4 py-3 border border-gray-200 dark:border-gray-700 font-medium text-right">
+                                    {/* <th className="px-4 py-3 border border-gray-200 dark:border-gray-700 font-medium text-right">
                                       Actions
-                                    </th>
+                                    </th> */}
                                   </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
@@ -560,24 +560,7 @@ export default function PrescriptionsPage() {
                                           )}
                                         </div>
                                       </td>
-                                      <td className="px-4 py-3 border border-gray-200 dark:border-gray-700 text-right">
-                                        <div className="flex justify-end gap-2">
-                                          <Button
-                                            variant="outline"
-                                            size="icon"
-                                            className="h-7 w-7"
-                                          >
-                                            <Download className="h-3 w-3" />
-                                          </Button>
-                                          <Button
-                                            size="sm"
-                                            className="h-7 px-2 text-xs bg-green-600 hover:bg-green-700"
-                                          >
-                                            <ShoppingCart className="h-3 w-3 mr-1" />
-                                            Refill
-                                          </Button>
-                                        </div>
-                                      </td>
+                                     
                                     </tr>
                                   ))}
                                 </tbody>
