@@ -545,7 +545,7 @@ const PatientManagementPage: React.FC = () => {
       else if (response.message?.includes('not found') || response.code === '404') {
         toast.error('Patient not found. It may have been already deleted.');
         // Refresh the list to remove missing patient
-        fetchPatients();
+       loadPatients(); 
       }
       // Handle other errors
       else {

@@ -1,13 +1,247 @@
+
+
+
+
 // "use client";
 
-// import { useState, useEffect, useCallback } from "react";
+// import { useState, useEffect, useCallback, useRef } from "react";
 // import { useRouter, useParams } from "next/navigation";
 // import {
 //   ArrowLeft, CheckSquare, Calendar, Clock, Loader2, Plus,
 //   CheckCircle2, AlertCircle, XCircle, User, Flag, RefreshCw,
+//   Mic, MicOff
 // } from "lucide-react";
 // import { doctorsApi } from "@/lib/api/doctors";
 // import toast from "react-hot-toast";
+
+// // Voice Textarea Component with microphone
+// // Voice Textarea Component with microphone - FIXED POSITIONING
+// function VoiceTextarea({ 
+//   value, 
+//   onChange, 
+//   placeholder, 
+//   rows = 3,
+//   className = ""
+// }: { 
+//   value: string; 
+//   onChange: (val: string) => void; 
+//   placeholder: string;
+//   rows?: number;
+//   className?: string;
+// }) {
+//   const [isListening, setIsListening] = useState(false);
+//   const [transcript, setTranscript] = useState("");
+//   const recognitionRef = useRef<any>(null);
+
+//   useEffect(() => {
+//     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+//     if (!SpeechRecognition) return;
+
+//     const recognition = new SpeechRecognition();
+//     recognition.continuous = false;
+//     recognition.interimResults = true;
+//     recognition.lang = "en-US";
+
+//     recognition.onresult = (event: any) => {
+//       let interimTranscript = "";
+//       let finalTranscript = "";
+
+//       for (let i = event.resultIndex; i < event.results.length; ++i) {
+//         if (event.results[i].isFinal) {
+//           finalTranscript += event.results[i][0].transcript;
+//         } else {
+//           interimTranscript += event.results[i][0].transcript;
+//         }
+//       }
+
+//       const currentTranscript = finalTranscript || interimTranscript;
+//       setTranscript(currentTranscript);
+
+//       if (finalTranscript) {
+//         const newValue = value ? value + ' ' + finalTranscript : finalTranscript;
+//         onChange(newValue);
+//         setTimeout(() => {
+//           setIsListening(false);
+//           setTranscript("");
+//         }, 500);
+//       }
+//     };
+
+//     recognition.onerror = () => {
+//       setIsListening(false);
+//     };
+
+//     recognition.onend = () => {
+//       setIsListening(false);
+//       setTranscript("");
+//     };
+
+//     recognitionRef.current = recognition;
+
+//     return () => {
+//       if (recognitionRef.current) {
+//         recognitionRef.current.stop();
+//       }
+//     };
+//   }, [value, onChange]);
+
+//   const toggleListening = () => {
+//     if (isListening) {
+//       recognitionRef.current?.stop();
+//       setIsListening(false);
+//     } else {
+//       setTranscript("");
+//       try {
+//         recognitionRef.current?.start();
+//         setIsListening(true);
+//       } catch (err) {
+//         console.error("Failed to start listening:", err);
+//       }
+//     }
+//   };
+
+//   return (
+//     <div className="relative">
+//       <textarea
+//         value={value}
+//         onChange={(e) => onChange(e.target.value)}
+//         placeholder={placeholder}
+//         rows={rows}
+//         className={`w-full px-3 py-2.5 border rounded-lg text-sm resize-none pr-10 ${isListening ? 'ring-2 ring-blue-500' : ''} ${className}`}
+//       />
+//       <button
+//         type="button"
+//         onClick={toggleListening}
+//         className={`absolute right-2 bottom-2 p-1.5 rounded-full transition ${
+//           isListening 
+//             ? 'bg-red-500 text-white animate-pulse' 
+//             : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200'
+//         }`}
+//       >
+//         {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+//       </button>
+//       {isListening && (
+//         <div className="mt-1 text-xs text-blue-500 animate-pulse flex items-center gap-1">
+//           <Mic className="w-3 h-3" /> {transcript || "Listening..."}
+//         </div>
+//       )}
+//     </div>
+//   );
+// }
+
+// // Voice Input Component for single line - FIXED POSITIONING
+// function VoiceInput({ 
+//   value, 
+//   onChange, 
+//   placeholder,
+//   className = ""
+// }: { 
+//   value: string; 
+//   onChange: (val: string) => void; 
+//   placeholder: string;
+//   className?: string;
+// }) {
+//   const [isListening, setIsListening] = useState(false);
+//   const [transcript, setTranscript] = useState("");
+//   const recognitionRef = useRef<any>(null);
+
+//   useEffect(() => {
+//     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+//     if (!SpeechRecognition) return;
+
+//     const recognition = new SpeechRecognition();
+//     recognition.continuous = false;
+//     recognition.interimResults = true;
+//     recognition.lang = "en-US";
+
+//     recognition.onresult = (event: any) => {
+//       let interimTranscript = "";
+//       let finalTranscript = "";
+
+//       for (let i = event.resultIndex; i < event.results.length; ++i) {
+//         if (event.results[i].isFinal) {
+//           finalTranscript += event.results[i][0].transcript;
+//         } else {
+//           interimTranscript += event.results[i][0].transcript;
+//         }
+//       }
+
+//       const currentTranscript = finalTranscript || interimTranscript;
+//       setTranscript(currentTranscript);
+
+//       if (finalTranscript) {
+//         const newValue = value ? value + ' ' + finalTranscript : finalTranscript;
+//         onChange(newValue);
+//         setTimeout(() => {
+//           setIsListening(false);
+//           setTranscript("");
+//         }, 500);
+//       }
+//     };
+
+//     recognition.onerror = () => {
+//       setIsListening(false);
+//     };
+
+//     recognition.onend = () => {
+//       setIsListening(false);
+//       setTranscript("");
+//     };
+
+//     recognitionRef.current = recognition;
+
+//     return () => {
+//       if (recognitionRef.current) {
+//         recognitionRef.current.stop();
+//       }
+//     };
+//   }, [value, onChange]);
+
+//   const toggleListening = () => {
+//     if (isListening) {
+//       recognitionRef.current?.stop();
+//       setIsListening(false);
+//     } else {
+//       setTranscript("");
+//       try {
+//         recognitionRef.current?.start();
+//         setIsListening(true);
+//       } catch (err) {
+//         console.error("Failed to start listening:", err);
+//       }
+//     }
+//   };
+
+//   return (
+//     <div>
+//       <div className="relative">
+//         <input
+//           type="text"
+//           value={value}
+//           onChange={(e) => onChange(e.target.value)}
+//           placeholder={placeholder}
+//           className={`w-full px-3 py-2.5 border rounded-lg text-sm pr-10 ${isListening ? 'ring-2 ring-blue-500' : ''} ${className}`}
+//         />
+//         <button
+//           type="button"
+//           onClick={toggleListening}
+//           className={`absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full transition ${
+//             isListening 
+//               ? 'bg-red-500 text-white animate-pulse' 
+//               : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200'
+//           }`}
+//         >
+//           {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+//         </button>
+//       </div>
+//       {isListening && (
+//         <div className="mt-1 text-xs text-blue-500 animate-pulse flex items-center gap-1">
+//           <Mic className="w-3 h-3" /> {transcript || "Listening..."}
+//         </div>
+//       )}
+//     </div>
+//   );
+// }
 
 // const getTaskTypeIcon = (taskType: string) => {
 //   switch (taskType) {
@@ -111,54 +345,52 @@
 //   useEffect(() => { if (showForm) fetchNurses(); }, [showForm]);
 
 //   // ✅ Create task via API
-//  const handleCreateTask = async () => {
-//   if (!taskForm.title || !taskForm.dueDate || !taskForm.dueTime || !taskForm.assignedTo) {
-//     toast.error("Please fill all required fields"); 
-//     return;
-//   }
-//   setSubmitting(true);
-//   try {
-//     const doctorName = localStorage.getItem('userName') || 'Doctor';
-    
-//     const result = await doctorsApi.createTask({
-//       patientId,
-//       taskType: taskForm.taskType,
-//       title: taskForm.title,
-//       description: taskForm.description,
-//       priority: taskForm.priority,
-//       dueDate: taskForm.dueDate,
-//       dueTime: taskForm.dueTime,
-//       assignedTo: taskForm.assignedTo,
-//       assignedBy: doctorName,
-//       notes: taskForm.notes,
-//       customTaskType: taskForm.customTaskType,
-//     });
-
-//     console.log('Create task response:', result); // Debug
-//     console.log('Response keys:', Object.keys(result)); // Debug
-
-//     // Check for success in multiple formats
-//     const isSuccess = 
-//       result?.success === true ||      // Standard format
-//       result?.id ||                     // Direct data return
-//       result?.data?.id ||              // Wrapped in data
-//       (result && !result?.error);      // Any response without error
-
-//     if (isSuccess) {
-//       toast.success("Task assigned successfully!");
-//       setShowForm(false);
-//       setTaskForm({ taskType: "vitals", title: "", description: "", priority: "medium", dueDate: "", dueTime: "", assignedTo: "", notes: "", customTaskType: "" });
-//       await fetchTasks();
-//     } else {
-//       toast.error(result?.message || result?.data?.message || "Failed to create task");
+//   const handleCreateTask = async () => {
+//     if (!taskForm.title || !taskForm.dueDate || !taskForm.dueTime || !taskForm.assignedTo) {
+//       toast.error("Please fill all required fields"); 
+//       return;
 //     }
-//   } catch (err: any) {
-//     console.error('Create task error:', err);
-//     toast.error(err.message || "Failed to create task");
-//   } finally {
-//     setSubmitting(false);
-//   }
-// };
+//     setSubmitting(true);
+//     try {
+//       const doctorName = localStorage.getItem('userName') || 'Doctor';
+      
+//       const result = await doctorsApi.createTask({
+//         patientId,
+//         taskType: taskForm.taskType,
+//         title: taskForm.title,
+//         description: taskForm.description,
+//         priority: taskForm.priority,
+//         dueDate: taskForm.dueDate,
+//         dueTime: taskForm.dueTime,
+//         assignedTo: taskForm.assignedTo,
+//         assignedBy: doctorName,
+//         notes: taskForm.notes,
+//         customTaskType: taskForm.customTaskType,
+//       });
+
+//       console.log('Create task response:', result);
+
+//       const isSuccess = 
+//         result?.success === true ||
+//         result?.id ||
+//         result?.data?.id ||
+//         (result && !result?.error);
+
+//       if (isSuccess) {
+//         toast.success("Task assigned successfully!");
+//         setShowForm(false);
+//         setTaskForm({ taskType: "vitals", title: "", description: "", priority: "medium", dueDate: "", dueTime: "", assignedTo: "", notes: "", customTaskType: "" });
+//         await fetchTasks();
+//       } else {
+//         toast.error(result?.message || result?.data?.message || "Failed to create task");
+//       }
+//     } catch (err: any) {
+//       console.error('Create task error:', err);
+//       toast.error(err.message || "Failed to create task");
+//     } finally {
+//       setSubmitting(false);
+//     }
+//   };
 
 //   const pendingTasks = tasks.filter(t => t.status === "pending" || t.status === "in-progress");
 //   const completedTasks = tasks.filter(t => t.status === "completed");
@@ -228,7 +460,7 @@
 //           )}
 //         </div>
 
-//         {/* Modal - same as before */}
+//         {/* Modal with Voice Inputs */}
 //         {showForm && (
 //           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
 //             <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -238,26 +470,100 @@
 //               </div>
 //               <form onSubmit={(e) => { e.preventDefault(); handleCreateTask(); }} className="p-6 space-y-4">
 //                 <div>
-//                   <label className="block text-sm font-medium mb-2">Task Type *</label>
-//                   <select value={taskForm.taskType} onChange={(e) => setTaskForm(prev => ({ ...prev, taskType: e.target.value }))} className="w-full px-3 py-2.5 border rounded-lg bg-white dark:bg-slate-800 text-sm">
-//                     <option value="vitals">❤️ Vitals</option><option value="medication">💊 Medication</option><option value="lab">🔬 Lab Test</option><option value="dressing">🏥 Dressing</option><option value="procedure">🩺 Procedure</option><option value="documentation">📝 Documentation</option><option value="other">✏️ Other (Type below)</option>
+//                   <label className="block text-sm font-medium mb-2">Task Type*</label>
+//                   <select 
+//                     value={taskForm.taskType} 
+//                     onChange={(e) => setTaskForm(prev => ({ ...prev, taskType: e.target.value }))} 
+//                     className="w-full px-3 py-2.5 border rounded-lg bg-white dark:bg-slate-800 text-sm"
+//                   >
+//                     <option value="vitals"> Vitals</option>
+//                     <option value="medication"> Medication</option>
+//                     <option value="lab">Lab Test</option>
+//                     <option value="dressing"> Dressing</option>
+//                     <option value="procedure">Procedure</option>
+//                     <option value="documentation">Documentation</option>
+//                     <option value="other"> Other (Type below)</option>
 //                   </select>
-//                   {taskForm.taskType === "other" && <input type="text" value={taskForm.customTaskType || ""} onChange={(e) => setTaskForm(prev => ({ ...prev, customTaskType: e.target.value }))} placeholder="Enter custom task type..." className="w-full mt-2 px-3 py-2 border rounded-lg text-sm" />}
+//                   {taskForm.taskType === "other" && (
+//                     <VoiceInput 
+//                       value={taskForm.customTaskType || ""} 
+//                       onChange={(val) => setTaskForm(prev => ({ ...prev, customTaskType: val }))} 
+//                       placeholder="Enter custom task type..."
+//                       className="mt-2"
+//                     />
+//                   )}
 //                 </div>
-//                 <div><label className="block text-sm font-medium mb-2">Task Title *</label><input type="text" value={taskForm.title} onChange={(e) => setTaskForm(prev => ({ ...prev, title: e.target.value }))} className="w-full px-3 py-2.5 border rounded-lg text-sm" required /></div>
-//                 <div><label className="block text-sm font-medium mb-2">Description</label><textarea value={taskForm.description} onChange={(e) => setTaskForm(prev => ({ ...prev, description: e.target.value }))} rows={3} className="w-full px-3 py-2.5 border rounded-lg text-sm resize-none" /></div>
+                
+//                 <div>
+//                   <label className="block text-sm font-medium mb-2">Task Title *</label>
+//                   <VoiceInput 
+//                     value={taskForm.title} 
+//                     onChange={(val) => setTaskForm(prev => ({ ...prev, title: val }))} 
+//                     placeholder="Enter task title"
+//                   />
+//                 </div>
+                
+//                 <div>
+//                   <label className="block text-sm font-medium mb-2">Description</label>
+//                   <VoiceTextarea 
+//                     value={taskForm.description} 
+//                     onChange={(val) => setTaskForm(prev => ({ ...prev, description: val }))} 
+//                     placeholder="Enter task description"
+//                     rows={3}
+//                   />
+//                 </div>
+                
 //                 <div className="grid grid-cols-2 gap-4">
-//                   <div><label className="block text-sm font-medium mb-2">Priority</label><div className="flex gap-2">{[{ value: "high", label: "🔴 High" }, { value: "medium", label: "🟡 Medium" }, { value: "low", label: "🟢 Low" }].map(p => (<button key={p.value} type="button" onClick={() => setTaskForm(prev => ({ ...prev, priority: p.value }))} className={`flex-1 px-2 py-2 rounded-lg text-xs border font-medium ${taskForm.priority === p.value ? "border-green-500 bg-green-50 text-green-700" : "border-slate-300"}`}>{p.label}</button>))}</div></div>
-//                   <div><label className="block text-sm font-medium mb-2">Assign To *</label><select value={taskForm.assignedTo} onChange={(e) => setTaskForm(prev => ({ ...prev, assignedTo: e.target.value }))} className="w-full px-3 py-2.5 border rounded-lg text-sm" disabled={loadingNurses} required><option value="">{loadingNurses ? "Loading..." : "Select Nurse"}</option>{nurses.map((n: any) => (<option key={n.id} value={`${n.first_name} ${n.last_name}`}>{n.first_name} {n.last_name}</option>))}</select></div>
+//                   <div>
+//                     <label className="block text-sm font-medium mb-2">Priority</label>
+//                     <div className="flex gap-2">
+//                       {[{ value: "high", label: "🔴 High" }, { value: "medium", label: "🟡 Medium" }, { value: "low", label: "🟢 Low" }].map(p => (
+//                         <button key={p.value} type="button" onClick={() => setTaskForm(prev => ({ ...prev, priority: p.value }))} 
+//                           className={`flex-1 px-2 py-2 rounded-lg text-xs border font-medium ${taskForm.priority === p.value ? "border-green-500 bg-green-50 text-green-700" : "border-slate-300"}`}>
+//                           {p.label}
+//                         </button>
+//                       ))}
+//                     </div>
+//                   </div>
+//                   <div>
+//                     <label className="block text-sm font-medium mb-2">Assign To *</label>
+//                     <select value={taskForm.assignedTo} onChange={(e) => setTaskForm(prev => ({ ...prev, assignedTo: e.target.value }))} 
+//                       className="w-full px-3 py-2.5 border rounded-lg text-sm" disabled={loadingNurses} required>
+//                       <option value="">{loadingNurses ? "Loading..." : "Select Nurse"}</option>
+//                       {nurses.map((n: any) => (<option key={n.id} value={`${n.first_name} ${n.last_name}`}>{n.first_name} {n.last_name}</option>))}
+//                     </select>
+//                   </div>
 //                 </div>
+                
 //                 <div className="grid grid-cols-2 gap-4">
-//                   <div><label className="block text-sm font-medium mb-2"><Calendar size={14} className="inline mr-1" />Due Date *</label><input type="date" value={taskForm.dueDate} onChange={(e) => setTaskForm(prev => ({ ...prev, dueDate: e.target.value }))} className="w-full px-3 py-2.5 border rounded-lg text-sm" required /></div>
-//                   <div><label className="block text-sm font-medium mb-2"><Clock size={14} className="inline mr-1" />Due Time *</label><input type="time" value={taskForm.dueTime} onChange={(e) => setTaskForm(prev => ({ ...prev, dueTime: e.target.value }))} className="w-full px-3 py-2.5 border rounded-lg text-sm" required /></div>
+//                   <div>
+//                     <label className="block text-sm font-medium mb-2"><Calendar size={14} className="inline mr-1" />Due Date *</label>
+//                     <input type="date" value={taskForm.dueDate} onChange={(e) => setTaskForm(prev => ({ ...prev, dueDate: e.target.value }))} 
+//                       className="w-full px-3 py-2.5 border rounded-lg text-sm" required />
+//                   </div>
+//                   <div>
+//                     <label className="block text-sm font-medium mb-2"><Clock size={14} className="inline mr-1" />Due Time *</label>
+//                     <input type="time" value={taskForm.dueTime} onChange={(e) => setTaskForm(prev => ({ ...prev, dueTime: e.target.value }))} 
+//                       className="w-full px-3 py-2.5 border rounded-lg text-sm" required />
+//                   </div>
 //                 </div>
-//                 <div><label className="block text-sm font-medium mb-2">Notes</label><textarea value={taskForm.notes} onChange={(e) => setTaskForm(prev => ({ ...prev, notes: e.target.value }))} rows={2} className="w-full px-3 py-2.5 border rounded-lg text-sm resize-none" /></div>
+                
+//                 <div>
+//                   <label className="block text-sm font-medium mb-2">Notes</label>
+//                   <VoiceTextarea 
+//                     value={taskForm.notes} 
+//                     onChange={(val) => setTaskForm(prev => ({ ...prev, notes: val }))} 
+//                     placeholder="Add any additional notes..."
+//                     rows={2}
+//                   />
+//                 </div>
+                
 //                 <div className="flex gap-3 justify-end pt-4 border-t">
 //                   <button type="button" onClick={() => setShowForm(false)} className="px-5 py-2.5 border rounded-lg text-sm">Cancel</button>
-//                   <button type="submit" disabled={submitting} className="px-6 py-2.5 bg-green-600 text-white rounded-lg text-sm font-medium flex items-center gap-2 disabled:opacity-50">{submitting ? <><Loader2 size={16} className="animate-spin" />Assigning...</> : <><CheckSquare size={16} />Assign Task</>}</button>
+//                   <button type="submit" disabled={submitting} 
+//                     className="px-6 py-2.5 bg-green-600 text-white rounded-lg text-sm font-medium flex items-center gap-2 disabled:opacity-50">
+//                     {submitting ? <><Loader2 size={16} className="animate-spin" />Assigning...</> : <><CheckSquare size={16} />Assign Task</>}
+//                   </button>
 //                 </div>
 //               </form>
 //             </div>
@@ -270,8 +576,6 @@
 
 
 
-
-
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
@@ -279,24 +583,23 @@ import { useRouter, useParams } from "next/navigation";
 import {
   ArrowLeft, CheckSquare, Calendar, Clock, Loader2, Plus,
   CheckCircle2, AlertCircle, XCircle, User, Flag, RefreshCw,
-  Mic, MicOff
+  Mic, MicOff, Sparkles
 } from "lucide-react";
 import { doctorsApi } from "@/lib/api/doctors";
 import toast from "react-hot-toast";
 
-// Voice Textarea Component with microphone
-// Voice Textarea Component with microphone - FIXED POSITIONING
+// ==================== VOICE COMPONENTS (unchanged) ====================
 function VoiceTextarea({ 
   value, 
   onChange, 
   placeholder, 
-  rows = 3,
-  className = ""
+  rows = 3, 
+  className = "" 
 }: { 
   value: string; 
   onChange: (val: string) => void; 
-  placeholder: string;
-  rows?: number;
+  placeholder: string; 
+  rows?: number; 
   className?: string;
 }) {
   const [isListening, setIsListening] = useState(false);
@@ -306,109 +609,56 @@ function VoiceTextarea({
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) return;
-
     const recognition = new SpeechRecognition();
     recognition.continuous = false;
     recognition.interimResults = true;
     recognition.lang = "en-US";
-
     recognition.onresult = (event: any) => {
-      let interimTranscript = "";
-      let finalTranscript = "";
-
+      let interim = "", final = "";
       for (let i = event.resultIndex; i < event.results.length; ++i) {
-        if (event.results[i].isFinal) {
-          finalTranscript += event.results[i][0].transcript;
-        } else {
-          interimTranscript += event.results[i][0].transcript;
-        }
+        if (event.results[i].isFinal) final += event.results[i][0].transcript;
+        else interim += event.results[i][0].transcript;
       }
-
-      const currentTranscript = finalTranscript || interimTranscript;
-      setTranscript(currentTranscript);
-
-      if (finalTranscript) {
-        const newValue = value ? value + ' ' + finalTranscript : finalTranscript;
-        onChange(newValue);
-        setTimeout(() => {
-          setIsListening(false);
-          setTranscript("");
-        }, 500);
+      const current = final || interim;
+      setTranscript(current);
+      if (final) {
+        onChange(value ? value + ' ' + final : final);
+        setTimeout(() => { setIsListening(false); setTranscript(""); }, 500);
       }
     };
-
-    recognition.onerror = () => {
-      setIsListening(false);
-    };
-
-    recognition.onend = () => {
-      setIsListening(false);
-      setTranscript("");
-    };
-
+    recognition.onerror = () => setIsListening(false);
+    recognition.onend = () => { setIsListening(false); setTranscript(""); };
     recognitionRef.current = recognition;
-
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-      }
-    };
+    return () => { if (recognitionRef.current) recognitionRef.current.stop(); };
   }, [value, onChange]);
 
   const toggleListening = () => {
-    if (isListening) {
-      recognitionRef.current?.stop();
-      setIsListening(false);
-    } else {
-      setTranscript("");
-      try {
-        recognitionRef.current?.start();
-        setIsListening(true);
-      } catch (err) {
-        console.error("Failed to start listening:", err);
-      }
-    }
+    if (isListening) { recognitionRef.current?.stop(); setIsListening(false); }
+    else { setTranscript(""); try { recognitionRef.current?.start(); setIsListening(true); } catch(e) {} }
   };
 
   return (
     <div className="relative">
-      <textarea
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        rows={rows}
-        className={`w-full px-3 py-2.5 border rounded-lg text-sm resize-none pr-10 ${isListening ? 'ring-2 ring-blue-500' : ''} ${className}`}
-      />
-      <button
-        type="button"
-        onClick={toggleListening}
-        className={`absolute right-2 bottom-2 p-1.5 rounded-full transition ${
-          isListening 
-            ? 'bg-red-500 text-white animate-pulse' 
-            : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200'
-        }`}
-      >
+      <textarea value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} rows={rows}
+        className={`w-full px-3 py-2.5 border rounded-lg text-sm resize-none pr-10 ${isListening ? 'ring-2 ring-blue-500' : ''} ${className}`} />
+      <button type="button" onClick={toggleListening}
+        className={`absolute right-2 bottom-2 p-1.5 rounded-full transition ${isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
         {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
       </button>
-      {isListening && (
-        <div className="mt-1 text-xs text-blue-500 animate-pulse flex items-center gap-1">
-          <Mic className="w-3 h-3" /> {transcript || "Listening..."}
-        </div>
-      )}
+      {isListening && <div className="mt-1 text-xs text-blue-500 animate-pulse flex items-center gap-1"><Mic className="w-3 h-3" /> {transcript || "Listening..."}</div>}
     </div>
   );
 }
 
-// Voice Input Component for single line - FIXED POSITIONING
 function VoiceInput({ 
   value, 
   onChange, 
-  placeholder,
-  className = ""
+  placeholder, 
+  className = "" 
 }: { 
   value: string; 
   onChange: (val: string) => void; 
-  placeholder: string;
+  placeholder: string; 
   className?: string;
 }) {
   const [isListening, setIsListening] = useState(false);
@@ -418,104 +668,53 @@ function VoiceInput({
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) return;
-
     const recognition = new SpeechRecognition();
     recognition.continuous = false;
     recognition.interimResults = true;
     recognition.lang = "en-US";
-
     recognition.onresult = (event: any) => {
-      let interimTranscript = "";
-      let finalTranscript = "";
-
+      let interim = "", final = "";
       for (let i = event.resultIndex; i < event.results.length; ++i) {
-        if (event.results[i].isFinal) {
-          finalTranscript += event.results[i][0].transcript;
-        } else {
-          interimTranscript += event.results[i][0].transcript;
-        }
+        if (event.results[i].isFinal) final += event.results[i][0].transcript;
+        else interim += event.results[i][0].transcript;
       }
-
-      const currentTranscript = finalTranscript || interimTranscript;
-      setTranscript(currentTranscript);
-
-      if (finalTranscript) {
-        const newValue = value ? value + ' ' + finalTranscript : finalTranscript;
-        onChange(newValue);
-        setTimeout(() => {
-          setIsListening(false);
-          setTranscript("");
-        }, 500);
+      const current = final || interim;
+      setTranscript(current);
+      if (final) {
+        onChange(value ? value + ' ' + final : final);
+        setTimeout(() => { setIsListening(false); setTranscript(""); }, 500);
       }
     };
-
-    recognition.onerror = () => {
-      setIsListening(false);
-    };
-
-    recognition.onend = () => {
-      setIsListening(false);
-      setTranscript("");
-    };
-
+    recognition.onerror = () => setIsListening(false);
+    recognition.onend = () => { setIsListening(false); setTranscript(""); };
     recognitionRef.current = recognition;
-
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-      }
-    };
+    return () => { if (recognitionRef.current) recognitionRef.current.stop(); };
   }, [value, onChange]);
 
   const toggleListening = () => {
-    if (isListening) {
-      recognitionRef.current?.stop();
-      setIsListening(false);
-    } else {
-      setTranscript("");
-      try {
-        recognitionRef.current?.start();
-        setIsListening(true);
-      } catch (err) {
-        console.error("Failed to start listening:", err);
-      }
-    }
+    if (isListening) { recognitionRef.current?.stop(); setIsListening(false); }
+    else { setTranscript(""); try { recognitionRef.current?.start(); setIsListening(true); } catch(e) {} }
   };
 
   return (
     <div>
       <div className="relative">
-        <input
-          type="text"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
-          className={`w-full px-3 py-2.5 border rounded-lg text-sm pr-10 ${isListening ? 'ring-2 ring-blue-500' : ''} ${className}`}
-        />
-        <button
-          type="button"
-          onClick={toggleListening}
-          className={`absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full transition ${
-            isListening 
-              ? 'bg-red-500 text-white animate-pulse' 
-              : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200'
-          }`}
-        >
+        <input type="text" value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder}
+          className={`w-full px-3 py-2.5 border rounded-lg text-sm pr-10 ${isListening ? 'ring-2 ring-blue-500' : ''} ${className}`} />
+        <button type="button" onClick={toggleListening}
+          className={`absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full transition ${isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
           {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
         </button>
       </div>
-      {isListening && (
-        <div className="mt-1 text-xs text-blue-500 animate-pulse flex items-center gap-1">
-          <Mic className="w-3 h-3" /> {transcript || "Listening..."}
-        </div>
-      )}
+      {isListening && <div className="mt-1 text-xs text-blue-500 animate-pulse flex items-center gap-1"><Mic className="w-3 h-3" /> {transcript || "Listening..."}</div>}
     </div>
   );
 }
 
+// ==================== HELPER FUNCTIONS ====================
 const getTaskTypeIcon = (taskType: string) => {
   switch (taskType) {
-    case "vitals": return "";
+    case "vitals": return "🩺";
     case "medication": return "💊";
     case "lab": return "🔬";
     case "dressing": return "🏥";
@@ -554,6 +753,7 @@ const getPriorityColor = (priority: string) => {
   }
 };
 
+// ==================== MAIN COMPONENT ====================
 export default function AssignTaskPage() {
   const router = useRouter();
   const params = useParams();
@@ -566,6 +766,13 @@ export default function AssignTaskPage() {
   const [loadingNurses, setLoadingNurses] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [wardInfo, setWardInfo] = useState<any>(null);
+
+  // AI dictation state
+  const [aiCommand, setAiCommand] = useState("");
+  const [isAiProcessing, setIsAiProcessing] = useState(false);
+  const [isAiListening, setIsAiListening] = useState(false);
+  const aiRecognitionRef = useRef<any>(null);
+
   const [taskForm, setTaskForm] = useState({
     taskType: "vitals",
     title: "",
@@ -578,27 +785,18 @@ export default function AssignTaskPage() {
     customTaskType: "",
   });
 
-  // ✅ Fetch tasks from API
+  // Fetch tasks from API
   const fetchTasks = useCallback(async () => {
     try {
       setLoading(true);
       const result = await doctorsApi.getTasks(patientId);
-      
-      if (result?.success && result?.data) {
-        setTasks(result.data);
-      } else if (Array.isArray(result)) {
-        setTasks(result);
-      } else {
-        setTasks([]);
-      }
-    } catch (err) {
-      console.error('Failed to fetch tasks:', err);
-    } finally {
-      setLoading(false);
-    }
+      if (result?.success && result?.data) setTasks(result.data);
+      else if (Array.isArray(result)) setTasks(result);
+      else setTasks([]);
+    } catch (err) { console.error(err); }
+    finally { setLoading(false); }
   }, [patientId]);
 
-  // Fetch nurses when form opens
   const fetchNurses = async () => {
     try {
       setLoadingNurses(true);
@@ -614,16 +812,89 @@ export default function AssignTaskPage() {
   useEffect(() => { fetchTasks(); }, [fetchTasks]);
   useEffect(() => { if (showForm) fetchNurses(); }, [showForm]);
 
-  // ✅ Create task via API
+  // AI Speech Recognition (continuous, for full command)
+  useEffect(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = "en-US";
+    recognition.onresult = (event: any) => {
+      let finalTranscript = "";
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
+      }
+      if (finalTranscript) {
+        setAiCommand(prev => prev + (prev ? " " : "") + finalTranscript);
+      }
+    };
+    recognition.onerror = () => { setIsAiListening(false); toast.error("Microphone error"); };
+    recognition.onend = () => setIsAiListening(false);
+    aiRecognitionRef.current = recognition;
+    return () => { if (aiRecognitionRef.current) aiRecognitionRef.current.stop(); };
+  }, []);
+
+  const startAiListening = () => {
+    if (isAiListening) {
+      aiRecognitionRef.current?.stop();
+      setIsAiListening(false);
+    } else {
+      setAiCommand("");
+      try {
+        aiRecognitionRef.current?.start();
+        setIsAiListening(true);
+        toast("🎤 Speak your clinical command...", { icon: "🎤" });
+      } catch (err) { toast.error("Microphone access denied"); }
+    }
+  };
+
+  const processAiCommand = async () => {
+    if (!aiCommand.trim()) {
+      toast.error("Please speak or type a command first.");
+      return;
+    }
+    setIsAiProcessing(true);
+    try {
+      const response = await fetch("/api/doctors/tasks/ai-assign-task", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ transcript: aiCommand, patientId }),
+      });
+      if (!response.ok) throw new Error("AI processing failed");
+      const parsed = await response.json();
+
+      // Auto-fill the form with AI result
+      setTaskForm({
+        taskType: parsed.taskType || taskForm.taskType,
+        title: parsed.title || "",
+        description: parsed.description || "",
+        priority: parsed.priority || "medium",
+        dueDate: parsed.dueDate || "",
+        dueTime: parsed.dueTime || "",
+        assignedTo: parsed.assignedTo || "",
+        notes: parsed.notes || "",
+        customTaskType: parsed.customTaskType || "",
+      });
+      toast.success("AI filled task details from your speech!");
+      setAiCommand(""); // clear after success
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Failed to parse command with AI");
+    } finally {
+      setIsAiProcessing(false);
+    }
+  };
+
+  // Create task via API
   const handleCreateTask = async () => {
     if (!taskForm.title || !taskForm.dueDate || !taskForm.dueTime || !taskForm.assignedTo) {
-      toast.error("Please fill all required fields"); 
+      toast.error("Please fill all required fields");
       return;
     }
     setSubmitting(true);
     try {
       const doctorName = localStorage.getItem('userName') || 'Doctor';
-      
       const result = await doctorsApi.createTask({
         patientId,
         taskType: taskForm.taskType,
@@ -637,15 +908,7 @@ export default function AssignTaskPage() {
         notes: taskForm.notes,
         customTaskType: taskForm.customTaskType,
       });
-
-      console.log('Create task response:', result);
-
-      const isSuccess = 
-        result?.success === true ||
-        result?.id ||
-        result?.data?.id ||
-        (result && !result?.error);
-
+      const isSuccess = result?.success === true || result?.id || result?.data?.id || (result && !result?.error);
       if (isSuccess) {
         toast.success("Task assigned successfully!");
         setShowForm(false);
@@ -655,11 +918,8 @@ export default function AssignTaskPage() {
         toast.error(result?.message || result?.data?.message || "Failed to create task");
       }
     } catch (err: any) {
-      console.error('Create task error:', err);
       toast.error(err.message || "Failed to create task");
-    } finally {
-      setSubmitting(false);
-    }
+    } finally { setSubmitting(false); }
   };
 
   const pendingTasks = tasks.filter(t => t.status === "pending" || t.status === "in-progress");
@@ -730,7 +990,7 @@ export default function AssignTaskPage() {
           )}
         </div>
 
-        {/* Modal with Voice Inputs */}
+        {/* Modal with AI Dictation + Voice Fields */}
         {showForm && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -739,56 +999,65 @@ export default function AssignTaskPage() {
                 <button onClick={() => setShowForm(false)} className="p-2 hover:bg-gray-100 rounded-lg"><XCircle size={20} /></button>
               </div>
               <form onSubmit={(e) => { e.preventDefault(); handleCreateTask(); }} className="p-6 space-y-4">
+                {/* AI Dictation Section */}
+                <div className="bg-gradient-to-r from-indigo-50 to-blue-50 p-4 rounded-xl border border-indigo-200 mb-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-semibold text-indigo-700 flex items-center gap-1"><Sparkles size={16} /> AI Speech-to-Task</span>
+                    <div className="flex gap-2">
+                      <button type="button" onClick={startAiListening} className={`p-2 rounded-full transition ${isAiListening ? 'bg-red-500 text-white animate-pulse' : 'bg-white border text-indigo-600'}`}>
+                        {isAiListening ? <MicOff size={16} /> : <Mic size={16} />}
+                      </button>
+                      <button type="button" onClick={processAiCommand} disabled={isAiProcessing || !aiCommand.trim()} className="px-3 py-1 bg-indigo-600 text-white text-xs rounded-lg disabled:opacity-50 flex items-center gap-1">
+                        {isAiProcessing ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />} Process
+                      </button>
+                    </div>
+                  </div>
+                  <textarea
+                    value={aiCommand}
+                    onChange={(e) => setAiCommand(e.target.value)}
+                    placeholder="Speak or type a clinical order, e.g. 'Assign medication task to Sarah Jenkins called Administer 40mg Furosemide IV for Bed 3 priority urgent due today at 11:30 AM with notes check BP first'"
+                    rows={3}
+                    className="w-full px-3 py-2 border rounded-lg text-sm resize-none bg-white"
+                  />
+                  <p className="text-xs text-indigo-600 mt-2 flex items-center gap-1"><Sparkles size={12} /> AI will auto‑fill all task fields below</p>
+                </div>
+
+                {/* Task Type */}
                 <div>
-                  <label className="block text-sm font-medium mb-2">Task Type *</label>
-                  <select 
-                    value={taskForm.taskType} 
-                    onChange={(e) => setTaskForm(prev => ({ ...prev, taskType: e.target.value }))} 
-                    className="w-full px-3 py-2.5 border rounded-lg bg-white dark:bg-slate-800 text-sm"
-                  >
-                    <option value="vitals"> Vitals</option>
-                    <option value="medication"> Medication</option>
-                    <option value="lab">Lab Test</option>
-                    <option value="dressing"> Dressing</option>
-                    <option value="procedure">Procedure</option>
-                    <option value="documentation">Documentation</option>
-                    <option value="other"> Other (Type below)</option>
+                  <label className="block text-sm font-medium mb-2">Task Type*</label>
+                  <select value={taskForm.taskType} onChange={(e) => setTaskForm(prev => ({ ...prev, taskType: e.target.value }))} className="w-full px-3 py-2.5 border rounded-lg bg-white dark:bg-slate-800 text-sm">
+                    <option value="vitals">🩺 Vitals</option>
+                    <option value="medication">💊 Medication</option>
+                    <option value="lab">🔬 Lab Test</option>
+                    <option value="dressing">🏥 Dressing</option>
+                    <option value="procedure">🩺 Procedure</option>
+                    <option value="documentation">📝 Documentation</option>
+                    <option value="other">📌 Other (Type below)</option>
                   </select>
                   {taskForm.taskType === "other" && (
-                    <VoiceInput 
-                      value={taskForm.customTaskType || ""} 
-                      onChange={(val) => setTaskForm(prev => ({ ...prev, customTaskType: val }))} 
-                      placeholder="Enter custom task type..."
-                      className="mt-2"
-                    />
+                    <VoiceInput value={taskForm.customTaskType} onChange={(val) => setTaskForm(prev => ({ ...prev, customTaskType: val }))} placeholder="Enter custom task type..." className="mt-2" />
                   )}
                 </div>
-                
+
+                {/* Task Title */}
                 <div>
                   <label className="block text-sm font-medium mb-2">Task Title *</label>
-                  <VoiceInput 
-                    value={taskForm.title} 
-                    onChange={(val) => setTaskForm(prev => ({ ...prev, title: val }))} 
-                    placeholder="Enter task title"
-                  />
+                  <VoiceInput value={taskForm.title} onChange={(val) => setTaskForm(prev => ({ ...prev, title: val }))} placeholder="Enter task title" />
                 </div>
-                
+
+                {/* Description */}
                 <div>
                   <label className="block text-sm font-medium mb-2">Description</label>
-                  <VoiceTextarea 
-                    value={taskForm.description} 
-                    onChange={(val) => setTaskForm(prev => ({ ...prev, description: val }))} 
-                    placeholder="Enter task description"
-                    rows={3}
-                  />
+                  <VoiceTextarea value={taskForm.description} onChange={(val) => setTaskForm(prev => ({ ...prev, description: val }))} placeholder="Enter task description" rows={3} />
                 </div>
-                
+
+                {/* Priority & Assigned To */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-2">Priority</label>
                     <div className="flex gap-2">
                       {[{ value: "high", label: "🔴 High" }, { value: "medium", label: "🟡 Medium" }, { value: "low", label: "🟢 Low" }].map(p => (
-                        <button key={p.value} type="button" onClick={() => setTaskForm(prev => ({ ...prev, priority: p.value }))} 
+                        <button key={p.value} type="button" onClick={() => setTaskForm(prev => ({ ...prev, priority: p.value }))}
                           className={`flex-1 px-2 py-2 rounded-lg text-xs border font-medium ${taskForm.priority === p.value ? "border-green-500 bg-green-50 text-green-700" : "border-slate-300"}`}>
                           {p.label}
                         </button>
@@ -797,41 +1066,35 @@ export default function AssignTaskPage() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-2">Assign To *</label>
-                    <select value={taskForm.assignedTo} onChange={(e) => setTaskForm(prev => ({ ...prev, assignedTo: e.target.value }))} 
-                      className="w-full px-3 py-2.5 border rounded-lg text-sm" disabled={loadingNurses} required>
+                    <select value={taskForm.assignedTo} onChange={(e) => setTaskForm(prev => ({ ...prev, assignedTo: e.target.value }))} className="w-full px-3 py-2.5 border rounded-lg text-sm" disabled={loadingNurses} required>
                       <option value="">{loadingNurses ? "Loading..." : "Select Nurse"}</option>
                       {nurses.map((n: any) => (<option key={n.id} value={`${n.first_name} ${n.last_name}`}>{n.first_name} {n.last_name}</option>))}
                     </select>
                   </div>
                 </div>
-                
+
+                {/* Due Date & Due Time */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-2"><Calendar size={14} className="inline mr-1" />Due Date *</label>
-                    <input type="date" value={taskForm.dueDate} onChange={(e) => setTaskForm(prev => ({ ...prev, dueDate: e.target.value }))} 
-                      className="w-full px-3 py-2.5 border rounded-lg text-sm" required />
+                    <input type="date" value={taskForm.dueDate} onChange={(e) => setTaskForm(prev => ({ ...prev, dueDate: e.target.value }))} className="w-full px-3 py-2.5 border rounded-lg text-sm" required />
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-2"><Clock size={14} className="inline mr-1" />Due Time *</label>
-                    <input type="time" value={taskForm.dueTime} onChange={(e) => setTaskForm(prev => ({ ...prev, dueTime: e.target.value }))} 
-                      className="w-full px-3 py-2.5 border rounded-lg text-sm" required />
+                    <input type="time" value={taskForm.dueTime} onChange={(e) => setTaskForm(prev => ({ ...prev, dueTime: e.target.value }))} className="w-full px-3 py-2.5 border rounded-lg text-sm" required />
                   </div>
                 </div>
-                
+
+                {/* Notes */}
                 <div>
                   <label className="block text-sm font-medium mb-2">Notes</label>
-                  <VoiceTextarea 
-                    value={taskForm.notes} 
-                    onChange={(val) => setTaskForm(prev => ({ ...prev, notes: val }))} 
-                    placeholder="Add any additional notes..."
-                    rows={2}
-                  />
+                  <VoiceTextarea value={taskForm.notes} onChange={(val) => setTaskForm(prev => ({ ...prev, notes: val }))} placeholder="Add any additional notes..." rows={2} />
                 </div>
-                
+
+                {/* Form Buttons */}
                 <div className="flex gap-3 justify-end pt-4 border-t">
                   <button type="button" onClick={() => setShowForm(false)} className="px-5 py-2.5 border rounded-lg text-sm">Cancel</button>
-                  <button type="submit" disabled={submitting} 
-                    className="px-6 py-2.5 bg-green-600 text-white rounded-lg text-sm font-medium flex items-center gap-2 disabled:opacity-50">
+                  <button type="submit" disabled={submitting} className="px-6 py-2.5 bg-green-600 text-white rounded-lg text-sm font-medium flex items-center gap-2 disabled:opacity-50">
                     {submitting ? <><Loader2 size={16} className="animate-spin" />Assigning...</> : <><CheckSquare size={16} />Assign Task</>}
                   </button>
                 </div>

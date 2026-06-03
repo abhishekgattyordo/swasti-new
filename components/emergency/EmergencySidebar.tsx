@@ -70,7 +70,6 @@ export default function EmergencySidebar({ isOpen, onClose }: SidebarProps) {
       icon: FileEdit, 
       label: 'Drafts', 
       href: '/emergency/drafts', 
-      badge: "", 
       color: 'from-amber-500 to-amber-700' 
     },
     { 

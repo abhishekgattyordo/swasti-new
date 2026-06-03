@@ -48,7 +48,7 @@ export interface PatientData {
 }
 
 interface HealthFormProps {
-  onSubmit: (data: PatientData) => void;
+  onSubmit: (data: PatientData) => void | Promise<void>;
   isLoading: boolean;
 }
 

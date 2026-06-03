@@ -3,6 +3,9 @@ import api from './client';
 interface DeletePatientResponse {
   success: boolean;
   message: string;
+  code?: string;        // PostgreSQL error code
+  detail?: string; 
+   constraint?: string; 
 }
 
 interface BulkImportResponse {

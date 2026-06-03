@@ -440,16 +440,15 @@ const HealthAdminPage: React.FC = () => {
   };
 
   // Handle local status update
-  const handleStatusUpdate = (doctorId: number, newStatus: string) => {
-    setDoctors(prevDoctors =>
-      prevDoctors.map(doctor =>
-        doctor.id === doctorId ? { ...doctor, status: newStatus } : doctor
-      )
-    );
-    // Refresh stats
-    setTimeout(() => fetchDoctors(), 500);
-  };
-
+const handleStatusUpdate = (doctorId: number, newStatus: string) => {
+  const validStatus = newStatus as 'active' | 'inactive' | 'on-leave';
+  setDoctors(prevDoctors =>
+    prevDoctors.map(doctor =>
+      doctor.id === doctorId ? { ...doctor, status: validStatus } : doctor
+    )
+  );
+  setTimeout(() => fetchDoctors(), 500);
+};
   useEffect(() => {
     fetchDoctors();
   }, []);

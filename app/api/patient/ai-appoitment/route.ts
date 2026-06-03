@@ -1043,6 +1043,13 @@ export async function POST(request: NextRequest) {
     // ========== CHECK FOR CANCEL INTENT ==========
     if (isCancelIntent(userText)) {
       console.log("❌ CANCEL INTENT DETECTED");
+
+      if (!memory.patientId) {
+  return NextResponse.json(
+    { error: "Patient ID not found. Please login again." },
+    { status: 401 }
+  );
+}
       
       const appointmentsData = await getPatientAppointments(request, memory.patientId);
       
@@ -1101,6 +1108,14 @@ export async function POST(request: NextRequest) {
     // ========== CHECK FOR RESCHEDULE INTENT ==========
     if (isRescheduleIntent(userText)) {
       console.log("🔄 RESCHEDULE INTENT DETECTED");
+
+      if (!memory.patientId) {
+  return NextResponse.json(
+    { error: "Patient ID not found. Please login again." },
+    { status: 401 }
+  );
+}
+
       
       const appointmentsData = await getPatientAppointments(request, memory.patientId);
       
@@ -1275,6 +1290,13 @@ export async function POST(request: NextRequest) {
 
     if (needsSlotFetch) {
       console.log("🔍 FETCHING SLOTS FROM MEMORY:", memory.doctor.id, memory.date);
+
+        if (!memory.doctor?.id || !memory.date) {
+    return NextResponse.json(
+      { error: "Missing doctor information or appointment date. Please try again." },
+      { status: 400 }
+    );
+  }
       const slotData = await fetchDoctorSlots(request, memory.doctor.id, memory.date);
 
       if (slotData.success && slotData.slots && slotData.slots.length > 0) {
