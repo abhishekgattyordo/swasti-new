@@ -1,18 +1,247 @@
 
 
 
-
 // 'use client';
 
-// import { useState, useEffect, useCallback } from 'react';
+// import { useState, useEffect, useCallback, useRef } from 'react';
 // import Link from 'next/link';
 // import { 
 //   ArrowLeft, BookOpen, Send, Download, Copy, 
 //   CheckCircle2, AlertCircle, Clock, User, 
-//   ChevronRight, Bell, Loader2
+//   ChevronRight, Bell, Loader2, Mic, MicOff
 // } from 'lucide-react';
 // import { nurseApi, Patient } from '@/lib/api/nurse';
 // import toast from 'react-hot-toast';
+
+// // Voice Textarea Component with microphone - FIXED POSITIONING
+// function VoiceTextarea({ 
+//   value, 
+//   onChange, 
+//   placeholder, 
+//   rows = 3,
+//   className = ""
+// }: { 
+//   value: string; 
+//   onChange: (val: string) => void; 
+//   placeholder: string;
+//   rows?: number;
+//   className?: string;
+// }) {
+//   const [isListening, setIsListening] = useState(false);
+//   const [transcript, setTranscript] = useState("");
+//   const recognitionRef = useRef<any>(null);
+
+//   useEffect(() => {
+//     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+//     if (!SpeechRecognition) return;
+
+//     const recognition = new SpeechRecognition();
+//     recognition.continuous = false;
+//     recognition.interimResults = true;
+//     recognition.lang = "en-US";
+
+//     recognition.onresult = (event: any) => {
+//       let interimTranscript = "";
+//       let finalTranscript = "";
+
+//       for (let i = event.resultIndex; i < event.results.length; ++i) {
+//         if (event.results[i].isFinal) {
+//           finalTranscript += event.results[i][0].transcript;
+//         } else {
+//           interimTranscript += event.results[i][0].transcript;
+//         }
+//       }
+
+//       const currentTranscript = finalTranscript || interimTranscript;
+//       setTranscript(currentTranscript);
+
+//       if (finalTranscript) {
+//         const newValue = value ? value + ' ' + finalTranscript : finalTranscript;
+//         onChange(newValue);
+//         setTimeout(() => {
+//           setIsListening(false);
+//           setTranscript("");
+//         }, 500);
+//       }
+//     };
+
+//     recognition.onerror = () => {
+//       setIsListening(false);
+//     };
+
+//     recognition.onend = () => {
+//       setIsListening(false);
+//       setTranscript("");
+//     };
+
+//     recognitionRef.current = recognition;
+
+//     return () => {
+//       if (recognitionRef.current) {
+//         recognitionRef.current.stop();
+//       }
+//     };
+//   }, [value, onChange]);
+
+//   const toggleListening = () => {
+//     if (isListening) {
+//       recognitionRef.current?.stop();
+//       setIsListening(false);
+//     } else {
+//       setTranscript("");
+//       try {
+//         recognitionRef.current?.start();
+//         setIsListening(true);
+//       } catch (err) {
+//         console.error("Failed to start listening:", err);
+//       }
+//     }
+//   };
+
+//   return (
+//     <div>
+//       <div className="relative">
+//         <textarea
+//           value={value}
+//           onChange={(e) => onChange(e.target.value)}
+//           placeholder={placeholder}
+//           rows={rows}
+//           className={`w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-sm resize-none pr-10 ${isListening ? 'ring-2 ring-blue-500' : ''} ${className}`}
+//         />
+//         <button
+//           type="button"
+//           onClick={toggleListening}
+//           className={`absolute right-2 bottom-2 p-1.5 rounded-full transition ${
+//             isListening 
+//               ? 'bg-red-500 text-white animate-pulse' 
+//               : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200'
+//           }`}
+//         >
+//           {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+//         </button>
+//       </div>
+//       {isListening && (
+//         <div className="mt-1 text-xs text-blue-500 animate-pulse flex items-center gap-1">
+//           <Mic className="w-3 h-3" /> {transcript || "Listening..."}
+//         </div>
+//       )}
+//     </div>
+//   );
+// }
+
+// // Voice Input Component for single line - FIXED POSITIONING
+// function VoiceInput({ 
+//   value, 
+//   onChange, 
+//   placeholder,
+//   className = ""
+// }: { 
+//   value: string; 
+//   onChange: (val: string) => void; 
+//   placeholder: string;
+//   className?: string;
+// }) {
+//   const [isListening, setIsListening] = useState(false);
+//   const [transcript, setTranscript] = useState("");
+//   const recognitionRef = useRef<any>(null);
+
+//   useEffect(() => {
+//     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+//     if (!SpeechRecognition) return;
+
+//     const recognition = new SpeechRecognition();
+//     recognition.continuous = false;
+//     recognition.interimResults = true;
+//     recognition.lang = "en-US";
+
+//     recognition.onresult = (event: any) => {
+//       let interimTranscript = "";
+//       let finalTranscript = "";
+
+//       for (let i = event.resultIndex; i < event.results.length; ++i) {
+//         if (event.results[i].isFinal) {
+//           finalTranscript += event.results[i][0].transcript;
+//         } else {
+//           interimTranscript += event.results[i][0].transcript;
+//         }
+//       }
+
+//       const currentTranscript = finalTranscript || interimTranscript;
+//       setTranscript(currentTranscript);
+
+//       if (finalTranscript) {
+//         const newValue = value ? value + ' ' + finalTranscript : finalTranscript;
+//         onChange(newValue);
+//         setTimeout(() => {
+//           setIsListening(false);
+//           setTranscript("");
+//         }, 500);
+//       }
+//     };
+
+//     recognition.onerror = () => {
+//       setIsListening(false);
+//     };
+
+//     recognition.onend = () => {
+//       setIsListening(false);
+//       setTranscript("");
+//     };
+
+//     recognitionRef.current = recognition;
+
+//     return () => {
+//       if (recognitionRef.current) {
+//         recognitionRef.current.stop();
+//       }
+//     };
+//   }, [value, onChange]);
+
+//   const toggleListening = () => {
+//     if (isListening) {
+//       recognitionRef.current?.stop();
+//       setIsListening(false);
+//     } else {
+//       setTranscript("");
+//       try {
+//         recognitionRef.current?.start();
+//         setIsListening(true);
+//       } catch (err) {
+//         console.error("Failed to start listening:", err);
+//       }
+//     }
+//   };
+
+//   return (
+//     <div>
+//       <div className="relative">
+//         <input
+//           type="text"
+//           value={value}
+//           onChange={(e) => onChange(e.target.value)}
+//           placeholder={placeholder}
+//           className={`w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-sm pr-10 ${isListening ? 'ring-2 ring-blue-500' : ''} ${className}`}
+//         />
+//         <button
+//           type="button"
+//           onClick={toggleListening}
+//           className={`absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full transition ${
+//             isListening 
+//               ? 'bg-red-500 text-white animate-pulse' 
+//               : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200'
+//           }`}
+//         >
+//           {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+//         </button>
+//       </div>
+//       {isListening && (
+//         <div className="mt-1 text-xs text-blue-500 animate-pulse flex items-center gap-1">
+//           <Mic className="w-3 h-3" /> {transcript || "Listening..."}
+//         </div>
+//       )}
+//     </div>
+//   );
+// }
 
 // interface HandoverPatient {
 //   patientId: string;
@@ -90,7 +319,6 @@
 //     overdue: 0,
 //     priority: { high: 0, medium: 0, low: 0 }
 //   });
-//   // Removed static checklist items - now using only API data
 
 //   const currentNurse = typeof window !== 'undefined' ? localStorage.getItem('userName') || 'Current Nurse' : 'Current Nurse';
 //   const currentDate = new Date().toLocaleDateString();
@@ -630,9 +858,11 @@
 //             </div>
 //             <div>
 //               <label className="block text-sm font-medium mb-1">To Nurse (Receiving) *</label>
-//               <input type="text" value={toNurse} onChange={(e) => setToNurse(e.target.value)}
+//               <VoiceInput 
+//                 value={toNurse} 
+//                 onChange={setToNurse}
 //                 placeholder="Enter receiving nurse name"
-//                 className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-sm" />
+//               />
 //             </div>
 //             <div>
 //               <label className="block text-sm font-medium mb-1">From Shift</label>
@@ -655,25 +885,36 @@
 //           </div>
 //         </div>
 
-//         {/* General Notes */}
+//         {/* General Notes - WITH VOICE MIC */}
 //         <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-6 shadow-sm">
 //           <h2 className="text-lg font-semibold mb-4">General Handover Notes</h2>
 //           <div className="space-y-4">
 //             <div>
 //               <label className="block text-sm font-medium mb-1">Equipment Status</label>
-//               <textarea value={equipmentStatus} onChange={(e) => setEquipmentStatus(e.target.value)} rows={2}
-//                 className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-sm" />
+//               <VoiceTextarea 
+//                 value={equipmentStatus} 
+//                 onChange={setEquipmentStatus} 
+//                 placeholder="Describe equipment status..."
+//                 rows={2}
+//               />
 //             </div>
 //             <div>
 //               <label className="block text-sm font-medium mb-1">Emergency Supplies</label>
-//               <textarea value={emergencySupplies} onChange={(e) => setEmergencySupplies(e.target.value)} rows={2}
-//                 className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-sm" />
+//               <VoiceTextarea 
+//                 value={emergencySupplies} 
+//                 onChange={setEmergencySupplies} 
+//                 placeholder="Describe emergency supplies status..."
+//                 rows={2}
+//               />
 //             </div>
 //             <div>
 //               <label className="block text-sm font-medium mb-1">General Notes / Issues</label>
-//               <textarea value={generalNotes} onChange={(e) => setGeneralNotes(e.target.value)} rows={3}
+//               <VoiceTextarea 
+//                 value={generalNotes} 
+//                 onChange={setGeneralNotes} 
 //                 placeholder="Any general notes about the shift..."
-//                 className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-sm" />
+//                 rows={3}
+//               />
 //             </div>
 //           </div>
 //         </div>
@@ -731,10 +972,12 @@
 //                       </div>
 //                       <div>
 //                         <label className="block text-sm font-medium mb-1">Additional Notes</label>
-//                         <textarea value={patientNotes[patient.patientId] || ''}
-//                           onChange={(e) => setPatientNotes(prev => ({ ...prev, [patient.patientId]: e.target.value }))}
-//                           rows={2} placeholder="Add special notes..."
-//                           className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm" />
+//                         <VoiceTextarea 
+//                           value={patientNotes[patient.patientId] || ''}
+//                           onChange={(val) => setPatientNotes(prev => ({ ...prev, [patient.patientId]: val }))}
+//                           placeholder="Add special notes..."
+//                           rows={2}
+//                         />
 //                       </div>
 //                     </div>
 //                   )}
@@ -744,141 +987,140 @@
 //           )}
 //         </div>
 
-//         {/* Handover Checklist - ONLY FROM API, NO MOCK DATA */}
-//        {/* Handover Checklist - WITH PENDING TASK DETAILS */}
-// <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-6 shadow-sm">
-//   <h2 className="text-lg font-semibold mb-4">Handover Checklist</h2>
-  
-//   {/* Overdue Items Section */}
-//   <div className="mb-4 p-3 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20">
-//     <div className="flex items-center gap-3 mb-2">
-//       <input 
-//         type="checkbox" 
-//         checked={globalSummary.overdue === 0}
-//         readOnly
-//         className="w-4 h-4 rounded border-gray-300 text-green-600"
-//       />
-//       <span className="text-sm font-semibold text-red-700 dark:text-red-400">
-//         ⚠️ Overdue Items ({globalSummary.overdue} remaining)
-//       </span>
-//       {globalSummary.overdue > 0 && (
-//         <span className="text-xs text-red-600 ml-auto">Must resolve before handover</span>
-//       )}
-//     </div>
-    
-//     {/* Show overdue items */}
-//     {globalSummary.overdue > 0 && (
-//       <div className="ml-7 space-y-2 mt-2">
-//         {Object.values(allPendingData).flatMap(data => 
-//           data.overdue_items.map(item => (
-//             <div key={item.id} className="text-sm p-2 bg-white dark:bg-slate-800 rounded border border-red-100">
-//               <div className="flex items-start justify-between">
-//                 <div>
-//                   <p className="font-medium text-red-700 dark:text-red-400">{item.name}</p>
-//                   <p className="text-xs text-gray-500 mt-0.5">{item.description}</p>
-//                   <div className="flex gap-3 mt-1 text-xs">
-//                     <span className="text-gray-500">Due: {item.due_date} at {item.due_time}</span>
-//                     <span className="px-1.5 py-0.5 rounded bg-red-100 text-red-700">Overdue</span>
-//                   </div>
-//                 </div>
-//               </div>
+//         {/* Handover Checklist */}
+//         <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-6 shadow-sm">
+//           <h2 className="text-lg font-semibold mb-4">Handover Checklist</h2>
+          
+//           {/* Overdue Items Section */}
+//           <div className="mb-4 p-3 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20">
+//             <div className="flex items-center gap-3 mb-2">
+//               <input 
+//                 type="checkbox" 
+//                 checked={globalSummary.overdue === 0}
+//                 readOnly
+//                 className="w-4 h-4 rounded border-gray-300 text-green-600"
+//               />
+//               <span className="text-sm font-semibold text-red-700 dark:text-red-400">
+//                 ⚠️ Overdue Items ({globalSummary.overdue} remaining)
+//               </span>
+//               {globalSummary.overdue > 0 && (
+//                 <span className="text-xs text-red-600 ml-auto">Must resolve before handover</span>
+//               )}
 //             </div>
-//           ))
-//         )}
-//       </div>
-//     )}
-//   </div>
-
-//   {/* Pending Tasks Section */}
-//   <div className="mb-4 p-3 rounded-lg border border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20">
-//     <div className="flex items-center gap-3 mb-2">
-//       <input 
-//         type="checkbox" 
-//         checked={globalSummary.pending_tasks === 0}
-//         readOnly
-//         className="w-4 h-4 rounded border-gray-300"
-//       />
-//       <span className="text-sm font-semibold text-yellow-700 dark:text-yellow-400">
-//         📋 Pending Tasks ({globalSummary.pending_tasks} remaining)
-//       </span>
-//     </div>
-    
-//     {/* Show pending tasks */}
-//     {globalSummary.pending_tasks > 0 && (
-//       <div className="ml-7 space-y-2 mt-2">
-//         {Object.values(allPendingData).flatMap(data => 
-//           data.pending_items
-//             .filter(item => item.type === 'task' && item.current_status !== 'overdue')
-//             .map(item => (
-//               <div key={item.id} className="text-sm p-2 bg-white dark:bg-slate-800 rounded border border-yellow-100">
-//                 <div className="flex items-start justify-between">
-//                   <div>
-//                     <p className="font-medium text-yellow-700 dark:text-yellow-400">{item.name}</p>
-//                     <p className="text-xs text-gray-500 mt-0.5">{item.description}</p>
-//                     <div className="flex gap-3 mt-1 text-xs">
-//                       <span className="text-gray-500">Due: {item.due_date} at {item.due_time}</span>
-//                       <span className={`px-1.5 py-0.5 rounded ${item.priority === 'high' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>
-//                         {item.priority} priority
-//                       </span>
-//                       <span className="text-gray-500">Assigned to: {item.assigned_to}</span>
+            
+//             {/* Show overdue items */}
+//             {globalSummary.overdue > 0 && (
+//               <div className="ml-7 space-y-2 mt-2">
+//                 {Object.values(allPendingData).flatMap(data => 
+//                   data.overdue_items.map(item => (
+//                     <div key={item.id} className="text-sm p-2 bg-white dark:bg-slate-800 rounded border border-red-100">
+//                       <div className="flex items-start justify-between">
+//                         <div>
+//                           <p className="font-medium text-red-700 dark:text-red-400">{item.name}</p>
+//                           <p className="text-xs text-gray-500 mt-0.5">{item.description}</p>
+//                           <div className="flex gap-3 mt-1 text-xs">
+//                             <span className="text-gray-500">Due: {item.due_date} at {item.due_time}</span>
+//                             <span className="px-1.5 py-0.5 rounded bg-red-100 text-red-700">Overdue</span>
+//                           </div>
+//                         </div>
+//                       </div>
 //                     </div>
-//                   </div>
-//                 </div>
+//                   ))
+//                 )}
 //               </div>
-//             ))
-//         )}
-//       </div>
-//     )}
-//   </div>
+//             )}
+//           </div>
 
-//   {/* Pending Medications Section */}
-//   <div className="p-3 rounded-lg border border-blue-200 bg-blue-50 dark:bg-blue-900/20">
-//     <div className="flex items-center gap-3 mb-2">
-//       <input 
-//         type="checkbox" 
-//         checked={globalSummary.pending_medications === 0}
-//         readOnly
-//         className="w-4 h-4 rounded border-gray-300"
-//       />
-//       <span className="text-sm font-semibold text-blue-700 dark:text-blue-400">
-//         💊 Pending Medications ({globalSummary.pending_medications} remaining)
-//       </span>
-//     </div>
-    
-//     {/* Show pending medications */}
-//     {globalSummary.pending_medications > 0 && (
-//       <div className="ml-7 space-y-2 mt-2">
-//         {Object.values(allPendingData).flatMap(data => 
-//           data.pending_items
-//             .filter(item => item.type === 'medication')
-//             .map(item => (
-//               <div key={item.id} className="text-sm p-2 bg-white dark:bg-slate-800 rounded border border-blue-100">
-//                 <div className="flex items-start justify-between">
-//                   <div>
-//                     <p className="font-medium text-blue-700 dark:text-blue-400">{item.name}</p>
-//                     <p className="text-xs text-gray-500 mt-0.5">{item.description}</p>
-//                     <div className="flex gap-3 mt-1 text-xs">
-//                       <span className="text-gray-500">Scheduled: {item.due_time}</span>
-//                       <span className="text-gray-500">Prescribed by: {item.assigned_by || 'Doctor'}</span>
-//                     </div>
-//                   </div>
-//                 </div>
+//           {/* Pending Tasks Section */}
+//           <div className="mb-4 p-3 rounded-lg border border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20">
+//             <div className="flex items-center gap-3 mb-2">
+//               <input 
+//                 type="checkbox" 
+//                 checked={globalSummary.pending_tasks === 0}
+//                 readOnly
+//                 className="w-4 h-4 rounded border-gray-300"
+//               />
+//               <span className="text-sm font-semibold text-yellow-700 dark:text-yellow-400">
+//                 📋 Pending Tasks ({globalSummary.pending_tasks} remaining)
+//               </span>
+//             </div>
+            
+//             {/* Show pending tasks */}
+//             {globalSummary.pending_tasks > 0 && (
+//               <div className="ml-7 space-y-2 mt-2">
+//                 {Object.values(allPendingData).flatMap(data => 
+//                   data.pending_items
+//                     .filter(item => item.type === 'task' && item.current_status !== 'overdue')
+//                     .map(item => (
+//                       <div key={item.id} className="text-sm p-2 bg-white dark:bg-slate-800 rounded border border-yellow-100">
+//                         <div className="flex items-start justify-between">
+//                           <div>
+//                             <p className="font-medium text-yellow-700 dark:text-yellow-400">{item.name}</p>
+//                             <p className="text-xs text-gray-500 mt-0.5">{item.description}</p>
+//                             <div className="flex gap-3 mt-1 text-xs">
+//                               <span className="text-gray-500">Due: {item.due_date} at {item.due_time}</span>
+//                               <span className={`px-1.5 py-0.5 rounded ${item.priority === 'high' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>
+//                                 {item.priority} priority
+//                               </span>
+//                               <span className="text-gray-500">Assigned to: {item.assigned_to}</span>
+//                             </div>
+//                           </div>
+//                         </div>
+//                       </div>
+//                     ))
+//                 )}
 //               </div>
-//             ))
-//         )}
-//       </div>
-//     )}
-//   </div>
+//             )}
+//           </div>
 
-//   {globalSummary.overdue > 0 && (
-//     <div className="mt-4 p-3 bg-red-100 dark:bg-red-900/30 rounded-lg border border-red-300">
-//       <p className="text-sm text-red-800 dark:text-red-300 flex items-center gap-2">
-//         <AlertCircle size={16} />
-//         Please resolve all overdue items before completing handover
-//       </p>
-//     </div>
-//   )}
-// </div>
+//           {/* Pending Medications Section */}
+//           <div className="p-3 rounded-lg border border-blue-200 bg-blue-50 dark:bg-blue-900/20">
+//             <div className="flex items-center gap-3 mb-2">
+//               <input 
+//                 type="checkbox" 
+//                 checked={globalSummary.pending_medications === 0}
+//                 readOnly
+//                 className="w-4 h-4 rounded border-gray-300"
+//               />
+//               <span className="text-sm font-semibold text-blue-700 dark:text-blue-400">
+//                 💊 Pending Medications ({globalSummary.pending_medications} remaining)
+//               </span>
+//             </div>
+            
+//             {/* Show pending medications */}
+//             {globalSummary.pending_medications > 0 && (
+//               <div className="ml-7 space-y-2 mt-2">
+//                 {Object.values(allPendingData).flatMap(data => 
+//                   data.pending_items
+//                     .filter(item => item.type === 'medication')
+//                     .map(item => (
+//                       <div key={item.id} className="text-sm p-2 bg-white dark:bg-slate-800 rounded border border-blue-100">
+//                         <div className="flex items-start justify-between">
+//                           <div>
+//                             <p className="font-medium text-blue-700 dark:text-blue-400">{item.name}</p>
+//                             <p className="text-xs text-gray-500 mt-0.5">{item.description}</p>
+//                             <div className="flex gap-3 mt-1 text-xs">
+//                               <span className="text-gray-500">Scheduled: {item.due_time}</span>
+//                               <span className="text-gray-500">Prescribed by: {item.assigned_by || 'Doctor'}</span>
+//                             </div>
+//                           </div>
+//                         </div>
+//                       </div>
+//                     ))
+//                 )}
+//               </div>
+//             )}
+//           </div>
+
+//           {globalSummary.overdue > 0 && (
+//             <div className="mt-4 p-3 bg-red-100 dark:bg-red-900/30 rounded-lg border border-red-300">
+//               <p className="text-sm text-red-800 dark:text-red-300 flex items-center gap-2">
+//                 <AlertCircle size={16} />
+//                 Please resolve all overdue items before completing handover
+//               </p>
+//             </div>
+//           )}
+//         </div>
 //       </main>
 //     </div>
 //   );
@@ -893,7 +1135,8 @@ import Link from 'next/link';
 import { 
   ArrowLeft, BookOpen, Send, Download, Copy, 
   CheckCircle2, AlertCircle, Clock, User, 
-  ChevronRight, Bell, Loader2, Mic, MicOff
+  ChevronRight, Bell, Loader2, Mic, MicOff, 
+  Sparkles, Trash2, Volume2, Wand2
 } from 'lucide-react';
 import { nurseApi, Patient } from '@/lib/api/nurse';
 import toast from 'react-hot-toast';
@@ -1204,6 +1447,104 @@ export default function HandoverPage() {
     overdue: 0,
     priority: { high: 0, medium: 0, low: 0 }
   });
+
+  // ---------- AI Voice Dictation for Handover ----------
+  const [handoverSpeech, setHandoverSpeech] = useState("");
+  const [isHandoverListening, setIsHandoverListening] = useState(false);
+  const [isParsingHandover, setIsParsingHandover] = useState(false);
+  const handoverRecognitionRef = useRef<any>(null);
+
+  // Setup continuous speech recognition for handover
+  useEffect(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = "en-US";
+    recognition.onresult = (event: any) => {
+      let final = "";
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) final += event.results[i][0].transcript;
+      }
+      if (final) {
+        setHandoverSpeech(prev => prev + (prev ? " " : "") + final);
+      }
+    };
+    recognition.onerror = () => setIsHandoverListening(false);
+    recognition.onend = () => setIsHandoverListening(false);
+    handoverRecognitionRef.current = recognition;
+    return () => {
+      if (handoverRecognitionRef.current) {
+        try { handoverRecognitionRef.current.stop(); } catch(e) {}
+      }
+    };
+  }, []);
+
+  const toggleHandoverListening = () => {
+    if (!handoverRecognitionRef.current) {
+      toast.error("Speech recognition not supported.");
+      return;
+    }
+    if (isHandoverListening) {
+      handoverRecognitionRef.current.stop();
+      setIsHandoverListening(false);
+    } else {
+      setHandoverSpeech("");
+      try {
+        handoverRecognitionRef.current.start();
+        setIsHandoverListening(true);
+        toast.success("Listening... Speak handover summary.");
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  };
+
+  const handleParseHandoverVoice = async () => {
+    if (!handoverSpeech.trim()) {
+      toast.error("Please speak or type some text first.");
+      return;
+    }
+    setIsParsingHandover(true);
+    try {
+      const response = await fetch("/api/nurse/handover/ai-handover-voice", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          transcript: handoverSpeech,
+          patients: handoverPatients.map(p => ({ patientId: p.patientId, patientName: p.patientName, bed: p.bed }))
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Parsing failed");
+      // Auto‑populate general fields
+      if (data.toNurse) setToNurse(data.toNurse);
+      if (data.generalNotes) setGeneralNotes(data.generalNotes);
+      if (data.equipmentStatus) setEquipmentStatus(data.equipmentStatus);
+      if (data.emergencySupplies) setEmergencySupplies(data.emergencySupplies);
+      // Populate per‑patient notes (if provided)
+      if (data.patientNotes && typeof data.patientNotes === "object") {
+        const newNotes = { ...patientNotes };
+        for (const [patientId, note] of Object.entries(data.patientNotes)) {
+          if (typeof note === "string") newNotes[patientId] = note;
+        }
+        setPatientNotes(newNotes);
+      }
+      toast.success("Handover fields auto‑filled from voice!");
+      setHandoverSpeech("");
+    } catch (err: any) {
+      toast.error(err.message || "AI parsing failed.");
+    } finally {
+      setIsParsingHandover(false);
+    }
+  };
+
+  const PRESET_HANDOVER = {
+    label: "Example Handover",
+    text: "Handover to nurse Maria Sanchez. General notes: All patients stable, no incidents. Equipment: Ventilator in room 203 needs calibration. Emergency supplies: Crash cart fully stocked. Additional notes for patient James Anderson: Wound dressing changed this morning, continue monitoring. Patient Eleanor Vance: Oxygen sat improved to 92%, continue current therapy."
+  };
+  // ---------- End AI Voice ----------
 
   const currentNurse = typeof window !== 'undefined' ? localStorage.getItem('userName') || 'Current Nurse' : 'Current Nurse';
   const currentDate = new Date().toLocaleDateString();
@@ -1730,6 +2071,72 @@ Date/Time: _________________
               <p className="text-green-700">No pending items for this patient!</p>
             </div>
           )}
+        </div>
+
+        {/* ========== AI VOICE DICTATION CARD ========== */}
+        <div className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-950/20 dark:to-indigo-950/20 rounded-lg border border-purple-200 dark:border-purple-800 p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              <Wand2 className="w-5 h-5 text-purple-600" /> AI Voice Handover Scribe
+            </h2>
+            {isHandoverListening && (
+              <span className="text-xs text-red-500 animate-pulse flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" /> Recording...
+              </span>
+            )}
+          </div>
+          <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+            Dictate the entire handover in natural language. Gemini AI will parse and fill all relevant fields below.
+          </p>
+          <textarea
+            value={handoverSpeech}
+            onChange={(e) => setHandoverSpeech(e.target.value)}
+            placeholder="Speak or paste: 'Handover to nurse John. General notes: All stable. Equipment: Ventilator calibrated...'"
+            rows={3}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-sm resize-none"
+          />
+          <div className="flex flex-wrap gap-2 justify-between mt-3">
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={toggleHandoverListening}
+                className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 ${
+                  isHandoverListening 
+                    ? 'bg-red-600 hover:bg-red-700 text-white' 
+                    : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                }`}
+              >
+                {isHandoverListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                {isHandoverListening ? "Stop Dictation" : "Start Dictation"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setHandoverSpeech("")}
+                disabled={!handoverSpeech}
+                className="px-4 py-2 rounded-lg text-sm font-medium border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50"
+              >
+                <Trash2 className="w-4 h-4 mr-1 inline" /> Clear
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={handleParseHandoverVoice}
+              disabled={isParsingHandover || !handoverSpeech.trim()}
+              className="px-5 py-2 rounded-lg text-sm font-medium bg-purple-600 hover:bg-purple-700 text-white disabled:opacity-50 flex items-center gap-2"
+            >
+              {isParsingHandover ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+              {isParsingHandover ? "Parsing..." : "Parse with Gemini AI"}
+            </button>
+          </div>
+          <div className="mt-2">
+            <button
+              type="button"
+              onClick={() => setHandoverSpeech(PRESET_HANDOVER.text)}
+              className="text-xs text-purple-600 hover:text-purple-800 flex items-center gap-1"
+            >
+              <Volume2 className="w-3 h-3" /> Use Example
+            </button>
+          </div>
         </div>
 
         {/* Handover Info */}
