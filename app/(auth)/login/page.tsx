@@ -501,6 +501,15 @@ export default function LoginPage() {
       localStorage.setItem("userName", data.user?.full_name_en || '');
       localStorage.setItem("userRole", data.user?.role || '');
 
+      if (data.user?.role === 'patient') {
+  const patientId = data.user?.patient_id || data.user?.id;
+  if (patientId) {
+    localStorage.setItem("patientId", patientId.toString());
+    console.log("✅ patientId stored:", patientId);
+  }
+}
+
+
       // For nurse role, fetch staff details to check department
       if (data.user?.role === 'nurse') {
         try {

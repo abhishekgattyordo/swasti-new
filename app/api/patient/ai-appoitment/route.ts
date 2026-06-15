@@ -1,6 +1,7 @@
 
 
 
+
 // // app/api/patient/ai-appoitment/route.ts
 // import { NextRequest, NextResponse } from "next/server";
 // import { GoogleGenAI } from "@google/genai";
@@ -74,7 +75,7 @@
 // }
 
 // // ================= GET PATIENT APPOINTMENTS =================
-// async function getPatientAppointments(patientId: string) {
+// async function getPatientAppointments(request: NextRequest, patientId: string) {
 //   try {
 //     const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
 //     const url = `${baseUrl}/api/appointments/patient/${patientId}`;
@@ -85,6 +86,8 @@
 //       method: "GET",
 //       headers: {
 //         "Content-Type": "application/json",
+//         Cookie: request.headers.get("cookie") || "",
+//         Authorization: request.headers.get("authorization") || "",
 //       },
 //     });
     
@@ -121,10 +124,15 @@
     
 //     console.log("📤 CREATING APPOINTMENT VIA API:", JSON.stringify(payload, null, 2));
     
+//     const authHeader = request.headers.get("authorization") || "";
+//     const cookieHeader = request.headers.get("cookie") || "";
+    
 //     const response = await fetch(url, {
 //       method: "POST",
 //       headers: {
 //         "Content-Type": "application/json",
+//         "Authorization": authHeader,
+//         "Cookie": cookieHeader,
 //       },
 //       body: JSON.stringify(payload),
 //     });
@@ -141,6 +149,7 @@
 
 // // ================= RESCHEDULE APPOINTMENT VIA API =================
 // async function rescheduleAppointmentViaAPI(
+//   request: NextRequest,
 //   appointmentId: string,
 //   newDate: string,
 //   newTime: string
@@ -157,10 +166,15 @@
 //     console.log("📤 RESCHEDULING APPOINTMENT VIA API:", JSON.stringify(payload, null, 2));
 //     console.log("🔗 RESCHEDULE URL:", url);
     
+//     const authHeader = request.headers.get("authorization") || "";
+//     const cookieHeader = request.headers.get("cookie") || "";
+    
 //     const response = await fetch(url, {
 //       method: "PUT",
 //       headers: {
 //         "Content-Type": "application/json",
+//         "Authorization": authHeader,
+//         "Cookie": cookieHeader,
 //       },
 //       body: JSON.stringify(payload),
 //     });
@@ -176,7 +190,10 @@
 // }
 
 // // ================= CANCEL APPOINTMENT VIA API =================
-// async function cancelAppointmentViaAPI(appointmentId: string) {
+// async function cancelAppointmentViaAPI(
+//   request: NextRequest,
+//   appointmentId: string
+// ) {
 //   try {
 //     const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
 //     const url = `${baseUrl}/api/appointments/${appointmentId}`;
@@ -188,10 +205,15 @@
 //     console.log("📤 CANCELLING APPOINTMENT VIA API:", JSON.stringify(payload, null, 2));
 //     console.log("🔗 CANCEL URL:", url);
     
+//     const authHeader = request.headers.get("authorization") || "";
+//     const cookieHeader = request.headers.get("cookie") || "";
+    
 //     const response = await fetch(url, {
 //       method: "PUT",
 //       headers: {
 //         "Content-Type": "application/json",
+//         "Authorization": authHeader,
+//         "Cookie": cookieHeader,
 //       },
 //       body: JSON.stringify(payload),
 //     });
@@ -297,8 +319,15 @@
 //     // ========== CHECK FOR CANCEL INTENT ==========
 //     if (isCancelIntent(userText)) {
 //       console.log("❌ CANCEL INTENT DETECTED");
+
+//       if (!memory.patientId) {
+//   return NextResponse.json(
+//     { error: "Patient ID not found. Please login again." },
+//     { status: 401 }
+//   );
+// }
       
-//       const appointmentsData = await getPatientAppointments(memory.patientId);
+//       const appointmentsData = await getPatientAppointments(request, memory.patientId);
       
 //       if (appointmentsData && appointmentsData.data && appointmentsData.data.length > 0) {
 //         const upcomingAppointments = appointmentsData.data.filter((apt: any) => apt.status === "BOOKED");
@@ -335,7 +364,7 @@
 //         if (memory.appointments[selectedIndex]) {
 //           const appointment = memory.appointments[selectedIndex];
           
-//           const result = await cancelAppointmentViaAPI(appointment.id);
+//           const result = await cancelAppointmentViaAPI(request, appointment.id);
           
 //           if (result.success) {
 //             chatMemory.delete(sessionId);
@@ -355,8 +384,16 @@
 //     // ========== CHECK FOR RESCHEDULE INTENT ==========
 //     if (isRescheduleIntent(userText)) {
 //       console.log("🔄 RESCHEDULE INTENT DETECTED");
+
+//       if (!memory.patientId) {
+//   return NextResponse.json(
+//     { error: "Patient ID not found. Please login again." },
+//     { status: 401 }
+//   );
+// }
+
       
-//       const appointmentsData = await getPatientAppointments(memory.patientId);
+//       const appointmentsData = await getPatientAppointments(request, memory.patientId);
       
 //       if (appointmentsData && appointmentsData.data && appointmentsData.data.length > 0) {
 //         const upcomingAppointments = appointmentsData.data.filter((apt: any) => apt.status === "BOOKED");
@@ -448,6 +485,7 @@
 //           const newTime = formatSlot(memory.newSlots[slotIndex]);
           
 //           const result = await rescheduleAppointmentViaAPI(
+//             request,
 //             memory.selectedAppointment.id,
 //             memory.newDate,
 //             newTime
@@ -528,6 +566,13 @@
 
 //     if (needsSlotFetch) {
 //       console.log("🔍 FETCHING SLOTS FROM MEMORY:", memory.doctor.id, memory.date);
+
+//         if (!memory.doctor?.id || !memory.date) {
+//     return NextResponse.json(
+//       { error: "Missing doctor information or appointment date. Please try again." },
+//       { status: 400 }
+//     );
+//   }
 //       const slotData = await fetchDoctorSlots(request, memory.doctor.id, memory.date);
 
 //       if (slotData.success && slotData.slots && slotData.slots.length > 0) {
@@ -726,16 +771,61 @@
 
 
 
+
+
+
 // app/api/patient/ai-appoitment/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
 
-// ================= GEMINI =================
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY!,
-});
+// ================= BILLING CONFIGURATION =================
+const BILLING_URL = "https://his-ai-billing.onrender.com/api/ai/billing";
+const TELEMETRY_URL = "https://his-ai-billing.onrender.com/api/ai/log-usage";
 
-// ================= SESSION MEMORY =================
+// Helper to fetch the active API key from your billing server
+async function fetchActiveApiKey(): Promise<string> {
+  const res = await fetch(BILLING_URL);
+  if (!res.ok) throw new Error(`Billing server error: ${res.status}`);
+  const data = await res.json();
+  const key = data.apiKey || data.customApiKey || data.token;
+  if (!key) throw new Error("No API key returned from billing server");
+  return key;
+}
+
+// Helper to send telemetry (used after Gemini calls)
+async function sendTelemetry(
+  activeToken: string,
+  model: string,
+  inputTokens: number,
+  outputTokens: number,
+  responseTimeMs: number,
+  status: "success" | "error",
+  errorDetails?: string
+) {
+  try {
+    await fetch(TELEMETRY_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${activeToken}`,
+      },
+      body: JSON.stringify({
+        projectName: "Hospital CRM - AI Appointment Assistant",
+        model,
+        inputTokens,
+        outputTokens,
+        responseTimeMs,
+        status,
+        errorDetails,
+        userRole: "patient",
+      }),
+    });
+  } catch (err) {
+    console.error("Telemetry send failed:", err);
+  }
+}
+
+// ================= SESSION MEMORY (unchanged) =================
 const chatMemory = new Map<
   string,
   {
@@ -757,7 +847,7 @@ const chatMemory = new Map<
   }
 >();
 
-// ================= FETCH DOCTORS =================
+// ================= FETCH DOCTORS (unchanged) =================
 async function fetchDoctorsFromAPI() {
   try {
     const response = await fetch(
@@ -772,7 +862,7 @@ async function fetchDoctorsFromAPI() {
   }
 }
 
-// ================= FETCH REAL SLOTS =================
+// ================= FETCH REAL SLOTS (unchanged) =================
 async function fetchDoctorSlots(request: NextRequest, doctorId: number, date: string) {
   try {
     const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
@@ -798,7 +888,7 @@ async function fetchDoctorSlots(request: NextRequest, doctorId: number, date: st
   }
 }
 
-// ================= GET PATIENT APPOINTMENTS =================
+// ================= GET PATIENT APPOINTMENTS (unchanged) =================
 async function getPatientAppointments(request: NextRequest, patientId: string) {
   try {
     const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
@@ -824,7 +914,7 @@ async function getPatientAppointments(request: NextRequest, patientId: string) {
   }
 }
 
-// ================= CREATE APPOINTMENT VIA API =================
+// ================= CREATE APPOINTMENT (unchanged) =================
 async function createAppointmentViaAPI(
   request: NextRequest,
   doctorId: string,
@@ -871,7 +961,7 @@ async function createAppointmentViaAPI(
   }
 }
 
-// ================= RESCHEDULE APPOINTMENT VIA API =================
+// ================= RESCHEDULE APPOINTMENT (unchanged) =================
 async function rescheduleAppointmentViaAPI(
   request: NextRequest,
   appointmentId: string,
@@ -913,7 +1003,7 @@ async function rescheduleAppointmentViaAPI(
   }
 }
 
-// ================= CANCEL APPOINTMENT VIA API =================
+// ================= CANCEL APPOINTMENT (unchanged) =================
 async function cancelAppointmentViaAPI(
   request: NextRequest,
   appointmentId: string
@@ -952,7 +1042,7 @@ async function cancelAppointmentViaAPI(
   }
 }
 
-// ================= FORMAT SLOT =================
+// ================= FORMAT SLOT (unchanged) =================
 function formatSlot(slot: string) {
   const [h, m] = slot.split(":");
   const hour = parseInt(h);
@@ -961,7 +1051,7 @@ function formatSlot(slot: string) {
   return `${displayHour}:${m} ${ampm}`;
 }
 
-// ================= EXTRACT DOCTOR AND DATE FROM USER TEXT =================
+// ================= EXTRACT DOCTOR AND DATE (unchanged) =================
 function extractDoctorAndDate(userText: string, realDoctors: any[]) {
   const lowerText = userText.toLowerCase();
   let detectedDoctor = null;
@@ -990,7 +1080,7 @@ function extractDoctorAndDate(userText: string, realDoctors: any[]) {
   return { detectedDoctor, detectedDate };
 }
 
-// ================= DETECT INTENTS =================
+// ================= INTENT DETECTION (unchanged) =================
 function isRescheduleIntent(userText: string): boolean {
   const lowerText = userText.toLowerCase();
   const rescheduleKeywords = [
@@ -1012,6 +1102,13 @@ function isCancelIntent(userText: string): boolean {
 
 // ================= MAIN API =================
 export async function POST(request: NextRequest) {
+  let geminiStartTime = 0;
+  let activeToken = "";
+  let responseTimeMs = 0;
+  let inputTokens = 0;
+  let outputTokens = 0;
+  let modelUsed = "gemini-3.5-flash";
+
   try {
     const body = await request.json();
     const { messages, sessionId = "default", userId, patientId } = body;
@@ -1040,16 +1137,16 @@ export async function POST(request: NextRequest) {
       console.log("💾 Saved patientId to memory:", memory.patientId);
     }
 
-    // ========== CHECK FOR CANCEL INTENT ==========
+    // ========== CANCEL INTENT (unchanged) ==========
     if (isCancelIntent(userText)) {
       console.log("❌ CANCEL INTENT DETECTED");
 
       if (!memory.patientId) {
-  return NextResponse.json(
-    { error: "Patient ID not found. Please login again." },
-    { status: 401 }
-  );
-}
+        return NextResponse.json(
+          { error: "Patient ID not found. Please login again." },
+          { status: 401 }
+        );
+      }
       
       const appointmentsData = await getPatientAppointments(request, memory.patientId);
       
@@ -1080,7 +1177,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // ========== HANDLE CANCEL SELECTION ==========
+    // ========== HANDLE CANCEL SELECTION (unchanged) ==========
     if (memory.step === "awaiting_cancel_selection" && memory.appointments) {
       const numberMatch = userText.match(/\d+/);
       if (numberMatch) {
@@ -1105,17 +1202,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // ========== CHECK FOR RESCHEDULE INTENT ==========
+    // ========== RESCHEDULE INTENT (unchanged) ==========
     if (isRescheduleIntent(userText)) {
       console.log("🔄 RESCHEDULE INTENT DETECTED");
 
       if (!memory.patientId) {
-  return NextResponse.json(
-    { error: "Patient ID not found. Please login again." },
-    { status: 401 }
-  );
-}
-
+        return NextResponse.json(
+          { error: "Patient ID not found. Please login again." },
+          { status: 401 }
+        );
+      }
       
       const appointmentsData = await getPatientAppointments(request, memory.patientId);
       
@@ -1146,7 +1242,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // ========== HANDLE APPOINTMENT SELECTION FOR RESCHEDULE ==========
+    // ========== HANDLE APPOINTMENT SELECTION (unchanged) ==========
     if (memory.step === "awaiting_appointment_selection" && memory.appointments) {
       const numberMatch = userText.match(/\d+/);
       if (numberMatch) {
@@ -1163,7 +1259,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // ========== HANDLE NEW DATE FOR RESCHEDULE ==========
+    // ========== HANDLE NEW DATE (unchanged) ==========
     if (memory.step === "awaiting_new_date" && memory.selectedAppointment) {
       const { detectedDate } = extractDoctorAndDate(userText, realDoctors);
       
@@ -1200,7 +1296,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // ========== HANDLE NEW SLOT SELECTION FOR RESCHEDULE ==========
+    // ========== HANDLE NEW SLOT SELECTION (unchanged) ==========
     if (memory.step === "awaiting_new_slots" && memory.newSlots && memory.selectedAppointment && memory.newDate) {
       const slotMatch = userText.match(/\d+/);
       if (slotMatch) {
@@ -1230,7 +1326,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // ========== CHECK IF USER IS ASKING ABOUT AVAILABILITY ==========
+    // ========== AVAILABILITY CHECKING (unchanged) ==========
     const lowerText = userText.toLowerCase();
     const isAskingAvailability = lowerText.includes("available") || 
                                   lowerText.includes("slot") || 
@@ -1240,7 +1336,6 @@ export async function POST(request: NextRequest) {
 
     const { detectedDoctor, detectedDate } = extractDoctorAndDate(userText, realDoctors);
 
-    // ========== RULE 1: IF USER ASKS ABOUT AVAILABILITY WITH DOCTOR AND DATE ==========
     if (isAskingAvailability && detectedDoctor && detectedDate) {
       console.log(`🔍 DIRECT SLOT FETCH FOR: ${detectedDoctor.firstName} on ${detectedDate}`);
       
@@ -1267,7 +1362,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // ========== RULE 2: IF USER ASKS ABOUT AVAILABILITY WITH ONLY DATE ==========
     if (isAskingAvailability && detectedDate && !detectedDoctor) {
       const doctorList = realDoctors
         .map((d: any) => `• Dr. ${d.firstName} ${d.lastName} (${d.specialty})`)
@@ -1278,25 +1372,24 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // ========== RULE 3: IF USER ASKS ABOUT AVAILABILITY WITH ONLY DOCTOR ==========
     if (isAskingAvailability && detectedDoctor && !detectedDate) {
       return NextResponse.json({
         text: `What date would you like to check availability for **Dr. ${detectedDoctor.firstName} ${detectedDoctor.lastName}**?\n\nPlease provide a date (e.g., "May 25" or "2026-05-25").`
       });
     }
 
-    // ========== CHECK IF WE NEED TO FETCH SLOTS (from memory/state) ==========
+    // ========== FETCH SLOTS FROM MEMORY (unchanged) ==========
     const needsSlotFetch = memory.step === "awaiting_slots" && memory.doctor && memory.date;
 
     if (needsSlotFetch) {
       console.log("🔍 FETCHING SLOTS FROM MEMORY:", memory.doctor.id, memory.date);
 
-        if (!memory.doctor?.id || !memory.date) {
-    return NextResponse.json(
-      { error: "Missing doctor information or appointment date. Please try again." },
-      { status: 400 }
-    );
-  }
+      if (!memory.doctor?.id || !memory.date) {
+        return NextResponse.json(
+          { error: "Missing doctor information or appointment date. Please try again." },
+          { status: 400 }
+        );
+      }
       const slotData = await fetchDoctorSlots(request, memory.doctor.id, memory.date);
 
       if (slotData.success && slotData.slots && slotData.slots.length > 0) {
@@ -1319,7 +1412,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // ========== CHECK IF USER IS TRYING TO BOOK (from memory) ==========
+    // ========== SLOT SELECTION (unchanged) ==========
     if (memory.step === "awaiting_slot_selection" && memory.slots) {
       const slotMatch = userText.match(/\d+/);
       if (slotMatch) {
@@ -1351,7 +1444,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // ========== CHECK FOR NAME ==========
+    // ========== NAME INPUT (unchanged) ==========
     if (memory.step === "awaiting_name" && !memory.patientName) {
       if (userText.length > 2 && !userText.match(/\d{10}/)) {
         memory.patientName = userText;
@@ -1364,7 +1457,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // ========== CHECK FOR PHONE AND CREATE APPOINTMENT ==========
+    // ========== PHONE INPUT & CREATE APPOINTMENT (unchanged) ==========
     if (memory.step === "awaiting_phone" && !memory.patientPhone) {
       const phoneMatch = userText.match(/\b\d{10}\b/);
       if (phoneMatch) {
@@ -1418,7 +1511,18 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // ========== AI SYSTEM PROMPT (for general conversation) ==========
+    // ===================== AI RESPONSE (WITH BILLING) =====================
+    // At this point, we must call Gemini. Fetch the active API key dynamically.
+    try {
+      activeToken = await fetchActiveApiKey();
+    } catch (err: any) {
+      console.error("❌ Failed to fetch API key from billing server:", err);
+      return NextResponse.json(
+        { text: "Sorry, the billing service is currently unavailable. Please try again later." },
+        { status: 503 }
+      );
+    }
+
     const doctorsList = realDoctors
       .map((d: any) => `- Dr. ${d.firstName} ${d.lastName} (${d.specialty})`)
       .join("\n");
@@ -1449,15 +1553,50 @@ Be helpful, warm, and professional.
       parts: [{ text: msg.parts?.[0]?.text || msg.content || msg.text || "" }],
     }));
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash", 
-      contents: formattedMessages,
-      config: {
-        systemInstruction: systemPrompt,
-        temperature: 0.3,
-        maxOutputTokens: 1024,
-      },
-    });
+    // Create a Gemini client with the dynamic token
+    const aiClient = new GoogleGenAI({ apiKey: activeToken });
+    geminiStartTime = Date.now();
+
+    let response;
+    try {
+      response = await aiClient.models.generateContent({
+        model: modelUsed,
+        contents: formattedMessages,
+        config: {
+          systemInstruction: systemPrompt,
+          temperature: 0.3,
+          maxOutputTokens: 1024,
+        },
+      });
+    } catch (geminiErr: any) {
+      responseTimeMs = Date.now() - geminiStartTime;
+      // Send error telemetry
+      await sendTelemetry(
+        activeToken,
+        modelUsed,
+        0,
+        0,
+        responseTimeMs,
+        "error",
+        geminiErr.message || "Gemini API error"
+      );
+      throw geminiErr; // rethrow to be caught by outer catch
+    }
+
+    responseTimeMs = Date.now() - geminiStartTime;
+    const usage = response.usageMetadata || {};
+    inputTokens = usage.promptTokenCount || 0;
+    outputTokens = usage.candidatesTokenCount || 0;
+
+    // Send success telemetry
+    await sendTelemetry(
+      activeToken,
+      modelUsed,
+      inputTokens,
+      outputTokens,
+      responseTimeMs,
+      "success"
+    );
 
     const aiResponse = response.text || "";
 
@@ -1488,6 +1627,18 @@ Be helpful, warm, and professional.
 
   } catch (err: any) {
     console.error("❌ SERVER ERROR:", err);
+    // Ensure error telemetry is sent if we had an active token and time
+    if (activeToken && geminiStartTime > 0) {
+      await sendTelemetry(
+        activeToken,
+        modelUsed,
+        inputTokens,
+        outputTokens,
+        Date.now() - geminiStartTime,
+        "error",
+        err.message || "Unknown error"
+      );
+    }
     return NextResponse.json({ error: "Hospital assistant unavailable." }, { status: 500 });
   }
 }
