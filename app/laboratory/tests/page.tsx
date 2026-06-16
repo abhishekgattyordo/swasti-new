@@ -3,6 +3,9 @@
 // "use client";
 
 // import { useState, useEffect } from "react";
+// import { useRouter } from "next/navigation";
+// import { useTenant } from "@/contexts/TenantContext";
+// import { MODULE_KEYS, LABARATORY_FEATURES } from "@/lib/feature";
 // import Card from "@/components/laboratory/Card";
 
 // interface LabTest {
@@ -24,6 +27,9 @@
 // }
 
 // export default function LabTestsPage() {
+//   const router = useRouter();
+//   const { tenant, isMicroFeatureEnabled, isLoading: tenantLoading } = useTenant();
+  
 //   const [tests, setTests] = useState<LabTest[]>([]);
 //   const [showModal, setShowModal] = useState(false);
 //   const [editingTest, setEditingTest] = useState<LabTest | null>(null);
@@ -37,10 +43,25 @@
 //     active: true,
 //   });
 
-//   // ✅ FETCH FROM API
+//   // Check if Test Catalog feature is enabled
+//   const isTestCatalogEnabled = isMicroFeatureEnabled(
+//     MODULE_KEYS.LABARATORY,
+//     LABARATORY_FEATURES.TEST_CATALOG
+//   );
+
+//   // Redirect if feature is not enabled
 //   useEffect(() => {
-//     fetchTests();
-//   }, []);
+//     if (!tenantLoading && !isTestCatalogEnabled) {
+//       router.push("/unauthorized");
+//     }
+//   }, [tenantLoading, isTestCatalogEnabled, router]);
+
+//   // Fetch tests only if feature is enabled
+//   useEffect(() => {
+//     if (isTestCatalogEnabled) {
+//       fetchTests();
+//     }
+//   }, [isTestCatalogEnabled]);
 
 //   const fetchTests = async () => {
 //     setLoading(true);
@@ -63,7 +84,7 @@
 //     }
 //   };
 
-//   // ✅ CREATE + UPDATE via API
+//   // Create + Update via API
 //   const handleSave = async () => {
 //     if (!formData.test_name || !formData.test_code || !formData.price) {
 //       alert("Please fill all required fields");
@@ -142,7 +163,7 @@
 //     }
 //   };
 
-//   // ✅ TOGGLE ACTIVE via API
+//   // Toggle active via API
 //   const toggleActive = async (id: string, currentStatus: boolean) => {
 //     try {
 //       const response = await fetch("/api/laboratory/tests", {
@@ -168,7 +189,7 @@
 //     }
 //   };
 
-//   // ✅ DELETE via API
+//   // Delete via API
 //   const deleteTest = async (id: string) => {
 //     if (!confirm("Are you sure you want to delete this test?")) return;
 
@@ -220,6 +241,39 @@
 //     return colors[category as keyof typeof colors];
 //   };
 
+//   // Show loading state while checking tenant and feature flags
+//   if (tenantLoading) {
+//     return (
+//       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+//         <div className="text-center">
+//           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+//           <p className="mt-4 text-gray-600">Loading...</p>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   // Show unauthorized if feature is not enabled
+//   if (!isTestCatalogEnabled) {
+//     return (
+//       <div className="min-h-screen flex items-center justify-center bg-gray-50">
+//         <div className="text-center">
+//           <div className="text-red-500 text-6xl mb-4">🔒</div>
+//           <h1 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h1>
+//           <p className="text-gray-600">
+//             Test Catalog feature is not enabled for {tenant?.name}.
+//           </p>
+//           <button
+//             onClick={() => router.push("/dashboard")}
+//             className="mt-4 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+//           >
+//             Go to Dashboard
+//           </button>
+//         </div>
+//       </div>
+//     );
+//   }
+
 //   if (loading) {
 //     return (
 //       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -259,6 +313,11 @@
 //             <p className="text-sm text-gray-500 mt-1">
 //               Manage laboratory test configurations
 //             </p>
+//             {tenant && (
+//               <p className="text-xs text-gray-400 mt-1">
+//                 Tenant: {tenant.name}
+//               </p>
+//             )}
 //           </div>
 //           <button
 //             onClick={() => openModal()}
@@ -271,64 +330,73 @@
 
 //       <div className="p-8">
 //         <div className="grid grid-cols-1 gap-4">
-//           {tests.map((test) => (
-//             <Card
-//               key={test.id}
-//               className="p-6 hover:shadow-md transition-shadow"
-//             >
-//               <div className="flex items-center justify-between">
-//                 <div className="flex-1">
-//                   <div className="flex items-center space-x-3 mb-2">
-//                     <h3 className="text-lg font-semibold text-gray-900">
-//                       {test.test_name}
-//                     </h3>
-//                     <span
-//                       className={`px-2 py-1 rounded-full text-xs font-medium border ${getCategoryColor(
-//                         test.category
-//                       )}`}
-//                     >
-//                       {test.category}
-//                     </span>
-//                     {!test.active && (
-//                       <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
-//                         Inactive
-//                       </span>
-//                     )}
-//                   </div>
-//                   <p className="text-sm text-gray-500">Code: {test.test_code}</p>
-//                 </div>
-//                 <div className="text-right">
-//                   <p className="text-2xl font-bold text-gray-900">
-//                     ₹{test.price}
-//                   </p>
-//                   <div className="flex items-center space-x-3 mt-2">
-//                     <button
-//                       onClick={() => toggleActive(test.id, test.active)}
-//                       className={`px-3 py-1 rounded-lg text-sm transition-colors ${
-//                         test.active
-//                           ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-//                           : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-//                       }`}
-//                     >
-//                       {test.active ? "Active" : "Activate"}
-//                     </button>
-//                     <button
-//                       onClick={() => openModal(test)}
-//                       className="px-3 py-1 rounded-lg text-sm text-primary hover:bg-primary/10 transition-colors"
-//                     >
-//                       Edit
-//                     </button>
-//                     <button
-//                       onClick={() => deleteTest(test.id)}
-//                       className="px-3 py-1 rounded-lg text-sm text-red-600 hover:bg-red-50 transition-colors"
-//                     >
-//                       Delete
-//                     </button>
-//                   </div>
-//                 </div>
-//               </div>
+//           {tests.length === 0 ? (
+//             <Card className="p-8 text-center">
+//               <p className="text-gray-500">No tests found. Click Add New Test to create one.</p>
 //             </Card>
-//           ))}
+//           ) : (
+//             tests.map((test) => (
+//               <Card
+//                 key={test.id}
+//                 className="p-6 hover:shadow-md transition-shadow"
+//               >
+//                 <div className="flex items-center justify-between">
+//                   <div className="flex-1">
+//                     <div className="flex items-center space-x-3 mb-2">
+//                       <h3 className="text-lg font-semibold text-gray-900">
+//                         {test.test_name}
+//                       </h3>
+//                       <span
+//                         className={`px-2 py-1 rounded-full text-xs font-medium border ${getCategoryColor(
+//                           test.category
+//                         )}`}
+//                       >
+//                         {test.category}
+//                       </span>
+//                       {!test.active && (
+//                         <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
+//                           Inactive
+//                         </span>
+//                       )}
+//                     </div>
+//                     <p className="text-sm text-gray-500">Code: {test.test_code}</p>
+//                     <p className="text-xs text-gray-400 mt-1">
+//                       Created: {new Date(test.created_at).toLocaleDateString()}
+//                     </p>
+//                   </div>
+//                   <div className="text-right">
+//                     <p className="text-2xl font-bold text-gray-900">
+//                       ₹{test.price}
+//                     </p>
+//                     <div className="flex items-center space-x-3 mt-2">
+//                       <button
+//                         onClick={() => toggleActive(test.id, test.active)}
+//                         className={`px-3 py-1 rounded-lg text-sm transition-colors ${
+//                           test.active
+//                             ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+//                             : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+//                         }`}
+//                       >
+//                         {test.active ? "Active" : "Activate"}
+//                       </button>
+//                       <button
+//                         onClick={() => openModal(test)}
+//                         className="px-3 py-1 rounded-lg text-sm text-primary hover:bg-primary/10 transition-colors"
+//                       >
+//                         Edit
+//                       </button>
+//                       <button
+//                         onClick={() => deleteTest(test.id)}
+//                         className="px-3 py-1 rounded-lg text-sm text-red-600 hover:bg-red-50 transition-colors"
+//                       >
+//                         Delete
+//                       </button>
+//                     </div>
+//                   </div>
+//                 </div>
+//               </Card>
+//             ))
+//           )}
 //         </div>
 //       </div>
 
@@ -457,6 +525,8 @@
 //   );
 // }
 
+
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -464,6 +534,21 @@ import { useRouter } from "next/navigation";
 import { useTenant } from "@/contexts/TenantContext";
 import { MODULE_KEYS, LABARATORY_FEATURES } from "@/lib/feature";
 import Card from "@/components/laboratory/Card";
+import {
+  Plus,
+  Edit,
+  Trash2,
+  X,
+  Search,
+  AlertCircle,
+  CheckCircle,
+  Clock,
+  Microscope,
+  Activity,
+  DollarSign,
+  Tag,
+  FolderOpen,
+} from "lucide-react";
 
 interface LabTest {
   id: string;
@@ -492,6 +577,7 @@ export default function LabTestsPage() {
   const [editingTest, setEditingTest] = useState<LabTest | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
   const [formData, setFormData] = useState<FormData>({
     test_name: "",
     test_code: "",
@@ -500,20 +586,17 @@ export default function LabTestsPage() {
     active: true,
   });
 
-  // Check if Test Catalog feature is enabled
   const isTestCatalogEnabled = isMicroFeatureEnabled(
     MODULE_KEYS.LABARATORY,
     LABARATORY_FEATURES.TEST_CATALOG
   );
 
-  // Redirect if feature is not enabled
   useEffect(() => {
     if (!tenantLoading && !isTestCatalogEnabled) {
       router.push("/unauthorized");
     }
   }, [tenantLoading, isTestCatalogEnabled, router]);
 
-  // Fetch tests only if feature is enabled
   useEffect(() => {
     if (isTestCatalogEnabled) {
       fetchTests();
@@ -541,7 +624,6 @@ export default function LabTestsPage() {
     }
   };
 
-  // Create + Update via API
   const handleSave = async () => {
     if (!formData.test_name || !formData.test_code || !formData.price) {
       alert("Please fill all required fields");
@@ -556,8 +638,6 @@ export default function LabTestsPage() {
 
     try {
       if (editingTest) {
-        // UPDATE
-        console.log("Updating test:", editingTest.id);
         const response = await fetch("/api/laboratory/tests", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -572,7 +652,6 @@ export default function LabTestsPage() {
         });
         
         const result = await response.json();
-        console.log("Update response:", result);
         
         if (!result.success) {
           throw new Error(result.error || "Update failed");
@@ -580,8 +659,6 @@ export default function LabTestsPage() {
         
         alert("Test updated successfully!");
       } else {
-        // CREATE
-        console.log("Creating new test");
         const response = await fetch("/api/laboratory/tests", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -595,7 +672,6 @@ export default function LabTestsPage() {
         });
         
         const result = await response.json();
-        console.log("Create response:", result);
         
         if (!result.success) {
           throw new Error(result.error || "Create failed");
@@ -620,7 +696,6 @@ export default function LabTestsPage() {
     }
   };
 
-  // Toggle active via API
   const toggleActive = async (id: string, currentStatus: boolean) => {
     try {
       const response = await fetch("/api/laboratory/tests", {
@@ -646,7 +721,6 @@ export default function LabTestsPage() {
     }
   };
 
-  // Delete via API
   const deleteTest = async (id: string) => {
     if (!confirm("Are you sure you want to delete this test?")) return;
 
@@ -691,38 +765,53 @@ export default function LabTestsPage() {
 
   const getCategoryColor = (category: string) => {
     const colors = {
-      Blood: "bg-red-50 text-red-700 border-red-200",
-      Urine: "bg-amber-50 text-amber-700 border-amber-200",
-      Other: "bg-gray-50 text-gray-700 border-gray-200",
+      Blood: "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800",
+      Urine: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800",
+      Other: "bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-700/30 dark:text-gray-300 dark:border-gray-600",
     };
     return colors[category as keyof typeof colors];
   };
 
-  // Show loading state while checking tenant and feature flags
+  const getCategoryIcon = (category: string) => {
+    const icons = {
+      Blood: "🩸",
+      Urine: "💧",
+      Other: "🔬",
+    };
+    return icons[category as keyof typeof icons];
+  };
+
+  const filteredTests = tests.filter(test =>
+    test.test_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    test.test_code.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const activeTests = filteredTests.filter(t => t.active);
+  const inactiveTests = filteredTests.filter(t => !t.active);
+
   if (tenantLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <div className="w-12 h-12 border-4 border-[#3B1E6F] border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading...</p>
         </div>
       </div>
     );
   }
 
-  // Show unauthorized if feature is not enabled
   if (!isTestCatalogEnabled) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="text-center bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg">
           <div className="text-red-500 text-6xl mb-4">🔒</div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h1>
-          <p className="text-gray-600">
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">Access Denied</h1>
+          <p className="text-gray-600 dark:text-gray-400">
             Test Catalog feature is not enabled for {tenant?.name}.
           </p>
           <button
             onClick={() => router.push("/dashboard")}
-            className="mt-4 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+            className="mt-4 px-4 py-2 bg-gradient-to-r from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] text-white rounded-lg hover:opacity-90 transition-opacity"
           >
             Go to Dashboard
           </button>
@@ -733,10 +822,10 @@ export default function LabTestsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading tests...</p>
+          <div className="w-12 h-12 border-4 border-[#3B1E6F] border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading tests...</p>
         </div>
       </div>
     );
@@ -744,63 +833,114 @@ export default function LabTestsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="bg-red-50 text-red-600 p-4 rounded-lg">
-            <p className="font-semibold">Error loading tests</p>
-            <p className="text-sm mt-1">{error}</p>
-            <button 
-              onClick={fetchTests}
-              className="mt-3 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"
-            >
-              Retry
-            </button>
-          </div>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-3" />
+          <p className="font-semibold text-gray-800 dark:text-white">Error loading tests</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{error}</p>
+          <button 
+            onClick={fetchTests}
+            className="mt-3 px-4 py-2 bg-gradient-to-r from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] text-white rounded-lg hover:opacity-90 transition-opacity"
+          >
+            Retry
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b border-gray-200 px-8 py-6 sticky top-0 z-10">
-        <div className="flex justify-between items-center">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Header */}
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 sticky top-0 z-10">
+        <div className="flex flex-wrap justify-between items-center gap-4">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900">Test Catalog</h1>
-            <p className="text-sm text-gray-500 mt-1">
+            <h1 className="text-2xl font-bold text-[#3B1E6F] dark:text-white">Test Catalog</h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
               Manage laboratory test configurations
             </p>
-            {tenant && (
-              <p className="text-xs text-gray-400 mt-1">
-                Tenant: {tenant.name}
-              </p>
-            )}
           </div>
           <button
             onClick={() => openModal()}
-            className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors shadow-sm"
+            className="px-4 py-2 bg-gradient-to-r from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] text-white rounded-lg hover:opacity-90 transition-opacity shadow-sm flex items-center gap-2"
           >
-            + Add New Test
+            <Plus className="w-4 h-4" />
+            Add New Test
           </button>
+        </div>
+
+        {/* Search Bar */}
+        <div className="mt-4 relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search tests by name or code..."
+            className="w-full sm:w-80 pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#7A329F] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
       </div>
 
-      <div className="p-8">
-        <div className="grid grid-cols-1 gap-4">
-          {tests.length === 0 ? (
-            <Card className="p-8 text-center">
-              <p className="text-gray-500">No tests found. Click Add New Test to create one.</p>
-            </Card>
-          ) : (
-            tests.map((test) => (
-              <Card
+      {/* Content */}
+      <div className="p-6">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-[#3B1E6F]/10 flex items-center justify-center">
+                <FolderOpen className="w-5 h-5 text-[#3B1E6F]" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Total Tests</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{tests.length}</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                <CheckCircle className="w-5 h-5 text-emerald-500" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Active Tests</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{activeTests.length}</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-gray-500/10 flex items-center justify-center">
+                <Clock className="w-5 h-5 text-gray-500" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Inactive Tests</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{inactiveTests.length}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Test List */}
+        {filteredTests.length === 0 ? (
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-12 text-center">
+            <Microscope className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+            <p className="text-gray-500 dark:text-gray-400">No tests found</p>
+            <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
+              {searchTerm ? "Try adjusting your search" : "Click Add New Test to create one"}
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-4">
+            {filteredTests.map((test) => (
+              <div
                 key={test.id}
-                className="p-6 hover:shadow-md transition-shadow"
+                className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 hover:shadow-md transition-shadow"
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-2">
-                      <h3 className="text-lg font-semibold text-gray-900">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                         {test.test_name}
                       </h3>
                       <span
@@ -808,75 +948,93 @@ export default function LabTestsPage() {
                           test.category
                         )}`}
                       >
-                        {test.category}
+                        {getCategoryIcon(test.category)} {test.category}
                       </span>
                       {!test.active && (
-                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
+                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-600">
                           Inactive
                         </span>
                       )}
+                      {test.active && (
+                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                          Active
+                        </span>
+                      )}
                     </div>
-                    <p className="text-sm text-gray-500">Code: {test.test_code}</p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      Created: {new Date(test.created_at).toLocaleDateString()}
-                    </p>
+                    <div className="flex flex-wrap gap-4 text-sm">
+                      <p className="text-gray-500 dark:text-gray-400">
+                        <Tag className="w-3.5 h-3.5 inline mr-1" />
+                        Code: {test.test_code}
+                      </p>
+                      <p className="text-gray-500 dark:text-gray-400">
+                        <Clock className="w-3.5 h-3.5 inline mr-1" />
+                        Created: {new Date(test.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-2xl font-bold text-gray-900">
+                  <div className="text-right min-w-[120px]">
+                    <p className="text-2xl font-bold text-[#3B1E6F] dark:text-[#7A329F]">
                       ₹{test.price}
                     </p>
-                    <div className="flex items-center space-x-3 mt-2">
+                    <div className="flex items-center justify-end gap-2 mt-2">
                       <button
                         onClick={() => toggleActive(test.id, test.active)}
-                        className={`px-3 py-1 rounded-lg text-sm transition-colors ${
+                        className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
                           test.active
-                            ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                            ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/30"
+                            : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"
                         }`}
                       >
                         {test.active ? "Active" : "Activate"}
                       </button>
                       <button
                         onClick={() => openModal(test)}
-                        className="px-3 py-1 rounded-lg text-sm text-primary hover:bg-primary/10 transition-colors"
+                        className="p-1.5 rounded-lg text-[#7A329F] hover:bg-[#7A329F]/10 transition-colors"
+                        title="Edit"
                       >
-                        Edit
+                        <Edit className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => deleteTest(test.id)}
-                        className="px-3 py-1 rounded-lg text-sm text-red-600 hover:bg-red-50 transition-colors"
+                        className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                        title="Delete"
                       >
-                        Delete
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
                 </div>
-              </Card>
-            ))
-          )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Footer with count */}
+        <div className="mt-4 text-sm text-gray-500 dark:text-gray-400">
+          Showing {filteredTests.length} of {tests.length} tests
         </div>
       </div>
 
       {/* Add/Edit Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold text-gray-900">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                   {editingTest ? "Edit Test" : "Add New Test"}
                 </h2>
                 <button
                   onClick={() => setShowModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                 >
-                  ✕
+                  <X className="w-5 h-5" />
                 </button>
               </div>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Test Name *
                   </label>
                   <input
@@ -885,13 +1043,13 @@ export default function LabTestsPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, test_name: e.target.value })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#7A329F] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     placeholder="e.g., Complete Blood Count"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Test Code *
                   </label>
                   <input
@@ -900,13 +1058,13 @@ export default function LabTestsPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, test_code: e.target.value })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#7A329F] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     placeholder="e.g., CBC001"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Category *
                   </label>
                   <select
@@ -920,7 +1078,7 @@ export default function LabTestsPage() {
                           | "Other",
                       })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#7A329F] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   >
                     <option value="Blood">Blood</option>
                     <option value="Urine">Urine</option>
@@ -929,20 +1087,23 @@ export default function LabTestsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Price (₹) *
                   </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.price}
-                    onChange={(e) =>
-                      setFormData({ ...formData, price: e.target.value })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    placeholder="e.g., 500"
-                  />
+                  <div className="relative">
+                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={formData.price}
+                      onChange={(e) =>
+                        setFormData({ ...formData, price: e.target.value })
+                      }
+                      className="w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#7A329F] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      placeholder="e.g., 500"
+                    />
+                  </div>
                 </div>
 
                 <div className="flex items-center">
@@ -952,24 +1113,24 @@ export default function LabTestsPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, active: e.target.checked })
                     }
-                    className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                    className="h-4 w-4 text-[#7A329F] focus:ring-[#7A329F] border-gray-300 rounded"
                   />
-                  <label className="ml-2 block text-sm text-gray-700">
+                  <label className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
                     Active
                   </label>
                 </div>
               </div>
 
-              <div className="flex justify-end space-x-3 mt-6">
+              <div className="flex justify-end gap-3 mt-6">
                 <button
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSave}
-                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+                  className="px-4 py-2 bg-gradient-to-r from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] text-white rounded-lg hover:opacity-90 transition-opacity"
                 >
                   {editingTest ? "Update" : "Add"} Test
                 </button>

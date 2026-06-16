@@ -1,4 +1,3 @@
-// app/admin/patientmanagement/page.tsx (updated)
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -11,6 +10,10 @@ import {
   Filter,
   Plus,
   Calendar as CalendarIcon,
+  Menu,
+  X,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { Users, Activity, HeartPulse, TrendingUp } from "lucide-react";
 import {
@@ -29,10 +32,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Menu, X } from "lucide-react";
 import { patientsApi } from "@/lib/api/registration";
 import { toast } from "sonner";
 import PatientImport from "@/components/admin/PatientImport";
+
 // ==================== Types & Interfaces ====================
 interface Patient {
   id: string;
@@ -46,17 +49,16 @@ interface Patient {
   conditionColor: string;
   department: string;
   contact: string;
-  lastVisit: string; // will be updated from appointments
-  nextAppointment: string; // will be updated from appointments
+  lastVisit: string;
+  nextAppointment: string;
   status: "active" | "inactive" | "critical";
   statusColor: string;
 }
 
-// Type for appointment from the API
 interface Appointment {
   id: number;
-  appointment_date: string; // e.g., "2026-03-10T10:00:00Z"
-  status: string; // e.g., "completed", "scheduled", "cancelled"
+  appointment_date: string;
+  status: string;
 }
 
 interface ColumnFilterProps {
@@ -88,7 +90,7 @@ function ColumnFilter({
       <PopoverTrigger asChild>
         <button
           className={`ml-1 p-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors ${
-            currentValue ? "text-blue-600 dark:text-blue-400" : "text-slate-400"
+            currentValue ? "text-purple-600 dark:text-purple-400" : "text-slate-400"
           }`}
         >
           <Filter className="h-3.5 w-3.5" />
@@ -163,7 +165,7 @@ function DateRangeFilter({
         <button
           className={`ml-1 p-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors ${
             currentRange?.from || currentRange?.to
-              ? "text-blue-600 dark:text-blue-400"
+              ? "text-purple-600 dark:text-purple-400"
               : "text-slate-400"
           }`}
         >
@@ -204,7 +206,11 @@ function DateRangeFilter({
             >
               Clear
             </Button>
-            <Button size="sm" onClick={handleApply} className="flex-1">
+            <Button 
+              size="sm" 
+              onClick={handleApply} 
+              className="flex-1 bg-gradient-to-r from-[#3B1E6F] to-[#7A329F] hover:opacity-90 text-white"
+            >
               Apply
             </Button>
           </div>
@@ -230,10 +236,14 @@ const PatientManagementPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  // Stats data
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
+
   const [statsData, setStatsData] = useState([
-    { title: "Total Patients", value: "0", color: "blue", icon: <Users /> },
-    { title: "Active Cases", value: "0", color: "green", icon: <Activity /> },
+    { title: "Total Patients", value: "0", color: "purple", icon: <Users /> },
+    { title: "Active Cases", value: "0", color: "emerald", icon: <Activity /> },
     { title: "ICU Patients", value: "0", color: "red", icon: <HeartPulse /> },
     {
       title: "Monthly Admissions",
@@ -243,7 +253,6 @@ const PatientManagementPage: React.FC = () => {
     },
   ]);
 
-  // Filter data (status filters)
   const filtersData = [
     { label: "All Patients", isActive: true },
     { label: "Active", isActive: false },
@@ -251,11 +260,10 @@ const PatientManagementPage: React.FC = () => {
     { label: "Inactive", isActive: false },
   ];
 
-  // Helper to get status color
   const getStatusColor = (status: string): string => {
     switch (status) {
       case "active":
-        return "text-green-700 dark:text-green-400";
+        return "text-emerald-700 dark:text-emerald-400";
       case "critical":
         return "text-rose-700 dark:text-rose-400";
       default:
@@ -263,26 +271,21 @@ const PatientManagementPage: React.FC = () => {
     }
   };
 
-  // Helper to format date from ISO string to local date string
   const formatDate = (dateString: string): string => {
     try {
       const date = new Date(dateString);
-      return date.toLocaleDateString(); // you can customize format as needed
+      return date.toLocaleDateString();
     } catch {
       return "N/A";
     }
   };
 
-  // Fetch patients and then their appointments
-
   const loadPatients = async () => {
     try {
       setLoading(true);
-      // 1. Fetch patients list
       const response = await patientsApi.adminGetAllPatients();
       console.log("API response:", response);
 
-      // Extract patient array
       let patientsArray: any[] = [];
       if (Array.isArray(response.data)) {
         patientsArray = response.data;
@@ -297,7 +300,6 @@ const PatientManagementPage: React.FC = () => {
         return;
       }
 
-      // Map to Patient type with placeholder dates
       const mappedPatients: Patient[] = patientsArray.map((item: any) => {
         const age = item.dob
           ? new Date().getFullYear() - new Date(item.dob).getFullYear()
@@ -312,9 +314,7 @@ const PatientManagementPage: React.FC = () => {
           | "active"
           | "inactive"
           | "critical";
-        const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(item.full_name_en || "Patient")}&background=137fec&color=fff&size=128`;
-        const conditionColor =
-          "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300";
+        const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(item.full_name_en || "Patient")}&background=6C2BD9&color=fff&size=128`;
 
         return {
           id: item.patient_id?.toString() || item.id?.toString() || "",
@@ -333,21 +333,22 @@ const PatientManagementPage: React.FC = () => {
             : "Other",
           bloodGroup: item.blood_group || "Unknown",
           condition,
-          conditionColor,
+          conditionColor:
+            "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
           department,
           contact: item.phone || "",
-          lastVisit: "N/A", // placeholder
-          nextAppointment: "N/A", // placeholder
+          lastVisit: "N/A",
+          nextAppointment: "N/A",
           status,
           statusColor: getStatusColor(status),
         };
       });
 
       setPatients(mappedPatients);
+      setTotalItems(mappedPatients.length);
       updateStats(mappedPatients);
       setError(null);
 
-      // 2. For each patient, fetch appointments and update lastVisit & nextAppointment
       const appointmentPromises = mappedPatients.map(async (patient) => {
         try {
           const res = await fetch(`/api/appointments/patient/${patient.id}`);
@@ -362,13 +363,11 @@ const PatientManagementPage: React.FC = () => {
             };
           }
           const json = await res.json();
-          // Handle response format { success: true, data: [...] }
           const appointments: any[] =
             json.data || (Array.isArray(json) ? json : []);
 
           const now = new Date();
 
-          // Past appointments: date before now, exclude cancelled
           const pastAppointments = appointments
             .filter((apt) => {
               const aptDate = new Date(apt.date);
@@ -376,9 +375,8 @@ const PatientManagementPage: React.FC = () => {
             })
             .sort(
               (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
-            ); // most recent first
+            );
 
-          // Future appointments: date after or equal now, exclude cancelled
           const futureAppointments = appointments
             .filter((apt) => {
               const aptDate = new Date(apt.date);
@@ -386,7 +384,7 @@ const PatientManagementPage: React.FC = () => {
             })
             .sort(
               (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
-            ); // soonest first
+            );
 
           const lastVisit =
             pastAppointments.length > 0
@@ -412,7 +410,6 @@ const PatientManagementPage: React.FC = () => {
       });
 
       const appointmentResults = await Promise.allSettled(appointmentPromises);
-      // Update patients with appointment data
       const updatedPatients = mappedPatients.map((patient) => {
         const result = appointmentResults.find(
           (r) => r.status === "fulfilled" && r.value.patientId === patient.id,
@@ -424,10 +421,11 @@ const PatientManagementPage: React.FC = () => {
             nextAppointment: result.value.nextAppointment,
           };
         }
-        return patient; // keep original placeholders
+        return patient;
       });
 
       setPatients(updatedPatients);
+      setCurrentPage(1);
     } catch (err) {
       console.error("Error fetching patients:", err);
       setError("An error occurred while fetching patients");
@@ -441,10 +439,9 @@ const PatientManagementPage: React.FC = () => {
   }, []);
 
   const handleImportSuccess = () => {
-    loadPatients(); // refresh the list
+    loadPatients();
   };
 
-  // Update stats based on patients
   const updateStats = (patients: Patient[]) => {
     const total = patients.length;
     const active = patients.filter((p) => p.status === "active").length;
@@ -453,13 +450,13 @@ const PatientManagementPage: React.FC = () => {
       {
         title: "Total Patients",
         value: total.toString(),
-        color: "blue",
+        color: "purple",
         icon: <Users />,
       },
       {
         title: "Active Cases",
         value: active.toString(),
-        color: "green",
+        color: "emerald",
         icon: <Activity />,
       },
       {
@@ -478,115 +475,105 @@ const PatientManagementPage: React.FC = () => {
   };
 
   const handleDelete = async (patientId: string) => {
-  console.log("🔥 Delete clicked:", patientId);
+    console.log("🔥 Delete clicked:", patientId);
 
-  if (!window.confirm("Are you sure you want to delete this patient?"))
-    return;
-
-  try {
-    console.log("🚀 Calling API...");
-
-    const response = await patientsApi.adminDeletePatient(patientId);
-
-    console.log("✅ RESPONSE:", response);
-
-    if (!response) {
-      console.log("❌ RESPONSE UNDEFINED");
-      toast.error("No response from server");
+    if (!window.confirm("Are you sure you want to delete this patient?"))
       return;
-    }
 
-    if (response.success) {
-      console.log("🎉 SUCCESS BLOCK");
+    try {
+      console.log("🚀 Calling API...");
 
-      setPatients((prev) => {
-        const updated = prev.filter((p) => p.id !== patientId);
-        updateStats(updated);
-        return updated;
-      });
+      const response = await patientsApi.adminDeletePatient(patientId);
 
-      toast.success(response.message);
-    } else {
-      console.log("⚠️ FAILED BLOCK");
-      
-      // 🎯 Handle foreign key constraint error (code 23503)
-      if (response.code === '23503' || response.detail?.includes('still referenced')) {
-        // Extract table name from detail
-        const tableMatch = response.detail?.match(/table "([^"]+)"/);
-        const tableName = tableMatch ? tableMatch[1] : '';
-        
-        // User-friendly messages based on table
-        const getFriendlyMessage = (table: string) => {
-          const messages: Record<string, string> = {
-            'emergency_assessments': 'This patient has emergency assessment records. Please delete their emergency assessments first.',
-            'medical_history': 'This patient has medical history records. Please delete their medical history first.',
-            'insurance_details': 'This patient has insurance details. Please delete their insurance records first.',
-            'registrations': 'This patient has registration records. Please delete their registrations first.',
-            'admissions': 'This patient has admission records. Please discharge them first.',
-            'prescriptions': 'This patient has active prescriptions. Please cancel them first.',
-            'lab_tests': 'This patient has pending lab tests. Please complete or cancel them first.',
-            'bills': 'This patient has unpaid bills. Please settle them first.',
-            'appointments': 'This patient has upcoming appointments. Please cancel them first.',
-          };
-          return messages[table] || `This patient has existing records in "${table}". Please remove those records first.`;
-        };
-        
-        const friendlyMessage = getFriendlyMessage(tableName);
-        toast.error(friendlyMessage);
-        
-        // Log technical details for developers
-        console.error('Delete failed - Foreign key constraint:', {
-          code: response.code,
-          detail: response.detail,
-          constraint: response.constraint
+      console.log("✅ RESPONSE:", response);
+
+      if (!response) {
+        console.log("❌ RESPONSE UNDEFINED");
+        toast.error("No response from server");
+        return;
+      }
+
+      if (response.success) {
+        console.log("🎉 SUCCESS BLOCK");
+
+        setPatients((prev) => {
+          const updated = prev.filter((p) => p.id !== patientId);
+          setTotalItems(updated.length);
+          updateStats(updated);
+          // If current page has no items after deletion, go to previous page
+          if (currentPage > 1 && updated.length <= (currentPage - 1) * itemsPerPage) {
+            setCurrentPage(currentPage - 1);
+          }
+          return updated;
         });
-      } 
-      // Handle patient not found
-      else if (response.message?.includes('not found') || response.code === '404') {
-        toast.error('Patient not found. It may have been already deleted.');
-        // Refresh the list to remove missing patient
-       loadPatients(); 
-      }
-      // Handle other errors
-      else {
-        toast.error(response.message || "Failed to delete patient");
-      }
-    }
-  } catch (error: any) {
-    console.log("❌ CATCH BLOCK TRIGGERED");
-    console.error("❌ ERROR:", error);
 
-    // Handle axios error response
-    if (error?.response?.data) {
-      const errorData = error.response.data;
-      
-      // Check for foreign key constraint in error response
-      if (errorData.code === '23503' || errorData.detail?.includes('still referenced')) {
-        const tableMatch = errorData.detail?.match(/table "([^"]+)"/);
-        const tableName = tableMatch ? tableMatch[1] : '';
-        
-        const messages: Record<string, string> = {
-          'emergency_assessments': 'Cannot delete: Patient has emergency assessment records.',
-          'medical_history': 'Cannot delete: Patient has medical history records.',
-          'insurance_details': 'Cannot delete: Patient has insurance records.',
-          'registrations': 'Cannot delete: Patient has registration records.',
-        };
-        
-        toast.error(messages[tableName] || `Cannot delete: Patient has records in "${tableName}".`);
+        toast.success(response.message);
       } else {
-        toast.error(errorData.message || "An error occurred while deleting");
+        console.log("⚠️ FAILED BLOCK");
+
+        if (response.code === '23503' || response.detail?.includes('still referenced')) {
+          const tableMatch = response.detail?.match(/table "([^"]+)"/);
+          const tableName = tableMatch ? tableMatch[1] : '';
+
+          const getFriendlyMessage = (table: string) => {
+            const messages: Record<string, string> = {
+              'emergency_assessments': 'This patient has emergency assessment records. Please delete their emergency assessments first.',
+              'medical_history': 'This patient has medical history records. Please delete their medical history first.',
+              'insurance_details': 'This patient has insurance details. Please delete their insurance records first.',
+              'registrations': 'This patient has registration records. Please delete their registrations first.',
+              'admissions': 'This patient has admission records. Please discharge them first.',
+              'prescriptions': 'This patient has active prescriptions. Please cancel them first.',
+              'lab_tests': 'This patient has pending lab tests. Please complete or cancel them first.',
+              'bills': 'This patient has unpaid bills. Please settle them first.',
+              'appointments': 'This patient has upcoming appointments. Please cancel them first.',
+            };
+            return messages[table] || `This patient has existing records in "${table}". Please remove those records first.`;
+          };
+
+          const friendlyMessage = getFriendlyMessage(tableName);
+          toast.error(friendlyMessage);
+
+          console.error('Delete failed - Foreign key constraint:', {
+            code: response.code,
+            detail: response.detail,
+            constraint: response.constraint
+          });
+        } else if (response.message?.includes('not found') || response.code === '404') {
+          toast.error('Patient not found. It may have been already deleted.');
+          loadPatients();
+        } else {
+          toast.error(response.message || "Failed to delete patient");
+        }
       }
-    } 
-    // Handle network errors
-    else if (error?.message === 'Network Error') {
-      toast.error('Network error. Please check your connection.');
+    } catch (error: any) {
+      console.log("❌ CATCH BLOCK TRIGGERED");
+      console.error("❌ ERROR:", error);
+
+      if (error?.response?.data) {
+        const errorData = error.response.data;
+
+        if (errorData.code === '23503' || errorData.detail?.includes('still referenced')) {
+          const tableMatch = errorData.detail?.match(/table "([^"]+)"/);
+          const tableName = tableMatch ? tableMatch[1] : '';
+
+          const messages: Record<string, string> = {
+            'emergency_assessments': 'Cannot delete: Patient has emergency assessment records.',
+            'medical_history': 'Cannot delete: Patient has medical history records.',
+            'insurance_details': 'Cannot delete: Patient has insurance records.',
+            'registrations': 'Cannot delete: Patient has registration records.',
+          };
+
+          toast.error(messages[tableName] || `Cannot delete: Patient has records in "${tableName}".`);
+        } else {
+          toast.error(errorData.message || "An error occurred while deleting");
+        }
+      } else if (error?.message === 'Network Error') {
+        toast.error('Network error. Please check your connection.');
+      } else {
+        toast.error("An unexpected error occurred. Please try again.");
+      }
     }
-    // Generic error fallback
-    else {
-      toast.error("An unexpected error occurred. Please try again.");
-    }
-  }
-};
+  };
 
   // Filter patients
   const filteredPatients = patients.filter((patient) => {
@@ -611,7 +598,6 @@ const PatientManagementPage: React.FC = () => {
         .includes(filter.value.toLowerCase());
     });
 
-    // Apply date range filters if present
     const matchesDateFilters = Object.entries(dateFilters).every(
       ([col, range]) => {
         if (!range.from && !range.to) return true;
@@ -634,15 +620,73 @@ const PatientManagementPage: React.FC = () => {
     );
   });
 
-  // Status badge component
+  // Pagination calculations
+  const totalFilteredItems = filteredPatients.length;
+  const totalPages = Math.ceil(totalFilteredItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, totalFilteredItems);
+  const currentItems = filteredPatients.slice(startIndex, endIndex);
+
+  const handlePageChange = (page: number) => {
+    if (page < 1 || page > totalPages) return;
+    setCurrentPage(page);
+    // Scroll to top of table
+    const tableElement = document.querySelector('.table-container');
+    if (tableElement) {
+      tableElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const handleItemsPerPageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newItemsPerPage = parseInt(e.target.value);
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1);
+  };
+
+  // Generate page numbers for pagination
+  const getPageNumbers = () => {
+    const pageNumbers = [];
+    const maxVisiblePages = 5;
+    
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pageNumbers.push(i);
+      }
+    } else {
+      const halfVisible = Math.floor(maxVisiblePages / 2);
+      let startPage = Math.max(1, currentPage - halfVisible);
+      let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+      
+      if (endPage - startPage + 1 < maxVisiblePages) {
+        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+      }
+      
+      for (let i = startPage; i <= endPage; i++) {
+        pageNumbers.push(i);
+      }
+      
+      if (startPage > 1) {
+        pageNumbers.unshift('...');
+        pageNumbers.unshift(1);
+      }
+      
+      if (endPage < totalPages) {
+        pageNumbers.push('...');
+        pageNumbers.push(totalPages);
+      }
+    }
+    
+    return pageNumbers;
+  };
+
   const StatusBadge = ({ status }: { status: string }) => {
     const getStatusConfig = (status: string) => {
       switch (status) {
         case "active":
           return {
-            bg: "bg-green-100 dark:bg-green-900/20",
-            text: "text-green-800 dark:text-green-300",
-            dot: "bg-green-500",
+            bg: "bg-emerald-100 dark:bg-emerald-900/20",
+            text: "text-emerald-800 dark:text-emerald-300",
+            dot: "bg-emerald-500",
           };
         case "critical":
           return {
@@ -677,11 +721,26 @@ const PatientManagementPage: React.FC = () => {
     );
   };
 
+  const getStatColor = (color: string) => {
+    switch (color) {
+      case "purple":
+        return "bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400";
+      case "emerald":
+        return "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400";
+      case "red":
+        return "bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400";
+      case "amber":
+        return "bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400";
+      default:
+        return "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400";
+    }
+  };
+
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900 font-sans text-gray-900 dark:text-gray-100">
       {/* Mobile Menu Button */}
       <button
-        className="lg:hidden fixed bottom-20 right-6 z-50 p-3 bg-white-600 hover:bg-green-700 text-blue rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center"
+        className="lg:hidden fixed bottom-20 right-6 z-50 p-3 bg-gradient-to-r from-[#3B1E6F] to-[#7A329F] hover:from-[#7A329F] hover:to-[#0D5CB3] text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center"
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
         aria-label="Toggle menu"
       >
@@ -722,7 +781,7 @@ const PatientManagementPage: React.FC = () => {
                     <PatientImport onSuccess={handleImportSuccess} />
                     <button
                       onClick={() => router.push("/admin/addnewpatient")}
-                      className="flex items-center justify-center gap-1.5 rounded-lg h-9 md:h-10 px-3 md:px-4 bg-[#137fec] text-white text-sm font-semibold shadow-lg shadow-[#137fec]/20 hover:bg-[#137fec]/90 transition-all w-full md:w-auto"
+                      className="flex items-center justify-center gap-1.5 rounded-lg h-9 md:h-10 px-3 md:px-4 bg-gradient-to-r from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] text-white text-sm font-semibold shadow-lg shadow-[#3B1E6F]/20 hover:opacity-90 transition-all w-full md:w-auto"
                     >
                       <Plus className="w-4 h-4" />
                       <span>Add New Patient</span>
@@ -746,17 +805,7 @@ const PatientManagementPage: React.FC = () => {
                             {loading ? "..." : stat.value}
                           </p>
                         </div>
-                        <div
-                          className={`p-3 rounded-lg ${
-                            stat.color === "blue"
-                              ? "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
-                              : stat.color === "green"
-                                ? "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400"
-                                : stat.color === "red"
-                                  ? "bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400"
-                                  : "bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400"
-                          }`}
-                        >
+                        <div className={`p-3 rounded-lg ${getStatColor(stat.color)}`}>
                           {React.cloneElement(stat.icon, {
                             className: "w-6 h-6",
                           })}
@@ -782,7 +831,7 @@ const PatientManagementPage: React.FC = () => {
                           setColumnFilters([]);
                           setDateFilters({});
                         }}
-                        className="text-xs text-blue-600 hover:underline"
+                        className="text-xs text-purple-600 dark:text-purple-400 hover:underline"
                       >
                         Clear all filters
                       </button>
@@ -798,14 +847,14 @@ const PatientManagementPage: React.FC = () => {
                           group relative flex items-center justify-center gap-x-2 h-10 rounded-full px-5 text-sm font-medium transition-all duration-300 backdrop-blur-sm
                           ${
                             selectedFilter === filter.label
-                              ? "bg-gradient-to-r from-[#137fec] to-blue-500 text-white shadow-lg shadow-blue-500/25"
+                              ? "bg-gradient-to-r from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] text-white shadow-lg shadow-[#3B1E6F]/25"
                               : "bg-white/80 dark:bg-slate-800/50 border border-slate-300/50 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 hover:shadow-md hover:border-slate-400/30 dark:hover:border-slate-600"
                           }
                         `}
                         onClick={() => setSelectedFilter(filter.label)}
                       >
                         {selectedFilter === filter.label && (
-                          <div className="absolute inset-0 rounded-full border-2 border-blue-300/30 animate-pulse"></div>
+                          <div className="absolute inset-0 rounded-full border-2 border-[#7A329F]/30 animate-pulse"></div>
                         )}
                         <span>{filter.label}</span>
                         {selectedFilter !== filter.label && (
@@ -829,14 +878,14 @@ const PatientManagementPage: React.FC = () => {
                     </div>
                   )}
 
-                  {/* Patients Table with Column Filters */}
+                  {/* Patients Table */}
                   {!loading && !error && (
-                    <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+                    <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm table-container">
                       <div className="overflow-x-auto">
                         <div className="min-w-[1000px]">
                           <table className="w-full text-left border-collapse">
                             <thead>
-                              <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-300 dark:border-slate-700">
+                              <tr className="bg-gradient-to-r from-purple-50 to-slate-50 dark:from-purple-900/20 dark:to-slate-800/50 border-b border-slate-300 dark:border-slate-700">
                                 <th className="px-4 py-3 text-slate-900 dark:text-white text-sm font-bold uppercase tracking-wider whitespace-nowrap border-r border-slate-300 dark:border-slate-700">
                                   <div className="flex items-center">
                                     Patient
@@ -932,95 +981,147 @@ const PatientManagementPage: React.FC = () => {
                               </tr>
                             </thead>
                             <tbody>
-                              {filteredPatients.map((patient) => (
-                                <tr
-                                  key={patient.id}
-                                  className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors cursor-pointer"
-                                  onClick={() =>
-                                    router.push(
-                                      `/admin/patientmanagement/${patient.id}`,
-                                    )
-                                  }
-                                >
-                                  <td className="px-4 py-3 whitespace-nowrap border-r border-slate-200 dark:border-slate-700">
-                                    <div className="flex items-center gap-3">
-                                      <div
-                                        className="h-10 w-10 rounded-full bg-slate-200 bg-cover bg-center ring-2 ring-slate-100 dark:ring-slate-800 flex-shrink-0"
-                                        style={{
-                                          backgroundImage: `url(${patient.avatarUrl})`,
-                                        }}
-                                      ></div>
-                                      <div className="flex flex-col">
-                                        <span className="text-slate-900 dark:text-white font-semibold text-base">
-                                          {patient.name}
-                                        </span>
-                                        <span className="text-slate-500 text-sm">
-                                          {patient.age}y • {patient.gender}
-                                        </span>
+                              {currentItems.length > 0 ? (
+                                currentItems.map((patient) => (
+                                  <tr
+                                    key={patient.id}
+                                    className="border-b border-slate-200 dark:border-slate-700 hover:bg-purple-50 dark:hover:bg-slate-800/30 transition-colors cursor-pointer"
+                                    onClick={() =>
+                                      router.push(
+                                        `/admin/patientmanagement/${patient.id}`,
+                                      )
+                                    }
+                                  >
+                                    <td className="px-4 py-3 whitespace-nowrap border-r border-slate-200 dark:border-slate-700">
+                                      <div className="flex items-center gap-3">
+                                        <div
+                                          className="h-10 w-10 rounded-full bg-gradient-to-br from-[#3B1E6F] to-[#7A329F] bg-cover bg-center ring-2 ring-purple-100 dark:ring-purple-800 flex-shrink-0 flex items-center justify-center text-white font-semibold text-sm"
+                                          style={{
+                                            backgroundImage: patient.avatarUrl.includes('ui-avatars') 
+                                              ? `url(${patient.avatarUrl})` 
+                                              : "none",
+                                          }}
+                                        >
+                                          {!patient.avatarUrl.includes('ui-avatars') && patient.name.charAt(0)}
+                                        </div>
+                                        <div className="flex flex-col">
+                                          <span className="text-slate-900 dark:text-white font-semibold text-base">
+                                            {patient.name}
+                                          </span>
+                                          <span className="text-slate-500 text-sm">
+                                            {patient.age}y • {patient.gender}
+                                          </span>
+                                        </div>
                                       </div>
-                                    </div>
-                                  </td>
+                                    </td>
 
-                                  <td className="px-4 py-3 text-slate-600 dark:text-slate-400 text-sm whitespace-nowrap border-r border-slate-200 dark:border-slate-700">
-                                    {patient.lastVisit}
-                                  </td>
-                                  <td className="px-4 py-3 text-slate-600 dark:text-slate-400 text-sm whitespace-nowrap border-r border-slate-200 dark:border-slate-700">
-                                    {patient.nextAppointment}
-                                  </td>
-                                  <td className="px-4 py-3 whitespace-nowrap border-r border-slate-200 dark:border-slate-700">
-                                    <StatusBadge status={patient.status} />
-                                  </td>
-                                  <td className="px-4 py-3 text-right whitespace-nowrap">
-                                    <div className="flex items-center justify-end gap-2">
-                                      <button
-                                        className="p-1.5 text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          console.log(
-                                            "Edit clicked for patient:",
-                                            patient,
-                                          );
-                                          router.push(
-                                            `/admin/addnewpatient?patientId=${patient.id}`,
-                                          );
-                                        }}
-                                      >
-                                        <Edit className="w-4 h-4" />
-                                      </button>
-                                      <button
-                                        className="p-1.5 text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleDelete(patient.id);
-                                        }}
-                                      >
-                                        <Trash2 className="w-4 h-4" />
-                                      </button>
-                                    </div>
+                                    <td className="px-4 py-3 text-slate-600 dark:text-slate-400 text-sm whitespace-nowrap border-r border-slate-200 dark:border-slate-700">
+                                      {patient.lastVisit}
+                                    </td>
+                                    <td className="px-4 py-3 text-slate-600 dark:text-slate-400 text-sm whitespace-nowrap border-r border-slate-200 dark:border-slate-700">
+                                      {patient.nextAppointment}
+                                    </td>
+                                    <td className="px-4 py-3 whitespace-nowrap border-r border-slate-200 dark:border-slate-700">
+                                      <StatusBadge status={patient.status} />
+                                    </td>
+                                    <td className="px-4 py-3 text-right whitespace-nowrap">
+                                      <div className="flex items-center justify-end gap-2">
+                                        <button
+                                          className="p-1.5 text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            router.push(
+                                              `/admin/addnewpatient?patientId=${patient.id}`,
+                                            );
+                                          }}
+                                        >
+                                          <Edit className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                          className="p-1.5 text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDelete(patient.id);
+                                          }}
+                                        >
+                                          <Trash2 className="w-4 h-4" />
+                                        </button>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ))
+                              ) : (
+                                <tr>
+                                  <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
+                                    No patients found matching your filters
                                   </td>
                                 </tr>
-                              ))}
+                              )}
                             </tbody>
                           </table>
                         </div>
                       </div>
+                      
+                      {/* Pagination Controls */}
                       <div className="px-4 py-3 border-t border-slate-300 dark:border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-3">
-                        <span className="text-sm text-slate-500 font-medium">
-                          Showing 1 to {filteredPatients.length} of{" "}
-                          {patients.length} patients
-                        </span>
-                        <div className="flex gap-2">
-                          <button className="px-3 py-1.5 rounded border border-slate-300 dark:border-slate-700 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                            Previous
+                        <div className="flex items-center gap-3 text-sm text-slate-500">
+                          <span>
+                            Showing {startIndex + 1} to {endIndex} of {totalFilteredItems} patients
+                          </span>
+                          <select
+                            value={itemsPerPage}
+                            onChange={handleItemsPerPageChange}
+                            className="px-2 py-1 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-800 text-sm focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
+                          >
+                            <option value={5}>5</option>
+                            <option value={10}>10</option>
+                            <option value={25}>25</option>
+                            <option value={50}>50</option>
+                            <option value={100}>100</option>
+                          </select>
+                          <span>per page</span>
+                        </div>
+                        
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => handlePageChange(currentPage - 1)}
+                            disabled={currentPage === 1}
+                            className={`px-3 py-1.5 rounded border text-sm font-medium transition-colors ${
+                              currentPage === 1
+                                ? "border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-600 cursor-not-allowed"
+                                : "border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+                            }`}
+                          >
+                            <ChevronLeft className="w-4 h-4" />
                           </button>
-                          <button className="px-3 py-1.5 rounded bg-[#137fec] text-white text-sm font-semibold">
-                            1
-                          </button>
-                          <button className="px-3 py-1.5 rounded border border-slate-300 dark:border-slate-700 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                            2
-                          </button>
-                          <button className="px-3 py-1.5 rounded border border-slate-300 dark:border-slate-700 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                            Next
+                          
+                          {getPageNumbers().map((page, index) => (
+                            <button
+                              key={index}
+                              onClick={() => typeof page === 'number' ? handlePageChange(page) : null}
+                              className={`px-3 py-1.5 rounded border text-sm font-medium transition-colors ${
+                                page === currentPage
+                                  ? "bg-gradient-to-r from-[#3B1E6F] to-[#7A329F] text-white border-transparent"
+                                  : typeof page === 'number'
+                                  ? "border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+                                  : "border-transparent text-slate-500 dark:text-slate-400 cursor-default"
+                              }`}
+                              disabled={typeof page !== 'number'}
+                            >
+                              {page}
+                            </button>
+                          ))}
+                          
+                          <button
+                            onClick={() => handlePageChange(currentPage + 1)}
+                            disabled={currentPage === totalPages || totalPages === 0}
+                            className={`px-3 py-1.5 rounded border text-sm font-medium transition-colors ${
+                              currentPage === totalPages || totalPages === 0
+                                ? "border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-600 cursor-not-allowed"
+                                : "border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+                            }`}
+                          >
+                            <ChevronRight className="w-4 h-4" />
                           </button>
                         </div>
                       </div>

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { 
   Users, UserCheck, UserX, FileCheck, 
-  Eye, Edit, Trash2, Plus, Loader2, Save, X, Building2
+  Eye, Edit, Trash2, Plus, Loader2, Save, X, Building2, Menu
 } from "lucide-react";
 
 import { staffApi } from "@/lib/api/staff";
@@ -36,7 +36,7 @@ const StatusBadge = ({ status }: { status: string }) => {
   const getStatusConfig = (status: string) => {
     switch (status) {
       case "active":
-        return { bg: "bg-green-100 dark:bg-green-900/20", text: "text-green-800 dark:text-green-300", dot: "bg-green-500" };
+        return { bg: "bg-emerald-100 dark:bg-emerald-900/20", text: "text-emerald-800 dark:text-emerald-300", dot: "bg-emerald-500" };
       case "on-leave":
         return { bg: "bg-amber-100 dark:bg-amber-900/20", text: "text-amber-800 dark:text-amber-300", dot: "bg-amber-500" };
       default:
@@ -185,8 +185,8 @@ const StaffManagementPage: React.FC = () => {
   const inactiveStaff = staff.filter(s => s.status === "inactive").length;
 
   const statsData = [
-    { title: "Total Staff", value: totalStaff.toString(), color: "blue", icon: Users },
-    { title: "Active Now", value: activeStaff.toString(), color: "green", icon: UserCheck },
+    { title: "Total Staff", value: totalStaff.toString(), color: "purple", icon: Users },
+    { title: "Active Now", value: activeStaff.toString(), color: "emerald", icon: UserCheck },
     { title: "On Leave", value: onLeaveStaff.toString(), color: "amber", icon: UserX },
     { title: "Inactive", value: inactiveStaff.toString(), color: "red", icon: FileCheck },
   ];
@@ -251,13 +251,28 @@ const StaffManagementPage: React.FC = () => {
     })),
   ];
 
+  const getStatColor = (color: string) => {
+    switch (color) {
+      case "purple":
+        return "bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400";
+      case "emerald":
+        return "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400";
+      case "amber":
+        return "bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400";
+      case "red":
+        return "bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400";
+      default:
+        return "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400";
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
         <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <Loader2 className="h-8 w-8 animate-spin text-[#137fec] mx-auto" />
+            <Loader2 className="h-8 w-8 animate-spin text-[#3B1E6F] mx-auto" />
             <p className="mt-2 text-slate-500">Loading staff data...</p>
           </div>
         </div>
@@ -272,7 +287,7 @@ const StaffManagementPage: React.FC = () => {
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="text-red-500 mb-4">⚠️ {error}</div>
-            <Button onClick={fetchStaff} className="bg-[#137fec] hover:bg-[#137fec]/90">
+            <Button onClick={fetchStaff} className="bg-gradient-to-r from-[#3B1E6F] to-[#7A329F] hover:opacity-90">
               Retry
             </Button>
           </div>
@@ -285,10 +300,10 @@ const StaffManagementPage: React.FC = () => {
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900 font-sans text-gray-900 dark:text-gray-100">
       {/* Mobile Menu Button */}
       <button
-        className="lg:hidden fixed bottom-20 right-6 z-50 p-3 bg-[#137fec] hover:bg-[#137fec]/90 text-white rounded-full shadow-lg"
+        className="lg:hidden fixed bottom-20 right-6 z-50 p-3 bg-gradient-to-r from-[#3B1E6F] to-[#7A329F] hover:from-[#7A329F] hover:to-[#0D5CB3] text-white rounded-full shadow-lg transition-all duration-200"
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
       >
-        {isSidebarOpen ? <span>✕</span> : <span>☰</span>}
+        {isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
       </button>
 
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
@@ -308,7 +323,7 @@ const StaffManagementPage: React.FC = () => {
             {/* Page Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div>
-                <h1 className="text-2xl font-bold tracking-tight">Staff Management</h1>
+                <h1 className="text-2xl font-bold tracking-tight text-[#3B1E6F] dark:text-white">Staff Management</h1>
                 <p className="text-slate-500 dark:text-slate-400 mt-1">
                   Manage hospital staff members and their information
                 </p>
@@ -316,7 +331,7 @@ const StaffManagementPage: React.FC = () => {
 
               <Button 
                 onClick={() => router.push("/admin/addnewstaff")}
-                className="bg-[#137fec] hover:bg-[#137fec]/90 flex items-center gap-2"
+                className="bg-gradient-to-r from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] hover:opacity-90 flex items-center gap-2 text-white"
               >
                 <Plus className="w-4 h-4" />
                 Add New Staff
@@ -334,12 +349,7 @@ const StaffManagementPage: React.FC = () => {
                         <p className="text-slate-500 dark:text-slate-400 text-sm">{stat.title}</p>
                         <p className="text-3xl font-bold mt-2 text-gray-900 dark:text-white">{stat.value}</p>
                       </div>
-                      <div className={`p-3 rounded-lg ${
-                        stat.color === "blue" ? "bg-blue-50 dark:bg-blue-900/30 text-blue-600" :
-                        stat.color === "green" ? "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600" :
-                        stat.color === "amber" ? "bg-amber-50 dark:bg-amber-900/30 text-amber-600" :
-                        "bg-rose-50 dark:bg-rose-900/30 text-rose-600"
-                      }`}>
+                      <div className={`p-3 rounded-lg ${getStatColor(stat.color)}`}>
                         <Icon className="w-6 h-6" />
                       </div>
                     </div>
@@ -359,7 +369,7 @@ const StaffManagementPage: React.FC = () => {
                 placeholder="Search by name, email, role, department or employee ID..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 focus:ring-2 focus:ring-[#137fec]"
+                className="w-full px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
               />
 
               <div className="flex flex-wrap gap-2">
@@ -369,7 +379,7 @@ const StaffManagementPage: React.FC = () => {
                     onClick={() => setSelectedRole(filter.label)}
                     className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                       filter.isActive
-                        ? "bg-[#137fec] text-white shadow-md"
+                        ? "bg-gradient-to-r from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] text-white shadow-md"
                         : "bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:border-slate-400"
                     }`}
                   >
@@ -384,7 +394,7 @@ const StaffManagementPage: React.FC = () => {
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
-                    <tr className="bg-gradient-to-r from-slate-100 to-slate-50 dark:from-slate-800 dark:to-slate-850 border-b-2 border-slate-300 dark:border-slate-600">
+                    <tr className="bg-gradient-to-r from-purple-50 to-slate-50 dark:from-purple-900/20 dark:to-slate-800 border-b-2 border-slate-300 dark:border-slate-600">
                       <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700">Staff Member</th>
                       <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700">Employee ID</th>
                       <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700">Role</th>
@@ -401,20 +411,18 @@ const StaffManagementPage: React.FC = () => {
                       filteredStaff.map((member, index) => (
                         <tr
                           key={member.id}
-                          className={`hover:bg-blue-50 dark:hover:bg-slate-700/50 transition-all duration-200 border-b border-slate-200 dark:border-slate-700 ${
+                          className={`hover:bg-purple-50 dark:hover:bg-slate-700/50 transition-all duration-200 border-b border-slate-200 dark:border-slate-700 ${
                             index % 2 === 0 ? 'bg-white dark:bg-slate-900' : 'bg-slate-50/50 dark:bg-slate-800/50'
                           }`}
                         >
                           {/* Staff Member */}
                           <td className="px-4 py-3 border-r border-slate-200 dark:border-slate-700">
                             <div className="flex items-center gap-2">
-                              <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex-shrink-0 overflow-hidden border border-blue-200">
+                              <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[#3B1E6F] to-[#7A329F] flex-shrink-0 overflow-hidden border border-purple-200 flex items-center justify-center text-white font-semibold text-xs">
                                 {member.avatar ? (
                                   <img src={member.avatar} alt="" className="h-full w-full object-cover" />
                                 ) : (
-                                  <div className="h-full w-full flex items-center justify-center text-blue-600 font-semibold text-xs">
-                                    {member.firstName[0]}{member.lastName[0]}
-                                  </div>
+                                  <span>{member.firstName[0]}{member.lastName[0]}</span>
                                 )}
                               </div>
                               <div>
@@ -448,7 +456,7 @@ const StaffManagementPage: React.FC = () => {
                                 <select
                                   defaultValue={member.wardId || ''}
                                   onChange={(e) => quickUpdateStaff(member.id, 'wardId', e.target.value)}
-                                  className="w-full px-1 py-0.5 text-xs border border-blue-300 rounded bg-white dark:bg-slate-800"
+                                  className="w-full px-1 py-0.5 text-xs border border-[#7A329F] rounded bg-white dark:bg-slate-800 focus:ring-1 focus:ring-[#7A329F]"
                                   autoFocus
                                 >
                                   <option value="">None</option>
@@ -462,11 +470,11 @@ const StaffManagementPage: React.FC = () => {
                               </div>
                             ) : (
                               <div 
-                                className="flex items-center gap-1 cursor-pointer hover:bg-blue-50 dark:hover:bg-slate-700 rounded px-1 py-0.5 group"
+                                className="flex items-center gap-1 cursor-pointer hover:bg-purple-50 dark:hover:bg-slate-700 rounded px-1 py-0.5 group"
                                 onClick={() => setEditingWardId(member.id)}
                               >
                                 {savingField === `wardId-${member.id}` ? (
-                                  <Loader2 size={12} className="animate-spin text-blue-500" />
+                                  <Loader2 size={12} className="animate-spin text-[#7A329F]" />
                                 ) : member.wardName ? (
                                   <span className="text-xs flex items-center gap-1">
                                     <Building2 size={10} className="text-slate-400" />
@@ -497,7 +505,7 @@ const StaffManagementPage: React.FC = () => {
                                 <select
                                   defaultValue={member.status}
                                   onChange={(e) => quickUpdateStaff(member.id, 'status', e.target.value)}
-                                  className="w-full px-1 py-0.5 text-xs border border-blue-300 rounded bg-white dark:bg-slate-800"
+                                  className="w-full px-1 py-0.5 text-xs border border-[#7A329F] rounded bg-white dark:bg-slate-800 focus:ring-1 focus:ring-[#7A329F]"
                                   autoFocus
                                 >
                                   <option value="active">Active</option>
@@ -514,7 +522,7 @@ const StaffManagementPage: React.FC = () => {
                                 onClick={() => setEditingStatusId(member.id)}
                               >
                                 {savingField === `status-${member.id}` ? (
-                                  <Loader2 size={14} className="animate-spin text-blue-500" />
+                                  <Loader2 size={14} className="animate-spin text-[#7A329F]" />
                                 ) : (
                                   <StatusBadge status={member.status} />
                                 )}
@@ -528,7 +536,7 @@ const StaffManagementPage: React.FC = () => {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="hover:bg-amber-50 dark:hover:bg-amber-900/20 text-amber-600 hover:text-amber-700"
+                                className="hover:bg-purple-50 dark:hover:bg-purple-900/20 text-purple-600 hover:text-purple-700"
                                 onClick={() => router.push(`/admin/staffmanagement/edit/${member.id}`)}
                                 title="Edit Staff"
                               >
@@ -573,7 +581,7 @@ const StaffManagementPage: React.FC = () => {
                 <div className="flex items-center justify-between text-sm text-slate-600 dark:text-slate-400">
                   <span>Showing {filteredStaff.length} of {staff.length} staff members</span>
                   <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-green-400"></span>
+                    <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
                     <span>Active: {activeStaff}</span>
                     <span className="w-2 h-2 rounded-full bg-amber-400 ml-3"></span>
                     <span>On Leave: {onLeaveStaff}</span>

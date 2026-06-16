@@ -1,11 +1,12 @@
 
 
 
+
 // "use client";
 
-// import { useState, useEffect } from "react";
+// import { useState, useEffect , useCallback } from "react";
 // import { useRouter } from "next/navigation";
-// import { Menu, X } from "lucide-react";
+// import { Menu, X, Filter } from "lucide-react";
 // import HelpDeskSidebar from "@/components/helpdesk/HelpDeskSidebar";
 // import HelpDeskStats from "@/components/helpdesk/HelpDeskStats";
 // import AppointmentsTable, { Appointment } from "@/components/helpdesk/AppointmentsTable";
@@ -13,7 +14,7 @@
 // import EditAppointmentModal from "@/components/helpdesk/EditAppointmentModal";
 // import { doctorsApi } from "@/lib/api/doctors";
 // import { patientsApi } from "@/lib/api/registration";
-// import { appointmentsApi } from "@/lib/api/appointments"; // 👈 new import
+// import { appointmentsApi } from "@/lib/api/appointments";
 // import toast from "react-hot-toast";
 // import { useTenant } from "@/contexts/TenantContext";
 // import { MODULE_KEYS, HELPDESK_FEATURES } from "@/lib/feature";
@@ -36,6 +37,9 @@
 //   allergies?: string;
 // };
 
+// // ✅ Filter type
+// type FilterStatus = "all" | "pending" | "completed";
+
 // export default function HelpDeskPage() {
 //   const router = useRouter();
 //   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -43,18 +47,22 @@
 //   const [appointments, setAppointments] = useState<Appointment[]>([]);
 //   const [loadingAppointments, setLoadingAppointments] = useState(false);
 //   const [selectedDate, setSelectedDate] = useState<string>(
-//     new Date().toISOString().split('T')[0] // today's date in YYYY-MM-DD
+//     new Date().toISOString().split('T')[0]
 //   );
-
 //   const [showCreateModal, setShowCreateModal] = useState(false);
 //   const [showEditModal, setShowEditModal] = useState(false);
 //   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+  
+//   // ✅ New state for filters
+//   const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
+//   const [showFilters, setShowFilters] = useState(false);
+
 //   const { tenant, isMicroFeatureEnabled, isLoading: tenantLoading } = useTenant();
 
 //   const isAppointmentsEnabled = isMicroFeatureEnabled(
-//   MODULE_KEYS.HELPDESK,
-//   HELPDESK_FEATURES.APPOINTMENTS
-// );
+//     MODULE_KEYS.HELPDESK,
+//     HELPDESK_FEATURES.APPOINTMENTS
+//   );
 
 //   useEffect(() => {
 //     if (!tenantLoading && !isAppointmentsEnabled) {
@@ -62,18 +70,8 @@
 //       return;
 //     }
 //     fetchDoctors();
-//   }, [tenantLoading]);
+//   }, [tenantLoading,isAppointmentsEnabled,router]);
 
-//     useEffect(() => {
-//     if (isAppointmentsEnabled) {
-//       fetchAppointments(selectedDate);
-//     }
-//   }, [selectedDate, isAppointmentsEnabled]);
-
-
-//   // Fetch doctors on mount
-
-//   // Fetch appointments whenever selectedDate changes
  
 
 //   const fetchDoctors = async () => {
@@ -92,15 +90,13 @@
 //     }
 //   };
 
-//   const fetchAppointments = async (date: string) => {
+// const fetchAppointments = useCallback(async (date: string) => {
 //     setLoadingAppointments(true);
     
 //     try {
 //       const response = await appointmentsApi.getAppointmentsByDate(date);
-//    const apiData = response.data || [];
-  
+//       const apiData = response.data || [];
 
-   
 //       const mappedAppointments: Appointment[] = apiData.map((item: any) => ({
 //         id: item.appointment_id,
 //         patientId: item.patient_id,
@@ -111,31 +107,23 @@
 //         appointmentTime: item.appointment_time,
 //         doctorId: item.doctor_id,
 //         doctorName: item.doctor_name || "Unknown",
-        
-        
-//          status:
-//     item.status === "BOOKED"
-//       ? "pending"
-//       : item.status === "CONFIRMED"
-//       ? "confirmed"
-//       : item.status === "COMPLETED"
-//       ? "completed"
-//       : item.status === "CANCELLED"
-//       ? "cancelled"
-//       : "pending",
-
-//   // ✅ FIX TYPE
-//   type:
-//     item.consultation_type === "in-person"
-//       ? "consultation"
-//       : item.consultation_type === "emergency"
-//       ? "emergency"
-//       : item.consultation_type === "followup"
-//       ? "followup"
-//       : "checkup",
-
-//   notes: item.notes || "",
-       
+//         status: item.status === "BOOKED"
+//           ? "pending"
+//           : item.status === "CONFIRMED"
+//           ? "confirmed"
+//           : item.status === "COMPLETED"
+//           ? "completed"
+//           : item.status === "CANCELLED"
+//           ? "cancelled"
+//           : "pending",
+//         type: item.consultation_type === "in-person"
+//           ? "consultation"
+//           : item.consultation_type === "emergency"
+//           ? "emergency"
+//           : item.consultation_type === "followup"
+//           ? "followup"
+//           : "checkup",
+//         notes: item.notes || "",
 //       }));
 
 //       setAppointments(mappedAppointments);
@@ -146,7 +134,14 @@
 //     } finally {
 //       setLoadingAppointments(false);
 //     }
-//   };
+//  }, []);
+
+
+//   useEffect(() => {
+//   if (isAppointmentsEnabled) {
+//     fetchAppointments(selectedDate);
+//   }
+// }, [selectedDate, isAppointmentsEnabled, fetchAppointments]);
 
 //   const searchPatientByPhone = async (phone: string): Promise<Patient[]> => {
 //     if (!phone || phone.trim().length < 10) return [];
@@ -179,14 +174,32 @@
 //     return age;
 //   };
 
+//   // ✅ Filtered appointments based on selected filter
+//   const filteredAppointments = appointments.filter((apt) => {
+//     if (filterStatus === "all") return true;
+//     if (filterStatus === "pending") {
+//       return apt.status === "pending" || apt.status === "confirmed";
+//     }
+//     if (filterStatus === "completed") {
+//       return apt.status === "completed";
+//     }
+//     return true;
+//   });
+
+//   // ✅ Count pending and completed appointments
+//   const pendingCount = appointments.filter(
+//     (apt) => apt.status === "pending" || apt.status === "confirmed"
+//   ).length;
+//   const completedCount = appointments.filter(
+//     (apt) => apt.status === "completed"
+//   ).length;
+
 //   const handleConfirm = (id: string) => {
 //     setAppointments(prev => prev.map(apt => apt.id === id ? { ...apt, status: "confirmed" } : apt));
-//     // TODO: Call API to update status
 //   };
 
 //   const handleComplete = (id: string) => {
 //     setAppointments(prev => prev.map(apt => apt.id === id ? { ...apt, status: "completed" } : apt));
-//     // TODO: Call API to update status
 //   };
 
 //   const handleEdit = (id: string) => {
@@ -199,18 +212,15 @@
 
 //   const handleCancel = (id: string) => {
 //     setAppointments(prev => prev.filter(apt => apt.id !== id));
-//     // TODO: Call API to delete appointment
 //   };
 
 //   const handleSaveEdit = (updated: Appointment) => {
 //     setAppointments(prev => prev.map(apt => apt.id === updated.id ? updated : apt));
 //     setShowEditModal(false);
 //     setSelectedAppointment(null);
-//     // TODO: Call API to update appointment
 //   };
 
 //   const handleCreate = (newAppt: Appointment) => {
-//     // After creation, refresh appointments for the selected date
 //     fetchAppointments(selectedDate);
 //     setShowCreateModal(false);
 //   };
@@ -253,7 +263,6 @@
 //     );
 //   }
 
-
 //   return (
 //     <div className="min-h-screen bg-gray-50 flex">
 //       <HelpDeskSidebar
@@ -281,52 +290,144 @@
 //         </button>
 
 //         <main className="flex-1 flex flex-col overflow-hidden p-4 sm:p-6 lg:p-8">
-//   <div className="space-y-6 flex-1 flex flex-col min-h-0">
-//     <HelpDeskStats />
+//           <div className="space-y-6 flex-1 flex flex-col min-h-0">
+//             <HelpDeskStats />
 
-//     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-//       <div className="w-full sm:w-auto">
-//         <h2 className="text-xl sm:text-2xl font-bold text-gray-800 break-words">
-//           Appointments
-//         </h2>
-//         <p className="text-sm text-gray-500 mt-1">Manage appointments and schedules</p>
-//       </div>
-//       <div className="flex items-center gap-2 w-full sm:w-auto">
-//         <input
-//           type="date"
-//           value={selectedDate}
-//           onChange={(e) => setSelectedDate(e.target.value)}
-//           className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
-//         />
-//         <button
-//           onClick={() => setShowCreateModal(true)}
-//           className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center justify-center gap-2 whitespace-nowrap"
-//         >
-        
-//           New Appointment
-//         </button>
-//       </div>
-//     </div>
+//             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+//               <div className="w-full sm:w-auto">
+//                 <h2 className="text-xl sm:text-2xl font-bold text-gray-800 break-words">
+//                   Appointments
+//                 </h2>
+//                 <p className="text-sm text-gray-500 mt-1">Manage appointments and schedules</p>
+//               </div>
+//               <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+//                 {/* Date Picker */}
+//                 <input
+//                   type="date"
+//                   value={selectedDate}
+//                   onChange={(e) => setSelectedDate(e.target.value)}
+//                   className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+//                 />
+                
+//                 {/* ✅ Filter Button with Counts */}
+//                 <div className="relative">
+//                   <button
+//                     onClick={() => setShowFilters(!showFilters)}
+//                     className="px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 flex items-center gap-2"
+//                   >
+//                     <Filter className="w-4 h-4" />
+//                     Filter
+//                     {(pendingCount > 0 || completedCount > 0) && (
+//                       <span className="ml-1 px-1.5 py-0.5 bg-blue-100 text-blue-600 text-xs rounded-full">
+//                         {filterStatus !== "all" ? filterStatus : "all"}
+//                       </span>
+//                     )}
+//                   </button>
+                  
+//                   {/* ✅ Filter Dropdown */}
+//                   {showFilters && (
+//                     <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+//                       <div className="p-2">
+//                         <button
+//                           onClick={() => {
+//                             setFilterStatus("all");
+//                             setShowFilters(false);
+//                           }}
+//                           className={`w-full text-left px-3 py-2 rounded-md text-sm ${
+//                             filterStatus === "all"
+//                               ? "bg-blue-50 text-blue-600"
+//                               : "hover:bg-gray-50"
+//                           }`}
+//                         >
+//                           All Appointments ({appointments.length})
+//                         </button>
+//                         <button
+//                           onClick={() => {
+//                             setFilterStatus("pending");
+//                             setShowFilters(false);
+//                           }}
+//                           className={`w-full text-left px-3 py-2 rounded-md text-sm ${
+//                             filterStatus === "pending"
+//                               ? "bg-amber-50 text-amber-600"
+//                               : "hover:bg-gray-50"
+//                           }`}
+//                         >
+//                           ⏳ Pending ({pendingCount})
+//                         </button>
+//                         <button
+//                           onClick={() => {
+//                             setFilterStatus("completed");
+//                             setShowFilters(false);
+//                           }}
+//                           className={`w-full text-left px-3 py-2 rounded-md text-sm ${
+//                             filterStatus === "completed"
+//                               ? "bg-emerald-50 text-emerald-600"
+//                               : "hover:bg-gray-50"
+//                           }`}
+//                         >
+//                           ✅ Completed ({completedCount})
+//                         </button>
+//                       </div>
+//                     </div>
+//                   )}
+//                 </div>
 
-//     {/* Scrollable Table Container */}
-//     <div className="flex-1 min-h-0 overflow-y-auto">
-//       {loadingAppointments ? (
-//         <div className="text-center py-8 text-gray-500">Loading appointments...</div>
-//       ) : (
-//         <AppointmentsTable
-//           appointments={appointments}
-//           doctors={doctors}
-//           onConfirm={handleConfirm}
-//           onComplete={handleComplete}
-//           onEdit={handleEdit}
-//           onCancel={handleCancel}
-//           getStatusColor={getStatusColor}
-//           getTypeColor={getTypeColor}
-//         />
-//       )}
-//     </div>
-//   </div>
-// </main>
+//                 <button
+//                   onClick={() => setShowCreateModal(true)}
+//                   className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center justify-center gap-2 whitespace-nowrap"
+//                 >
+//                   New Appointment
+//                 </button>
+//               </div>
+//             </div>
+
+//             {/* ✅ Filter Status Indicator */}
+//             {filterStatus !== "all" && (
+//               <div className="flex items-center gap-2">
+//                 <span className="text-sm text-gray-500">Showing:</span>
+//                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+//                   filterStatus === "pending" 
+//                     ? "bg-amber-100 text-amber-700" 
+//                     : "bg-emerald-100 text-emerald-700"
+//                 }`}>
+//                   {filterStatus === "pending" ? "Pending Appointments" : "Completed Appointments"}
+//                 </span>
+//                 <button
+//                   onClick={() => setFilterStatus("all")}
+//                   className="text-xs text-blue-600 hover:text-blue-700"
+//                 >
+//                   Clear filter
+//                 </button>
+//               </div>
+//             )}
+
+//             {/* Scrollable Table Container */}
+//             <div className="flex-1 min-h-0 overflow-y-auto">
+//               {loadingAppointments ? (
+//                 <div className="text-center py-8 text-gray-500">Loading appointments...</div>
+//               ) : filteredAppointments.length === 0 ? (
+//                 <div className="text-center py-8 text-gray-500">
+//                   {filterStatus === "all" 
+//                     ? "No appointments found for this date"
+//                     : filterStatus === "pending"
+//                     ? "No pending appointments for this date"
+//                     : "No completed appointments for this date"}
+//                 </div>
+//               ) : (
+//                 <AppointmentsTable
+//                   appointments={filteredAppointments}
+//                   doctors={doctors}
+//                   onConfirm={handleConfirm}
+//                   onComplete={handleComplete}
+//                   onEdit={handleEdit}
+//                   onCancel={handleCancel}
+//                   getStatusColor={getStatusColor}
+//                   getTypeColor={getTypeColor}
+//                 />
+//               )}
+//             </div>
+//           </div>
+//         </main>
 //       </div>
 
 //       {showCreateModal && (
@@ -357,9 +458,9 @@
 
 "use client";
 
-import { useState, useEffect , useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Menu, X, Filter } from "lucide-react";
+import { Menu, X, Filter, Calendar as CalendarIcon, Users, Clock } from "lucide-react";
 import HelpDeskSidebar from "@/components/helpdesk/HelpDeskSidebar";
 import HelpDeskStats from "@/components/helpdesk/HelpDeskStats";
 import AppointmentsTable, { Appointment } from "@/components/helpdesk/AppointmentsTable";
@@ -390,7 +491,6 @@ type Patient = {
   allergies?: string;
 };
 
-// ✅ Filter type
 type FilterStatus = "all" | "pending" | "completed";
 
 export default function HelpDeskPage() {
@@ -405,8 +505,6 @@ export default function HelpDeskPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
-  
-  // ✅ New state for filters
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
   const [showFilters, setShowFilters] = useState(false);
 
@@ -423,9 +521,7 @@ export default function HelpDeskPage() {
       return;
     }
     fetchDoctors();
-  }, [tenantLoading,isAppointmentsEnabled,router]);
-
- 
+  }, [tenantLoading, isAppointmentsEnabled, router]);
 
   const fetchDoctors = async () => {
     try {
@@ -443,7 +539,7 @@ export default function HelpDeskPage() {
     }
   };
 
-const fetchAppointments = useCallback(async (date: string) => {
+  const fetchAppointments = useCallback(async (date: string) => {
     setLoadingAppointments(true);
     
     try {
@@ -487,14 +583,13 @@ const fetchAppointments = useCallback(async (date: string) => {
     } finally {
       setLoadingAppointments(false);
     }
- }, []);
-
+  }, []);
 
   useEffect(() => {
-  if (isAppointmentsEnabled) {
-    fetchAppointments(selectedDate);
-  }
-}, [selectedDate, isAppointmentsEnabled, fetchAppointments]);
+    if (isAppointmentsEnabled) {
+      fetchAppointments(selectedDate);
+    }
+  }, [selectedDate, isAppointmentsEnabled, fetchAppointments]);
 
   const searchPatientByPhone = async (phone: string): Promise<Patient[]> => {
     if (!phone || phone.trim().length < 10) return [];
@@ -527,7 +622,6 @@ const fetchAppointments = useCallback(async (date: string) => {
     return age;
   };
 
-  // ✅ Filtered appointments based on selected filter
   const filteredAppointments = appointments.filter((apt) => {
     if (filterStatus === "all") return true;
     if (filterStatus === "pending") {
@@ -539,7 +633,6 @@ const fetchAppointments = useCallback(async (date: string) => {
     return true;
   });
 
-  // ✅ Count pending and completed appointments
   const pendingCount = appointments.filter(
     (apt) => apt.status === "pending" || apt.status === "confirmed"
   ).length;
@@ -580,21 +673,21 @@ const fetchAppointments = useCallback(async (date: string) => {
 
   const getStatusColor = (status: Appointment["status"]) => {
     switch (status) {
-      case "pending": return "bg-amber-50 text-amber-600";
-      case "confirmed": return "bg-blue-50 text-blue-600";
-      case "completed": return "bg-emerald-50 text-emerald-600";
-      case "cancelled": return "bg-rose-50 text-rose-600";
-      default: return "bg-gray-50 text-gray-600";
+      case "pending": return "bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400";
+      case "confirmed": return "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400";
+      case "completed": return "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400";
+      case "cancelled": return "bg-rose-50 text-rose-600 dark:bg-rose-900/20 dark:text-rose-400";
+      default: return "bg-gray-50 text-gray-600 dark:bg-gray-800/30 dark:text-gray-400";
     }
   };
 
   const getTypeColor = (type: Appointment["type"]) => {
     switch (type) {
-      case "emergency": return "bg-rose-50 text-rose-600";
-      case "consultation": return "bg-indigo-50 text-indigo-600";
-      case "checkup": return "bg-emerald-50 text-emerald-600";
-      case "followup": return "bg-purple-50 text-purple-600";
-      default: return "bg-gray-50 text-gray-600";
+      case "emergency": return "bg-rose-50 text-rose-600 dark:bg-rose-900/20 dark:text-rose-400";
+      case "consultation": return "bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400";
+      case "checkup": return "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400";
+      case "followup": return "bg-purple-50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400";
+      default: return "bg-gray-50 text-gray-600 dark:bg-gray-800/30 dark:text-gray-400";
     }
   };
 
@@ -604,11 +697,11 @@ const fetchAppointments = useCallback(async (date: string) => {
 
   if (!tenantLoading && !isAppointmentsEnabled) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="text-center bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg">
           <div className="text-red-500 text-6xl mb-4">🔒</div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h1>
-          <p className="text-gray-600">
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">Access Denied</h1>
+          <p className="text-gray-600 dark:text-gray-400">
             Appointments feature is not enabled for {tenant?.name}.
           </p>
         </div>
@@ -617,7 +710,7 @@ const fetchAppointments = useCallback(async (date: string) => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex">
       <HelpDeskSidebar
         isOpen={mobileMenuOpen}
         onClose={() => setMobileMenuOpen(false)}
@@ -627,15 +720,15 @@ const fetchAppointments = useCallback(async (date: string) => {
       />
 
       <div className="flex-1 flex flex-col min-h-screen">
-        <header className="lg:hidden bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3">
-          <button onClick={() => setMobileMenuOpen(true)} className="p-2 rounded-lg hover:bg-gray-100">
-            <span className="material-icons">menu</span>
+        <header className="lg:hidden bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3 flex items-center gap-3">
+          <button onClick={() => setMobileMenuOpen(true)} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+            <Menu className="w-5 h-5 text-gray-700 dark:text-gray-300" />
           </button>
-          <h1 className="text-xl font-bold text-gray-800 truncate">Help Desk</h1>
+          <h1 className="text-xl font-bold text-[#3B1E6F] dark:text-white truncate">Help Desk</h1>
         </header>
 
         <button
-          className="lg:hidden fixed bottom-20 right-6 z-50 p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center"
+          className="lg:hidden fixed bottom-20 right-6 z-50 p-3 bg-gradient-to-r from-[#3B1E6F] to-[#7A329F] hover:from-[#7A329F] hover:to-[#0D5CB3] text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-label="Toggle menu"
         >
@@ -648,38 +741,35 @@ const fetchAppointments = useCallback(async (date: string) => {
 
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div className="w-full sm:w-auto">
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-800 break-words">
+                <h2 className="text-xl sm:text-2xl font-bold text-[#3B1E6F] dark:text-white break-words">
                   Appointments
                 </h2>
-                <p className="text-sm text-gray-500 mt-1">Manage appointments and schedules</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Manage appointments and schedules</p>
               </div>
               <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                {/* Date Picker */}
                 <input
                   type="date"
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-[#7A329F] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
                 
-                {/* ✅ Filter Button with Counts */}
                 <div className="relative">
                   <button
                     onClick={() => setShowFilters(!showFilters)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 flex items-center gap-2"
+                    className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
                   >
                     <Filter className="w-4 h-4" />
                     Filter
                     {(pendingCount > 0 || completedCount > 0) && (
-                      <span className="ml-1 px-1.5 py-0.5 bg-blue-100 text-blue-600 text-xs rounded-full">
+                      <span className="ml-1 px-1.5 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 text-xs rounded-full">
                         {filterStatus !== "all" ? filterStatus : "all"}
                       </span>
                     )}
                   </button>
                   
-                  {/* ✅ Filter Dropdown */}
                   {showFilters && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                    <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-10">
                       <div className="p-2">
                         <button
                           onClick={() => {
@@ -688,8 +778,8 @@ const fetchAppointments = useCallback(async (date: string) => {
                           }}
                           className={`w-full text-left px-3 py-2 rounded-md text-sm ${
                             filterStatus === "all"
-                              ? "bg-blue-50 text-blue-600"
-                              : "hover:bg-gray-50"
+                              ? "bg-purple-50 dark:bg-purple-900/20 text-[#3B1E6F] dark:text-[#7A329F]"
+                              : "hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
                           }`}
                         >
                           All Appointments ({appointments.length})
@@ -701,8 +791,8 @@ const fetchAppointments = useCallback(async (date: string) => {
                           }}
                           className={`w-full text-left px-3 py-2 rounded-md text-sm ${
                             filterStatus === "pending"
-                              ? "bg-amber-50 text-amber-600"
-                              : "hover:bg-gray-50"
+                              ? "bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400"
+                              : "hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
                           }`}
                         >
                           ⏳ Pending ({pendingCount})
@@ -714,8 +804,8 @@ const fetchAppointments = useCallback(async (date: string) => {
                           }}
                           className={`w-full text-left px-3 py-2 rounded-md text-sm ${
                             filterStatus === "completed"
-                              ? "bg-emerald-50 text-emerald-600"
-                              : "hover:bg-gray-50"
+                              ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400"
+                              : "hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
                           }`}
                         >
                           ✅ Completed ({completedCount})
@@ -727,44 +817,51 @@ const fetchAppointments = useCallback(async (date: string) => {
 
                 <button
                   onClick={() => setShowCreateModal(true)}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center justify-center gap-2 whitespace-nowrap"
+                  className="px-4 py-2 bg-gradient-to-r from-[#3B1E6F] to-[#7A329F] text-white rounded-lg text-sm font-medium hover:opacity-90 flex items-center justify-center gap-2 whitespace-nowrap shadow-lg shadow-[#3B1E6F]/20"
                 >
+                  <CalendarIcon className="w-4 h-4" />
                   New Appointment
                 </button>
               </div>
             </div>
 
-            {/* ✅ Filter Status Indicator */}
             {filterStatus !== "all" && (
               <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-500">Showing:</span>
+                <span className="text-sm text-gray-500 dark:text-gray-400">Showing:</span>
                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                   filterStatus === "pending" 
-                    ? "bg-amber-100 text-amber-700" 
-                    : "bg-emerald-100 text-emerald-700"
+                    ? "bg-amber-100 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400" 
+                    : "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400"
                 }`}>
                   {filterStatus === "pending" ? "Pending Appointments" : "Completed Appointments"}
                 </span>
                 <button
                   onClick={() => setFilterStatus("all")}
-                  className="text-xs text-blue-600 hover:text-blue-700"
+                  className="text-xs text-[#7A329F] dark:text-[#9B4DBF] hover:underline"
                 >
                   Clear filter
                 </button>
               </div>
             )}
 
-            {/* Scrollable Table Container */}
             <div className="flex-1 min-h-0 overflow-y-auto">
               {loadingAppointments ? (
-                <div className="text-center py-8 text-gray-500">Loading appointments...</div>
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[#3B1E6F]"></div>
+                    Loading appointments...
+                  </div>
+                </div>
               ) : filteredAppointments.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  {filterStatus === "all" 
-                    ? "No appointments found for this date"
-                    : filterStatus === "pending"
-                    ? "No pending appointments for this date"
-                    : "No completed appointments for this date"}
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-8">
+                  <CalendarIcon className="w-12 h-12 mx-auto mb-3 text-gray-300 dark:text-gray-600" />
+                  <p className="text-sm">
+                    {filterStatus === "all" 
+                      ? "No appointments found for this date"
+                      : filterStatus === "pending"
+                      ? "No pending appointments for this date"
+                      : "No completed appointments for this date"}
+                  </p>
                 </div>
               ) : (
                 <AppointmentsTable

@@ -1,3 +1,5 @@
+
+
 // "use client";
 
 // import { useState, useEffect } from "react";
@@ -47,6 +49,7 @@
 //   const [selectedOrderForResult, setSelectedOrderForResult] = useState<XRayOrder | null>(null);
 //   const [showResultModal, setShowResultModal] = useState(false);
 //   const [resultText, setResultText] = useState("");
+//   const [searchTerm, setSearchTerm] = useState("");
 
 //   const xrayTypes = [
 //     "Chest X-Ray",
@@ -269,8 +272,176 @@
 //     }
 //   };
 
+//   const downloadPDF = (order: XRayOrder) => {
+//     const printContent = `
+//       <!DOCTYPE html>
+//       <html>
+//       <head>
+//         <title>X-Ray Report - ${order.order_id}</title>
+//         <style>
+//           body {
+//             font-family: Arial, sans-serif;
+//             margin: 40px;
+//             padding: 20px;
+//           }
+//           .header {
+//             text-align: center;
+//             margin-bottom: 30px;
+//             border-bottom: 2px solid #333;
+//             padding-bottom: 10px;
+//           }
+//           .hospital-name {
+//             font-size: 24px;
+//             font-weight: bold;
+//             color: #2563eb;
+//           }
+//           .report-title {
+//             font-size: 20px;
+//             font-weight: bold;
+//             margin-top: 10px;
+//           }
+//           .patient-info {
+//             background-color: #f3f4f6;
+//             padding: 15px;
+//             margin-bottom: 20px;
+//             border-radius: 8px;
+//           }
+//           .info-row {
+//             display: flex;
+//             margin-bottom: 8px;
+//           }
+//           .info-label {
+//             font-weight: bold;
+//             width: 150px;
+//           }
+//           .info-value {
+//             flex: 1;
+//           }
+//           .report-section {
+//             margin-top: 20px;
+//             padding: 15px;
+//             border: 1px solid #e5e7eb;
+//             border-radius: 8px;
+//           }
+//           .section-title {
+//             font-size: 16px;
+//             font-weight: bold;
+//             margin-bottom: 10px;
+//             color: #2563eb;
+//           }
+//           .footer {
+//             margin-top: 30px;
+//             text-align: center;
+//             font-size: 12px;
+//             color: #6b7280;
+//             border-top: 1px solid #e5e7eb;
+//             padding-top: 10px;
+//           }
+//         </style>
+//       </head>
+//       <body>
+//         <div class="header">
+//           <div class="hospital-name">${tenant?.name || 'Hospital'} Radiology Department</div>
+//           <div class="report-title">X-Ray Report</div>
+//         </div>
+        
+//         <div class="patient-info">
+//           <div class="info-row">
+//             <div class="info-label">Patient Name:</div>
+//             <div class="info-value">${order.patient_name}</div>
+//           </div>
+//           <div class="info-row">
+//             <div class="info-label">Patient ID:</div>
+//             <div class="info-value">${order.patient_id}</div>
+//           </div>
+//           <div class="info-row">
+//             <div class="info-label">Order ID:</div>
+//             <div class="info-value">${order.order_id}</div>
+//           </div>
+//           <div class="info-row">
+//             <div class="info-label">Visit Type:</div>
+//             <div class="info-value">${order.visit_type} - ${order.visit_id}</div>
+//           </div>
+//           <div class="info-row">
+//             <div class="info-label">Exam Date:</div>
+//             <div class="info-value">${order.order_date}</div>
+//           </div>
+//           <div class="info-row">
+//             <div class="info-label">Report Date:</div>
+//             <div class="info-value">${order.completed_date || ''}</div>
+//           </div>
+//         </div>
+        
+//         <div class="report-section">
+//           <div class="section-title">Exam Details</div>
+//           <div class="info-row">
+//             <div class="info-label">Body Part:</div>
+//             <div class="info-value">${order.body_part}</div>
+//           </div>
+//           <div class="info-row">
+//             <div class="info-label">X-Ray Type:</div>
+//             <div class="info-value">${order.xray_type}</div>
+//           </div>
+//           ${order.doctor_name ? `
+//           <div class="info-row">
+//             <div class="info-label">Referring Doctor:</div>
+//             <div class="info-value">Dr. ${order.doctor_name}</div>
+//           </div>
+//           ` : ''}
+//         </div>
+        
+//         <div class="report-section">
+//           <div class="section-title">Radiology Report</div>
+//           <div style="white-space: pre-wrap;">${order.result || 'No report available'}</div>
+//         </div>
+        
+//         <div class="footer">
+//           <p>This is a computer-generated report. No signature required.</p>
+//           <p>Generated on: ${new Date().toLocaleString()}</p>
+//         </div>
+//       </body>
+//       </html>
+//     `;
+
+//     const win = window.open();
+//     win?.document.write(printContent);
+//     win?.document.close();
+//     win?.print();
+//   };
+
+//   const exportToCSV = () => {
+//     const completedOrders = orders.filter(o => o.status === "Completed");
+//     const headers = ["Order ID", "Patient Name", "Patient ID", "Body Part", "X-Ray Type", "Visit Type", "Order Date", "Completed Date", "Referring Doctor"];
+//     const csvData = completedOrders.map(order => [
+//       order.order_id,
+//       order.patient_name,
+//       order.patient_id,
+//       order.body_part,
+//       order.xray_type,
+//       `${order.visit_type} - ${order.visit_id}`,
+//       order.order_date,
+//       order.completed_date || "-",
+//       order.doctor_name || "-"
+//     ]);
+    
+//     const csvContent = [headers, ...csvData].map(row => row.join(",")).join("\n");
+//     const blob = new Blob([csvContent], { type: "text/csv" });
+//     const url = URL.createObjectURL(blob);
+//     const a = document.createElement("a");
+//     a.href = url;
+//     a.download = `xray_reports_${new Date().toISOString().split("T")[0]}.csv`;
+//     a.click();
+//     URL.revokeObjectURL(url);
+//   };
+
 //   const pendingOrders = orders.filter(o => o.status === "Ordered");
 //   const completedOrders = orders.filter(o => o.status === "Completed");
+  
+//   const filteredCompletedOrders = completedOrders.filter(order =>
+//     order.patient_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//     order.order_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//     order.patient_id.toLowerCase().includes(searchTerm.toLowerCase())
+//   );
 
 //   const getStatusBadge = (status: string) => {
 //     const configs: Record<string, string> = {
@@ -329,7 +500,7 @@
 //                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
 //             }`}
 //           >
-//             Pending Orders
+//             Pending Orders ({pendingOrders.length})
 //           </button>
 //           <button
 //             onClick={() => setActiveTab("completed")}
@@ -339,7 +510,7 @@
 //                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
 //             }`}
 //           >
-//             Completed Reports
+//             Completed Reports ({completedOrders.length})
 //           </button>
 //         </div>
 //       </div>
@@ -405,51 +576,98 @@
 //             )}
 //           </div>
 //         ) : (
-//           <div className="space-y-4">
-//             <h2 className="text-lg font-semibold text-gray-900 mb-4">Completed X-Ray Reports</h2>
-//             {completedOrders.length === 0 ? (
+//           <div>
+//             <div className="flex justify-between items-center mb-4">
+//               <h2 className="text-lg font-semibold text-gray-900">Completed X-Ray Reports</h2>
+//               <div className="flex space-x-3">
+//                 <input
+//                   type="text"
+//                   placeholder="Search by patient name, ID or order ID..."
+//                   className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent w-80"
+//                   value={searchTerm}
+//                   onChange={(e) => setSearchTerm(e.target.value)}
+//                 />
+//                 <button
+//                   onClick={exportToCSV}
+//                   className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm font-medium"
+//                 >
+//                   📥 Export CSV
+//                 </button>
+//               </div>
+//             </div>
+            
+//             {filteredCompletedOrders.length === 0 ? (
 //               <Card className="p-8 text-center">
-//                 <p className="text-gray-500">No completed X-Ray reports</p>
+//                 <p className="text-gray-500">No completed X-Ray reports found</p>
 //               </Card>
 //             ) : (
-//               completedOrders.map((order) => (
-//                 <Card key={order.id} className="p-6 hover:shadow-md transition-shadow">
-//                   <div className="flex justify-between items-start">
-//                     <div className="flex-1">
-//                       <div className="flex items-center space-x-3 mb-2">
-//                         <h3 className="text-lg font-semibold text-gray-900">{order.patient_name}</h3>
-//                         <span className="text-sm text-gray-500">ID: {order.patient_id}</span>
-//                         <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusBadge(order.status)}`}>
-//                           {order.status}
-//                         </span>
-//                       </div>
-//                       <p className="text-sm text-gray-500 mb-2">
-//                         {order.order_id} • {order.visit_type} Visit • Completed: {order.completed_date}
-//                       </p>
-//                       <div className="grid grid-cols-2 gap-4">
-//                         <p className="text-sm">
-//                           <span className="font-medium">Body Part:</span> {order.body_part}
-//                         </p>
-//                         <p className="text-sm">
-//                           <span className="font-medium">X-Ray Type:</span> {order.xray_type}
-//                         </p>
-//                       </div>
-//                       {order.result && (
-//                         <div className="mt-3 p-3 bg-gray-50 rounded-lg">
-//                           <p className="text-sm font-medium text-gray-700">Report:</p>
-//                           <p className="text-sm text-gray-600 mt-1">{order.result}</p>
-//                         </div>
-//                       )}
-//                     </div>
+//               <Card className="overflow-hidden">
+//                 <div className="overflow-x-auto">
+//                   <table className="w-full">
+//                     <thead className="bg-gray-50 border-b border-gray-200">
+//                       <tr>
+//                         <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
+//                         <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Patient Name</th>
+//                         <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Patient ID</th>
+//                         <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Body Part</th>
+//                         <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">X-Ray Type</th>
+//                         <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Visit</th>
+//                         <th className="text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Report Date</th>
+//                         <th className="text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+//                       </tr>
+//                     </thead>
+//                     <tbody className="divide-y divide-gray-200">
+//                       {filteredCompletedOrders.map((order) => (
+//                         <tr key={order.id} className="hover:bg-gray-50 transition-colors">
+//                           <td className="px-6 py-4 text-sm font-mono font-medium text-gray-900">
+//                             {order.order_id}
+//                           </td>
+//                           <td className="px-6 py-4 text-sm font-medium text-gray-900">
+//                             {order.patient_name}
+//                           </td>
+//                           <td className="px-6 py-4 text-sm text-gray-500">
+//                             {order.patient_id}
+//                           </td>
+//                           <td className="px-6 py-4 text-sm text-gray-600">
+//                             {order.body_part}
+//                           </td>
+//                           <td className="px-6 py-4 text-sm text-gray-600">
+//                             {order.xray_type}
+//                           </td>
+//                           <td className="px-6 py-4 text-sm text-gray-500">
+//                             {order.visit_type}
+//                            </td>
+//                           <td className="px-6 py-4 text-sm text-gray-500 text-center">
+//                             {order.completed_date}
+//                            </td>
+//                           <td className="px-6 py-4 text-center">
+//                             <button
+//                               onClick={() => downloadPDF(order)}
+//                               className="px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-lg transition-colors text-xs font-medium"
+//                             >
+//                               📄 Download PDF
+//                             </button>
+//                           </td>
+//                         </tr>
+//                       ))}
+//                     </tbody>
+//                   </table>
+//                 </div>
+                
+//                 <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+//                   <div className="flex justify-between items-center">
+//                     <span className="text-sm text-gray-600">
+//                       Total Reports: <span className="font-semibold text-gray-900">{filteredCompletedOrders.length}</span>
+//                     </span>
 //                   </div>
-//                 </Card>
-//               ))
+//                 </div>
+//               </Card>
 //             )}
 //           </div>
 //         )}
 //       </div>
 
-//       {/* New X-Ray Order Modal */}
+//       {/* New X-Ray Order Modal - Same as before */}
 //       {showOrderModal && (
 //         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
 //           <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
@@ -471,7 +689,6 @@
 //               </div>
 
 //               <div className="space-y-4">
-//                 {/* Patient Search */}
 //                 <div className="relative">
 //                   <label className="block text-sm font-medium text-gray-700 mb-2">
 //                     Search Patient by Phone Number *
@@ -524,7 +741,6 @@
 //                   </div>
 //                 )}
 
-//                 {/* Visit Type */}
 //                 {selectedPatient && (
 //                   <div>
 //                     <label className="block text-sm font-medium text-gray-700 mb-2">Visit Type *</label>
@@ -541,7 +757,6 @@
 //                   </div>
 //                 )}
 
-//                 {/* X-Ray Details */}
 //                 {selectedPatient && (
 //                   <>
 //                     <div>
@@ -661,6 +876,9 @@
 //   );
 // }
 
+
+
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -668,6 +886,24 @@ import { useRouter } from "next/navigation";
 import { useTenant } from "@/contexts/TenantContext";
 import { MODULE_KEYS, LABARATORY_FEATURES } from "@/lib/feature";
 import Card from "@/components/laboratory/Card";
+import {
+  Plus,
+  Search,
+  X,
+  Clock,
+  CheckCircle,
+  AlertCircle,
+  User,
+  Phone,
+  FileText,
+  Calendar,
+  Activity,
+  Microscope,
+  Printer,
+  Download,
+  Hospital,
+  Pill,
+} from "lucide-react";
 
 interface XRayOrder {
   id: string;
@@ -948,18 +1184,19 @@ export default function XRayPage() {
           .header {
             text-align: center;
             margin-bottom: 30px;
-            border-bottom: 2px solid #333;
+            border-bottom: 2px solid #3B1E6F;
             padding-bottom: 10px;
           }
           .hospital-name {
             font-size: 24px;
             font-weight: bold;
-            color: #2563eb;
+            color: #3B1E6F;
           }
           .report-title {
             font-size: 20px;
             font-weight: bold;
             margin-top: 10px;
+            color: #7A329F;
           }
           .patient-info {
             background-color: #f3f4f6;
@@ -988,7 +1225,7 @@ export default function XRayPage() {
             font-size: 16px;
             font-weight: bold;
             margin-bottom: 10px;
-            color: #2563eb;
+            color: #3B1E6F;
           }
           .footer {
             margin-top: 30px;
@@ -1105,20 +1342,32 @@ export default function XRayPage() {
   );
 
   const getStatusBadge = (status: string) => {
-    const configs: Record<string, string> = {
-      Ordered: "bg-amber-50 text-amber-700 border-amber-200",
-      Completed: "bg-emerald-50 text-emerald-700 border-emerald-200",
-      Cancelled: "bg-red-50 text-red-700 border-red-200",
+    const configs: Record<string, { bg: string; text: string; icon: React.ReactNode }> = {
+      Ordered: { 
+        bg: "bg-amber-50 dark:bg-amber-900/20", 
+        text: "text-amber-700 dark:text-amber-300", 
+        icon: <Clock className="w-3.5 h-3.5 inline mr-1" />
+      },
+      Completed: { 
+        bg: "bg-emerald-50 dark:bg-emerald-900/20", 
+        text: "text-emerald-700 dark:text-emerald-300", 
+        icon: <CheckCircle className="w-3.5 h-3.5 inline mr-1" />
+      },
+      Cancelled: { 
+        bg: "bg-red-50 dark:bg-red-900/20", 
+        text: "text-red-700 dark:text-red-300", 
+        icon: <AlertCircle className="w-3.5 h-3.5 inline mr-1" />
+      },
     };
     return configs[status] || configs.Ordered;
   };
 
   if (tenantLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <div className="w-12 h-12 border-4 border-[#3B1E6F] border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading...</p>
         </div>
       </div>
     );
@@ -1126,187 +1375,208 @@ export default function XRayPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading X-Ray orders...</p>
+          <div className="w-12 h-12 border-4 border-[#3B1E6F] border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading X-Ray orders...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b border-gray-200 px-8 py-6 sticky top-0 z-10">
-        <div className="flex justify-between items-center">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Header */}
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 sticky top-0 z-10">
+        <div className="flex flex-wrap justify-between items-center gap-4">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900">X-Ray / Radiography</h1>
-            <p className="text-sm text-gray-500 mt-1">Manage X-Ray orders and reports</p>
-            {tenant && <p className="text-xs text-gray-400 mt-1">Tenant: {tenant.name}</p>}
+            <h1 className="text-2xl font-bold text-[#3B1E6F] dark:text-white">X-Ray / Radiography</h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Manage X-Ray orders and reports</p>
           </div>
           <button
             onClick={() => setShowOrderModal(true)}
-            className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors shadow-sm"
+            className="px-4 py-2 bg-gradient-to-r from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] text-white rounded-lg hover:opacity-90 transition-opacity shadow-sm flex items-center gap-2"
           >
-            + New X-Ray Order
+            <Plus className="w-4 h-4" />
+            New X-Ray Order
           </button>
         </div>
 
         <div className="flex space-x-2 mt-4">
           <button
             onClick={() => setActiveTab("pending")}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
               activeTab === "pending"
-                ? "bg-primary text-white"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                ? "bg-[#3B1E6F] text-white"
+                : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
             }`}
           >
+            <Clock className="w-4 h-4" />
             Pending Orders ({pendingOrders.length})
           </button>
           <button
             onClick={() => setActiveTab("completed")}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
               activeTab === "completed"
-                ? "bg-primary text-white"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                ? "bg-[#3B1E6F] text-white"
+                : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
             }`}
           >
+            <CheckCircle className="w-4 h-4" />
             Completed Reports ({completedOrders.length})
           </button>
         </div>
       </div>
 
-      <div className="p-8">
+      {/* Content */}
+      <div className="p-6">
         {activeTab === "pending" ? (
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Pending X-Ray Orders</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Pending X-Ray Orders</h2>
             {pendingOrders.length === 0 ? (
-              <Card className="p-8 text-center">
-                <p className="text-gray-500">No pending X-Ray orders</p>
-              </Card>
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-12 text-center">
+                <Activity className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+                <p className="text-gray-500 dark:text-gray-400">No pending X-Ray orders</p>
+              </div>
             ) : (
-              pendingOrders.map((order) => (
-                <Card key={order.id} className="p-6 hover:shadow-md transition-shadow">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-2">
-                        <h3 className="text-lg font-semibold text-gray-900">{order.patient_name}</h3>
-                        <span className="text-sm text-gray-500">ID: {order.patient_id}</span>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusBadge(order.status)}`}>
-                          {order.status}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-500 mb-2">
-                        {order.order_id} • {order.visit_type} Visit • {order.order_date}
-                      </p>
-                      <div className="grid grid-cols-2 gap-4 mt-2">
-                        <p className="text-sm">
-                          <span className="font-medium">Body Part:</span> {order.body_part}
+              pendingOrders.map((order) => {
+                const statusConfig = getStatusBadge(order.status);
+                return (
+                  <div
+                    key={order.id}
+                    className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex flex-wrap justify-between items-start gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-3 mb-2">
+                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                            {order.patient_name}
+                          </h3>
+                          <span className="text-sm text-gray-500 dark:text-gray-400">
+                            ID: {order.patient_id}
+                          </span>
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${statusConfig.bg} ${statusConfig.text}`}>
+                            {statusConfig.icon}
+                            {order.status}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                          {order.order_id} • {order.visit_type} Visit • {order.order_date}
                         </p>
-                        <p className="text-sm">
-                          <span className="font-medium">X-Ray Type:</span> {order.xray_type}
-                        </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+                          <p className="text-sm">
+                            <span className="font-medium text-gray-700 dark:text-gray-300">Body Part:</span>{' '}
+                            <span className="text-gray-600 dark:text-gray-400">{order.body_part}</span>
+                          </p>
+                          <p className="text-sm">
+                            <span className="font-medium text-gray-700 dark:text-gray-300">X-Ray Type:</span>{' '}
+                            <span className="text-gray-600 dark:text-gray-400">{order.xray_type}</span>
+                          </p>
+                        </div>
+                        {order.doctor_name && (
+                          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Ordered by: Dr. {order.doctor_name}</p>
+                        )}
+                        {order.notes && (
+                          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Notes: {order.notes}</p>
+                        )}
                       </div>
-                      {order.doctor_name && (
-                        <p className="text-sm text-gray-500 mt-1">Ordered by: Dr. {order.doctor_name}</p>
-                      )}
-                      {order.notes && (
-                        <p className="text-sm text-gray-500 mt-1">Notes: {order.notes}</p>
-                      )}
-                    </div>
-                    <div className="text-right space-y-2">
-                      <button
-                        onClick={() => {
-                          setSelectedOrderForResult(order);
-                          setShowResultModal(true);
-                        }}
-                        className="w-full px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm"
-                      >
-                        Enter Report
-                      </button>
-                      <button
-                        onClick={() => cancelOrder(order.id)}
-                        className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
-                      >
-                        Cancel Order
-                      </button>
+                      <div className="flex flex-col gap-2 min-w-[120px]">
+                        <button
+                          onClick={() => {
+                            setSelectedOrderForResult(order);
+                            setShowResultModal(true);
+                          }}
+                          className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm"
+                        >
+                          Enter Report
+                        </button>
+                        <button
+                          onClick={() => cancelOrder(order.id)}
+                          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+                        >
+                          Cancel Order
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </Card>
-              ))
+                );
+              })
             )}
           </div>
         ) : (
           <div>
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">Completed X-Ray Reports</h2>
-              <div className="flex space-x-3">
-                <input
-                  type="text"
-                  placeholder="Search by patient name, ID or order ID..."
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent w-80"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
+            <div className="flex flex-wrap justify-between items-center gap-4 mb-4">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Completed X-Ray Reports</h2>
+              <div className="flex flex-wrap gap-3">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search by patient, ID or order..."
+                    className="pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#7A329F] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white w-64"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
                 <button
                   onClick={exportToCSV}
-                  className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm font-medium"
+                  className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm font-medium flex items-center gap-2"
                 >
-                  📥 Export CSV
+                  <Download className="w-4 h-4" />
+                  Export CSV
                 </button>
               </div>
             </div>
             
             {filteredCompletedOrders.length === 0 ? (
-              <Card className="p-8 text-center">
-                <p className="text-gray-500">No completed X-Ray reports found</p>
-              </Card>
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-12 text-center">
+                <FileText className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+                <p className="text-gray-500 dark:text-gray-400">No completed X-Ray reports found</p>
+              </div>
             ) : (
-              <Card className="overflow-hidden">
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead className="bg-gray-50 border-b border-gray-200">
+                    <thead className="bg-gray-50 dark:bg-gray-700/30 border-b border-gray-200 dark:border-gray-700">
                       <tr>
-                        <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
-                        <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Patient Name</th>
-                        <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Patient ID</th>
-                        <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Body Part</th>
-                        <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">X-Ray Type</th>
-                        <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Visit</th>
-                        <th className="text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Report Date</th>
-                        <th className="text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Order ID</th>
+                        <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Patient</th>
+                        <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Body Part</th>
+                        <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">X-Ray Type</th>
+                        <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Visit</th>
+                        <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Report Date</th>
+                        <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Action</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200">
+                    <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                       {filteredCompletedOrders.map((order) => (
-                        <tr key={order.id} className="hover:bg-gray-50 transition-colors">
-                          <td className="px-6 py-4 text-sm font-mono font-medium text-gray-900">
+                        <tr key={order.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                          <td className="px-4 py-3 text-sm font-mono font-medium text-gray-900 dark:text-white">
                             {order.order_id}
                           </td>
-                          <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                            {order.patient_name}
+                          <td className="px-4 py-3">
+                            <div className="text-sm font-medium text-gray-900 dark:text-white">{order.patient_name}</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">ID: {order.patient_id}</div>
                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-500">
-                            {order.patient_id}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-600">
+                          <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
                             {order.body_part}
                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-600">
+                          <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
                             {order.xray_type}
                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-500">
+                          <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
                             {order.visit_type}
-                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-500 text-center">
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 text-center">
                             {order.completed_date}
-                           </td>
-                          <td className="px-6 py-4 text-center">
+                          </td>
+                          <td className="px-4 py-3 text-center">
                             <button
                               onClick={() => downloadPDF(order)}
-                              className="px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-lg transition-colors text-xs font-medium"
+                              className="px-3 py-1.5 bg-[#3B1E6F]/10 text-[#3B1E6F] hover:bg-[#3B1E6F] hover:text-white rounded-lg transition-colors text-xs font-medium flex items-center gap-1 mx-auto"
                             >
-                              📄 Download PDF
+                              <Printer className="w-3 h-3" />
+                              PDF
                             </button>
                           </td>
                         </tr>
@@ -1315,26 +1585,24 @@ export default function XRayPage() {
                   </table>
                 </div>
                 
-                <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">
-                      Total Reports: <span className="font-semibold text-gray-900">{filteredCompletedOrders.length}</span>
-                    </span>
-                  </div>
+                <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700/30 border-t border-gray-200 dark:border-gray-700">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    Total Reports: <span className="font-semibold text-gray-900 dark:text-white">{filteredCompletedOrders.length}</span>
+                  </span>
                 </div>
-              </Card>
+              </div>
             )}
           </div>
         )}
       </div>
 
-      {/* New X-Ray Order Modal - Same as before */}
+      {/* New X-Ray Order Modal */}
       {showOrderModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold text-gray-900">New X-Ray Order</h2>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">New X-Ray Order</h2>
                 <button
                   onClick={() => {
                     setShowOrderModal(false);
@@ -1343,18 +1611,18 @@ export default function XRayPage() {
                     setPhoneSearch("");
                     setFormData({ body_part: "", xray_type: "", doctor_name: "", notes: "" });
                   }}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                 >
-                  ✕
+                  <X className="w-5 h-5" />
                 </button>
               </div>
 
               <div className="space-y-4">
                 <div className="relative">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Search Patient by Phone Number *
                   </label>
-                  <div className="flex space-x-2">
+                  <div className="flex gap-2">
                     <input
                       type="tel"
                       placeholder="Enter 10-digit mobile number"
@@ -1366,29 +1634,29 @@ export default function XRayPage() {
                         setSelectedPatient(null);
                         setShowPatientDropdown(false);
                       }}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                      className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#7A329F] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       maxLength={10}
                     />
                     <button
                       onClick={searchPatientByPhone}
                       disabled={isSearching || phoneSearch.length < 10}
-                      className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                      className="px-4 py-2 bg-[#3B1E6F] text-white rounded-lg hover:bg-[#7A329F] transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
                     >
                       {isSearching ? "Searching..." : "Search"}
                     </button>
                   </div>
-                  {searchError && <p className="text-sm text-red-600 mt-1">{searchError}</p>}
+                  {searchError && <p className="text-sm text-red-600 dark:text-red-400 mt-1">{searchError}</p>}
                   
                   {showPatientDropdown && patientList.length > 0 && (
-                    <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    <div className="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                       {patientList.map((patient) => (
                         <button
                           key={patient.id}
                           onClick={() => selectPatient(patient)}
-                          className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors"
+                          className="w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 last:border-b-0 transition-colors"
                         >
-                          <div className="font-medium text-gray-900">{patient.name}</div>
-                          <div className="text-sm text-gray-500">ID: {patient.id}</div>
+                          <div className="font-medium text-gray-900 dark:text-white">{patient.name}</div>
+                          <div className="text-sm text-gray-500 dark:text-gray-400">ID: {patient.id}</div>
                         </button>
                       ))}
                     </div>
@@ -1396,21 +1664,21 @@ export default function XRayPage() {
                 </div>
 
                 {selectedPatient && (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                    <p className="text-sm font-medium text-green-900">✅ Patient Selected: {selectedPatient.name}</p>
-                    <p className="text-sm text-green-700">ID: {selectedPatient.id}</p>
+                  <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                    <p className="text-sm font-medium text-green-900 dark:text-green-400">✅ Patient Selected: {selectedPatient.name}</p>
+                    <p className="text-sm text-green-700 dark:text-green-500">ID: {selectedPatient.id}</p>
                   </div>
                 )}
 
                 {selectedPatient && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Visit Type *</label>
-                    <div className="flex space-x-4">
-                      <label className="flex items-center">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Visit Type *</label>
+                    <div className="flex gap-4">
+                      <label className="flex items-center text-sm text-gray-700 dark:text-gray-300">
                         <input type="radio" value="OP" checked={selectedVisitType === "OP"} onChange={() => setSelectedVisitType("OP")} className="mr-2" />
                         OP Visit
                       </label>
-                      <label className="flex items-center">
+                      <label className="flex items-center text-sm text-gray-700 dark:text-gray-300">
                         <input type="radio" value="IP" checked={selectedVisitType === "IP"} onChange={() => setSelectedVisitType("IP")} className="mr-2" />
                         IP Admission
                       </label>
@@ -1421,11 +1689,11 @@ export default function XRayPage() {
                 {selectedPatient && (
                   <>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Body Part *</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Body Part *</label>
                       <select
                         value={formData.body_part}
                         onChange={(e) => setFormData({ ...formData, body_part: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#7A329F] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       >
                         <option value="">Select Body Part</option>
                         {bodyParts.map(part => (
@@ -1435,11 +1703,11 @@ export default function XRayPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">X-Ray Type *</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">X-Ray Type *</label>
                       <select
                         value={formData.xray_type}
                         onChange={(e) => setFormData({ ...formData, xray_type: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#7A329F] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       >
                         <option value="">Select X-Ray Type</option>
                         {xrayTypes.map(type => (
@@ -1449,41 +1717,41 @@ export default function XRayPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Referring Doctor</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Referring Doctor</label>
                       <input
                         type="text"
                         placeholder="Doctor's name"
                         value={formData.doctor_name}
                         onChange={(e) => setFormData({ ...formData, doctor_name: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#7A329F] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Clinical Notes</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Clinical Notes</label>
                       <textarea
                         placeholder="Any clinical notes or specific concerns..."
                         rows={3}
                         value={formData.notes}
                         onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#7A329F] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       />
                     </div>
                   </>
                 )}
               </div>
 
-              <div className="flex justify-end space-x-3 mt-6">
+              <div className="flex justify-end gap-3 mt-6">
                 <button
                   onClick={() => setShowOrderModal(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleCreateOrder}
                   disabled={!selectedPatient || !formData.body_part || !formData.xray_type}
-                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                  className="px-4 py-2 bg-gradient-to-r from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Create X-Ray Order
                 </button>
@@ -1495,34 +1763,36 @@ export default function XRayPage() {
 
       {/* Enter Result Modal */}
       {showResultModal && selectedOrderForResult && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl mx-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-2xl">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold text-gray-900">X-Ray Report</h2>
-                <button onClick={() => setShowResultModal(false)} className="text-gray-400 hover:text-gray-600">✕</button>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">X-Ray Report</h2>
+                <button onClick={() => setShowResultModal(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                  <X className="w-5 h-5" />
+                </button>
               </div>
 
-              <div className="mb-4 p-4 bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-600">Patient: <span className="font-medium">{selectedOrderForResult.patient_name}</span></p>
-                <p className="text-sm text-gray-600">Order ID: <span className="font-medium">{selectedOrderForResult.order_id}</span></p>
-                <p className="text-sm text-gray-600">Body Part: <span className="font-medium">{selectedOrderForResult.body_part}</span></p>
-                <p className="text-sm text-gray-600">X-Ray Type: <span className="font-medium">{selectedOrderForResult.xray_type}</span></p>
+              <div className="mb-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                <p className="text-sm text-gray-600 dark:text-gray-300">Patient: <span className="font-medium">{selectedOrderForResult.patient_name}</span></p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Order ID: <span className="font-medium">{selectedOrderForResult.order_id}</span></p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Body Part: <span className="font-medium">{selectedOrderForResult.body_part}</span></p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">X-Ray Type: <span className="font-medium">{selectedOrderForResult.xray_type}</span></p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">X-Ray Report / Findings *</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">X-Ray Report / Findings *</label>
                 <textarea
                   placeholder="Enter detailed X-Ray report, findings, observations..."
                   rows={8}
                   value={resultText}
                   onChange={(e) => setResultText(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#7A329F] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
               </div>
 
-              <div className="flex justify-end space-x-3 mt-6">
-                <button onClick={() => setShowResultModal(false)} className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+              <div className="flex justify-end gap-3 mt-6">
+                <button onClick={() => setShowResultModal(false)} className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300">
                   Cancel
                 </button>
                 <button onClick={completeOrder} className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors">

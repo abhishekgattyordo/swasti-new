@@ -1,5 +1,3 @@
-
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -7,6 +5,25 @@ import { useRouter } from "next/navigation";
 import { useTenant } from "@/contexts/TenantContext";
 import { MODULE_KEYS, LABARATORY_FEATURES } from "@/lib/feature";
 import Card from "@/components/laboratory/Card";
+import {
+  Plus,
+  Search,
+  X,
+  Clock,
+  CheckCircle,
+  AlertCircle,
+  User,
+  Phone,
+  FileText,
+  Calendar,
+  Brain,
+  Activity,
+  Microscope,
+  Printer,
+  Download,
+  Hospital,
+  Pill,
+} from "lucide-react";
 
 interface MRIOrder {
   id: string;
@@ -293,18 +310,19 @@ export default function MRIPage() {
           .header {
             text-align: center;
             margin-bottom: 30px;
-            border-bottom: 2px solid #333;
+            border-bottom: 2px solid #3B1E6F;
             padding-bottom: 10px;
           }
           .hospital-name {
             font-size: 24px;
             font-weight: bold;
-            color: #2563eb;
+            color: #3B1E6F;
           }
           .report-title {
             font-size: 20px;
             font-weight: bold;
             margin-top: 10px;
+            color: #7A329F;
           }
           .patient-info {
             background-color: #f3f4f6;
@@ -333,7 +351,7 @@ export default function MRIPage() {
             font-size: 16px;
             font-weight: bold;
             margin-bottom: 10px;
-            color: #2563eb;
+            color: #3B1E6F;
           }
           .footer {
             margin-top: 30px;
@@ -455,20 +473,32 @@ export default function MRIPage() {
   );
 
   const getStatusBadge = (status: string) => {
-    const configs: Record<string, string> = {
-      Ordered: "bg-amber-50 text-amber-700 border-amber-200",
-      Completed: "bg-emerald-50 text-emerald-700 border-emerald-200",
-      Cancelled: "bg-red-50 text-red-700 border-red-200",
+    const configs: Record<string, { bg: string; text: string; icon: React.ReactNode }> = {
+      Ordered: { 
+        bg: "bg-amber-50 dark:bg-amber-900/20", 
+        text: "text-amber-700 dark:text-amber-300", 
+        icon: <Clock className="w-3.5 h-3.5 inline mr-1" />
+      },
+      Completed: { 
+        bg: "bg-emerald-50 dark:bg-emerald-900/20", 
+        text: "text-emerald-700 dark:text-emerald-300", 
+        icon: <CheckCircle className="w-3.5 h-3.5 inline mr-1" />
+      },
+      Cancelled: { 
+        bg: "bg-red-50 dark:bg-red-900/20", 
+        text: "text-red-700 dark:text-red-300", 
+        icon: <AlertCircle className="w-3.5 h-3.5 inline mr-1" />
+      },
     };
     return configs[status] || configs.Ordered;
   };
 
   if (tenantLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <div className="w-12 h-12 border-4 border-[#3B1E6F] border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading...</p>
         </div>
       </div>
     );
@@ -476,198 +506,218 @@ export default function MRIPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading MRI orders...</p>
+          <div className="w-12 h-12 border-4 border-[#3B1E6F] border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading MRI orders...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b border-gray-200 px-8 py-6 sticky top-0 z-10">
-        <div className="flex justify-between items-center">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Header */}
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 sticky top-0 z-10">
+        <div className="flex flex-wrap justify-between items-center gap-4">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900">MRI Scan</h1>
-            <p className="text-sm text-gray-500 mt-1">Manage MRI orders and reports</p>
-            {tenant && <p className="text-xs text-gray-400 mt-1">Tenant: {tenant.name}</p>}
+            <h1 className="text-2xl font-bold text-[#3B1E6F] dark:text-white">MRI Scan</h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Manage MRI orders and reports</p>
           </div>
           <button
             onClick={() => setShowOrderModal(true)}
-            className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors shadow-sm"
+            className="px-4 py-2 bg-gradient-to-r from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] text-white rounded-lg hover:opacity-90 transition-opacity shadow-sm flex items-center gap-2"
           >
-            + New MRI Order
+            <Plus className="w-4 h-4" />
+            New MRI Order
           </button>
         </div>
 
         <div className="flex space-x-2 mt-4">
           <button
             onClick={() => setActiveTab("pending")}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
               activeTab === "pending"
-                ? "bg-primary text-white"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                ? "bg-[#3B1E6F] text-white"
+                : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
             }`}
           >
+            <Clock className="w-4 h-4" />
             Pending Orders ({pendingOrders.length})
           </button>
           <button
             onClick={() => setActiveTab("completed")}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
               activeTab === "completed"
-                ? "bg-primary text-white"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                ? "bg-[#3B1E6F] text-white"
+                : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
             }`}
           >
+            <CheckCircle className="w-4 h-4" />
             Completed Reports ({completedOrders.length})
           </button>
         </div>
       </div>
 
-      <div className="p-8">
+      {/* Content */}
+      <div className="p-6">
         {activeTab === "pending" ? (
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Pending MRI Orders</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Pending MRI Orders</h2>
             {pendingOrders.length === 0 ? (
-              <Card className="p-8 text-center">
-                <p className="text-gray-500">No pending MRI orders</p>
-              </Card>
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-12 text-center">
+                <Brain className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+                <p className="text-gray-500 dark:text-gray-400">No pending MRI orders</p>
+              </div>
             ) : (
-              pendingOrders.map((order) => (
-                <Card key={order.id} className="p-6 hover:shadow-md transition-shadow">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-2">
-                        <h3 className="text-lg font-semibold text-gray-900">{order.patient_name}</h3>
-                        <span className="text-sm text-gray-500">ID: {order.patient_id}</span>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusBadge(order.status)}`}>
-                          {order.status}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-500 mb-2">
-                        {order.order_id} • {order.visit_type} Visit • {order.order_date}
-                      </p>
-                      <div className="grid grid-cols-2 gap-4 mt-2">
-                        <p className="text-sm">
-                          <span className="font-medium">Body Part:</span> {order.body_part}
+              pendingOrders.map((order) => {
+                const statusConfig = getStatusBadge(order.status);
+                return (
+                  <div
+                    key={order.id}
+                    className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex flex-wrap justify-between items-start gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-3 mb-2">
+                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                            {order.patient_name}
+                          </h3>
+                          <span className="text-sm text-gray-500 dark:text-gray-400">
+                            ID: {order.patient_id}
+                          </span>
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${statusConfig.bg} ${statusConfig.text}`}>
+                            {statusConfig.icon}
+                            {order.status}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                          {order.order_id} • {order.visit_type} Visit • {order.order_date}
                         </p>
-                        <p className="text-sm">
-                          <span className="font-medium">MRI Type:</span> {order.mri_type}
-                        </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+                          <p className="text-sm">
+                            <span className="font-medium text-gray-700 dark:text-gray-300">Body Part:</span>{' '}
+                            <span className="text-gray-600 dark:text-gray-400">{order.body_part}</span>
+                          </p>
+                          <p className="text-sm">
+                            <span className="font-medium text-gray-700 dark:text-gray-300">MRI Type:</span>{' '}
+                            <span className="text-gray-600 dark:text-gray-400">{order.mri_type}</span>
+                          </p>
+                        </div>
+                        {order.with_contrast && (
+                          <p className="text-sm text-blue-600 dark:text-blue-400 mt-1 flex items-center gap-1">
+                            <CheckCircle className="w-3.5 h-3.5" />
+                            With Contrast
+                          </p>
+                        )}
+                        {order.doctor_name && (
+                          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Ordered by: Dr. {order.doctor_name}</p>
+                        )}
+                        {order.notes && (
+                          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Notes: {order.notes}</p>
+                        )}
                       </div>
-                      {order.with_contrast && (
-                        <p className="text-sm text-blue-600 mt-1">✓ With Contrast</p>
-                      )}
-                      {order.doctor_name && (
-                        <p className="text-sm text-gray-500 mt-1">Ordered by: Dr. {order.doctor_name}</p>
-                      )}
-                      {order.notes && (
-                        <p className="text-sm text-gray-500 mt-1">Notes: {order.notes}</p>
-                      )}
-                    </div>
-                    <div className="text-right space-y-2">
-                      <button
-                        onClick={() => {
-                          setSelectedOrderForResult(order);
-                          setShowResultModal(true);
-                        }}
-                        className="w-full px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm"
-                      >
-                        Enter Report
-                      </button>
-                      <button
-                        onClick={() => cancelOrder(order.id)}
-                        className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
-                      >
-                        Cancel Order
-                      </button>
+                      <div className="flex flex-col gap-2 min-w-[120px]">
+                        <button
+                          onClick={() => {
+                            setSelectedOrderForResult(order);
+                            setShowResultModal(true);
+                          }}
+                          className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm"
+                        >
+                          Enter Report
+                        </button>
+                        <button
+                          onClick={() => cancelOrder(order.id)}
+                          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+                        >
+                          Cancel Order
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </Card>
-              ))
+                );
+              })
             )}
           </div>
         ) : (
           <div>
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">Completed MRI Reports</h2>
-              <div className="flex space-x-3">
-                <input
-                  type="text"
-                  placeholder="Search by patient name, ID or order ID..."
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent w-80"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
+            <div className="flex flex-wrap justify-between items-center gap-4 mb-4">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Completed MRI Reports</h2>
+              <div className="flex flex-wrap gap-3">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search by patient, ID or order..."
+                    className="pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#7A329F] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white w-64"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
                 <button
                   onClick={exportToCSV}
-                  className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm font-medium"
+                  className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm font-medium flex items-center gap-2"
                 >
-                  📥 Export CSV
+                  <Download className="w-4 h-4" />
+                  Export CSV
                 </button>
               </div>
             </div>
             
             {filteredCompletedOrders.length === 0 ? (
-              <Card className="p-8 text-center">
-                <p className="text-gray-500">No completed MRI reports found</p>
-              </Card>
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-12 text-center">
+                <FileText className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+                <p className="text-gray-500 dark:text-gray-400">No completed MRI reports found</p>
+              </div>
             ) : (
-              <Card className="overflow-hidden">
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead className="bg-gray-50 border-b border-gray-200">
+                    <thead className="bg-gray-50 dark:bg-gray-700/30 border-b border-gray-200 dark:border-gray-700">
                       <tr>
-                        <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
-                        <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Patient Name</th>
-                        <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Patient ID</th>
-                        <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Body Part</th>
-                        <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">MRI Type</th>
-                        <th className="text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Contrast</th>
-                        <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Visit</th>
-                        <th className="text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Report Date</th>
-                        <th className="text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Order ID</th>
+                        <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Patient</th>
+                        <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Body Part</th>
+                        <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">MRI Type</th>
+                        <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Contrast</th>
+                        <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Report Date</th>
+                        <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Action</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200">
+                    <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                       {filteredCompletedOrders.map((order) => (
-                        <tr key={order.id} className="hover:bg-gray-50 transition-colors">
-                          <td className="px-6 py-4 text-sm font-mono font-medium text-gray-900">
+                        <tr key={order.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                          <td className="px-4 py-3 text-sm font-mono font-medium text-gray-900 dark:text-white">
                             {order.order_id}
                           </td>
-                          <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                            {order.patient_name}
+                          <td className="px-4 py-3">
+                            <div className="text-sm font-medium text-gray-900 dark:text-white">{order.patient_name}</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">ID: {order.patient_id}</div>
                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-500">
-                            {order.patient_id}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-600">
+                          <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
                             {order.body_part}
                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-600">
+                          <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
                             {order.mri_type}
                           </td>
-                          <td className="px-6 py-4 text-sm text-center">
+                          <td className="px-4 py-3 text-sm text-center">
                             {order.with_contrast ? (
-                              <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">Yes</span>
+                              <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-xs">Yes</span>
                             ) : (
-                              <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">No</span>
+                              <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-full text-xs">No</span>
                             )}
                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-500">
-                            {order.visit_type}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-500 text-center">
+                          <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 text-center">
                             {order.completed_date}
                           </td>
-                          <td className="px-6 py-4 text-center">
+                          <td className="px-4 py-3 text-center">
                             <button
                               onClick={() => downloadPDF(order)}
-                              className="px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-lg transition-colors text-xs font-medium"
+                              className="px-3 py-1.5 bg-[#3B1E6F]/10 text-[#3B1E6F] hover:bg-[#3B1E6F] hover:text-white rounded-lg transition-colors text-xs font-medium flex items-center gap-1 mx-auto"
                             >
-                              📄 Download PDF
+                              <Printer className="w-3 h-3" />
+                              PDF
                             </button>
                           </td>
                         </tr>
@@ -676,26 +726,24 @@ export default function MRIPage() {
                   </table>
                 </div>
                 
-                <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">
-                      Total Reports: <span className="font-semibold text-gray-900">{filteredCompletedOrders.length}</span>
-                    </span>
-                  </div>
+                <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700/30 border-t border-gray-200 dark:border-gray-700">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    Total Reports: <span className="font-semibold text-gray-900 dark:text-white">{filteredCompletedOrders.length}</span>
+                  </span>
                 </div>
-              </Card>
+              </div>
             )}
           </div>
         )}
       </div>
 
-      {/* New MRI Order Modal - Same structure as before */}
+      {/* New MRI Order Modal */}
       {showOrderModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold text-gray-900">New MRI Order</h2>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">New MRI Order</h2>
                 <button
                   onClick={() => {
                     setShowOrderModal(false);
@@ -704,18 +752,18 @@ export default function MRIPage() {
                     setPhoneSearch("");
                     setFormData({ body_part: "", mri_type: "", with_contrast: false, doctor_name: "", notes: "" });
                   }}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                 >
-                  ✕
+                  <X className="w-5 h-5" />
                 </button>
               </div>
 
               <div className="space-y-4">
                 <div className="relative">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Search Patient by Phone Number *
                   </label>
-                  <div className="flex space-x-2">
+                  <div className="flex gap-2">
                     <input
                       type="tel"
                       placeholder="Enter 10-digit mobile number"
@@ -727,29 +775,29 @@ export default function MRIPage() {
                         setSelectedPatient(null);
                         setShowPatientDropdown(false);
                       }}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                      className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#7A329F] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       maxLength={10}
                     />
                     <button
                       onClick={searchPatientByPhone}
                       disabled={isSearching || phoneSearch.length < 10}
-                      className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                      className="px-4 py-2 bg-[#3B1E6F] text-white rounded-lg hover:bg-[#7A329F] transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
                     >
                       {isSearching ? "Searching..." : "Search"}
                     </button>
                   </div>
-                  {searchError && <p className="text-sm text-red-600 mt-1">{searchError}</p>}
+                  {searchError && <p className="text-sm text-red-600 dark:text-red-400 mt-1">{searchError}</p>}
                   
                   {showPatientDropdown && patientList.length > 0 && (
-                    <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    <div className="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                       {patientList.map((patient) => (
                         <button
                           key={patient.id}
                           onClick={() => selectPatient(patient)}
-                          className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors"
+                          className="w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 last:border-b-0 transition-colors"
                         >
-                          <div className="font-medium text-gray-900">{patient.name}</div>
-                          <div className="text-sm text-gray-500">ID: {patient.id}</div>
+                          <div className="font-medium text-gray-900 dark:text-white">{patient.name}</div>
+                          <div className="text-sm text-gray-500 dark:text-gray-400">ID: {patient.id}</div>
                         </button>
                       ))}
                     </div>
@@ -757,21 +805,21 @@ export default function MRIPage() {
                 </div>
 
                 {selectedPatient && (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                    <p className="text-sm font-medium text-green-900">✅ Patient Selected: {selectedPatient.name}</p>
-                    <p className="text-sm text-green-700">ID: {selectedPatient.id}</p>
+                  <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                    <p className="text-sm font-medium text-green-900 dark:text-green-400">✅ Patient Selected: {selectedPatient.name}</p>
+                    <p className="text-sm text-green-700 dark:text-green-500">ID: {selectedPatient.id}</p>
                   </div>
                 )}
 
                 {selectedPatient && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Visit Type *</label>
-                    <div className="flex space-x-4">
-                      <label className="flex items-center">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Visit Type *</label>
+                    <div className="flex gap-4">
+                      <label className="flex items-center text-sm text-gray-700 dark:text-gray-300">
                         <input type="radio" value="OP" checked={selectedVisitType === "OP"} onChange={() => setSelectedVisitType("OP")} className="mr-2" />
                         OP Visit
                       </label>
-                      <label className="flex items-center">
+                      <label className="flex items-center text-sm text-gray-700 dark:text-gray-300">
                         <input type="radio" value="IP" checked={selectedVisitType === "IP"} onChange={() => setSelectedVisitType("IP")} className="mr-2" />
                         IP Admission
                       </label>
@@ -782,11 +830,11 @@ export default function MRIPage() {
                 {selectedPatient && (
                   <>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Body Part *</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Body Part *</label>
                       <select
                         value={formData.body_part}
                         onChange={(e) => setFormData({ ...formData, body_part: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#7A329F] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       >
                         <option value="">Select Body Part</option>
                         {bodyParts.map(part => (
@@ -796,11 +844,11 @@ export default function MRIPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">MRI Type *</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">MRI Type *</label>
                       <select
                         value={formData.mri_type}
                         onChange={(e) => setFormData({ ...formData, mri_type: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#7A329F] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       >
                         <option value="">Select MRI Type</option>
                         {mriTypes.map(type => (
@@ -815,49 +863,49 @@ export default function MRIPage() {
                         id="with_contrast"
                         checked={formData.with_contrast}
                         onChange={(e) => setFormData({ ...formData, with_contrast: e.target.checked })}
-                        className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                        className="h-4 w-4 text-[#7A329F] focus:ring-[#7A329F] border-gray-300 rounded"
                       />
-                      <label htmlFor="with_contrast" className="ml-2 block text-sm text-gray-700">
+                      <label htmlFor="with_contrast" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
                         With Contrast (Gadolinium)
                       </label>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Referring Doctor</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Referring Doctor</label>
                       <input
                         type="text"
                         placeholder="Doctor's name"
                         value={formData.doctor_name}
                         onChange={(e) => setFormData({ ...formData, doctor_name: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#7A329F] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Clinical Notes</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Clinical Notes</label>
                       <textarea
                         placeholder="Any clinical notes or specific concerns..."
                         rows={3}
                         value={formData.notes}
                         onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#7A329F] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       />
                     </div>
                   </>
                 )}
               </div>
 
-              <div className="flex justify-end space-x-3 mt-6">
+              <div className="flex justify-end gap-3 mt-6">
                 <button
                   onClick={() => setShowOrderModal(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleCreateOrder}
                   disabled={!selectedPatient || !formData.body_part || !formData.mri_type}
-                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                  className="px-4 py-2 bg-gradient-to-r from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Create MRI Order
                 </button>
@@ -869,37 +917,39 @@ export default function MRIPage() {
 
       {/* Enter Result Modal */}
       {showResultModal && selectedOrderForResult && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl mx-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-2xl">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold text-gray-900">MRI Report</h2>
-                <button onClick={() => setShowResultModal(false)} className="text-gray-400 hover:text-gray-600">✕</button>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">MRI Report</h2>
+                <button onClick={() => setShowResultModal(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                  <X className="w-5 h-5" />
+                </button>
               </div>
 
-              <div className="mb-4 p-4 bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-600">Patient: <span className="font-medium">{selectedOrderForResult.patient_name}</span></p>
-                <p className="text-sm text-gray-600">Order ID: <span className="font-medium">{selectedOrderForResult.order_id}</span></p>
-                <p className="text-sm text-gray-600">Body Part: <span className="font-medium">{selectedOrderForResult.body_part}</span></p>
-                <p className="text-sm text-gray-600">MRI Type: <span className="font-medium">{selectedOrderForResult.mri_type}</span></p>
+              <div className="mb-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                <p className="text-sm text-gray-600 dark:text-gray-300">Patient: <span className="font-medium">{selectedOrderForResult.patient_name}</span></p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Order ID: <span className="font-medium">{selectedOrderForResult.order_id}</span></p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Body Part: <span className="font-medium">{selectedOrderForResult.body_part}</span></p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">MRI Type: <span className="font-medium">{selectedOrderForResult.mri_type}</span></p>
                 {selectedOrderForResult.with_contrast && (
-                  <p className="text-sm text-blue-600">With Contrast</p>
+                  <p className="text-sm text-blue-600 dark:text-blue-400">With Contrast</p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">MRI Report / Findings *</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">MRI Report / Findings *</label>
                 <textarea
                   placeholder="Enter detailed MRI report, findings, observations..."
                   rows={8}
                   value={resultText}
                   onChange={(e) => setResultText(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#7A329F] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
               </div>
 
-              <div className="flex justify-end space-x-3 mt-6">
-                <button onClick={() => setShowResultModal(false)} className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+              <div className="flex justify-end gap-3 mt-6">
+                <button onClick={() => setShowResultModal(false)} className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300">
                   Cancel
                 </button>
                 <button onClick={completeOrder} className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors">
@@ -913,4 +963,3 @@ export default function MRIPage() {
     </div>
   );
 }
-

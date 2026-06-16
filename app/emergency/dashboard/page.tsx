@@ -37,9 +37,9 @@ async function fetchAssessments(): Promise<Assessment[]> {
 function TriageBadge({ value }: { value: TriageType | '' }) {
   if (!value) return null;
   const config = {
-    Red: { text: 'Critical', icon: '🔴', className: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-red-200' },
-    Yellow: { text: 'Observation', icon: '🟡', className: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 border-yellow-200' },
-    Green: { text: 'Stable', icon: '🟢', className: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-green-200' }
+    Red: { text: 'Critical', icon: '🔴', className: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800' },
+    Yellow: { text: 'Observation', icon: '🟡', className: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800' },
+    Green: { text: 'Stable', icon: '🟢', className: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-green-200 dark:border-green-800' }
   };
   const { text, icon, className } = config[value];
   return (
@@ -54,7 +54,7 @@ function StatusBadge({ value }: { value: AssessmentStatus }) {
   const config = {
     'Draft': { icon: '📝', className: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
     'Completed': { icon: '✅', className: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
-    'Converted to Admission': { icon: '🏥', className: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' }
+    'Converted to Admission': { icon: '🏥', className: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400' }
   };
   const { icon, className } = config[value];
   return (
@@ -128,9 +128,9 @@ export default function Dashboard() {
   ] as const;
 
   const toneClass: Record<string, string> = {
-    info: "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400",
+    info: "bg-purple-100 text-[#3B1E6F] dark:bg-purple-900/30 dark:text-[#7A329F]",
     warning: "bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400",
-    success: "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400",
+    success: "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400",
     critical: "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400",
   };
 
@@ -138,7 +138,7 @@ export default function Dashboard() {
     return (
       <div className="container mx-auto py-6 flex justify-center items-center min-h-[400px]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3B1E6F] mx-auto" />
           <p className="mt-2 text-sm text-muted-foreground">Loading dashboard...</p>
         </div>
       </div>
@@ -149,16 +149,16 @@ export default function Dashboard() {
     <div className="container mx-auto py-6 space-y-8 max-w-7xl">
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Emergency Dashboard</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-[#3B1E6F] dark:text-white">Emergency Dashboard</h1>
           <p className="text-sm text-muted-foreground">Track triage, vitals and admissions in real-time.</p>
         </div>
-        <div className="flex gap-2">
-          <Button asChild variant="outline">
+        <div className="flex gap-2 flex-wrap">
+          <Button asChild variant="outline" className="border-[#3B1E6F] text-[#3B1E6F] hover:bg-[#3B1E6F] hover:text-white dark:border-[#7A329F] dark:text-[#7A329F] dark:hover:bg-[#7A329F] dark:hover:text-white">
             <Link href="/emergency/assessments">
               <ClipboardList className="h-4 w-4 mr-2" /> View all
             </Link>
           </Button>
-          <Button asChild size="lg" className="bg-red-600 hover:bg-red-700">
+          <Button asChild size="lg" className="bg-gradient-to-r from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] hover:opacity-90 text-white shadow-lg shadow-[#3B1E6F]/20">
             <Link href="/emergency/assessments/new">
               <FilePlus2 className="h-4 w-4 mr-2" /> New Assessment
             </Link>
@@ -172,7 +172,7 @@ export default function Dashboard() {
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">{c.label}</p>
-                <p className="mt-2 text-3xl font-bold tabular-nums">{c.value}</p>
+                <p className="mt-2 text-3xl font-bold tabular-nums text-[#3B1E6F] dark:text-white">{c.value}</p>
               </div>
               <span className={`flex h-10 w-10 items-center justify-center rounded-lg ${toneClass[c.tone]} bg-opacity-10`}>
                 <c.icon className="h-5 w-5" />
@@ -183,9 +183,9 @@ export default function Dashboard() {
       </div>
 
       <Card className="border-border/60 overflow-hidden shadow-sm">
-        <div className="flex flex-col gap-3 border-b p-4 sm:flex-row sm:items-center sm:justify-between bg-gradient-to-r from-gray-50 to-white dark:from-gray-900 dark:to-gray-950">
+        <div className="flex flex-col gap-3 border-b p-4 sm:flex-row sm:items-center sm:justify-between bg-gradient-to-r from-purple-50 to-white dark:from-purple-900/10 dark:to-gray-950">
           <div>
-            <h2 className="font-semibold text-lg">Recent Assessments</h2>
+            <h2 className="font-semibold text-lg text-[#3B1E6F] dark:text-white">Recent Assessments</h2>
             <p className="text-xs text-muted-foreground">Latest patients seen in the emergency ward</p>
           </div>
           <div className="relative w-full sm:w-80">
@@ -194,7 +194,7 @@ export default function Dashboard() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by name, UHID, or doctor..."
-              className="pl-9"
+              className="pl-9 focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
             />
           </div>
         </div>
@@ -205,7 +205,7 @@ export default function Dashboard() {
               <ClipboardList className="h-8 w-8 text-muted-foreground" />
             </div>
             <p className="text-sm text-muted-foreground">No assessments yet.</p>
-            <Button asChild className="mt-4">
+            <Button asChild className="mt-4 bg-gradient-to-r from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] hover:opacity-90 text-white">
               <Link href="/emergency/assessments/new">
                 <FilePlus2 className="h-4 w-4 mr-2" /> Create first assessment
               </Link>
@@ -217,7 +217,7 @@ export default function Dashboard() {
               <Link
                 key={assessment.id}
                 href={`/emergency/assessments/${assessment.id}`}
-                className="block hover:bg-muted/30 transition-all duration-200"
+                className="block hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-200"
               >
                 <div className="p-4">
                   <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -225,9 +225,10 @@ export default function Dashboard() {
                       <Avatar className="h-10 w-10">
                         <AvatarFallback className={cn(
                           "text-sm font-medium",
-                          assessment.triage === 'Red' && "bg-red-100 text-red-700",
-                          assessment.triage === 'Yellow' && "bg-yellow-100 text-yellow-700",
-                          assessment.triage === 'Green' && "bg-green-100 text-green-700"
+                          assessment.triage === 'Red' && "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+                          assessment.triage === 'Yellow' && "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
+                          assessment.triage === 'Green' && "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+                          !assessment.triage && "bg-purple-100 text-[#3B1E6F] dark:bg-purple-900/30 dark:text-[#7A329F]"
                         )}>
                           {assessment.patientName?.charAt(0).toUpperCase() || 'P'}
                         </AvatarFallback>
@@ -235,7 +236,7 @@ export default function Dashboard() {
 
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="font-semibold text-base">
+                          <h3 className="font-semibold text-base text-gray-900 dark:text-white">
                             {assessment.patientName || "Unnamed patient"}
                           </h3>
                           <TriageBadge value={assessment.triage} />
@@ -266,7 +267,7 @@ export default function Dashboard() {
                     </div>
 
                     <div className="flex items-center gap-2 ml-13 lg:ml-0">
-                      <Button variant="ghost" size="sm" className="gap-1">
+                      <Button variant="ghost" size="sm" className="gap-1 text-[#7A329F] hover:text-[#3B1E6F] hover:bg-purple-50 dark:hover:bg-purple-900/20">
                         View Details <ArrowRight className="h-3 w-3" />
                       </Button>
                     </div>
@@ -278,10 +279,10 @@ export default function Dashboard() {
         )}
 
         {recent.length > 0 && (
-          <div className="border-t p-3 text-center bg-muted/20">
+          <div className="border-t p-3 text-center bg-purple-50/50 dark:bg-purple-900/10">
             <Link
               href="/emergency/assessments"
-              className="text-sm text-primary hover:underline inline-flex items-center gap-1"
+              className="text-sm text-[#7A329F] dark:text-[#9B4DBF] hover:underline inline-flex items-center gap-1"
             >
               View all assessments <ArrowRight className="h-3 w-3" />
             </Link>

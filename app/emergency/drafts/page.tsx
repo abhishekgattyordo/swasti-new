@@ -117,7 +117,7 @@ export default function DraftsPage() {
     return (
       <div className="container mx-auto py-6 flex justify-center items-center min-h-[400px]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3B1E6F] mx-auto" />
           <p className="mt-2 text-sm text-muted-foreground">Loading drafts...</p>
         </div>
       </div>
@@ -129,12 +129,12 @@ export default function DraftsPage() {
       <div className="border-b border-gray-200 dark:border-gray-800 pb-4">
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Draft Assessments</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-[#3B1E6F] dark:text-white">Draft Assessments</h1>
             <p className="text-sm text-muted-foreground">
               {filteredDrafts.length} draft{filteredDrafts.length === 1 ? "" : "s"} pending completion
             </p>
           </div>
-          <Button asChild>
+          <Button asChild className="bg-gradient-to-r from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] hover:opacity-90 text-white shadow-lg shadow-[#3B1E6F]/20">
             <Link href="/emergency/assessments/new">
               <FilePlus2 className="h-4 w-4 mr-2" /> New Assessment
             </Link>
@@ -149,7 +149,7 @@ export default function DraftsPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search UHID, name, or assessment ID"
-            className="pl-9"
+            className="pl-9 focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
           />
         </div>
       </Card>
@@ -159,11 +159,11 @@ export default function DraftsPage() {
           <div className="p-12 text-center">
             <p className="text-sm text-muted-foreground">No draft assessments found.</p>
             {searchQuery ? (
-              <Button variant="outline" className="mt-4" onClick={() => setSearchQuery("")}>
+              <Button variant="outline" className="mt-4 border-[#3B1E6F] text-[#3B1E6F] hover:bg-[#3B1E6F] hover:text-white dark:border-[#7A329F] dark:text-[#7A329F] dark:hover:bg-[#7A329F] dark:hover:text-white" onClick={() => setSearchQuery("")}>
                 Clear search
               </Button>
             ) : (
-              <Button asChild variant="outline" className="mt-4">
+              <Button asChild variant="outline" className="mt-4 border-[#3B1E6F] text-[#3B1E6F] hover:bg-[#3B1E6F] hover:text-white dark:border-[#7A329F] dark:text-[#7A329F] dark:hover:bg-[#7A329F] dark:hover:text-white">
                 <Link href="/emergency/assessments/new">
                   <FilePlus2 className="h-4 w-4 mr-2" /> Start a new assessment
                 </Link>
@@ -173,14 +173,14 @@ export default function DraftsPage() {
         ) : (
           <div className="overflow-x-auto">
             <Table>
-              <TableHeader className="bg-muted/30">
+              <TableHeader className="bg-gradient-to-r from-purple-50 to-white dark:from-purple-900/10 dark:to-gray-900">
                 <TableRow className="border-b-2 border-gray-300 dark:border-gray-700">
-                  <TableHead className="border-r border-gray-200 dark:border-gray-800">Assessment ID</TableHead>
-                  <TableHead className="border-r border-gray-200 dark:border-gray-800">UHID</TableHead>
-                  <TableHead className="border-r border-gray-200 dark:border-gray-800">Patient</TableHead>
-                  <TableHead className="border-r border-gray-200 dark:border-gray-800">Triage</TableHead>
-                  <TableHead className="border-r border-gray-200 dark:border-gray-800">Last updated</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="border-r border-gray-200 dark:border-gray-800 text-[#3B1E6F] dark:text-white">Assessment ID</TableHead>
+                  <TableHead className="border-r border-gray-200 dark:border-gray-800 text-[#3B1E6F] dark:text-white">UHID</TableHead>
+                  <TableHead className="border-r border-gray-200 dark:border-gray-800 text-[#3B1E6F] dark:text-white">Patient</TableHead>
+                  <TableHead className="border-r border-gray-200 dark:border-gray-800 text-[#3B1E6F] dark:text-white">Triage</TableHead>
+                  <TableHead className="border-r border-gray-200 dark:border-gray-800 text-[#3B1E6F] dark:text-white">Last updated</TableHead>
+                  <TableHead className="text-right text-[#3B1E6F] dark:text-white">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -188,17 +188,17 @@ export default function DraftsPage() {
                   <TableRow
                     key={assessment.id}
                     className={cn(
-                      "hover:bg-muted/30 transition-colors",
+                      "hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors",
                       idx !== filteredDrafts.length - 1 && "border-b border-gray-200 dark:border-gray-800"
                     )}
                   >
-                    <TableCell className="font-mono text-xs border-r border-gray-200 dark:border-gray-800">
+                    <TableCell className="font-mono text-xs border-r border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white">
                       {assessment.id}
                     </TableCell>
-                    <TableCell className="border-r border-gray-200 dark:border-gray-800">
+                    <TableCell className="border-r border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300">
                       {assessment.uhid || "—"}
                     </TableCell>
-                    <TableCell className="font-medium border-r border-gray-200 dark:border-gray-800">
+                    <TableCell className="font-medium border-r border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white">
                       {assessment.patientName || "Unnamed patient"}
                     </TableCell>
                     <TableCell className="border-r border-gray-200 dark:border-gray-800">
@@ -209,33 +209,33 @@ export default function DraftsPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="inline-flex gap-1">
-                        <Button asChild size="icon" variant="ghost" aria-label="View">
+                        <Button asChild size="icon" variant="ghost" aria-label="View" className="hover:bg-purple-100 dark:hover:bg-purple-900/20 hover:text-[#3B1E6F]">
                           <Link href={`/emergency/assessments/${assessment.id}`}>
                             <Eye className="h-4 w-4" />
                           </Link>
                         </Button>
-                        <Button asChild size="icon" variant="ghost" aria-label="Continue editing">
+                        <Button asChild size="icon" variant="ghost" aria-label="Continue editing" className="hover:bg-purple-100 dark:hover:bg-purple-900/20 hover:text-[#3B1E6F]">
                           <Link href={`/emergency/assessments/edit/${assessment.id}`}>
                             <Pencil className="h-4 w-4" />
                           </Link>
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button size="icon" variant="ghost" aria-label="Delete">
+                            <Button size="icon" variant="ghost" aria-label="Delete" className="hover:bg-red-50 dark:hover:bg-red-900/20">
                               <Trash2 className="h-4 w-4 text-red-500" />
                             </Button>
                           </AlertDialogTrigger>
-                          <AlertDialogContent>
+                          <AlertDialogContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                             <AlertDialogHeader>
-                              <AlertDialogTitle>Delete this draft?</AlertDialogTitle>
-                              <AlertDialogDescription>
+                              <AlertDialogTitle className="text-[#3B1E6F] dark:text-white">Delete this draft?</AlertDialogTitle>
+                              <AlertDialogDescription className="text-gray-500 dark:text-gray-400">
                                 {assessment.id} — {assessment.patientName || "Unnamed patient"}.
                                 This action cannot be undone.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDelete(assessment.id)}>
+                              <AlertDialogCancel className="border-gray-300 dark:border-gray-600">Cancel</AlertDialogCancel>
+                              <AlertDialogAction className="bg-red-600 hover:bg-red-700 text-white">
                                 Delete
                               </AlertDialogAction>
                             </AlertDialogFooter>

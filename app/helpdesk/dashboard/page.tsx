@@ -9,6 +9,10 @@ import {
   Users,
   Clock,
   DollarSign,
+  Activity,
+  TrendingUp,
+  ArrowRight,
+  BedDouble,
 } from "lucide-react";
 import HelpDeskSidebar from "@/components/helpdesk/HelpDeskSidebar";
 import HelpDeskStats from "@/components/helpdesk/HelpDeskStats";
@@ -34,7 +38,6 @@ export default function HelpDeskDashboard() {
     Appointment[]
   >([]);
   
-  // ✅ Revenue state from invoices API
   const [todayRevenue, setTodayRevenue] = useState(0);
   const [todayPaidRevenue, setTodayPaidRevenue] = useState(0);
 
@@ -43,7 +46,6 @@ export default function HelpDeskDashboard() {
     router.push("/helpdesk/room-availability");
   const handleDoctorSlotsClick = () => router.push("/helpdesk/doctor-slots");
 
-  // ✅ Fetch revenue from invoices API
   const fetchRevenue = async () => {
     try {
       const today = new Date().toISOString().split("T")[0];
@@ -53,13 +55,11 @@ export default function HelpDeskDashboard() {
       if (data.success && Array.isArray(data.data)) {
         const invoices = data.data;
         
-        // Total revenue (all invoices for today)
         const total = invoices.reduce(
           (sum: number, inv: any) => sum + (inv.amount || 0),
           0
         );
         
-        // Paid revenue (only paid invoices)
         const paid = invoices
           .filter((inv: any) => inv.status === "paid")
           .reduce((sum: number, inv: any) => sum + (inv.amount || 0), 0);
@@ -74,7 +74,7 @@ export default function HelpDeskDashboard() {
 
   useEffect(() => {
     fetchDashboardData();
-    fetchRevenue(); // ✅ Fetch revenue on mount
+    fetchRevenue();
   }, []);
 
   const fetchDashboardData = async () => {
@@ -82,21 +82,16 @@ export default function HelpDeskDashboard() {
     try {
       const today = new Date().toISOString().split("T")[0];
 
-      // Fetch today's appointments
       const appointmentsRes =
         await appointmentsApi.getAppointmentsByDate(today);
       const appointments = appointmentsRes.data || [];
 
-      // Count unique patients
       const uniquePatientIds = new Set(
         appointments.map((apt: any) => apt.patient_id),
       );
       setPatientsTodayCount(uniquePatientIds.size);
-
-      // Set appointment count
       setTodayAppointmentsCount(appointments.length);
 
-      // Map to the Appointment type expected by the UI
       const mappedAppointments = appointments.map((apt: any) => ({
         id: apt.appointment_id,
         patientName: apt.patient_name || "Unknown",
@@ -115,40 +110,39 @@ export default function HelpDeskDashboard() {
     }
   };
 
-  // ✅ Quick Stats with real revenue data
   const quickStats = [
     {
       title: "Patients Today",
       value: patientsTodayCount,
       change: "",
-      icon: <Users className="w-5 h-5 text-blue-600" />,
-      bgColor: "bg-blue-100",
+      icon: <Users className="w-5 h-5 text-[#3B1E6F]" />,
+      bgColor: "bg-purple-50 dark:bg-purple-900/20",
     },
     {
       title: "Appointments",
       value: todayAppointmentsCount,
       change: "",
       icon: <Calendar className="w-5 h-5 text-emerald-600" />,
-      bgColor: "bg-emerald-100",
+      bgColor: "bg-emerald-50 dark:bg-emerald-900/20",
     },
     {
       title: "Avg. Wait Time",
-      value: "", // Mock or calculate from API
+      value: "12 min",
       change: "",
       icon: <Clock className="w-5 h-5 text-amber-600" />,
-      bgColor: "bg-amber-100",
+      bgColor: "bg-amber-50 dark:bg-amber-900/20",
     },
     {
       title: "Revenue Today",
       value: `₹${todayRevenue.toFixed(2)}`,
       change: "",
-      icon: <DollarSign className="w-5 h-5 text-purple-600" />,
-      bgColor: "bg-purple-100",
+      icon: <DollarSign className="w-5 h-5 text-[#7A329F]" />,
+      bgColor: "bg-purple-50 dark:bg-purple-900/20",
     },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex">
       {/* Sidebar */}
       <HelpDeskSidebar
         isOpen={mobileMenuOpen}
@@ -161,21 +155,21 @@ export default function HelpDeskDashboard() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-h-screen overflow-hidden">
         {/* Mobile header */}
-        <header className="lg:hidden bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3">
+        <header className="lg:hidden bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3 flex items-center gap-3">
           <button
             onClick={() => setMobileMenuOpen(true)}
-            className="p-2 rounded-lg hover:bg-gray-100"
+            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
           >
-            <span className="material-icons">menu</span>
+            <Menu className="w-5 h-5 text-gray-700 dark:text-gray-300" />
           </button>
-          <h1 className="text-xl font-bold text-gray-800 truncate">
+          <h1 className="text-xl font-bold text-[#3B1E6F] dark:text-white truncate">
             Dashboard
           </h1>
         </header>
 
         {/* Mobile toggle button */}
         <button
-          className="lg:hidden fixed bottom-20 right-6 z-50 p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center"
+          className="lg:hidden fixed bottom-20 right-6 z-50 p-3 bg-gradient-to-r from-[#3B1E6F] to-[#7A329F] hover:from-[#7A329F] hover:to-[#0D5CB3] text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-label="Toggle menu"
         >
@@ -191,12 +185,22 @@ export default function HelpDeskDashboard() {
             {/* Welcome Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">
+                <h1 className="text-3xl font-bold text-[#3B1E6F] dark:text-white">
                   Welcome back
                 </h1>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                   This is what is happening at the help desk today.
                 </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-500 dark:text-gray-400">
+                  {new Date().toLocaleDateString('en-US', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  })}
+                </span>
               </div>
             </div>
 
@@ -206,9 +210,9 @@ export default function HelpDeskDashboard() {
                 {[1, 2, 3, 4].map((i) => (
                   <div
                     key={i}
-                    className="bg-white rounded-xl border border-gray-200 p-3 sm:p-4 shadow-sm animate-pulse"
+                    className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-3 sm:p-4 shadow-sm animate-pulse"
                   >
-                    <div className="h-16 bg-gray-200 rounded"></div>
+                    <div className="h-16 bg-gray-200 dark:bg-gray-700 rounded"></div>
                   </div>
                 ))}
               </div>
@@ -217,7 +221,7 @@ export default function HelpDeskDashboard() {
                 {quickStats.map((stat, index) => (
                   <div
                     key={index}
-                    className="bg-white rounded-xl border border-gray-200 p-3 sm:p-4 shadow-sm hover:shadow-md transition-shadow"
+                    className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-3 sm:p-4 shadow-sm hover:shadow-md transition-shadow"
                   >
                     <div className="flex items-start justify-between">
                       <div
@@ -225,14 +229,14 @@ export default function HelpDeskDashboard() {
                       >
                         {stat.icon}
                       </div>
-                      <span className="text-xs font-medium text-green-600 bg-green-50 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                      <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
                         {stat.change}
                       </span>
                     </div>
-                    <p className="text-xs sm:text-sm text-gray-500 mt-2 sm:mt-3">
+                    <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-2 sm:mt-3">
                       {stat.title}
                     </p>
-                    <p className="text-base sm:text-xl font-bold text-gray-900 mt-0.5">
+                    <p className="text-base sm:text-xl font-bold text-gray-900 dark:text-white mt-0.5">
                       {stat.value}
                     </p>
                   </div>
@@ -240,82 +244,134 @@ export default function HelpDeskDashboard() {
               </div>
             )}
 
-            {/* Main Stats from HelpDeskStats (reuse) */}
+            {/* Main Stats from HelpDeskStats */}
             <div className="mt-6">
-              <h2 className="text-lg font-semibold text-gray-800 mb-3">
+              <h2 className="text-lg font-semibold text-[#3B1E6F] dark:text-white mb-3">
                 Appointment Overview
               </h2>
               <HelpDeskStats />
             </div>
 
-            {/* Two Column Layout */}
-            <div className="grid grid-cols-2 lg:grid-cols-1 gap-6">
-              <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-                <h2 className="text-lg font-semibold text-gray-800 mb-4">
-                  Quick Actions
-                </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <button
-                    onClick={() => router.push("/helpdesk/appointments/new")}
-                    className="p-4 bg-blue-50 rounded-xl border border-blue-100 hover:bg-blue-100 transition-colors text-left"
-                  >
-                    <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white mb-3">
-                      <Calendar className="w-5 h-5" />
-                    </div>
-                    <h3 className="font-medium text-gray-900">
-                      Book Appointment
-                    </h3>
-                    <p className="text-sm text-gray-500 mt-1">
-                      Schedule a new appointment for a patient
-                    </p>
-                  </button>
+            {/* Quick Actions */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
+              <h2 className="text-lg font-semibold text-[#3B1E6F] dark:text-white mb-4">
+                Quick Actions
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <button
+                  onClick={() => router.push("/helpdesk/appointments/new")}
+                  className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl border border-purple-100 dark:border-purple-800 hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors text-left group"
+                >
+                  <div className="w-10 h-10 bg-gradient-to-r from-[#3B1E6F] to-[#7A329F] rounded-lg flex items-center justify-center text-white mb-3 group-hover:scale-105 transition-transform">
+                    <Calendar className="w-5 h-5" />
+                  </div>
+                  <h3 className="font-medium text-gray-900 dark:text-white">
+                    Book Appointment
+                  </h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    Schedule a new appointment for a patient
+                  </p>
+                </button>
 
-                  <button
-                    onClick={() => router.push("/helpdesk/doctor-slots")}
-                    className="p-4 bg-purple-50 rounded-xl border border-purple-100 hover:bg-purple-100 transition-colors text-left"
-                  >
-                    <div className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center text-white mb-3">
-                      <Clock className="w-5 h-5" />
-                    </div>
-                    <h3 className="font-medium text-gray-900">
-                      Manage Doctor Slots
-                    </h3>
-                    <p className="text-sm text-gray-500 mt-1">
-                      Update availability for doctors
-                    </p>
-                  </button>
+                <button
+                  onClick={() => router.push("/helpdesk/doctor-slots")}
+                  className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl border border-purple-100 dark:border-purple-800 hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors text-left group"
+                >
+                  <div className="w-10 h-10 bg-gradient-to-r from-[#7A329F] to-[#0D5CB3] rounded-lg flex items-center justify-center text-white mb-3 group-hover:scale-105 transition-transform">
+                    <Clock className="w-5 h-5" />
+                  </div>
+                  <h3 className="font-medium text-gray-900 dark:text-white">
+                    Manage Doctor Slots
+                  </h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    Update availability for doctors
+                  </p>
+                </button>
 
-                  <button
-                    onClick={() => router.push("/helpdesk/billing")}
-                    className="p-4 bg-emerald-50 rounded-xl border border-emerald-100 hover:bg-emerald-100 transition-colors text-left"
-                  >
-                    <div className="w-10 h-10 bg-emerald-600 rounded-lg flex items-center justify-center text-white mb-3">
-                      <DollarSign className="w-5 h-5" />
-                    </div>
-                    <h3 className="font-medium text-gray-900">
-                      Process Payment
-                    </h3>
-                    <p className="text-sm text-gray-500 mt-1">
-                      Create invoice or collect payment
-                    </p>
-                  </button>
+                <button
+                  onClick={() => router.push("/helpdesk/billing")}
+                  className="p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-100 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-colors text-left group"
+                >
+                  <div className="w-10 h-10 bg-emerald-600 rounded-lg flex items-center justify-center text-white mb-3 group-hover:scale-105 transition-transform">
+                    <DollarSign className="w-5 h-5" />
+                  </div>
+                  <h3 className="font-medium text-gray-900 dark:text-white">
+                    Process Payment
+                  </h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    Create invoice or collect payment
+                  </p>
+                </button>
 
-                  <button
-                    onClick={() => router.push("/helpdesk/room-availability")}
-                    className="p-4 bg-amber-50 rounded-xl border border-amber-100 hover:bg-amber-100 transition-colors text-left"
-                  >
-                    <div className="w-10 h-10 bg-amber-600 rounded-lg flex items-center justify-center text-white mb-3">
-                      <Users className="w-5 h-5" />
-                    </div>
-                    <h3 className="font-medium text-gray-900">
-                      Room Availability
-                    </h3>
-                    <p className="text-sm text-gray-500 mt-1">
-                      Check and manage room schedules
-                    </p>
-                  </button>
-                </div>
+                <button
+                  onClick={() => router.push("/helpdesk/room-availability")}
+                  className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-100 dark:border-amber-800 hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors text-left group"
+                >
+                  <div className="w-10 h-10 bg-amber-600 rounded-lg flex items-center justify-center text-white mb-3 group-hover:scale-105 transition-transform">
+                    <BedDouble className="w-5 h-5" />
+                  </div>
+                  <h3 className="font-medium text-gray-900 dark:text-white">
+                    Room Availability
+                  </h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    Check and manage room schedules
+                  </p>
+                </button>
               </div>
+            </div>
+
+            {/* Recent Appointments */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-semibold text-[#3B1E6F] dark:text-white">
+                  Recent Appointments
+                </h2>
+                <button 
+                  onClick={() => router.push("/helpdesk/appointments")}
+                  className="text-sm text-[#7A329F] dark:text-[#9B4DBF] hover:underline flex items-center gap-1"
+                >
+                  View All <ArrowRight className="w-3 h-3" />
+                </button>
+              </div>
+              {upcomingAppointments.length === 0 ? (
+                <p className="text-gray-500 dark:text-gray-400 text-sm">
+                  No appointments today.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {upcomingAppointments.map((apt) => (
+                    <div
+                      key={apt.id}
+                      className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#3B1E6F] to-[#7A329F] flex items-center justify-center text-white font-semibold text-sm">
+                          {apt.patientName.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white">
+                            {apt.patientName}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {apt.doctorName} • {apt.appointmentTime}
+                          </p>
+                        </div>
+                      </div>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        apt.status === "completed" 
+                          ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400"
+                          : apt.status === "scheduled"
+                          ? "bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400"
+                          : apt.status === "cancelled"
+                          ? "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400"
+                          : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400"
+                      }`}>
+                        {apt.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </main>
