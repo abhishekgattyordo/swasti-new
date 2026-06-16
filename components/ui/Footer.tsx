@@ -21,7 +21,6 @@ export function Footer() {
   const { tenant, isLoading } = useTenant();
   const tenantName = tenant?.name || "";
 
-
   const quickLinks = [
     { href: "/", label: "Home" },
     { href: "/doctors", label: "Find Doctors" },
@@ -60,12 +59,12 @@ export function Footer() {
           {/* Brand Column */}
           <div className="space-y-4">
             <Link href="/" className="flex items-center space-x-3 group">
-              <div className="h-10 w-10 bg-gradient-to-r from-green-600 to-green-400 rounded-xl flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
+              <div className="h-10 w-10 bg-gradient-to-r from-[#3B1E6F] to-[#7A329F] rounded-xl flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
                 <Heart className="w-5 h-5 text-white" />
               </div>
               <div>
-                <span className="text-xl font-bold bg-gradient-to-r from-green-400 to-green-300 bg-clip-text text-transparent">
-                {tenantName}
+                <span className="text-xl font-bold bg-gradient-to-r from-[#7A329F] to-[#0D5CB3] bg-clip-text text-transparent">
+                  {tenantName || "OrDo Health"}
                 </span>
                 <p className="text-xs text-gray-500 -mt-1">
                   Healthcare Information System
@@ -80,7 +79,7 @@ export function Footer() {
 
             {/* Trust Badge */}
             <div className="flex items-center gap-2 bg-gray-800/50 p-3 rounded-lg border border-gray-700">
-              <Shield className="w-5 h-5 text-green-400 flex-shrink-0" />
+              <Shield className="w-5 h-5 text-[#7A329F] flex-shrink-0" />
               <p className="text-xs text-gray-300">
                 HIPAA Compliant • ISO 27001 Certified • 256-bit Encryption
               </p>
@@ -92,7 +91,7 @@ export function Footer() {
                 <a
                   key={social.label}
                   href={social.href}
-                  className="bg-gray-800 p-2 rounded-lg hover:bg-green-600 transition-all duration-300 group"
+                  className="bg-gray-800 p-2 rounded-lg hover:bg-[#3B1E6F] transition-all duration-300 group"
                   aria-label={social.label}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -106,7 +105,7 @@ export function Footer() {
           {/* Quick Links Column */}
           <div>
             <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
-              <span className="w-6 h-0.5 bg-green-500"></span>
+              <span className="w-6 h-0.5 bg-[#7A329F]"></span>
               Quick Links
             </h3>
             <ul className="space-y-3">
@@ -114,9 +113,9 @@ export function Footer() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm text-gray-400 hover:text-green-400 transition-colors flex items-center gap-2 group"
+                    className="text-sm text-gray-400 hover:text-[#7A329F] transition-colors flex items-center gap-2 group"
                   >
-                    <ChevronRight className="w-3 h-3 text-green-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <ChevronRight className="w-3 h-3 text-[#7A329F] opacity-0 group-hover:opacity-100 transition-opacity" />
                     {link.label}
                   </Link>
                 </li>
@@ -127,7 +126,7 @@ export function Footer() {
           {/* Services Column */}
           <div>
             <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
-              <span className="w-6 h-0.5 bg-green-500"></span>
+              <span className="w-6 h-0.5 bg-[#7A329F]"></span>
               Our Services
             </h3>
             <ul className="space-y-3">
@@ -135,9 +134,9 @@ export function Footer() {
                 <li key={service.href}>
                   <Link
                     href={service.href}
-                    className="text-sm text-gray-400 hover:text-green-400 transition-colors flex items-center gap-2 group"
+                    className="text-sm text-gray-400 hover:text-[#7A329F] transition-colors flex items-center gap-2 group"
                   >
-                    <ChevronRight className="w-3 h-3 text-green-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <ChevronRight className="w-3 h-3 text-[#7A329F] opacity-0 group-hover:opacity-100 transition-opacity" />
                     {service.label}
                   </Link>
                 </li>
@@ -148,7 +147,7 @@ export function Footer() {
           {/* Contact Column */}
           <div>
             <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
-              <span className="w-6 h-0.5 bg-green-500"></span>
+              <span className="w-6 h-0.5 bg-[#7A329F]"></span>
               Contact Us
             </h3>
             <ul className="space-y-4">
@@ -160,20 +159,20 @@ export function Footer() {
                       <a
                         href={item.href}
                         className={`flex items-start gap-3 text-sm group ${
-                          item.highlight ? 'text-green-400' : 'text-gray-400 hover:text-green-400'
+                          item.highlight ? 'text-[#7A329F]' : 'text-gray-400 hover:text-[#7A329F]'
                         } transition-colors`}
                       >
                         <Icon className={`w-4 h-4 mt-0.5 flex-shrink-0 ${
-                          item.highlight ? 'text-green-500' : 'text-gray-500 group-hover:text-green-500'
+                          item.highlight ? 'text-[#7A329F]' : 'text-gray-500 group-hover:text-[#7A329F]'
                         }`} />
                         <span>{item.text}</span>
                       </a>
                     ) : (
                       <div className={`flex items-start gap-3 text-sm ${
-                        item.highlight ? 'text-green-400' : 'text-gray-400'
+                        item.highlight ? 'text-[#7A329F]' : 'text-gray-400'
                       }`}>
                         <Icon className={`w-4 h-4 mt-0.5 flex-shrink-0 ${
-                          item.highlight ? 'text-green-500' : 'text-gray-500'
+                          item.highlight ? 'text-[#7A329F]' : 'text-gray-500'
                         }`} />
                         <span>{item.text}</span>
                       </div>
@@ -190,7 +189,7 @@ export function Footer() {
               </p>
               <Link
                 href="/newsletter"
-                className="inline-flex items-center gap-2 text-xs font-medium text-green-400 hover:text-green-300 transition-colors"
+                className="inline-flex items-center gap-2 text-xs font-medium text-[#7A329F] hover:text-[#0D5CB3] transition-colors"
               >
                 Subscribe to Newsletter
                 <ChevronRight className="w-3 h-3" />
@@ -205,11 +204,11 @@ export function Footer() {
             <p className="text-xs text-gray-500 text-center md:text-left">
               &copy; {currentYear} Ordo HIS. All rights reserved. 
               <span className="mx-2">|</span>
-              <Link href="/privacy" className="hover:text-green-400 transition-colors">
+              <Link href="/privacy" className="hover:text-[#7A329F] transition-colors">
                 Privacy Policy
               </Link>
               <span className="mx-2">|</span>
-              <Link href="/terms" className="hover:text-green-400 transition-colors">
+              <Link href="/terms" className="hover:text-[#7A329F] transition-colors">
                 Terms of Service
               </Link>
             </p>
