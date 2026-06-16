@@ -38,14 +38,13 @@
 //   onClick?: () => void;
 //   badge?: string;
 //   activeCheck?: () => boolean;
-//   isEnabled?: boolean;  // ← NEW: feature flag
+//   isEnabled?: boolean;  // Feature flag
 // }
 
 // export default function HelpDeskSidebar({
 //   isOpen,
 //   onClose,
 //   onBillingClick,
-//   onRoomAvailabilityClick,
 //   onDoctorSlotsClick,
 // }: HelpDeskSidebarProps) {
 //   const pathname = usePathname();
@@ -53,7 +52,13 @@
 //   const [isCollapsed, setIsCollapsed] = useState(false);
 //   const [userName, setUserName] = useState('Reception');
 //   const [userRole, setUserRole] = useState('Help Desk');
-//   const { isMicroFeatureEnabled } = useTenant();
+  
+//   // Get tenant data from context
+//   const { tenant, isLoading: isTenantLoading, isMicroFeatureEnabled } = useTenant();
+  
+//   // Get tenant name from tenant object
+//   const tenantName = tenant?.name || "";
+ 
 
 //   useEffect(() => {
 //     const userStr = localStorage.getItem('user');
@@ -96,7 +101,7 @@
 //     {
 //       icon: DoorOpen,
 //       label: 'Room Availability',
-//       href: '/helpdesk/room-availability',  // ← FIXED: correct path
+//       href: '/helpdesk/room-availability',
 //       color: 'from-blue-500 to-blue-700',
 //       activeCheck: () => pathname === '/helpdesk/room-availability',
 //       isEnabled: isRoomAvailabilityEnabled,
@@ -145,6 +150,31 @@
 
 //   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
 
+//   // Show loading state while tenant is being fetched
+//   if (isTenantLoading) {
+//     return (
+//       <aside
+//         className={`${
+//           isOpen ? 'translate-x-0' : '-translate-x-full'
+//         } lg:translate-x-0 fixed lg:sticky top-0 z-40 ${
+//           isCollapsed ? 'w-20' : 'w-80'
+//         } flex-shrink-0 border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 flex flex-col transition-all duration-300 ease-out shadow-xl lg:shadow-none h-screen pb-4 lg:pb-0`}
+//       >
+//         <div className="p-6 flex items-center justify-center">
+//           <div className="animate-pulse flex space-x-4">
+//             <div className="rounded-full bg-gray-200 dark:bg-gray-700 h-12 w-12"></div>
+//             {!isCollapsed && (
+//               <div className="flex-1 space-y-2 py-1">
+//                 <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
+//                 <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-32"></div>
+//               </div>
+//             )}
+//           </div>
+//         </div>
+//       </aside>
+//     );
+//   }
+
 //   return (
 //     <aside
 //       className={`${
@@ -155,7 +185,7 @@
 //     >
 //       {/* Close button for mobile */}
 //       <button
-//         className="lg:hidden absolute top-6 right-6 p-2 text-gray-500 hover:text-gray-700"
+//         className="lg:hidden absolute top-6 right-6 p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
 //         onClick={onClose}
 //       >
 //         <X className="w-5 h-5" />
@@ -173,8 +203,8 @@
 //               <Activity className="w-6 h-6" />
 //             </div>
 //             <div>
-//               <h1 className="text-xl font-bold tracking-tight">HealthSync</h1>
-//               <p className="text-xs text-gray-500 mt-0.5">Help Desk</p>
+//               <h1 className="text-xl font-bold tracking-tight">{tenantName || 'HealthSync'}</h1>
+//               <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Help Desk</p>
 //             </div>
 //           </Link>
 //         ) : (
@@ -188,14 +218,14 @@
 //         {/* Collapse Button */}
 //         <button
 //           onClick={toggleCollapse}
-//           className={`hidden lg:flex items-center justify-center w-8 h-8 rounded-lg hover:bg-gray-100 transition-colors ${
+//           className={`hidden lg:flex items-center justify-center w-8 h-8 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ${
 //             isCollapsed
-//               ? 'absolute -right-4 top-1/2 transform -translate-y-1/2 bg-white border border-gray-200 shadow-sm'
+//               ? 'absolute -right-4 top-1/2 transform -translate-y-1/2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-sm'
 //               : ''
 //           }`}
 //           title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
 //         >
-//           {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+//           {isCollapsed ? <ChevronRight className="w-4 h-4 text-gray-600 dark:text-gray-300" /> : <ChevronLeft className="w-4 h-4 text-gray-600 dark:text-gray-300" />}
 //         </button>
 //       </div>
 
@@ -229,22 +259,22 @@
 //                       <span
 //                         className={`text-xs font-bold px-2 py-1 rounded-full ${
 //                           active
-//                             ? 'bg-blue-100 text-blue-700'
-//                             : 'bg-gray-100 text-gray-600'
+//                             ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
+//                             : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
 //                         }`}
 //                       >
 //                         {item.badge}
 //                       </span>
 //                     )}
 //                     {isCollapsed && item.badge && (
-//                       <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>
+//                       <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white dark:ring-gray-900"></span>
 //                     )}
 //                   </>
 //                 );
 
 //                 const activeClasses = active
-//                   ? 'bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 border border-blue-100 shadow-sm'
-//                   : 'text-gray-600 hover:bg-gray-50';
+//                   ? 'bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/20 text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-800/30 shadow-sm'
+//                   : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50';
 
 //                 if (item.href) {
 //                   return (
@@ -292,13 +322,13 @@
 //                     {userName.charAt(0).toUpperCase()}
 //                   </div>
 //                   <div className="flex-1 min-w-0">
-//                     <p className="text-sm font-semibold truncate">{userName}</p>
-//                     <p className="text-xs text-gray-500 truncate">{userRole}</p>
+//                     <p className="text-sm font-semibold truncate dark:text-white">{userName}</p>
+//                     <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{userRole}</p>
 //                   </div>
 //                 </div>
 //                 <button
 //                   onClick={handleLogout}
-//                   className="p-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
+//                   className="p-2 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
 //                   title="Logout"
 //                 >
 //                   <LogOut className="w-5 h-5" />
@@ -311,7 +341,7 @@
 //                 </div>
 //                 <button
 //                   onClick={handleLogout}
-//                   className="p-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
+//                   className="p-2 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
 //                   title="Logout"
 //                 >
 //                   <LogOut className="w-5 h-5" />
@@ -324,6 +354,7 @@
 //     </aside>
 //   );
 // }
+
 
 
 'use client';
@@ -364,7 +395,7 @@ interface NavItem {
   onClick?: () => void;
   badge?: string;
   activeCheck?: () => boolean;
-  isEnabled?: boolean;  // Feature flag
+  isEnabled?: boolean;
 }
 
 export default function HelpDeskSidebar({
@@ -378,13 +409,10 @@ export default function HelpDeskSidebar({
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [userName, setUserName] = useState('Reception');
   const [userRole, setUserRole] = useState('Help Desk');
+  const [tooltipText, setTooltipText] = useState<string | null>(null);
+  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   
-  // Get tenant data from context
   const { tenant, isLoading: isTenantLoading, isMicroFeatureEnabled } = useTenant();
-  
-  // Get tenant name from tenant object
-  const tenantName = tenant?.name || "";
- 
 
   useEffect(() => {
     const userStr = localStorage.getItem('user');
@@ -399,7 +427,6 @@ export default function HelpDeskSidebar({
     }
   }, []);
 
-  // Check which features are enabled
   const isDashboardEnabled = isMicroFeatureEnabled(MODULE_KEYS.HELPDESK, HELPDESK_FEATURES.DASHBOARD);
   const isAppointmentsEnabled = isMicroFeatureEnabled(MODULE_KEYS.HELPDESK, HELPDESK_FEATURES.APPOINTMENTS);
   const isRoomAvailabilityEnabled = isMicroFeatureEnabled(MODULE_KEYS.HELPDESK, HELPDESK_FEATURES.ROOM_AVAILABILITY);
@@ -459,7 +486,6 @@ export default function HelpDeskSidebar({
     },
   ];
 
-  // Filter out disabled items
   const visibleNavItems = navItems.filter(item => item.isEnabled !== false);
 
   const handleLinkClick = () => {
@@ -476,7 +502,21 @@ export default function HelpDeskSidebar({
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
 
-  // Show loading state while tenant is being fetched
+  const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>, label: string) => {
+    if (isCollapsed) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      setTooltipText(label);
+      setTooltipPosition({
+        x: rect.right + 12,
+        y: rect.top + rect.height / 2
+      });
+    }
+  };
+
+  const handleMouseLeave = () => {
+    setTooltipText(null);
+  };
+
   if (isTenantLoading) {
     return (
       <aside
@@ -486,197 +526,237 @@ export default function HelpDeskSidebar({
           isCollapsed ? 'w-20' : 'w-80'
         } flex-shrink-0 border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 flex flex-col transition-all duration-300 ease-out shadow-xl lg:shadow-none h-screen pb-4 lg:pb-0`}
       >
-        <div className="p-6 flex items-center justify-center">
-          <div className="animate-pulse flex space-x-4">
-            <div className="rounded-full bg-gray-200 dark:bg-gray-700 h-12 w-12"></div>
-            {!isCollapsed && (
-              <div className="flex-1 space-y-2 py-1">
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
-                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-32"></div>
+        <div className={`p-6 flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} border-b border-gray-100 relative`}>
+          {!isCollapsed && (
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-xl flex items-center justify-center animate-pulse">
+                <Activity className="text-2xl text-gray-400" />
               </div>
-            )}
-          </div>
+              <div className="animate-pulse">
+                <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-32 mb-1"></div>
+                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
+              </div>
+            </div>
+          )}
+          {isCollapsed && (
+            <div className="flex items-center justify-center w-full">
+              <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-xl flex items-center justify-center animate-pulse">
+                <Activity className="text-2xl text-gray-400" />
+              </div>
+            </div>
+          )}
         </div>
       </aside>
     );
   }
 
   return (
-    <aside
-      className={`${
-        isOpen ? 'translate-x-0' : '-translate-x-full'
-      } lg:translate-x-0 fixed lg:sticky top-0 z-40 ${
-        isCollapsed ? 'w-20' : 'w-80'
-      } flex-shrink-0 border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 flex flex-col transition-all duration-300 ease-out shadow-xl lg:shadow-none h-screen pb-4 lg:pb-0`}
-    >
-      {/* Close button for mobile */}
-      <button
-        className="lg:hidden absolute top-6 right-6 p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-        onClick={onClose}
+    <>
+      <aside
+        className={`${
+          isOpen ? 'translate-x-0' : '-translate-x-full'
+        } lg:translate-x-0 fixed lg:sticky top-0 z-40 ${
+          isCollapsed ? 'w-24' : 'w-80'
+        } flex-shrink-0 border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 flex flex-col transition-all duration-300 ease-out shadow-xl lg:shadow-none h-screen`}
       >
-        <X className="w-5 h-5" />
-      </button>
-
-      {/* Logo Section */}
-      <div
-        className={`p-6 flex items-center ${
-          isCollapsed ? 'justify-center' : 'justify-between'
-        } border-b border-gray-100 dark:border-gray-800 relative`}
-      >
-        {!isCollapsed ? (
-          <Link href="/helpdesk/dashboard" className="flex items-center gap-4" onClick={handleLinkClick}>
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center text-white shadow-lg">
-              <Activity className="w-6 h-6" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold tracking-tight">{tenantName || 'HealthSync'}</h1>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Help Desk</p>
-            </div>
-          </Link>
-        ) : (
-          <Link href="/helpdesk/dashboard" className="flex items-center justify-center" onClick={handleLinkClick}>
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center text-white shadow-lg">
-              <Activity className="w-6 h-6" />
-            </div>
-          </Link>
-        )}
-
-        {/* Collapse Button */}
         <button
-          onClick={toggleCollapse}
-          className={`hidden lg:flex items-center justify-center w-8 h-8 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ${
-            isCollapsed
-              ? 'absolute -right-4 top-1/2 transform -translate-y-1/2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-sm'
-              : ''
-          }`}
-          title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          className="lg:hidden absolute top-6 right-6 p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+          onClick={onClose}
         >
-          {isCollapsed ? <ChevronRight className="w-4 h-4 text-gray-600 dark:text-gray-300" /> : <ChevronLeft className="w-4 h-4 text-gray-600 dark:text-gray-300" />}
+          <X className="w-5 h-5" />
         </button>
-      </div>
 
-      {/* Navigation */}
-      <div className="flex-1 flex flex-col min-h-0">
-        <nav className="flex-1 overflow-y-auto px-4 py-8">
-          <div className="mb-6">
-            {!isCollapsed && (
-              <p className="text-xs font-medium text-gray-400 uppercase tracking-wider px-4 mb-3">
-                Main Navigation
-              </p>
-            )}
-            <div className="space-y-2">
-              {visibleNavItems.map((item) => {
-                const active = item.href ? isActive(item.href) : (item.activeCheck?.() ?? false);
-                const content = (
-                  <>
-                    <div className={`flex items-center ${isCollapsed ? '' : 'gap-4'}`}>
-                      <div
-                        className={`w-8 h-8 flex items-center justify-center rounded-lg ${
-                          active
-                            ? 'bg-blue-500 text-white'
-                            : `bg-gradient-to-br ${item.color} text-white`
-                        }`}
-                      >
-                        <item.icon className="w-4 h-4" />
-                      </div>
-                      {!isCollapsed && <span className="text-sm font-medium">{item.label}</span>}
-                    </div>
-                    {!isCollapsed && item.badge && (
-                      <span
-                        className={`text-xs font-bold px-2 py-1 rounded-full ${
-                          active
-                            ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
-                            : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
-                        }`}
-                      >
-                        {item.badge}
-                      </span>
-                    )}
-                    {isCollapsed && item.badge && (
-                      <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white dark:ring-gray-900"></span>
-                    )}
-                  </>
-                );
-
-                const activeClasses = active
-                  ? 'bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/20 text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-800/30 shadow-sm'
-                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50';
-
-                if (item.href) {
-                  return (
-                    <Link
-                      key={item.label}
-                      href={item.href}
-                      onClick={handleLinkClick}
-                      className={`flex items-center ${
-                        isCollapsed ? 'justify-center' : 'justify-between gap-4'
-                      } px-4 py-3 rounded-xl transition-all group relative ${activeClasses}`}
-                      title={isCollapsed ? item.label : ''}
-                    >
-                      {content}
-                    </Link>
-                  );
-                } else {
-                  return (
-                    <button
-                      key={item.label}
-                      onClick={() => {
-                        item.onClick?.();
-                        handleLinkClick();
-                      }}
-                      className={`w-full flex items-center ${
-                        isCollapsed ? 'justify-center' : 'justify-between gap-4'
-                      } px-4 py-3 rounded-xl transition-all group relative text-left ${activeClasses}`}
-                      title={isCollapsed ? item.label : ''}
-                    >
-                      {content}
-                    </button>
-                  );
-                }
-              })}
+        {/* Logo Section - Left aligned with Text Below */}
+        <div className={`px-4 py-1 flex flex-col items-start border-b border-gray-100 dark:border-gray-800 relative`}>
+          <Link href="/helpdesk/dashboard" className="flex flex-col items-start w-full" onClick={handleLinkClick}>
+            {/* Logo - Left aligned - Large size and no background */}
+            <div className="w-full flex justify-start">
+              <div className="w-40 relative -ml-6">
+                <img
+                  src="/OrDo%20New%20Logo.png"
+                  alt="OrDo Logo"
+                  className="w-full h-full object-contain"
+                />
+              </div>
             </div>
-          </div>
-        </nav>
+            
+            {/* Text - Help Desk with Help Desk Module subtitle */}
+            {!isCollapsed && (
+              <div className="w-full mt-1">
+                <h1 className="text-lg font-bold tracking-tight text-[#3B1E6F] dark:text-white text-left">
+             Help Desk Module
+                </h1>
+               
+              </div>
+            )}
+          </Link>
 
-        {/* User Profile & Logout */}
-        <div className="mt-auto border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900">
-          <div className="p-4">
-            {!isCollapsed ? (
-              <div className="flex items-center justify-between gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-semibold text-sm">
+          {/* Collapse Button */}
+          <button
+            onClick={toggleCollapse}
+            className={`hidden lg:flex items-center justify-center w-6 h-6 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors z-50 ${
+              isCollapsed 
+                ? 'absolute -right-1 top-1/2 transform -translate-y-1/2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-sm' 
+                : 'absolute -right-1 top-1/2 transform -translate-y-1/2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-sm'
+            }`}
+            title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {isCollapsed ? (
+              <ChevronRight className="text-[#7A329F] text-sm" />
+            ) : (
+              <ChevronLeft className="text-[#7A329F] text-sm" />
+            )}
+          </button>
+        </div>
+
+        <div className="flex-1 flex flex-col min-h-0">
+          <nav className="flex-1 overflow-y-auto px-3 py-3">
+            <div className="mb-4">
+              {!isCollapsed && <p className="text-[10px] font-medium text-[#3B1E6F] uppercase tracking-wider px-3 mb-2">Main Navigation</p>}
+              <div className="space-y-1">
+                {visibleNavItems.map((item) => {
+                  const active = item.href ? isActive(item.href) : (item.activeCheck?.() ?? false);
+                  return (
+                    <div 
+                      key={item.label} 
+                      className="relative"
+                      onMouseEnter={(e) => handleMouseEnter(e, item.label)}
+                      onMouseLeave={handleMouseLeave}
+                    >
+                      {item.href ? (
+                        <Link
+                          href={item.href}
+                          onClick={handleLinkClick}
+                          className={`flex items-center ${
+                            isCollapsed ? 'justify-center' : 'justify-between gap-3'
+                          } px-3 py-2 rounded-lg transition-all ${
+                            active
+                              ? 'bg-gradient-to-r from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] text-white shadow-sm'
+                              : 'text-[#1A438A] hover:bg-[#3B1E6F]/5'
+                          }`}
+                        >
+                          <div className={`flex items-center ${isCollapsed ? '' : 'gap-3'}`}>
+                            <div className={`w-7 h-7 flex items-center justify-center rounded-lg ${
+                              active ? 'text-white' : 'text-[#7A329F]'
+                            }`}>
+                              <item.icon className="text-sm" />
+                            </div>
+                            {!isCollapsed && <span className="text-sm font-medium">{item.label}</span>}
+                          </div>
+                          {!isCollapsed && item.badge && (
+                            <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${
+                              active ? 'bg-white/20 text-white' : 'bg-gray-100 text-[#1A438A]'
+                            }`}>
+                              {item.badge}
+                            </span>
+                          )}
+                          {isCollapsed && item.badge && (
+                            <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-red-500 rounded-full ring-2 ring-white dark:ring-gray-900"></span>
+                          )}
+                        </Link>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            item.onClick?.();
+                            handleLinkClick();
+                          }}
+                          className={`w-full flex items-center ${
+                            isCollapsed ? 'justify-center' : 'justify-between gap-3'
+                          } px-3 py-2 rounded-lg transition-all text-left ${
+                            active
+                              ? 'bg-gradient-to-r from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] text-white shadow-sm'
+                              : 'text-[#1A438A] hover:bg-[#3B1E6F]/5'
+                          }`}
+                          title={isCollapsed ? item.label : ''}
+                        >
+                          <div className={`flex items-center ${isCollapsed ? '' : 'gap-3'}`}>
+                            <div className={`w-7 h-7 flex items-center justify-center rounded-lg ${
+                              active ? 'text-white' : 'text-[#7A329F]'
+                            }`}>
+                              <item.icon className="text-sm" />
+                            </div>
+                            {!isCollapsed && <span className="text-sm font-medium">{item.label}</span>}
+                          </div>
+                          {!isCollapsed && item.badge && (
+                            <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${
+                              active ? 'bg-white/20 text-white' : 'bg-gray-100 text-[#1A438A]'
+                            }`}>
+                              {item.badge}
+                            </span>
+                          )}
+                          {isCollapsed && item.badge && (
+                            <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-red-500 rounded-full ring-2 ring-white dark:ring-gray-900"></span>
+                          )}
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </nav>
+
+          {/* User Profile & Logout */}
+          <div className="mt-auto border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900">
+            <div className="p-3">
+              {!isCollapsed ? (
+                <div className="flex items-center justify-between gap-2 p-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] flex items-center justify-center text-white font-semibold text-xs">
+                      {userName.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold truncate text-gray-900 dark:text-white">{userName}</p>
+                      <p className="text-[10px] text-[#1A438A] dark:text-gray-400 truncate">{userRole}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                    title="Logout"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-1.5">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] flex items-center justify-center text-white font-semibold text-xs">
                     {userName.charAt(0).toUpperCase()}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold truncate dark:text-white">{userName}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{userRole}</p>
-                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                    title="Logout"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                  </button>
                 </div>
-                <button
-                  onClick={handleLogout}
-                  className="p-2 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                  title="Logout"
-                >
-                  <LogOut className="w-5 h-5" />
-                </button>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center gap-2">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-semibold text-sm">
-                  {userName.charAt(0).toUpperCase()}
+              )}
+              {!isCollapsed && (
+                <div className="mt-2 px-2">
+                  <p className="text-[8px] text-[#1A438A]/50 dark:text-gray-500 text-center">Help Desk v1.0.0</p>
                 </div>
-                <button
-                  onClick={handleLogout}
-                  className="p-2 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                  title="Logout"
-                >
-                  <LogOut className="w-5 h-5" />
-                </button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
-      </div>
-    </aside>
+      </aside>
+
+      {/* Global Tooltip - Rendered at root level */}
+      {isCollapsed && tooltipText && (
+        <div 
+          className="fixed px-3 py-2 bg-gray-900 text-white text-xs font-medium rounded-lg shadow-lg z-[9999] pointer-events-none whitespace-nowrap"
+          style={{
+            left: tooltipPosition.x,
+            top: tooltipPosition.y,
+            transform: 'translateY(-50%)'
+          }}
+        >
+          {tooltipText}
+          {/* Tooltip arrow */}
+          <div className="absolute left-0 top-1/2 -translate-x-1 -translate-y-1/2 border-4 border-transparent border-r-gray-900"></div>
+        </div>
+      )}
+    </>
   );
 }
