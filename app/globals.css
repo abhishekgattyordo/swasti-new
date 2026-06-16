@@ -134,7 +134,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
 @import "tw-animate-css";
 @custom-variant dark (&:is(.dark *));
-@import "tailwindcss";
+/* -->Auto Generated @vercel
+@import "tailwindcss"; */
 
 @theme inline {
   --color-background: var(--background);
