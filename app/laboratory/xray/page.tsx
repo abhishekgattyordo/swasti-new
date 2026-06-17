@@ -877,8 +877,6 @@
 // }
 
 
-
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -1184,22 +1182,22 @@ export default function XRayPage() {
           .header {
             text-align: center;
             margin-bottom: 30px;
-            border-bottom: 2px solid #3B1E6F;
+            border-bottom: 2px solid #2BB2A7;
             padding-bottom: 10px;
           }
           .hospital-name {
             font-size: 24px;
             font-weight: bold;
-            color: #3B1E6F;
+            color: #2BB2A7;
           }
           .report-title {
             font-size: 20px;
             font-weight: bold;
             margin-top: 10px;
-            color: #7A329F;
+            color: #1F8F89;
           }
           .patient-info {
-            background-color: #f3f4f6;
+            background-color: #f4f9f7;
             padding: 15px;
             margin-bottom: 20px;
             border-radius: 8px;
@@ -1225,7 +1223,7 @@ export default function XRayPage() {
             font-size: 16px;
             font-weight: bold;
             margin-bottom: 10px;
-            color: #3B1E6F;
+            color: #2BB2A7;
           }
           .footer {
             margin-top: 30px;
@@ -1349,8 +1347,8 @@ export default function XRayPage() {
         icon: <Clock className="w-3.5 h-3.5 inline mr-1" />
       },
       Completed: { 
-        bg: "bg-emerald-50 dark:bg-emerald-900/20", 
-        text: "text-emerald-700 dark:text-emerald-300", 
+        bg: "bg-[#EAF7F4] dark:bg-[#1F8F89]/20", 
+        text: "text-[#1F8F89] dark:text-[#2BB2A7]", 
         icon: <CheckCircle className="w-3.5 h-3.5 inline mr-1" />
       },
       Cancelled: { 
@@ -1366,7 +1364,7 @@ export default function XRayPage() {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-[#3B1E6F] border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <div className="w-12 h-12 border-4 border-[#2BB2A7] border-t-transparent rounded-full animate-spin mx-auto"></div>
           <p className="mt-4 text-gray-600 dark:text-gray-400">Loading...</p>
         </div>
       </div>
@@ -1377,7 +1375,7 @@ export default function XRayPage() {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-[#3B1E6F] border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <div className="w-12 h-12 border-4 border-[#2BB2A7] border-t-transparent rounded-full animate-spin mx-auto"></div>
           <p className="mt-4 text-gray-600 dark:text-gray-400">Loading X-Ray orders...</p>
         </div>
       </div>
@@ -1387,15 +1385,15 @@ export default function XRayPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 sticky top-0 z-10">
+      <div className="bg-white dark:bg-gray-800 border-b border-[#E2EFEA] dark:border-gray-700 px-6 py-4 sticky top-0 z-10">
         <div className="flex flex-wrap justify-between items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-[#3B1E6F] dark:text-white">X-Ray / Radiography</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">X-Ray / Radiography</h1>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Manage X-Ray orders and reports</p>
           </div>
           <button
             onClick={() => setShowOrderModal(true)}
-            className="px-4 py-2 bg-gradient-to-r from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] text-white rounded-lg hover:opacity-90 transition-opacity shadow-sm flex items-center gap-2"
+            className="px-4 py-2 bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] text-white rounded-lg hover:opacity-90 transition-opacity shadow-sm flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
             New X-Ray Order
@@ -1407,7 +1405,7 @@ export default function XRayPage() {
             onClick={() => setActiveTab("pending")}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
               activeTab === "pending"
-                ? "bg-[#3B1E6F] text-white"
+                ? "bg-[#2BB2A7] text-white"
                 : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
             }`}
           >
@@ -1418,7 +1416,7 @@ export default function XRayPage() {
             onClick={() => setActiveTab("completed")}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
               activeTab === "completed"
-                ? "bg-[#3B1E6F] text-white"
+                ? "bg-[#2BB2A7] text-white"
                 : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
             }`}
           >
@@ -1434,7 +1432,7 @@ export default function XRayPage() {
           <div className="space-y-4">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Pending X-Ray Orders</h2>
             {pendingOrders.length === 0 ? (
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-12 text-center">
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-[#E2EFEA] dark:border-gray-700 p-12 text-center">
                 <Activity className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
                 <p className="text-gray-500 dark:text-gray-400">No pending X-Ray orders</p>
               </div>
@@ -1444,7 +1442,7 @@ export default function XRayPage() {
                 return (
                   <div
                     key={order.id}
-                    className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 hover:shadow-md transition-shadow"
+                    className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-[#E2EFEA] dark:border-gray-700 p-6 hover:shadow-md transition-shadow"
                   >
                     <div className="flex flex-wrap justify-between items-start gap-4">
                       <div className="flex-1 min-w-0">
@@ -1486,7 +1484,7 @@ export default function XRayPage() {
                             setSelectedOrderForResult(order);
                             setShowResultModal(true);
                           }}
-                          className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm"
+                          className="px-4 py-2 bg-[#2BB2A7] text-white rounded-lg hover:bg-[#1F8F89] transition-colors text-sm"
                         >
                           Enter Report
                         </button>
@@ -1513,14 +1511,14 @@ export default function XRayPage() {
                   <input
                     type="text"
                     placeholder="Search by patient, ID or order..."
-                    className="pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#7A329F] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white w-64"
+                    className="pl-9 pr-4 py-2 border border-[#E2EFEA] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white w-64"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
                 <button
                   onClick={exportToCSV}
-                  className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm font-medium flex items-center gap-2"
+                  className="px-4 py-2 bg-[#2BB2A7] text-white rounded-lg hover:bg-[#1F8F89] transition-colors text-sm font-medium flex items-center gap-2"
                 >
                   <Download className="w-4 h-4" />
                   Export CSV
@@ -1529,28 +1527,28 @@ export default function XRayPage() {
             </div>
             
             {filteredCompletedOrders.length === 0 ? (
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-12 text-center">
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-[#E2EFEA] dark:border-gray-700 p-12 text-center">
                 <FileText className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
                 <p className="text-gray-500 dark:text-gray-400">No completed X-Ray reports found</p>
               </div>
             ) : (
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-[#E2EFEA] dark:border-gray-700 overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead className="bg-gray-50 dark:bg-gray-700/30 border-b border-gray-200 dark:border-gray-700">
+                    <thead className="bg-[#F4F9F7] dark:bg-gray-700/30 border-b border-[#E2EFEA] dark:border-gray-700">
                       <tr>
-                        <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Order ID</th>
-                        <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Patient</th>
-                        <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Body Part</th>
-                        <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">X-Ray Type</th>
-                        <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Visit</th>
-                        <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Report Date</th>
-                        <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Action</th>
+                        <th className="text-left px-4 py-3 text-xs font-medium text-[#1F8F89] dark:text-[#2BB2A7] uppercase tracking-wider">Order ID</th>
+                        <th className="text-left px-4 py-3 text-xs font-medium text-[#1F8F89] dark:text-[#2BB2A7] uppercase tracking-wider">Patient</th>
+                        <th className="text-left px-4 py-3 text-xs font-medium text-[#1F8F89] dark:text-[#2BB2A7] uppercase tracking-wider">Body Part</th>
+                        <th className="text-left px-4 py-3 text-xs font-medium text-[#1F8F89] dark:text-[#2BB2A7] uppercase tracking-wider">X-Ray Type</th>
+                        <th className="text-left px-4 py-3 text-xs font-medium text-[#1F8F89] dark:text-[#2BB2A7] uppercase tracking-wider">Visit</th>
+                        <th className="text-center px-4 py-3 text-xs font-medium text-[#1F8F89] dark:text-[#2BB2A7] uppercase tracking-wider">Report Date</th>
+                        <th className="text-center px-4 py-3 text-xs font-medium text-[#1F8F89] dark:text-[#2BB2A7] uppercase tracking-wider">Action</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                    <tbody className="divide-y divide-[#E2EFEA] dark:divide-gray-700">
                       {filteredCompletedOrders.map((order) => (
-                        <tr key={order.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                        <tr key={order.id} className="hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/10 transition-colors">
                           <td className="px-4 py-3 text-sm font-mono font-medium text-gray-900 dark:text-white">
                             {order.order_id}
                           </td>
@@ -1573,7 +1571,7 @@ export default function XRayPage() {
                           <td className="px-4 py-3 text-center">
                             <button
                               onClick={() => downloadPDF(order)}
-                              className="px-3 py-1.5 bg-[#3B1E6F]/10 text-[#3B1E6F] hover:bg-[#3B1E6F] hover:text-white rounded-lg transition-colors text-xs font-medium flex items-center gap-1 mx-auto"
+                              className="px-3 py-1.5 bg-[#EAF7F4] text-[#1F8F89] hover:bg-[#2BB2A7] hover:text-white rounded-lg transition-colors text-xs font-medium flex items-center gap-1 mx-auto"
                             >
                               <Printer className="w-3 h-3" />
                               PDF
@@ -1585,7 +1583,7 @@ export default function XRayPage() {
                   </table>
                 </div>
                 
-                <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700/30 border-t border-gray-200 dark:border-gray-700">
+                <div className="px-4 py-3 bg-[#F4F9F7] dark:bg-gray-700/30 border-t border-[#E2EFEA] dark:border-gray-700">
                   <span className="text-sm text-gray-600 dark:text-gray-400">
                     Total Reports: <span className="font-semibold text-gray-900 dark:text-white">{filteredCompletedOrders.length}</span>
                   </span>
@@ -1599,7 +1597,7 @@ export default function XRayPage() {
       {/* New X-Ray Order Modal */}
       {showOrderModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-[#E2EFEA] dark:border-gray-700">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">New X-Ray Order</h2>
@@ -1634,13 +1632,13 @@ export default function XRayPage() {
                         setSelectedPatient(null);
                         setShowPatientDropdown(false);
                       }}
-                      className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#7A329F] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      className="flex-1 px-3 py-2 border border-[#E2EFEA] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       maxLength={10}
                     />
                     <button
                       onClick={searchPatientByPhone}
                       disabled={isSearching || phoneSearch.length < 10}
-                      className="px-4 py-2 bg-[#3B1E6F] text-white rounded-lg hover:bg-[#7A329F] transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                      className="px-4 py-2 bg-[#2BB2A7] text-white rounded-lg hover:bg-[#1F8F89] transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
                     >
                       {isSearching ? "Searching..." : "Search"}
                     </button>
@@ -1648,12 +1646,12 @@ export default function XRayPage() {
                   {searchError && <p className="text-sm text-red-600 dark:text-red-400 mt-1">{searchError}</p>}
                   
                   {showPatientDropdown && patientList.length > 0 && (
-                    <div className="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    <div className="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 border border-[#E2EFEA] dark:border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                       {patientList.map((patient) => (
                         <button
                           key={patient.id}
                           onClick={() => selectPatient(patient)}
-                          className="w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 last:border-b-0 transition-colors"
+                          className="w-full text-left px-4 py-3 hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/10 border-b border-[#E2EFEA] dark:border-gray-700 last:border-b-0 transition-colors"
                         >
                           <div className="font-medium text-gray-900 dark:text-white">{patient.name}</div>
                           <div className="text-sm text-gray-500 dark:text-gray-400">ID: {patient.id}</div>
@@ -1664,9 +1662,9 @@ export default function XRayPage() {
                 </div>
 
                 {selectedPatient && (
-                  <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
-                    <p className="text-sm font-medium text-green-900 dark:text-green-400">✅ Patient Selected: {selectedPatient.name}</p>
-                    <p className="text-sm text-green-700 dark:text-green-500">ID: {selectedPatient.id}</p>
+                  <div className="bg-[#EAF7F4] dark:bg-[#1F8F89]/20 border border-[#2BB2A7]/30 dark:border-[#2BB2A7]/20 rounded-lg p-4">
+                    <p className="text-sm font-medium text-[#1F8F89] dark:text-[#2BB2A7]">✅ Patient Selected: {selectedPatient.name}</p>
+                    <p className="text-sm text-[#1F8F89] dark:text-[#2BB2A7]">ID: {selectedPatient.id}</p>
                   </div>
                 )}
 
@@ -1675,11 +1673,11 @@ export default function XRayPage() {
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Visit Type *</label>
                     <div className="flex gap-4">
                       <label className="flex items-center text-sm text-gray-700 dark:text-gray-300">
-                        <input type="radio" value="OP" checked={selectedVisitType === "OP"} onChange={() => setSelectedVisitType("OP")} className="mr-2" />
+                        <input type="radio" value="OP" checked={selectedVisitType === "OP"} onChange={() => setSelectedVisitType("OP")} className="mr-2 accent-[#2BB2A7]" />
                         OP Visit
                       </label>
                       <label className="flex items-center text-sm text-gray-700 dark:text-gray-300">
-                        <input type="radio" value="IP" checked={selectedVisitType === "IP"} onChange={() => setSelectedVisitType("IP")} className="mr-2" />
+                        <input type="radio" value="IP" checked={selectedVisitType === "IP"} onChange={() => setSelectedVisitType("IP")} className="mr-2 accent-[#2BB2A7]" />
                         IP Admission
                       </label>
                     </div>
@@ -1693,7 +1691,7 @@ export default function XRayPage() {
                       <select
                         value={formData.body_part}
                         onChange={(e) => setFormData({ ...formData, body_part: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#7A329F] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        className="w-full px-3 py-2 border border-[#E2EFEA] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       >
                         <option value="">Select Body Part</option>
                         {bodyParts.map(part => (
@@ -1707,7 +1705,7 @@ export default function XRayPage() {
                       <select
                         value={formData.xray_type}
                         onChange={(e) => setFormData({ ...formData, xray_type: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#7A329F] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        className="w-full px-3 py-2 border border-[#E2EFEA] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       >
                         <option value="">Select X-Ray Type</option>
                         {xrayTypes.map(type => (
@@ -1723,7 +1721,7 @@ export default function XRayPage() {
                         placeholder="Doctor's name"
                         value={formData.doctor_name}
                         onChange={(e) => setFormData({ ...formData, doctor_name: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#7A329F] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        className="w-full px-3 py-2 border border-[#E2EFEA] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       />
                     </div>
 
@@ -1734,7 +1732,7 @@ export default function XRayPage() {
                         rows={3}
                         value={formData.notes}
                         onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#7A329F] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        className="w-full px-3 py-2 border border-[#E2EFEA] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       />
                     </div>
                   </>
@@ -1744,14 +1742,14 @@ export default function XRayPage() {
               <div className="flex justify-end gap-3 mt-6">
                 <button
                   onClick={() => setShowOrderModal(false)}
-                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300"
+                  className="px-4 py-2 border border-[#E2EFEA] dark:border-gray-600 rounded-lg hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/10 transition-colors text-gray-700 dark:text-gray-300"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleCreateOrder}
                   disabled={!selectedPatient || !formData.body_part || !formData.xray_type}
-                  className="px-4 py-2 bg-gradient-to-r from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Create X-Ray Order
                 </button>
@@ -1764,7 +1762,7 @@ export default function XRayPage() {
       {/* Enter Result Modal */}
       {showResultModal && selectedOrderForResult && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-2xl">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-2xl border border-[#E2EFEA] dark:border-gray-700">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">X-Ray Report</h2>
@@ -1773,7 +1771,7 @@ export default function XRayPage() {
                 </button>
               </div>
 
-              <div className="mb-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+              <div className="mb-4 p-4 bg-[#F4F9F7] dark:bg-gray-700/50 rounded-lg border border-[#E2EFEA] dark:border-gray-600">
                 <p className="text-sm text-gray-600 dark:text-gray-300">Patient: <span className="font-medium">{selectedOrderForResult.patient_name}</span></p>
                 <p className="text-sm text-gray-600 dark:text-gray-300">Order ID: <span className="font-medium">{selectedOrderForResult.order_id}</span></p>
                 <p className="text-sm text-gray-600 dark:text-gray-300">Body Part: <span className="font-medium">{selectedOrderForResult.body_part}</span></p>
@@ -1787,15 +1785,15 @@ export default function XRayPage() {
                   rows={8}
                   value={resultText}
                   onChange={(e) => setResultText(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#7A329F] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 border border-[#E2EFEA] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
               </div>
 
               <div className="flex justify-end gap-3 mt-6">
-                <button onClick={() => setShowResultModal(false)} className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300">
+                <button onClick={() => setShowResultModal(false)} className="px-4 py-2 border border-[#E2EFEA] dark:border-gray-600 rounded-lg hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/10 transition-colors text-gray-700 dark:text-gray-300">
                   Cancel
                 </button>
-                <button onClick={completeOrder} className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors">
+                <button onClick={completeOrder} className="px-4 py-2 bg-[#2BB2A7] text-white rounded-lg hover:bg-[#1F8F89] transition-colors">
                   Save Report & Complete
                 </button>
               </div>

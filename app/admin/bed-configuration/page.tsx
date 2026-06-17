@@ -1105,8 +1105,6 @@
 // }
 
 
-
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -1638,7 +1636,7 @@ useEffect(() => {
   if (!tenantLoading && !isBedConfigEnabled) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="text-center bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg">
+        <div className="text-center bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-[#E2EFEA] dark:border-gray-700">
           <div className="text-red-500 text-6xl mb-4">🔒</div>
           <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">Access Denied</h1>
           <p className="text-gray-600 dark:text-gray-400">
@@ -1653,7 +1651,7 @@ useEffect(() => {
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Mobile menu button */}
       <button
-        className="lg:hidden fixed bottom-20 right-6 z-50 p-3 bg-gradient-to-r from-[#3B1E6F] to-[#7A329F] hover:from-[#7A329F] hover:to-[#0D5CB3] text-white rounded-full shadow-lg transition-all duration-200"
+        className="lg:hidden fixed bottom-20 right-6 z-50 p-3 bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] hover:opacity-90 text-white rounded-full shadow-lg transition-all duration-200"
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
       >
         {isSidebarOpen ? (
@@ -1676,7 +1674,7 @@ useEffect(() => {
           {/* Header */}
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <div>
-              <h2 className="text-xl lg:text-2xl font-bold text-[#3B1E6F] dark:text-white">
+              <h2 className="text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">
                 Bed Configuration
               </h2>
               <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
@@ -1697,18 +1695,18 @@ useEffect(() => {
           {/* Loading indicator */}
           {isLoading && (
             <div className="flex justify-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3B1E6F]"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2BB2A7]"></div>
             </div>
           )}
 
           {/* Two-column layout */}
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* Left: Floors */}
-            <Card className="lg:col-span-1 border-gray-200 dark:border-gray-700">
+            <Card className="lg:col-span-1 border-[#E2EFEA] dark:border-gray-700">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium flex items-center justify-between">
-                  <span className="flex items-center text-[#3B1E6F] dark:text-white">
-                    <Building2 className="h-4 w-4 mr-2" />
+                  <span className="flex items-center text-gray-900 dark:text-white">
+                    <Building2 className="h-4 w-4 mr-2 text-[#2BB2A7]" />
                     Floors
                   </span>
                 </CardTitle>
@@ -1720,19 +1718,19 @@ useEffect(() => {
                       placeholder="Floor number"
                       value={newFloorNumber}
                       onChange={(e) => setNewFloorNumber(e.target.value)}
-                      className="w-24 focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
+                      className="w-24 focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent border-[#E2EFEA] dark:border-gray-600"
                     />
                     <Input
                       placeholder="Name (optional)"
                       value={newFloorName}
                       onChange={(e) => setNewFloorName(e.target.value)}
-                      className="flex-1 focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
+                      className="flex-1 focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent border-[#E2EFEA] dark:border-gray-600"
                     />
                     <Button
                       size="icon"
                       onClick={handleAddFloor}
                       disabled={isLoading}
-                      className="bg-[#3B1E6F] hover:bg-[#7A329F]"
+                      className="bg-[#2BB2A7] hover:bg-[#1F8F89] text-white"
                     >
                       <Plus className="h-4 w-4" />
                     </Button>
@@ -1749,8 +1747,8 @@ useEffect(() => {
                         key={floor.id}
                         className={`flex items-center justify-between p-2 rounded-md border ${
                           selectedFloor?.id === floor.id
-                            ? "bg-purple-50 dark:bg-purple-900/20 border-[#7A329F]"
-                            : "bg-card"
+                            ? "bg-[#EAF7F4] dark:bg-[#1F8F89]/20 border-[#2BB2A7]"
+                            : "bg-card border-[#E2EFEA] dark:border-gray-700"
                         }`}
                       >
                         <div
@@ -1770,7 +1768,7 @@ useEffect(() => {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-7 w-7 text-purple-600 hover:text-purple-700 hover:bg-purple-50 dark:text-purple-400 dark:hover:text-purple-300"
+                            className="h-7 w-7 text-[#2BB2A7] hover:text-[#1F8F89] hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/20"
                             onClick={() => {
                               setEditFloorId(floor.id);
                               setEditFloorNumber(floor.floor_number.toString());
@@ -1800,11 +1798,11 @@ useEffect(() => {
               {selectedFloor ? (
                 <>
                   {/* Wards */}
-                  <Card className="border-gray-200 dark:border-gray-700">
+                  <Card className="border-[#E2EFEA] dark:border-gray-700">
                     <CardHeader className="pb-3">
                       <CardTitle className="text-sm font-medium flex items-center justify-between">
-                        <span className="flex items-center text-[#3B1E6F] dark:text-white">
-                          <Layers className="h-4 w-4 mr-2" />
+                        <span className="flex items-center text-gray-900 dark:text-white">
+                          <Layers className="h-4 w-4 mr-2 text-[#2BB2A7]" />
                           Wards on Floor {selectedFloor.floor_number}
                         </span>
                       </CardTitle>
@@ -1815,13 +1813,13 @@ useEffect(() => {
                           placeholder="Ward name"
                           value={newWardName}
                           onChange={(e) => setNewWardName(e.target.value)}
-                          className="w-full focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
+                          className="w-full focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent border-[#E2EFEA] dark:border-gray-600"
                         />
                         <Select
                           value={newWardType}
                           onValueChange={(v) => setNewWardType(v as WardType)}
                         >
-                          <SelectTrigger className="w-full">
+                          <SelectTrigger className="w-full border-[#E2EFEA] dark:border-gray-600 focus:ring-2 focus:ring-[#2BB2A7]">
                             <SelectValue placeholder="Type" />
                           </SelectTrigger>
                           <SelectContent>
@@ -1842,7 +1840,7 @@ useEffect(() => {
                             setNewWardCategory(v as PatientCategory)
                           }
                         >
-                          <SelectTrigger className="w-full">
+                          <SelectTrigger className="w-full border-[#E2EFEA] dark:border-gray-600 focus:ring-2 focus:ring-[#2BB2A7]">
                             <SelectValue placeholder="Category" />
                           </SelectTrigger>
                           <SelectContent>
@@ -1856,7 +1854,7 @@ useEffect(() => {
                           placeholder="Description"
                           value={newWardDesc}
                           onChange={(e) => setNewWardDesc(e.target.value)}
-                          className="w-full focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
+                          className="w-full focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent border-[#E2EFEA] dark:border-gray-600"
                         />
                         <Input
                           type="number"
@@ -1865,12 +1863,12 @@ useEffect(() => {
                           onChange={(e) =>
                             setNewWardRate(parseFloat(e.target.value) || 0)
                           }
-                          className="w-full focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
+                          className="w-full focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent border-[#E2EFEA] dark:border-gray-600"
                         />
                         <Button
                           onClick={handleAddWard}
                           disabled={isLoading}
-                          className="w-full bg-[#3B1E6F] hover:bg-[#7A329F]"
+                          className="w-full bg-[#2BB2A7] hover:bg-[#1F8F89] text-white"
                         >
                           <Plus className="h-4 w-4 mr-1" /> Add
                         </Button>
@@ -1885,9 +1883,9 @@ useEffect(() => {
                           {filteredWards.map((ward) => (
                             <div
                               key={ward.id}
-                              className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer hover:bg-purple-50 dark:hover:bg-purple-900/20 ${
+                              className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/10 ${
                                 selectedWard?.id === ward.id
-                                  ? "border-[#7A329F] bg-purple-50 dark:bg-purple-900/20"
+                                  ? "border-[#2BB2A7] bg-[#EAF7F4] dark:bg-[#1F8F89]/20"
                                   : ""
                               }`}
                               onClick={() => setSelectedWard(ward)}
@@ -1911,7 +1909,7 @@ useEffect(() => {
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-7 w-7 text-purple-600 hover:text-purple-700 hover:bg-purple-50 dark:text-purple-400 dark:hover:text-purple-300"
+                                  className="h-7 w-7 text-[#2BB2A7] hover:text-[#1F8F89] hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/20"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setEditWardId(ward.id);
@@ -1945,11 +1943,11 @@ useEffect(() => {
 
                   {/* Beds */}
                   {selectedWard && (
-                    <Card className="border-gray-200 dark:border-gray-700">
+                    <Card className="border-[#E2EFEA] dark:border-gray-700">
                       <CardHeader className="pb-3">
                         <CardTitle className="text-sm font-medium flex items-center justify-between">
-                          <span className="flex items-center text-[#3B1E6F] dark:text-white">
-                            <BedDouble className="h-4 w-4 mr-2" />
+                          <span className="flex items-center text-gray-900 dark:text-white">
+                            <BedDouble className="h-4 w-4 mr-2 text-[#2BB2A7]" />
                             Beds in {selectedWard.name}
                           </span>
                         </CardTitle>
@@ -1963,19 +1961,19 @@ useEffect(() => {
                             onChange={(e) =>
                               setNewBedCount(parseInt(e.target.value) || 1)
                             }
-                            className="focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
+                            className="focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent border-[#E2EFEA] dark:border-gray-600"
                           />
                           <Input
                             placeholder="Prefix (e.g., ICU-)"
                             value={newBedPrefix}
                             onChange={(e) => setNewBedPrefix(e.target.value)}
-                            className="focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
+                            className="focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent border-[#E2EFEA] dark:border-gray-600"
                           />
                           <Input
                             placeholder="Room number (optional)"
                             value={newRoomNumber}
                             onChange={(e) => setNewRoomNumber(e.target.value)}
-                            className="focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
+                            className="focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent border-[#E2EFEA] dark:border-gray-600"
                           />
                           <Select
                             value={newBedCategory}
@@ -1983,7 +1981,7 @@ useEffect(() => {
                               setNewBedCategory(v as PatientCategory)
                             }
                           >
-                            <SelectTrigger>
+                            <SelectTrigger className="border-[#E2EFEA] dark:border-gray-600 focus:ring-2 focus:ring-[#2BB2A7]">
                               <SelectValue placeholder="Category (optional)" />
                             </SelectTrigger>
                             <SelectContent>
@@ -1995,7 +1993,7 @@ useEffect(() => {
                           </Select>
                           <Button
                             onClick={handleAddBeds}
-                            className="sm:col-span-4 bg-[#3B1E6F] hover:bg-[#7A329F]"
+                            className="sm:col-span-4 bg-[#2BB2A7] hover:bg-[#1F8F89] text-white"
                           >
                             <Plus className="h-4 w-4 mr-1" /> Add {newBedCount}{" "}
                             bed(s)
@@ -2048,7 +2046,7 @@ useEffect(() => {
                                         )
                                       }
                                     >
-                                      <SelectTrigger className="h-8 text-xs flex-1">
+                                      <SelectTrigger className="h-8 text-xs flex-1 border-[#E2EFEA] dark:border-gray-600 focus:ring-2 focus:ring-[#2BB2A7]">
                                         <SelectValue />
                                       </SelectTrigger>
                                       <SelectContent>
@@ -2112,8 +2110,8 @@ useEffect(() => {
                   )}
                 </>
               ) : (
-                <Card className="p-12 text-center text-muted-foreground border-gray-200 dark:border-gray-700">
-                  <Building2 className="h-12 w-12 mx-auto mb-4 opacity-20 text-[#3B1E6F]" />
+                <Card className="p-12 text-center text-muted-foreground border-[#E2EFEA] dark:border-gray-700">
+                  <Building2 className="h-12 w-12 mx-auto mb-4 opacity-20 text-[#2BB2A7]" />
                   <p className="text-gray-500 dark:text-gray-400">
                     Select a floor to start configuring wards and beds.
                   </p>
@@ -2127,7 +2125,7 @@ useEffect(() => {
       {/* Edit Floor Dialog */}
       {editFloorId && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl w-96">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl w-96 border border-[#E2EFEA] dark:border-gray-700">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
               Edit Floor
             </h3>
@@ -2140,7 +2138,7 @@ useEffect(() => {
                   type="number"
                   value={editFloorNumber}
                   onChange={(e) => setEditFloorNumber(e.target.value)}
-                  className="focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
+                  className="focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent border-[#E2EFEA] dark:border-gray-600"
                 />
               </div>
               <div>
@@ -2150,7 +2148,7 @@ useEffect(() => {
                 <Input
                   value={editFloorName}
                   onChange={(e) => setEditFloorName(e.target.value)}
-                  className="focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
+                  className="focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent border-[#E2EFEA] dark:border-gray-600"
                 />
               </div>
             </div>
@@ -2158,14 +2156,14 @@ useEffect(() => {
               <Button
                 variant="outline"
                 onClick={() => setEditFloorId(null)}
-                className="border-gray-300 dark:border-gray-600"
+                className="border-[#E2EFEA] dark:border-gray-600"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleUpdateFloor}
                 disabled={isLoading}
-                className="bg-[#3B1E6F] hover:bg-[#7A329F]"
+                className="bg-[#2BB2A7] hover:bg-[#1F8F89] text-white"
               >
                 Save
               </Button>
@@ -2177,7 +2175,7 @@ useEffect(() => {
       {/* Edit Ward Dialog */}
       {editWardId && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl w-96">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl w-96 border border-[#E2EFEA] dark:border-gray-700">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
               Edit Ward
             </h3>
@@ -2189,7 +2187,7 @@ useEffect(() => {
                 <Input
                   value={editWardName}
                   onChange={(e) => setEditWardName(e.target.value)}
-                  className="focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
+                  className="focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent border-[#E2EFEA] dark:border-gray-600"
                 />
               </div>
               <div>
@@ -2200,7 +2198,7 @@ useEffect(() => {
                   value={editWardType}
                   onValueChange={(v) => setEditWardType(v as WardType)}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="border-[#E2EFEA] dark:border-gray-600 focus:ring-2 focus:ring-[#2BB2A7]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -2224,7 +2222,7 @@ useEffect(() => {
                     setEditWardCategory(v as PatientCategory)
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="border-[#E2EFEA] dark:border-gray-600 focus:ring-2 focus:ring-[#2BB2A7]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -2242,7 +2240,7 @@ useEffect(() => {
                 <Input
                   value={editWardDesc}
                   onChange={(e) => setEditWardDesc(e.target.value)}
-                  className="focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
+                  className="focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent border-[#E2EFEA] dark:border-gray-600"
                 />
               </div>
               <div>
@@ -2255,7 +2253,7 @@ useEffect(() => {
                   onChange={(e) =>
                     setEditWardRate(parseFloat(e.target.value) || 0)
                   }
-                  className="focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
+                  className="focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent border-[#E2EFEA] dark:border-gray-600"
                 />
               </div>
             </div>
@@ -2263,14 +2261,14 @@ useEffect(() => {
               <Button
                 variant="outline"
                 onClick={() => setEditWardId(null)}
-                className="border-gray-300 dark:border-gray-600"
+                className="border-[#E2EFEA] dark:border-gray-600"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleUpdateWard}
                 disabled={isLoading}
-                className="bg-[#3B1E6F] hover:bg-[#7A329F]"
+                className="bg-[#2BB2A7] hover:bg-[#1F8F89] text-white"
               >
                 Save
               </Button>

@@ -53,7 +53,7 @@ function TriageBadge({ value }: { value: TriageType | '' }) {
 function StatusBadge({ value }: { value: AssessmentStatus }) {
   const config = {
     'Draft': { icon: '📝', className: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
-    'Completed': { icon: '✅', className: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
+    'Completed': { icon: '✅', className: 'bg-[#EAF7F4] text-[#1F8F89] dark:bg-[#1F8F89]/20 dark:text-[#2BB2A7]' },
     'Converted to Admission': { icon: '🏥', className: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400' }
   };
   const { icon, className } = config[value];
@@ -128,7 +128,7 @@ export default function Dashboard() {
   ] as const;
 
   const toneClass: Record<string, string> = {
-    info: "bg-purple-100 text-[#3B1E6F] dark:bg-purple-900/30 dark:text-[#7A329F]",
+    info: "bg-[#EAF7F4] text-[#2BB2A7] dark:bg-[#1F8F89]/20 dark:text-[#2BB2A7]",
     warning: "bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400",
     success: "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400",
     critical: "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400",
@@ -138,7 +138,7 @@ export default function Dashboard() {
     return (
       <div className="container mx-auto py-6 flex justify-center items-center min-h-[400px]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3B1E6F] mx-auto" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2BB2A7] mx-auto" />
           <p className="mt-2 text-sm text-muted-foreground">Loading dashboard...</p>
         </div>
       </div>
@@ -149,16 +149,16 @@ export default function Dashboard() {
     <div className="container mx-auto py-6 space-y-8 max-w-7xl">
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-[#3B1E6F] dark:text-white">Emergency Dashboard</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Emergency Dashboard</h1>
           <p className="text-sm text-muted-foreground">Track triage, vitals and admissions in real-time.</p>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <Button asChild variant="outline" className="border-[#3B1E6F] text-[#3B1E6F] hover:bg-[#3B1E6F] hover:text-white dark:border-[#7A329F] dark:text-[#7A329F] dark:hover:bg-[#7A329F] dark:hover:text-white">
+          <Button asChild variant="outline" className="border-[#2BB2A7] text-[#2BB2A7] hover:bg-[#2BB2A7] hover:text-white dark:border-[#2BB2A7] dark:text-[#2BB2A7] dark:hover:bg-[#2BB2A7] dark:hover:text-white">
             <Link href="/emergency/assessments">
               <ClipboardList className="h-4 w-4 mr-2" /> View all
             </Link>
           </Button>
-          <Button asChild size="lg" className="bg-gradient-to-r from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] hover:opacity-90 text-white shadow-lg shadow-[#3B1E6F]/20">
+          <Button asChild size="lg" className="bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] hover:opacity-90 text-white shadow-lg shadow-[#2BB2A7]/20">
             <Link href="/emergency/assessments/new">
               <FilePlus2 className="h-4 w-4 mr-2" /> New Assessment
             </Link>
@@ -168,11 +168,11 @@ export default function Dashboard() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {cards.map((c) => (
-          <Card key={c.label} className="border-border/60 p-5 shadow-sm hover:shadow-md transition-all">
+          <Card key={c.label} className="border-[#E2EFEA] dark:border-slate-700 p-5 shadow-sm hover:shadow-md transition-all">
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">{c.label}</p>
-                <p className="mt-2 text-3xl font-bold tabular-nums text-[#3B1E6F] dark:text-white">{c.value}</p>
+                <p className="mt-2 text-3xl font-bold tabular-nums text-gray-900 dark:text-white">{c.value}</p>
               </div>
               <span className={`flex h-10 w-10 items-center justify-center rounded-lg ${toneClass[c.tone]} bg-opacity-10`}>
                 <c.icon className="h-5 w-5" />
@@ -182,10 +182,10 @@ export default function Dashboard() {
         ))}
       </div>
 
-      <Card className="border-border/60 overflow-hidden shadow-sm">
-        <div className="flex flex-col gap-3 border-b p-4 sm:flex-row sm:items-center sm:justify-between bg-gradient-to-r from-purple-50 to-white dark:from-purple-900/10 dark:to-gray-950">
+      <Card className="border-[#E2EFEA] dark:border-slate-700 overflow-hidden shadow-sm">
+        <div className="flex flex-col gap-3 border-b border-[#E2EFEA] dark:border-slate-700 p-4 sm:flex-row sm:items-center sm:justify-between bg-[#F4F9F7] dark:bg-slate-800/30">
           <div>
-            <h2 className="font-semibold text-lg text-[#3B1E6F] dark:text-white">Recent Assessments</h2>
+            <h2 className="font-semibold text-lg text-gray-900 dark:text-white">Recent Assessments</h2>
             <p className="text-xs text-muted-foreground">Latest patients seen in the emergency ward</p>
           </div>
           <div className="relative w-full sm:w-80">
@@ -194,30 +194,30 @@ export default function Dashboard() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by name, UHID, or doctor..."
-              className="pl-9 focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
+              className="pl-9 focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent border-[#E2EFEA] dark:border-slate-700"
             />
           </div>
         </div>
 
         {recent.length === 0 ? (
           <div className="p-12 text-center">
-            <div className="mx-auto w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
-              <ClipboardList className="h-8 w-8 text-muted-foreground" />
+            <div className="mx-auto w-16 h-16 rounded-full bg-[#EAF7F4] dark:bg-[#1F8F89]/20 flex items-center justify-center mb-4">
+              <ClipboardList className="h-8 w-8 text-[#2BB2A7]" />
             </div>
             <p className="text-sm text-muted-foreground">No assessments yet.</p>
-            <Button asChild className="mt-4 bg-gradient-to-r from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] hover:opacity-90 text-white">
+            <Button asChild className="mt-4 bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] hover:opacity-90 text-white">
               <Link href="/emergency/assessments/new">
                 <FilePlus2 className="h-4 w-4 mr-2" /> Create first assessment
               </Link>
             </Button>
           </div>
         ) : (
-          <div className="divide-y divide-border">
+          <div className="divide-y divide-[#E2EFEA] dark:divide-slate-700">
             {recent.map((assessment) => (
               <Link
                 key={assessment.id}
                 href={`/emergency/assessments/${assessment.id}`}
-                className="block hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-200"
+                className="block hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/10 transition-all duration-200"
               >
                 <div className="p-4">
                   <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -228,7 +228,7 @@ export default function Dashboard() {
                           assessment.triage === 'Red' && "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
                           assessment.triage === 'Yellow' && "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
                           assessment.triage === 'Green' && "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-                          !assessment.triage && "bg-purple-100 text-[#3B1E6F] dark:bg-purple-900/30 dark:text-[#7A329F]"
+                          !assessment.triage && "bg-[#EAF7F4] text-[#2BB2A7] dark:bg-[#1F8F89]/20 dark:text-[#2BB2A7]"
                         )}>
                           {assessment.patientName?.charAt(0).toUpperCase() || 'P'}
                         </AvatarFallback>
@@ -267,7 +267,7 @@ export default function Dashboard() {
                     </div>
 
                     <div className="flex items-center gap-2 ml-13 lg:ml-0">
-                      <Button variant="ghost" size="sm" className="gap-1 text-[#7A329F] hover:text-[#3B1E6F] hover:bg-purple-50 dark:hover:bg-purple-900/20">
+                      <Button variant="ghost" size="sm" className="gap-1 text-[#2BB2A7] hover:text-[#1F8F89] hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/20">
                         View Details <ArrowRight className="h-3 w-3" />
                       </Button>
                     </div>
@@ -279,10 +279,10 @@ export default function Dashboard() {
         )}
 
         {recent.length > 0 && (
-          <div className="border-t p-3 text-center bg-purple-50/50 dark:bg-purple-900/10">
+          <div className="border-t border-[#E2EFEA] dark:border-slate-700 p-3 text-center bg-[#F4F9F7] dark:bg-slate-800/30">
             <Link
               href="/emergency/assessments"
-              className="text-sm text-[#7A329F] dark:text-[#9B4DBF] hover:underline inline-flex items-center gap-1"
+              className="text-sm text-[#2BB2A7] hover:text-[#1F8F89] inline-flex items-center gap-1 font-medium"
             >
               View all assessments <ArrowRight className="h-3 w-3" />
             </Link>

@@ -115,15 +115,15 @@ export default function HelpDeskDashboard() {
       title: "Patients Today",
       value: patientsTodayCount,
       change: "",
-      icon: <Users className="w-5 h-5 text-[#3B1E6F]" />,
-      bgColor: "bg-purple-50 dark:bg-purple-900/20",
+      icon: <Users className="w-5 h-5 text-[#2BB2A7]" />,
+      bgColor: "bg-[#EAF7F4] dark:bg-[#1F8F89]/20",
     },
     {
       title: "Appointments",
       value: todayAppointmentsCount,
       change: "",
-      icon: <Calendar className="w-5 h-5 text-emerald-600" />,
-      bgColor: "bg-emerald-50 dark:bg-emerald-900/20",
+      icon: <Calendar className="w-5 h-5 text-[#86C94C]" />,
+      bgColor: "bg-green-50 dark:bg-green-900/20",
     },
     {
       title: "Avg. Wait Time",
@@ -136,8 +136,8 @@ export default function HelpDeskDashboard() {
       title: "Revenue Today",
       value: `₹${todayRevenue.toFixed(2)}`,
       change: "",
-      icon: <DollarSign className="w-5 h-5 text-[#7A329F]" />,
-      bgColor: "bg-purple-50 dark:bg-purple-900/20",
+      icon: <DollarSign className="w-5 h-5 text-[#2BB2A7]" />,
+      bgColor: "bg-[#EAF7F4] dark:bg-[#1F8F89]/20",
     },
   ];
 
@@ -155,21 +155,21 @@ export default function HelpDeskDashboard() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-h-screen overflow-hidden">
         {/* Mobile header */}
-        <header className="lg:hidden bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3 flex items-center gap-3">
+        <header className="lg:hidden bg-white dark:bg-gray-800 border-b border-[#E2EFEA] dark:border-gray-700 px-4 py-3 flex items-center gap-3">
           <button
             onClick={() => setMobileMenuOpen(true)}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+            className="p-2 rounded-lg hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/20"
           >
             <Menu className="w-5 h-5 text-gray-700 dark:text-gray-300" />
           </button>
-          <h1 className="text-xl font-bold text-[#3B1E6F] dark:text-white truncate">
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white truncate">
             Dashboard
           </h1>
         </header>
 
         {/* Mobile toggle button */}
         <button
-          className="lg:hidden fixed bottom-20 right-6 z-50 p-3 bg-gradient-to-r from-[#3B1E6F] to-[#7A329F] hover:from-[#7A329F] hover:to-[#0D5CB3] text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center"
+          className="lg:hidden fixed bottom-20 right-6 z-50 p-3 bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] hover:opacity-90 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-label="Toggle menu"
         >
@@ -185,7 +185,7 @@ export default function HelpDeskDashboard() {
             {/* Welcome Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
-                <h1 className="text-3xl font-bold text-[#3B1E6F] dark:text-white">
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
                   Welcome back
                 </h1>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
@@ -210,7 +210,7 @@ export default function HelpDeskDashboard() {
                 {[1, 2, 3, 4].map((i) => (
                   <div
                     key={i}
-                    className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-3 sm:p-4 shadow-sm animate-pulse"
+                    className="bg-white dark:bg-gray-800 rounded-xl border border-[#E2EFEA] dark:border-gray-700 p-3 sm:p-4 shadow-sm animate-pulse"
                   >
                     <div className="h-16 bg-gray-200 dark:bg-gray-700 rounded"></div>
                   </div>
@@ -221,7 +221,7 @@ export default function HelpDeskDashboard() {
                 {quickStats.map((stat, index) => (
                   <div
                     key={index}
-                    className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-3 sm:p-4 shadow-sm hover:shadow-md transition-shadow"
+                    className="bg-white dark:bg-gray-800 rounded-xl border border-[#E2EFEA] dark:border-gray-700 p-3 sm:p-4 shadow-sm hover:shadow-md transition-shadow"
                   >
                     <div className="flex items-start justify-between">
                       <div
@@ -246,74 +246,74 @@ export default function HelpDeskDashboard() {
 
             {/* Main Stats from HelpDeskStats */}
             <div className="mt-6">
-              <h2 className="text-lg font-semibold text-[#3B1E6F] dark:text-white mb-3">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
                 Appointment Overview
               </h2>
               <HelpDeskStats />
             </div>
 
             {/* Quick Actions */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
-              <h2 className="text-lg font-semibold text-[#3B1E6F] dark:text-white mb-4">
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-[#E2EFEA] dark:border-gray-700 p-5 shadow-sm">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                 Quick Actions
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <button
                   onClick={() => router.push("/helpdesk/appointments/new")}
-                  className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl border border-purple-100 dark:border-purple-800 hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors text-left group"
+                  className="p-4 bg-[#EAF7F4] dark:bg-[#1F8F89]/20 rounded-xl border border-[#2BB2A7]/30 dark:border-[#2BB2A7]/20 hover:bg-[#2BB2A7] hover:text-white dark:hover:bg-[#2BB2A7] transition-colors text-left group"
                 >
-                  <div className="w-10 h-10 bg-gradient-to-r from-[#3B1E6F] to-[#7A329F] rounded-lg flex items-center justify-center text-white mb-3 group-hover:scale-105 transition-transform">
+                  <div className="w-10 h-10 bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] rounded-lg flex items-center justify-center text-white mb-3 group-hover:scale-105 transition-transform">
                     <Calendar className="w-5 h-5" />
                   </div>
-                  <h3 className="font-medium text-gray-900 dark:text-white">
+                  <h3 className="font-medium text-gray-900 dark:text-white group-hover:text-white">
                     Book Appointment
                   </h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 group-hover:text-white/80 mt-1">
                     Schedule a new appointment for a patient
                   </p>
                 </button>
 
                 <button
                   onClick={() => router.push("/helpdesk/doctor-slots")}
-                  className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl border border-purple-100 dark:border-purple-800 hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors text-left group"
+                  className="p-4 bg-[#EAF7F4] dark:bg-[#1F8F89]/20 rounded-xl border border-[#2BB2A7]/30 dark:border-[#2BB2A7]/20 hover:bg-[#2BB2A7] hover:text-white dark:hover:bg-[#2BB2A7] transition-colors text-left group"
                 >
-                  <div className="w-10 h-10 bg-gradient-to-r from-[#7A329F] to-[#0D5CB3] rounded-lg flex items-center justify-center text-white mb-3 group-hover:scale-105 transition-transform">
+                  <div className="w-10 h-10 bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] rounded-lg flex items-center justify-center text-white mb-3 group-hover:scale-105 transition-transform">
                     <Clock className="w-5 h-5" />
                   </div>
-                  <h3 className="font-medium text-gray-900 dark:text-white">
+                  <h3 className="font-medium text-gray-900 dark:text-white group-hover:text-white">
                     Manage Doctor Slots
                   </h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 group-hover:text-white/80 mt-1">
                     Update availability for doctors
                   </p>
                 </button>
 
                 <button
                   onClick={() => router.push("/helpdesk/billing")}
-                  className="p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-100 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-colors text-left group"
+                  className="p-4 bg-[#EAF7F4] dark:bg-[#1F8F89]/20 rounded-xl border border-[#2BB2A7]/30 dark:border-[#2BB2A7]/20 hover:bg-[#2BB2A7] hover:text-white dark:hover:bg-[#2BB2A7] transition-colors text-left group"
                 >
-                  <div className="w-10 h-10 bg-emerald-600 rounded-lg flex items-center justify-center text-white mb-3 group-hover:scale-105 transition-transform">
+                  <div className="w-10 h-10 bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] rounded-lg flex items-center justify-center text-white mb-3 group-hover:scale-105 transition-transform">
                     <DollarSign className="w-5 h-5" />
                   </div>
-                  <h3 className="font-medium text-gray-900 dark:text-white">
+                  <h3 className="font-medium text-gray-900 dark:text-white group-hover:text-white">
                     Process Payment
                   </h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 group-hover:text-white/80 mt-1">
                     Create invoice or collect payment
                   </p>
                 </button>
 
                 <button
                   onClick={() => router.push("/helpdesk/room-availability")}
-                  className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-100 dark:border-amber-800 hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors text-left group"
+                  className="p-4 bg-[#EAF7F4] dark:bg-[#1F8F89]/20 rounded-xl border border-[#2BB2A7]/30 dark:border-[#2BB2A7]/20 hover:bg-[#2BB2A7] hover:text-white dark:hover:bg-[#2BB2A7] transition-colors text-left group"
                 >
-                  <div className="w-10 h-10 bg-amber-600 rounded-lg flex items-center justify-center text-white mb-3 group-hover:scale-105 transition-transform">
+                  <div className="w-10 h-10 bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] rounded-lg flex items-center justify-center text-white mb-3 group-hover:scale-105 transition-transform">
                     <BedDouble className="w-5 h-5" />
                   </div>
-                  <h3 className="font-medium text-gray-900 dark:text-white">
+                  <h3 className="font-medium text-gray-900 dark:text-white group-hover:text-white">
                     Room Availability
                   </h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 group-hover:text-white/80 mt-1">
                     Check and manage room schedules
                   </p>
                 </button>
@@ -321,14 +321,14 @@ export default function HelpDeskDashboard() {
             </div>
 
             {/* Recent Appointments */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-[#E2EFEA] dark:border-gray-700 p-5 shadow-sm">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold text-[#3B1E6F] dark:text-white">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                   Recent Appointments
                 </h2>
                 <button 
                   onClick={() => router.push("/helpdesk/appointments")}
-                  className="text-sm text-[#7A329F] dark:text-[#9B4DBF] hover:underline flex items-center gap-1"
+                  className="text-sm text-[#2BB2A7] hover:text-[#1F8F89] font-medium flex items-center gap-1"
                 >
                   View All <ArrowRight className="w-3 h-3" />
                 </button>
@@ -342,10 +342,10 @@ export default function HelpDeskDashboard() {
                   {upcomingAppointments.map((apt) => (
                     <div
                       key={apt.id}
-                      className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                      className="flex items-center justify-between p-3 bg-[#F4F9F7] dark:bg-gray-700/50 rounded-lg hover:bg-[#EAF7F4] dark:hover:bg-gray-700 transition-colors"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#3B1E6F] to-[#7A329F] flex items-center justify-center text-white font-semibold text-sm">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#2BB2A7] to-[#86C94C] flex items-center justify-center text-white font-semibold text-sm">
                           {apt.patientName.charAt(0).toUpperCase()}
                         </div>
                         <div>
@@ -359,7 +359,7 @@ export default function HelpDeskDashboard() {
                       </div>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                         apt.status === "completed" 
-                          ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400"
+                          ? "bg-[#EAF7F4] text-[#1F8F89] dark:bg-[#1F8F89]/20 dark:text-[#2BB2A7]"
                           : apt.status === "scheduled"
                           ? "bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400"
                           : apt.status === "cancelled"

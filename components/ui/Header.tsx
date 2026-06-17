@@ -133,24 +133,24 @@ export default function Header() {
   const displayName = user?.full_name_en || user?.name || user?.email?.split("@")[0] || "User";
 
   return (
-    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100">
+    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md shadow-sm border-b border-[#E2EFEA] dark:border-gray-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
         <div className="flex items-center justify-between">
-          {/* Logo – with OrDo Logo - Increased size, no background */}
+          {/* Logo – with Swasti.ai Logo - Increased size, no background */}
           <Link href={homeHref} className="flex items-center gap-3 group">
-            <div className="relative w-14 h-14 flex items-center justify-center">
+            <div className="relative w-20 h-20 flex items-center justify-center">
               <img 
-                src="/OrDo%20New%20Logo.png"
-                alt="OrDo Logo" 
+                src="/swasti ai logo.png"
+                alt="Swasti.ai Logo" 
                 className="w-full h-full object-contain transition-transform group-hover:scale-105 duration-200"
               />
             </div>
             <div>
-              <span className="text-xl font-bold text-[#3B1E6F] dark:text-white">
-                {tenantName}
+              <span className="text-xl font-bold text-[#1A1A1A] dark:text-white">
+                swasti.ai
               </span>
-              <p className="text-[10px] text-gray-500 dark:text-gray-400 -mt-0.5 tracking-wide">
-                Healthcare Information System
+              <p className="text-[10px] text-[#1F8F89] dark:text-gray-400 -mt-0.5 tracking-wide">
+              AI-BASED HOSPITAL INFORMATION SYSTEM
               </p>
             </div>
           </Link>
@@ -161,7 +161,7 @@ export default function Header() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="text-gray-700 hover:text-[#7A329F] dark:text-gray-300 dark:hover:text-[#9B4DBF] font-medium transition-colors"
+                className="text-gray-700 hover:text-[#2BB2A7] dark:text-gray-300 dark:hover:text-[#2BB2A7] font-medium transition-colors"
               >
                 {item.label}
               </Link>
@@ -172,17 +172,17 @@ export default function Header() {
           <div className="hidden md:flex items-center space-x-4">
             {isLoggedIn ? (
               <>
-                <button className="p-2 text-gray-600 hover:text-[#7A329F] dark:text-gray-400 dark:hover:text-[#9B4DBF] relative transition-colors">
+                <button className="p-2 text-gray-600 hover:text-[#2BB2A7] dark:text-gray-400 dark:hover:text-[#2BB2A7] relative transition-colors">
                   <Bell size={20} />
                   <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
                 </button>
 
                 <div className="relative">
                   <button
-                    className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors"
+                    className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/20 transition-colors"
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                   >
-                    <div className="w-8 h-8 bg-gradient-to-br from-[#3B1E6F] to-[#7A329F] rounded-full flex items-center justify-center text-white font-bold text-sm">
+                    <div className="w-8 h-8 bg-gradient-to-br from-[#2BB2A7] to-[#86C94C] rounded-full flex items-center justify-center text-white font-bold text-sm">
                       {displayName.charAt(0).toUpperCase()}
                     </div>
                     <span className="text-gray-700 dark:text-gray-300 font-medium">
@@ -197,8 +197,8 @@ export default function Header() {
                   </button>
 
                   {isUserMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50">
-                      <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800">
+                    <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-[#E2EFEA] dark:border-gray-700 py-2 z-50">
+                      <div className="px-4 py-3 border-b border-[#E2EFEA] dark:border-gray-800">
                         <p className="font-medium text-gray-900 dark:text-white">
                           {displayName}
                         </p>
@@ -208,13 +208,13 @@ export default function Header() {
                       </div>
                       <Link
                         href={roleHomePage[currentRole] || "/"}
-                        className="flex items-center space-x-2 px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-[#3B1E6F] dark:hover:text-[#7A329F] transition-colors"
+                        className="flex items-center space-x-2 px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/20 hover:text-[#2BB2A7] dark:hover:text-[#2BB2A7] transition-colors"
                         onClick={() => setIsUserMenuOpen(false)}
                       >
                         <User size={16} />
                         <span>Dashboard</span>
                       </Link>
-                      <div className="border-t border-gray-100 dark:border-gray-800 mt-1 pt-1">
+                      <div className="border-t border-[#E2EFEA] dark:border-gray-800 mt-1 pt-1">
                         <button
                           className="flex items-center space-x-2 w-full px-4 py-3 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                           onClick={handleLogout}
@@ -230,13 +230,13 @@ export default function Header() {
             ) : (
               <>
                 <Link href="/login">
-                  <button className="flex items-center space-x-2 px-4 py-2 text-[#7A329F] hover:text-[#3B1E6F] dark:text-[#9B4DBF] dark:hover:text-[#7A329F] font-medium transition-colors">
+                  <button className="flex items-center space-x-2 px-4 py-2 text-[#2BB2A7] hover:text-[#1F8F89] dark:text-[#2BB2A7] dark:hover:text-[#2BB2A7] font-medium transition-colors">
                     <LogIn size={18} />
                     <span>Login</span>
                   </button>
                 </Link>
                 <Link href="/register">
-                  <button className="flex items-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] text-white rounded-lg hover:opacity-90 transition-all shadow-lg shadow-[#3B1E6F]/20">
+                  <button className="flex items-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] text-white rounded-lg hover:opacity-90 transition-all shadow-lg shadow-[#2BB2A7]/20">
                     <UserPlus size={18} />
                     <span>Sign Up</span>
                   </button>
@@ -247,7 +247,7 @@ export default function Header() {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden p-2 text-gray-600 hover:text-[#7A329F] dark:text-gray-400 dark:hover:text-[#9B4DBF] transition-colors"
+            className="md:hidden p-2 text-gray-600 hover:text-[#2BB2A7] dark:text-gray-400 dark:hover:text-[#2BB2A7] transition-colors"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
             {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -256,11 +256,11 @@ export default function Header() {
 
         {/* Mobile Menu – role‑based */}
         {isMenuOpen && (
-          <div className="md:hidden mt-4 pb-4 border-t border-gray-100 dark:border-gray-800 pt-4">
+          <div className="md:hidden mt-4 pb-4 border-t border-[#E2EFEA] dark:border-gray-800 pt-4">
             <div className="flex flex-col space-y-4">
               {isLoggedIn && (
-                <div className="flex items-center space-x-3 px-2 py-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                  <div className="w-10 h-10 bg-gradient-to-br from-[#3B1E6F] to-[#7A329F] rounded-full flex items-center justify-center text-white font-bold">
+                <div className="flex items-center space-x-3 px-2 py-3 bg-[#EAF7F4] dark:bg-[#1F8F89]/20 rounded-lg">
+                  <div className="w-10 h-10 bg-gradient-to-br from-[#2BB2A7] to-[#86C94C] rounded-full flex items-center justify-center text-white font-bold">
                     {displayName.charAt(0).toUpperCase()}
                   </div>
                   <div>
@@ -275,19 +275,19 @@ export default function Header() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="text-gray-700 dark:text-gray-300 hover:text-[#7A329F] dark:hover:text-[#9B4DBF] font-medium py-2 px-2 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors"
+                  className="text-gray-700 dark:text-gray-300 hover:text-[#2BB2A7] dark:hover:text-[#2BB2A7] font-medium py-2 px-2 rounded-lg hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/20 transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {item.label}
                 </Link>
               ))}
 
-              <div className="pt-4 space-y-3 border-t border-gray-100 dark:border-gray-800">
+              <div className="pt-4 space-y-3 border-t border-[#E2EFEA] dark:border-gray-800">
                 {isLoggedIn ? (
                   <>
                     <Link href="/profile">
                       <button
-                        className="w-full flex items-center justify-center space-x-2 px-4 py-3 text-[#7A329F] dark:text-[#9B4DBF] border border-purple-200 dark:border-purple-800 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors"
+                        className="w-full flex items-center justify-center space-x-2 px-4 py-3 text-[#2BB2A7] dark:text-[#2BB2A7] border border-[#2BB2A7]/30 dark:border-[#2BB2A7]/20 rounded-lg hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/20 transition-colors"
                         onClick={() => setIsMenuOpen(false)}
                       >
                         <User size={18} />
@@ -306,7 +306,7 @@ export default function Header() {
                   <>
                     <Link href="/login">
                       <button
-                        className="w-full flex items-center justify-center space-x-2 px-4 py-3 text-[#7A329F] border border-purple-200 dark:border-purple-800 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors"
+                        className="w-full flex items-center justify-center space-x-2 px-4 py-3 text-[#2BB2A7] border border-[#2BB2A7]/30 dark:border-[#2BB2A7]/20 rounded-lg hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/20 transition-colors"
                         onClick={() => setIsMenuOpen(false)}
                       >
                         <LogIn size={18} />
@@ -315,7 +315,7 @@ export default function Header() {
                     </Link>
                     <Link href="/register">
                       <button
-                        className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-gradient-to-r from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] text-white rounded-lg hover:opacity-90 transition-all"
+                        className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] text-white rounded-lg hover:opacity-90 transition-all"
                         onClick={() => setIsMenuOpen(false)}
                       >
                         <UserPlus size={18} />

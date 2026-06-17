@@ -292,8 +292,6 @@
 // }
 
 
-
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -376,8 +374,8 @@ export default function LaboratoryDashboard() {
         icon: <FlaskRound className="w-3.5 h-3.5 inline mr-1" />
       },
       Completed: { 
-        bg: "bg-emerald-50 dark:bg-emerald-900/20", 
-        text: "text-emerald-700 dark:text-emerald-300", 
+        bg: "bg-[#EAF7F4] dark:bg-[#1F8F89]/20", 
+        text: "text-[#1F8F89] dark:text-[#2BB2A7]", 
         icon: <CheckCircle className="w-3.5 h-3.5 inline mr-1" />
       },
       Cancelled: { 
@@ -397,7 +395,7 @@ export default function LaboratoryDashboard() {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-[#3B1E6F] border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <div className="w-12 h-12 border-4 border-[#2BB2A7] border-t-transparent rounded-full animate-spin mx-auto"></div>
           <p className="mt-4 text-gray-600 dark:text-gray-400">Loading...</p>
         </div>
       </div>
@@ -407,7 +405,7 @@ export default function LaboratoryDashboard() {
   if (!isDashboardEnabled) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="text-center bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg">
+        <div className="text-center bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-[#E2EFEA] dark:border-gray-700">
           <div className="text-red-500 text-6xl mb-4">🔒</div>
           <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">Access Denied</h1>
           <p className="text-gray-600 dark:text-gray-400">
@@ -415,7 +413,7 @@ export default function LaboratoryDashboard() {
           </p>
           <button
             onClick={() => router.push("/dashboard")}
-            className="mt-4 px-4 py-2 bg-gradient-to-r from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] text-white rounded-lg hover:opacity-90 transition-opacity"
+            className="mt-4 px-4 py-2 bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] text-white rounded-lg hover:opacity-90 transition-opacity"
           >
             Go to Dashboard
           </button>
@@ -428,7 +426,7 @@ export default function LaboratoryDashboard() {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-[#3B1E6F] border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <div className="w-12 h-12 border-4 border-[#2BB2A7] border-t-transparent rounded-full animate-spin mx-auto"></div>
           <p className="mt-4 text-gray-600 dark:text-gray-400">Loading dashboard...</p>
         </div>
       </div>
@@ -438,9 +436,9 @@ export default function LaboratoryDashboard() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 sticky top-0 z-10">
+      <div className="bg-white dark:bg-gray-800 border-b border-[#E2EFEA] dark:border-gray-700 px-6 py-4 sticky top-0 z-10">
         <div>
-          <h1 className="text-2xl font-bold text-[#3B1E6F] dark:text-white">Laboratory Dashboard</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Laboratory Dashboard</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             Overview of laboratory operations
           </p>
@@ -450,7 +448,7 @@ export default function LaboratoryDashboard() {
       <div className="p-6">
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 hover:shadow-md transition-shadow">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-[#E2EFEA] dark:border-gray-700 p-5 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Orders</p>
@@ -459,13 +457,13 @@ export default function LaboratoryDashboard() {
                 </p>
                 <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-2">All time</p>
               </div>
-              <div className="w-12 h-12 rounded-xl bg-[#3B1E6F]/10 dark:bg-[#3B1E6F]/20 flex items-center justify-center">
-                <FileText className="w-6 h-6 text-[#3B1E6F] dark:text-[#7A329F]" />
+              <div className="w-12 h-12 rounded-xl bg-[#EAF7F4] dark:bg-[#1F8F89]/20 flex items-center justify-center">
+                <FileText className="w-6 h-6 text-[#2BB2A7]" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 hover:shadow-md transition-shadow">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-[#E2EFEA] dark:border-gray-700 p-5 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Pending Collection</p>
@@ -480,7 +478,7 @@ export default function LaboratoryDashboard() {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 hover:shadow-md transition-shadow">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-[#E2EFEA] dark:border-gray-700 p-5 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Pending Results</p>
@@ -495,40 +493,40 @@ export default function LaboratoryDashboard() {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 hover:shadow-md transition-shadow">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-[#E2EFEA] dark:border-gray-700 p-5 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Completed Today</p>
-                <p className="text-3xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
+                <p className="text-3xl font-bold text-[#2BB2A7] mt-1">
                   {stats.completedToday}
                 </p>
-                <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-2">Today's reports</p>
+                <p className="text-xs text-[#2BB2A7] mt-2">Today's reports</p>
               </div>
-              <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center">
-                <CheckCircle className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+              <div className="w-12 h-12 rounded-xl bg-[#EAF7F4] dark:bg-[#1F8F89]/20 flex items-center justify-center">
+                <CheckCircle className="w-6 h-6 text-[#2BB2A7]" />
               </div>
             </div>
           </div>
         </div>
 
         {/* Recent Orders Table */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden mb-6">
-          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-[#E2EFEA] dark:border-gray-700 overflow-hidden mb-6">
+          <div className="px-6 py-4 border-b border-[#E2EFEA] dark:border-gray-700 bg-[#F4F9F7] dark:bg-gray-700/30">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Recent Orders</h2>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 dark:bg-gray-700/30 border-b border-gray-200 dark:border-gray-700">
+              <thead className="bg-[#F4F9F7] dark:bg-gray-700/30 border-b border-[#E2EFEA] dark:border-gray-700">
                 <tr>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Order ID</th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Patient</th>
-                  <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tests</th>
-                  <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Amount</th>
-                  <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-                  <th className="text-right px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-[#1F8F89] dark:text-[#2BB2A7] uppercase tracking-wider">Order ID</th>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-[#1F8F89] dark:text-[#2BB2A7] uppercase tracking-wider">Patient</th>
+                  <th className="text-center px-4 py-3 text-xs font-medium text-[#1F8F89] dark:text-[#2BB2A7] uppercase tracking-wider">Tests</th>
+                  <th className="text-center px-4 py-3 text-xs font-medium text-[#1F8F89] dark:text-[#2BB2A7] uppercase tracking-wider">Amount</th>
+                  <th className="text-center px-4 py-3 text-xs font-medium text-[#1F8F89] dark:text-[#2BB2A7] uppercase tracking-wider">Status</th>
+                  <th className="text-right px-4 py-3 text-xs font-medium text-[#1F8F89] dark:text-[#2BB2A7] uppercase tracking-wider">Date</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+              <tbody className="divide-y divide-[#E2EFEA] dark:divide-gray-700">
                 {recentOrders.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
@@ -540,7 +538,7 @@ export default function LaboratoryDashboard() {
                   recentOrders.map((order) => {
                     const statusConfig = getStatusConfig(order.status);
                     return (
-                      <tr key={order.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                      <tr key={order.id} className="hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/10 transition-colors">
                         <td className="px-4 py-3 text-sm font-mono font-medium text-gray-900 dark:text-white">
                           {order.order_id}
                         </td>
@@ -577,10 +575,10 @@ export default function LaboratoryDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <button
               onClick={() => navigateTo("/laboratory/orders")}
-              className="group text-left p-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-[#7A329F] dark:hover:border-[#7A329F] hover:shadow-lg transition-all duration-300 cursor-pointer"
+              className="group text-left p-6 bg-white dark:bg-gray-800 rounded-xl border border-[#E2EFEA] dark:border-gray-700 hover:border-[#2BB2A7] dark:hover:border-[#2BB2A7] hover:shadow-lg transition-all duration-300 cursor-pointer"
             >
-              <div className="w-12 h-12 rounded-xl bg-[#3B1E6F]/10 dark:bg-[#3B1E6F]/20 flex items-center justify-center mb-3 group-hover:bg-[#3B1E6F]/20 dark:group-hover:bg-[#3B1E6F]/30 transition-colors">
-                <FileText className="w-6 h-6 text-[#3B1E6F] dark:text-[#7A329F]" />
+              <div className="w-12 h-12 rounded-xl bg-[#EAF7F4] dark:bg-[#1F8F89]/20 flex items-center justify-center mb-3 group-hover:bg-[#2BB2A7] group-hover:text-white transition-colors">
+                <FileText className="w-6 h-6 text-[#2BB2A7] group-hover:text-white transition-colors" />
               </div>
               <h3 className="font-semibold text-gray-900 dark:text-white mb-1">New Order</h3>
               <p className="text-sm text-gray-500 dark:text-gray-400">Create lab order for patient</p>
@@ -588,10 +586,10 @@ export default function LaboratoryDashboard() {
 
             <button
               onClick={() => navigateTo("/laboratory/samples")}
-              className="group text-left p-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-[#7A329F] dark:hover:border-[#7A329F] hover:shadow-lg transition-all duration-300 cursor-pointer"
+              className="group text-left p-6 bg-white dark:bg-gray-800 rounded-xl border border-[#E2EFEA] dark:border-gray-700 hover:border-[#2BB2A7] dark:hover:border-[#2BB2A7] hover:shadow-lg transition-all duration-300 cursor-pointer"
             >
-              <div className="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center mb-3 group-hover:bg-amber-100 dark:group-hover:bg-amber-900/30 transition-colors">
-                <FlaskRound className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+              <div className="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center mb-3 group-hover:bg-[#2BB2A7] group-hover:text-white transition-colors">
+                <FlaskRound className="w-6 h-6 text-amber-600 dark:text-amber-400 group-hover:text-white transition-colors" />
               </div>
               <h3 className="font-semibold text-gray-900 dark:text-white mb-1">Sample Collection</h3>
               <p className="text-sm text-gray-500 dark:text-gray-400">Mark samples as collected</p>
@@ -599,10 +597,10 @@ export default function LaboratoryDashboard() {
 
             <button
               onClick={() => navigateTo("/laboratory/samples")}
-              className="group text-left p-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-[#7A329F] dark:hover:border-[#7A329F] hover:shadow-lg transition-all duration-300 cursor-pointer"
+              className="group text-left p-6 bg-white dark:bg-gray-800 rounded-xl border border-[#E2EFEA] dark:border-gray-700 hover:border-[#2BB2A7] dark:hover:border-[#2BB2A7] hover:shadow-lg transition-all duration-300 cursor-pointer"
             >
-              <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center mb-3 group-hover:bg-emerald-100 dark:group-hover:bg-emerald-900/30 transition-colors">
-                <BarChart3 className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+              <div className="w-12 h-12 rounded-xl bg-[#EAF7F4] dark:bg-[#1F8F89]/20 flex items-center justify-center mb-3 group-hover:bg-[#2BB2A7] group-hover:text-white transition-colors">
+                <BarChart3 className="w-6 h-6 text-[#2BB2A7] group-hover:text-white transition-colors" />
               </div>
               <h3 className="font-semibold text-gray-900 dark:text-white mb-1">Enter Results</h3>
               <p className="text-sm text-gray-500 dark:text-gray-400">Add test results</p>

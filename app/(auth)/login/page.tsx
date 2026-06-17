@@ -23,12 +23,16 @@ import { useTenant } from "@/contexts/TenantContext";
 export default function LoginPage() {
   const router = useRouter();
   const { tenant, isLoading: tenantLoading } = useTenant();
-  
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string }>({});
+  const [errors, setErrors] = useState<{
+    email?: string;
+    password?: string;
+    general?: string;
+  }>({});
   const [serverError, setServerError] = useState<string | null>(null);
 
   // Get tenant name
@@ -42,7 +46,10 @@ export default function LoginPage() {
 
     if (!trimmedEmail) {
       newErrors.email = "Email or Patient ID is required";
-    } else if (!/\S+@\S+\.\S+/.test(trimmedEmail) && !/^[A-Z0-9]+$/i.test(trimmedEmail)) {
+    } else if (
+      !/\S+@\S+\.\S+/.test(trimmedEmail) &&
+      !/^[A-Z0-9]+$/i.test(trimmedEmail)
+    ) {
       newErrors.email = "Please enter a valid email or patient ID";
     }
 
@@ -68,7 +75,10 @@ export default function LoginPage() {
     const trimmedEmail = email.trim();
     const trimmedPassword = password.trim();
 
-    if (trimmedEmail === "laboratory@gmail.com" && trimmedPassword === "password123") {
+    if (
+      trimmedEmail === "laboratory@gmail.com" &&
+      trimmedPassword === "password123"
+    ) {
       const dummyUser = {
         id: 99,
         email: "laboratory@gmail.com",
@@ -93,7 +103,10 @@ export default function LoginPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email: trimmedEmail, password: trimmedPassword }),
+        body: JSON.stringify({
+          email: trimmedEmail,
+          password: trimmedPassword,
+        }),
       });
 
       const data = await res.json();
@@ -119,40 +132,47 @@ export default function LoginPage() {
       }
 
       // Store basic user info
-      localStorage.setItem("userId", data.user?.id?.toString() || '');
-      localStorage.setItem("userName", data.user?.full_name_en || '');
-      localStorage.setItem("userRole", data.user?.role || '');
+      localStorage.setItem("userId", data.user?.id?.toString() || "");
+      localStorage.setItem("userName", data.user?.full_name_en || "");
+      localStorage.setItem("userRole", data.user?.role || "");
 
-      if (data.user?.role === 'patient') {
-  const patientId = data.user?.patient_id || data.user?.id;
-  if (patientId) {
-    localStorage.setItem("patientId", patientId.toString());
-    console.log("✅ patientId stored:", patientId);
-  }
-}
-
+      if (data.user?.role === "patient") {
+        const patientId = data.user?.patient_id || data.user?.id;
+        if (patientId) {
+          localStorage.setItem("patientId", patientId.toString());
+          console.log("✅ patientId stored:", patientId);
+        }
+      }
 
       // For nurse role, fetch staff details to check department
-      if (data.user?.role === 'nurse') {
+      if (data.user?.role === "nurse") {
         try {
-          const staffRes = await fetch('/api/admin/staff');
+          const staffRes = await fetch("/api/admin/staff");
           const staffData = await staffRes.json();
-          
+
           if (staffData?.success && staffData?.data) {
             const staffRecord = staffData.data.find(
-              (s: any) => s.user_id === data.user.id
+              (s: any) => s.user_id === data.user.id,
             );
-            
+
             if (staffRecord) {
-              localStorage.setItem('staffId', staffRecord.id.toString());
-              localStorage.setItem('staffDepartment', staffRecord.department || '');
-              localStorage.setItem('staffWardId', staffRecord.ward_id?.toString() || '');
-              console.log('✅ Staff ID stored:', staffRecord.id);
-              console.log('✅ Staff Department:', staffRecord.department);
-              
+              localStorage.setItem("staffId", staffRecord.id.toString());
+              localStorage.setItem(
+                "staffDepartment",
+                staffRecord.department || "",
+              );
+              localStorage.setItem(
+                "staffWardId",
+                staffRecord.ward_id?.toString() || "",
+              );
+              console.log("✅ Staff ID stored:", staffRecord.id);
+              console.log("✅ Staff Department:", staffRecord.department);
+
               // Check if nurse is from Emergency department
-              if (staffRecord.department === 'Emergency') {
-                console.log('🚑 Emergency nurse detected, redirecting to emergency dashboard');
+              if (staffRecord.department === "Emergency") {
+                console.log(
+                  "🚑 Emergency nurse detected, redirecting to emergency dashboard",
+                );
                 router.push("/emergency/dashboard");
                 setIsLoading(false);
                 return;
@@ -160,11 +180,16 @@ export default function LoginPage() {
             }
           }
         } catch (err) {
-          console.error('Failed to fetch staff ID:', err);
+          console.error("Failed to fetch staff ID:", err);
         }
       }
 
-      console.log("✅ Login successful for:", data.user.email, "Role:", data.user.role);
+      console.log(
+        "✅ Login successful for:",
+        data.user.email,
+        "Role:",
+        data.user.role,
+      );
 
       // Role-based navigation
       switch (data.user.role) {
@@ -197,7 +222,9 @@ export default function LoginPage() {
       }
     } catch (error) {
       console.error("❌ Login error:", error);
-      setServerError("Network error. Please check your connection and try again.");
+      setServerError(
+        "Network error. Please check your connection and try again.",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -220,7 +247,7 @@ export default function LoginPage() {
       <div className="min-h-screen flex bg-white">
         <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
           <div className="text-center">
-            <div className="w-16 h-16 border-4 border-[#3B1E6F] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <div className="w-16 h-16 border-4 border-[#2BB2A7] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
             <p className="text-gray-600">Loading...</p>
           </div>
         </div>
@@ -242,8 +269,6 @@ export default function LoginPage() {
 
         <div className="relative z-10 p-12 xl:p-20 flex flex-col justify-end w-full text-white">
           <div className="max-w-lg space-y-8">
-          
-
             <div>
               <h1 className="text-4xl font-bold leading-tight">
                 Welcome to {tenantName}
@@ -278,18 +303,20 @@ export default function LoginPage() {
       {/* RIGHT SIDE - Login Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
-          {/* Logo at the top - No background, w-40 h-40 */}
-          <div className="flex flex-col items-center mb-0">
-            <div className="w-40 h-40 flex items-center justify-center">
-              <img 
-                src="/OrDo%20New%20Logo.png"
-                alt="OrDo Logo" 
-                className="w-full h-full object-contain"
-              />
-            </div>
-          </div>
+          {/* Logo at the top - Swasti.ai logo */}
+         <div className="flex flex-col items-center mb-2">
+  <img
+    src="Swasti.ai bg rm logo.png"
+    alt="Swasti.ai Logo"
+    className="w-80 h-auto object-contain"
+  />
+</div>
 
-          <h1 className="text-3xl font-semibold mb-6 text-center">Welcome Back</h1>
+<h1 className="text-2xl font-semibold mb-4 text-center text-gray-800 ml-4">
+  Welcome Back
+</h1>
+
+         
 
           {serverError && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700">
@@ -300,13 +327,13 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <Label>Email</Label>
+              <Label className="text-gray-700">Email</Label>
               <div className="relative mt-2">
                 <Mail className="absolute left-3 top-3 text-gray-400 w-5 h-5" />
                 <Input
                   className={cn(
-                    "pl-10 h-12",
-                    errors.email && "border-red-500 focus-visible:ring-red-500"
+                    "pl-10 h-12 border-[#E2EFEA] focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent",
+                    errors.email && "border-red-500 focus-visible:ring-red-500",
                   )}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -320,14 +347,15 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <Label>Password</Label>
+              <Label className="text-gray-700">Password</Label>
               <div className="relative mt-2">
                 <Lock className="absolute left-3 top-3 text-gray-400 w-5 h-5" />
                 <Input
                   type={showPassword ? "text" : "password"}
                   className={cn(
-                    "pl-10 pr-12 h-12",
-                    errors.password && "border-red-500 focus-visible:ring-red-500"
+                    "pl-10 pr-12 h-12 border-[#E2EFEA] focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent",
+                    errors.password &&
+                      "border-red-500 focus-visible:ring-red-500",
                   )}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -337,14 +365,14 @@ export default function LoginPage() {
                 <Button
                   type="button"
                   variant="ghost"
-                  className="absolute right-1 top-1/2 -translate-y-1/2 h-10 w-10 p-0"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-10 w-10 p-0 hover:bg-transparent"
                   onClick={() => setShowPassword(!showPassword)}
                   disabled={isLoading}
                 >
                   {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
+                    <EyeOff className="h-4 w-4 text-gray-400" />
                   ) : (
-                    <Eye className="h-4 w-4" />
+                    <Eye className="h-4 w-4 text-gray-400" />
                   )}
                 </Button>
               </div>
@@ -357,7 +385,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={handleForgotPassword}
-                className="text-sm text-[#7A329F] hover:text-[#3B1E6F] hover:underline disabled:opacity-50"
+                className="text-sm text-[#2BB2A7] hover:text-[#1F8F89] hover:underline disabled:opacity-50 font-medium"
                 disabled={isLoading}
               >
                 Forgot password?
@@ -366,7 +394,7 @@ export default function LoginPage() {
 
             <Button
               type="submit"
-              className="w-full h-12 bg-gradient-to-r from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] hover:opacity-90 text-white transition-opacity"
+              className="w-full h-12 bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] hover:opacity-90 text-white transition-opacity shadow-lg shadow-[#2BB2A7]/20"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -386,7 +414,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={handleRegister}
-                className="text-[#7A329F] hover:text-[#3B1E6F] hover:underline font-medium disabled:opacity-50"
+                className="text-[#2BB2A7] hover:text-[#1F8F89] hover:underline font-medium disabled:opacity-50"
                 disabled={isLoading}
               >
                 Create account

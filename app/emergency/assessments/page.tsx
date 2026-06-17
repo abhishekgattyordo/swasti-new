@@ -375,7 +375,6 @@
 // }
 
 
-
 'use client';
 
 import { useEffect, useMemo, useState } from "react";
@@ -435,7 +434,7 @@ function TriageBadge({ value }: { value: TriageType | '' }) {
 function StatusBadge({ value }: { value: AssessmentStatus }) {
   const config = {
     'Draft': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
-    'Completed': 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+    'Completed': 'bg-[#EAF7F4] text-[#1F8F89] dark:bg-[#1F8F89]/20 dark:text-[#2BB2A7]',
     'Converted to Admission': 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400',
   };
   return (
@@ -578,7 +577,7 @@ export default function AssessmentsPage() {
     return (
       <div className="container mx-auto py-6 flex justify-center items-center min-h-[400px]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3B1E6F] mx-auto" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2BB2A7] mx-auto" />
           <p className="mt-2 text-sm text-muted-foreground">Loading assessments...</p>
         </div>
       </div>
@@ -587,15 +586,15 @@ export default function AssessmentsPage() {
 
   return (
     <div className="container mx-auto py-6 space-y-6 max-w-7xl">
-      <div className="border-b border-gray-200 dark:border-gray-800 pb-4">
+      <div className="border-b border-[#E2EFEA] dark:border-gray-800 pb-4">
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-[#3B1E6F] dark:text-white">Assessments</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Assessments</h1>
             <p className="text-sm text-muted-foreground">
               {filteredAssessments.length} of {nonDraftAssessments.length} records (drafts excluded)
             </p>
           </div>
-          <Button asChild className="bg-gradient-to-r from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] hover:opacity-90 text-white shadow-lg shadow-[#3B1E6F]/20">
+          <Button asChild className="bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] hover:opacity-90 text-white shadow-lg shadow-[#2BB2A7]/20">
             <Link href="/emergency/assessments/new">
               <FilePlus2 className="h-4 w-4 mr-2" /> New Assessment
             </Link>
@@ -604,7 +603,7 @@ export default function AssessmentsPage() {
       </div>
 
       {/* Filters Card */}
-      <Card className="border-border/60 p-4 shadow-sm">
+      <Card className="border-[#E2EFEA] dark:border-slate-700 p-4 shadow-sm">
         <div className="grid gap-3 md:grid-cols-[1fr_150px_150px_150px]">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -612,11 +611,11 @@ export default function AssessmentsPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search UHID, name, or assessment ID"
-              className="pl-9 focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
+              className="pl-9 focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent border-[#E2EFEA] dark:border-slate-700"
             />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="focus:ring-2 focus:ring-[#7A329F] focus:border-transparent">
+            <SelectTrigger className="focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent border-[#E2EFEA] dark:border-slate-700">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
@@ -626,7 +625,7 @@ export default function AssessmentsPage() {
             </SelectContent>
           </Select>
           <Select value={outcomeFilter} onValueChange={setOutcomeFilter}>
-            <SelectTrigger className="focus:ring-2 focus:ring-[#7A329F] focus:border-transparent">
+            <SelectTrigger className="focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent border-[#E2EFEA] dark:border-slate-700">
               <SelectValue placeholder="Outcome" />
             </SelectTrigger>
             <SelectContent>
@@ -646,27 +645,27 @@ export default function AssessmentsPage() {
               value={dateFilter}
               onChange={(e) => setDateFilter(e.target.value)}
               placeholder="Filter by date"
-              className="focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
+              className="focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent border-[#E2EFEA] dark:border-slate-700"
             />
           </div>
         </div>
       </Card>
 
       {/* Table Card */}
-      <Card className="border-border/60 overflow-hidden shadow-sm">
+      <Card className="border-[#E2EFEA] dark:border-slate-700 overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <Table>
-            <TableHeader className="bg-gradient-to-r from-purple-50 to-white dark:from-purple-900/10 dark:to-gray-900">
-              <TableRow className="border-b-2 border-gray-300 dark:border-gray-700">
-                <TableHead className="border-r border-gray-200 dark:border-gray-800 text-[#3B1E6F] dark:text-white">Assessment ID</TableHead>
-                <TableHead className="border-r border-gray-200 dark:border-gray-800 text-[#3B1E6F] dark:text-white">UHID</TableHead>
-                <TableHead className="border-r border-gray-200 dark:border-gray-800 text-[#3B1E6F] dark:text-white">Patient</TableHead>
-                <TableHead className="border-r border-gray-200 dark:border-gray-800 text-[#3B1E6F] dark:text-white">Triage</TableHead>
-                <TableHead className="border-r border-gray-200 dark:border-gray-800 text-[#3B1E6F] dark:text-white">Duty Doctor</TableHead>
-                <TableHead className="border-r border-gray-200 dark:border-gray-800 text-[#3B1E6F] dark:text-white">Status</TableHead>
-                <TableHead className="border-r border-gray-200 dark:border-gray-800 text-[#3B1E6F] dark:text-white">Outcome</TableHead>
-                <TableHead className="border-r border-gray-200 dark:border-gray-800 text-[#3B1E6F] dark:text-white">Date & Time</TableHead>
-                <TableHead className="text-right text-[#3B1E6F] dark:text-white">Actions</TableHead>
+            <TableHeader className="bg-[#F4F9F7] dark:bg-slate-800/30">
+              <TableRow className="border-b-2 border-[#E2EFEA] dark:border-slate-700">
+                <TableHead className="border-r border-[#E2EFEA] dark:border-slate-700 text-[#1F8F89] dark:text-[#2BB2A7]">Assessment ID</TableHead>
+                <TableHead className="border-r border-[#E2EFEA] dark:border-slate-700 text-[#1F8F89] dark:text-[#2BB2A7]">UHID</TableHead>
+                <TableHead className="border-r border-[#E2EFEA] dark:border-slate-700 text-[#1F8F89] dark:text-[#2BB2A7]">Patient</TableHead>
+                <TableHead className="border-r border-[#E2EFEA] dark:border-slate-700 text-[#1F8F89] dark:text-[#2BB2A7]">Triage</TableHead>
+                <TableHead className="border-r border-[#E2EFEA] dark:border-slate-700 text-[#1F8F89] dark:text-[#2BB2A7]">Duty Doctor</TableHead>
+                <TableHead className="border-r border-[#E2EFEA] dark:border-slate-700 text-[#1F8F89] dark:text-[#2BB2A7]">Status</TableHead>
+                <TableHead className="border-r border-[#E2EFEA] dark:border-slate-700 text-[#1F8F89] dark:text-[#2BB2A7]">Outcome</TableHead>
+                <TableHead className="border-r border-[#E2EFEA] dark:border-slate-700 text-[#1F8F89] dark:text-[#2BB2A7]">Date & Time</TableHead>
+                <TableHead className="text-right text-[#1F8F89] dark:text-[#2BB2A7]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -681,42 +680,42 @@ export default function AssessmentsPage() {
                   <TableRow
                     key={assessment.id}
                     className={cn(
-                      "hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors",
-                      index !== filteredAssessments.length - 1 && "border-b border-gray-200 dark:border-gray-800"
+                      "hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/10 transition-colors",
+                      index !== filteredAssessments.length - 1 && "border-b border-[#E2EFEA] dark:border-slate-700"
                     )}
                   >
-                    <TableCell className="font-mono text-xs border-r border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white">
+                    <TableCell className="font-mono text-xs border-r border-[#E2EFEA] dark:border-slate-700 text-gray-900 dark:text-white">
                       {assessment.id}
                     </TableCell>
-                    <TableCell className="border-r border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300">
+                    <TableCell className="border-r border-[#E2EFEA] dark:border-slate-700 text-gray-700 dark:text-gray-300">
                       {assessment.uhid || "—"}
                     </TableCell>
-                    <TableCell className="font-medium border-r border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white">
+                    <TableCell className="font-medium border-r border-[#E2EFEA] dark:border-slate-700 text-gray-900 dark:text-white">
                       {assessment.patientName || "—"}
                     </TableCell>
-                    <TableCell className="border-r border-gray-200 dark:border-gray-800">
+                    <TableCell className="border-r border-[#E2EFEA] dark:border-slate-700">
                       <TriageBadge value={assessment.triage} />
                     </TableCell>
-                    <TableCell className="border-r border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300">
+                    <TableCell className="border-r border-[#E2EFEA] dark:border-slate-700 text-gray-700 dark:text-gray-300">
                       {assessment.dutyDoctorName || "—"}
                     </TableCell>
-                    <TableCell className="border-r border-gray-200 dark:border-gray-800">
+                    <TableCell className="border-r border-[#E2EFEA] dark:border-slate-700">
                       <StatusBadge value={assessment.status} />
                     </TableCell>
-                    <TableCell className="border-r border-gray-200 dark:border-gray-800">
+                    <TableCell className="border-r border-[#E2EFEA] dark:border-slate-700">
                       <OutcomeBadge assessment={assessment} />
                     </TableCell>
-                    <TableCell className="text-xs text-muted-foreground border-r border-gray-200 dark:border-gray-800">
+                    <TableCell className="text-xs text-muted-foreground border-r border-[#E2EFEA] dark:border-slate-700">
                       {new Date(assessment.createdAt).toLocaleString()}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="inline-flex gap-1">
-                        <Button asChild size="icon" variant="ghost" aria-label="View" className="hover:bg-purple-100 dark:hover:bg-purple-900/20 hover:text-[#3B1E6F]">
+                        <Button asChild size="icon" variant="ghost" aria-label="View" className="hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/20 hover:text-[#2BB2A7]">
                           <Link href={`/emergency/assessments/${assessment.id}`}>
                             <Eye className="h-4 w-4" />
                           </Link>
                         </Button>
-                        <Button asChild size="icon" variant="ghost" aria-label="Edit" className="hover:bg-purple-100 dark:hover:bg-purple-900/20 hover:text-[#3B1E6F]">
+                        <Button asChild size="icon" variant="ghost" aria-label="Edit" className="hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/20 hover:text-[#2BB2A7]">
                           <Link href={`/emergency/assessments/edit/${assessment.id}`}>
                             <Pencil className="h-4 w-4" />
                           </Link>
@@ -731,7 +730,7 @@ export default function AssessmentsPage() {
         </div>
       </Card>
 
-      <div className="text-center text-xs text-muted-foreground border-t border-gray-200 dark:border-gray-800 pt-4">
+      <div className="text-center text-xs text-muted-foreground border-t border-[#E2EFEA] dark:border-gray-800 pt-4">
         Showing {filteredAssessments.length} of {nonDraftAssessments.length} assessments (drafts hidden)
       </div>
     </div>

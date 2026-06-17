@@ -124,7 +124,7 @@ export default function ReportsPage() {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-[#3B1E6F] border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <div className="w-12 h-12 border-4 border-[#2BB2A7] border-t-transparent rounded-full animate-spin mx-auto"></div>
           <p className="mt-4 text-gray-600 dark:text-gray-400">Loading...</p>
         </div>
       </div>
@@ -134,7 +134,7 @@ export default function ReportsPage() {
   if (!isReportsEnabled) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="text-center bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg">
+        <div className="text-center bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-[#E2EFEA] dark:border-gray-700">
           <div className="text-red-500 text-6xl mb-4">🔒</div>
           <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">Access Denied</h1>
           <p className="text-gray-600 dark:text-gray-400">
@@ -142,7 +142,7 @@ export default function ReportsPage() {
           </p>
           <button
             onClick={() => router.push("/dashboard")}
-            className="mt-4 px-4 py-2 bg-gradient-to-r from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] text-white rounded-lg hover:opacity-90 transition-opacity"
+            className="mt-4 px-4 py-2 bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] text-white rounded-lg hover:opacity-90 transition-opacity"
           >
             Go to Dashboard
           </button>
@@ -155,7 +155,7 @@ export default function ReportsPage() {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-[#3B1E6F] border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <div className="w-12 h-12 border-4 border-[#2BB2A7] border-t-transparent rounded-full animate-spin mx-auto"></div>
           <p className="mt-4 text-gray-600 dark:text-gray-400">Loading reports...</p>
         </div>
       </div>
@@ -165,10 +165,10 @@ export default function ReportsPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 sticky top-0 z-10">
+      <div className="bg-white dark:bg-gray-800 border-b border-[#E2EFEA] dark:border-gray-700 px-6 py-4 sticky top-0 z-10">
         <div className="flex flex-wrap justify-between items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-[#3B1E6F] dark:text-white">Lab Reports</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Lab Reports</h1>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">View completed test reports</p>
           </div>
           <div className="flex items-center gap-3">
@@ -178,7 +178,7 @@ export default function ReportsPage() {
                 onClick={() => setViewMode("table")}
                 className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5 ${
                   viewMode === "table" 
-                    ? "bg-white dark:bg-gray-600 text-[#3B1E6F] dark:text-white shadow-sm" 
+                    ? "bg-white dark:bg-gray-600 text-[#2BB2A7] dark:text-white shadow-sm" 
                     : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
                 }`}
               >
@@ -189,7 +189,7 @@ export default function ReportsPage() {
                 onClick={() => setViewMode("cards")}
                 className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5 ${
                   viewMode === "cards" 
-                    ? "bg-white dark:bg-gray-600 text-[#3B1E6F] dark:text-white shadow-sm" 
+                    ? "bg-white dark:bg-gray-600 text-[#2BB2A7] dark:text-white shadow-sm" 
                     : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
                 }`}
               >
@@ -201,7 +201,7 @@ export default function ReportsPage() {
             {/* Export Button */}
             <button
               onClick={exportToCSV}
-              className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm font-medium flex items-center gap-2"
+              className="px-4 py-2 bg-[#2BB2A7] text-white rounded-lg hover:bg-[#1F8F89] transition-colors text-sm font-medium flex items-center gap-2"
             >
               <Download className="w-4 h-4" />
               Export CSV
@@ -215,7 +215,7 @@ export default function ReportsPage() {
           <input
             type="text"
             placeholder="Search by patient name, order ID, or patient ID..."
-            className="w-full md:w-96 pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#7A329F] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            className="w-full md:w-96 pl-9 pr-4 py-2 border border-[#E2EFEA] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
           />
@@ -226,10 +226,10 @@ export default function ReportsPage() {
       <div className="p-6">
         {/* Stats Summary */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-[#E2EFEA] dark:border-gray-700 p-4 hover:shadow-md transition-shadow">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-[#3B1E6F]/10 flex items-center justify-center">
-                <FileText className="w-5 h-5 text-[#3B1E6F]" />
+              <div className="w-10 h-10 rounded-lg bg-[#EAF7F4] dark:bg-[#1F8F89]/20 flex items-center justify-center">
+                <FileText className="w-5 h-5 text-[#2BB2A7]" />
               </div>
               <div>
                 <p className="text-sm text-gray-500 dark:text-gray-400">Total Reports</p>
@@ -237,10 +237,10 @@ export default function ReportsPage() {
               </div>
             </div>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-[#E2EFEA] dark:border-gray-700 p-4 hover:shadow-md transition-shadow">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                <DollarSign className="w-5 h-5 text-emerald-500" />
+              <div className="w-10 h-10 rounded-lg bg-emerald-500/10 dark:bg-emerald-900/20 flex items-center justify-center">
+                <DollarSign className="w-5 h-5 text-emerald-500 dark:text-emerald-400" />
               </div>
               <div>
                 <p className="text-sm text-gray-500 dark:text-gray-400">Total Revenue</p>
@@ -250,10 +250,10 @@ export default function ReportsPage() {
               </div>
             </div>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-[#E2EFEA] dark:border-gray-700 p-4 hover:shadow-md transition-shadow">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                <BarChart3 className="w-5 h-5 text-blue-500" />
+              <div className="w-10 h-10 rounded-lg bg-blue-500/10 dark:bg-blue-900/20 flex items-center justify-center">
+                <BarChart3 className="w-5 h-5 text-blue-500 dark:text-blue-400" />
               </div>
               <div>
                 <p className="text-sm text-gray-500 dark:text-gray-400">Avg. Revenue</p>
@@ -267,20 +267,20 @@ export default function ReportsPage() {
 
         {/* Table View */}
         {viewMode === "table" && (
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-[#E2EFEA] dark:border-gray-700 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50 dark:bg-gray-700/30 border-b border-gray-200 dark:border-gray-700">
+                <thead className="bg-[#F4F9F7] dark:bg-gray-700/30 border-b border-[#E2EFEA] dark:border-gray-700">
                   <tr>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Order ID</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Patient</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tests</th>
-                    <th className="text-right px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Amount</th>
-                    <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Completed</th>
-                    <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Action</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-[#1F8F89] dark:text-[#2BB2A7] uppercase tracking-wider">Order ID</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-[#1F8F89] dark:text-[#2BB2A7] uppercase tracking-wider">Patient</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-[#1F8F89] dark:text-[#2BB2A7] uppercase tracking-wider">Tests</th>
+                    <th className="text-right px-4 py-3 text-xs font-medium text-[#1F8F89] dark:text-[#2BB2A7] uppercase tracking-wider">Amount</th>
+                    <th className="text-center px-4 py-3 text-xs font-medium text-[#1F8F89] dark:text-[#2BB2A7] uppercase tracking-wider">Completed</th>
+                    <th className="text-center px-4 py-3 text-xs font-medium text-[#1F8F89] dark:text-[#2BB2A7] uppercase tracking-wider">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                <tbody className="divide-y divide-[#E2EFEA] dark:divide-gray-700">
                   {filteredReports.length === 0 ? (
                     <tr>
                       <td colSpan={6} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
@@ -290,7 +290,7 @@ export default function ReportsPage() {
                     </tr>
                   ) : (
                     filteredReports.map((report) => (
-                      <tr key={report.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                      <tr key={report.id} className="hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/10 transition-colors">
                         <td className="px-4 py-3 text-sm font-mono font-medium text-gray-900 dark:text-white">
                           {report.order_id}
                         </td>
@@ -312,7 +312,7 @@ export default function ReportsPage() {
                             )}
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-sm font-semibold text-[#3B1E6F] dark:text-[#7A329F] text-right">
+                        <td className="px-4 py-3 text-sm font-semibold text-[#2BB2A7] text-right">
                           ₹{report.total_amount}
                         </td>
                         <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 text-center">
@@ -321,7 +321,7 @@ export default function ReportsPage() {
                         <td className="px-4 py-3 text-center">
                           <button
                             onClick={() => setSelectedReport(report)}
-                            className="px-3 py-1.5 bg-[#3B1E6F]/10 text-[#3B1E6F] hover:bg-[#3B1E6F] hover:text-white rounded-lg transition-colors text-xs font-medium flex items-center gap-1 mx-auto"
+                            className="px-3 py-1.5 bg-[#EAF7F4] text-[#1F8F89] hover:bg-[#2BB2A7] hover:text-white rounded-lg transition-colors text-xs font-medium flex items-center gap-1 mx-auto"
                           >
                             <Eye className="w-3 h-3" />
                             View
@@ -336,13 +336,13 @@ export default function ReportsPage() {
             
             {/* Summary Row */}
             {filteredReports.length > 0 && (
-              <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700/30 border-t border-gray-200 dark:border-gray-700">
+              <div className="px-4 py-3 bg-[#F4F9F7] dark:bg-gray-700/30 border-t border-[#E2EFEA] dark:border-gray-700">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600 dark:text-gray-400">
                     Total Reports: <span className="font-semibold text-gray-900 dark:text-white">{filteredReports.length}</span>
                   </span>
                   <span className="text-sm text-gray-600 dark:text-gray-400">
-                    Total Revenue: <span className="font-semibold text-[#3B1E6F] dark:text-[#7A329F]">
+                    Total Revenue: <span className="font-semibold text-[#2BB2A7]">
                       ₹{totalRevenue.toLocaleString()}
                     </span>
                   </span>
@@ -359,7 +359,7 @@ export default function ReportsPage() {
               {filteredReports.map((report) => (
                 <div
                   key={report.id}
-                  className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden hover:shadow-lg transition-shadow"
+                  className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-[#E2EFEA] dark:border-gray-700 overflow-hidden hover:shadow-lg transition-shadow"
                 >
                   <div className="p-6">
                     <div className="flex justify-between items-start mb-4">
@@ -376,7 +376,7 @@ export default function ReportsPage() {
                           <Calendar className="w-3.5 h-3.5 inline mr-1" />
                           {report.completed_date}
                         </p>
-                        <p className="text-lg font-bold text-[#3B1E6F] dark:text-[#7A329F] mt-1">
+                        <p className="text-lg font-bold text-[#2BB2A7] mt-1">
                           ₹{report.total_amount}
                         </p>
                       </div>
@@ -384,7 +384,7 @@ export default function ReportsPage() {
 
                     <div className="space-y-3 mb-4">
                       {report.tests.slice(0, 3).map((test, idx) => (
-                        <div key={idx} className="border-l-2 border-[#7A329F] pl-3">
+                        <div key={idx} className="border-l-2 border-[#2BB2A7] pl-3">
                           <p className="text-sm font-medium text-gray-900 dark:text-white">
                             {test.name}
                           </p>
@@ -402,7 +402,7 @@ export default function ReportsPage() {
 
                     <button
                       onClick={() => setSelectedReport(report)}
-                      className="w-full mt-2 px-4 py-2 bg-gray-50 dark:bg-gray-700 text-[#3B1E6F] dark:text-[#7A329F] hover:bg-[#3B1E6F] hover:text-white rounded-lg transition-colors text-sm font-medium flex items-center justify-center gap-2"
+                      className="w-full mt-2 px-4 py-2 bg-[#F4F9F7] dark:bg-gray-700 text-[#2BB2A7] hover:bg-[#2BB2A7] hover:text-white rounded-lg transition-colors text-sm font-medium flex items-center justify-center gap-2"
                     >
                       <Eye className="w-4 h-4" />
                       View Full Report
@@ -412,7 +412,7 @@ export default function ReportsPage() {
               ))}
               
               {filteredReports.length === 0 && (
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-12 text-center col-span-2">
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-[#E2EFEA] dark:border-gray-700 p-12 text-center col-span-2">
                   <FileText className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
                   <p className="text-gray-500 dark:text-gray-400">No completed reports found</p>
                 </div>
@@ -421,13 +421,13 @@ export default function ReportsPage() {
             
             {/* Summary Row for Card View */}
             {filteredReports.length > 0 && (
-              <div className="mt-6 px-4 py-3 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+              <div className="mt-6 px-4 py-3 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-[#E2EFEA] dark:border-gray-700">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600 dark:text-gray-400">
                     Total Reports: <span className="font-semibold text-gray-900 dark:text-white">{filteredReports.length}</span>
                   </span>
                   <span className="text-sm text-gray-600 dark:text-gray-400">
-                    Total Revenue: <span className="font-semibold text-[#3B1E6F] dark:text-[#7A329F]">
+                    Total Revenue: <span className="font-semibold text-[#2BB2A7]">
                       ₹{totalRevenue.toLocaleString()}
                     </span>
                   </span>
@@ -441,7 +441,7 @@ export default function ReportsPage() {
       {/* Report Details Modal */}
       {selectedReport && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto border border-[#E2EFEA] dark:border-gray-700">
             <div className="p-6">
               <div className="flex justify-between items-start mb-6">
                 <div>
@@ -462,7 +462,7 @@ export default function ReportsPage() {
               </div>
 
               {/* Header */}
-              <div className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700/30 dark:to-gray-800/30 rounded-lg p-6 mb-6">
+              <div className="bg-[#F4F9F7] dark:bg-gray-700/30 rounded-lg p-6 mb-6 border border-[#E2EFEA] dark:border-gray-600">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -523,16 +523,16 @@ export default function ReportsPage() {
               {/* Test Results */}
               <div className="mb-6">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                  <ClipboardList className="w-5 h-5 text-[#7A329F]" />
+                  <ClipboardList className="w-5 h-5 text-[#2BB2A7]" />
                   Test Results
                 </h3>
                 <div className="space-y-4">
                   {selectedReport.tests.map((test, idx) => (
                     <div
                       key={idx}
-                      className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden"
+                      className="border border-[#E2EFEA] dark:border-gray-700 rounded-lg overflow-hidden"
                     >
-                      <div className="bg-gray-50 dark:bg-gray-700/30 px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                      <div className="bg-[#F4F9F7] dark:bg-gray-700/30 px-4 py-3 border-b border-[#E2EFEA] dark:border-gray-700 flex justify-between items-center">
                         <p className="font-semibold text-gray-900 dark:text-white">
                           {test.name}
                         </p>
@@ -551,7 +551,7 @@ export default function ReportsPage() {
               </div>
 
               {/* Footer */}
-              <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+              <div className="border-t border-[#E2EFEA] dark:border-gray-700 pt-4">
                 <div className="flex justify-between items-center">
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Authorized by</p>
@@ -561,7 +561,7 @@ export default function ReportsPage() {
                   </div>
                   <div className="text-right">
                     <p className="text-sm text-gray-500 dark:text-gray-400">Total Amount</p>
-                    <p className="text-xl font-bold text-[#3B1E6F] dark:text-[#7A329F]">
+                    <p className="text-xl font-bold text-[#2BB2A7]">
                       ₹{selectedReport.total_amount}
                     </p>
                   </div>
@@ -571,13 +571,13 @@ export default function ReportsPage() {
               <div className="flex justify-end gap-3 mt-6">
                 <button
                   onClick={() => setSelectedReport(null)}
-                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300"
+                  className="px-4 py-2 border border-[#E2EFEA] dark:border-gray-600 rounded-lg hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/10 transition-colors text-gray-700 dark:text-gray-300"
                 >
                   Close
                 </button>
                 <button
                   onClick={handlePrint}
-                  className="px-4 py-2 bg-gradient-to-r from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] text-white rounded-lg hover:opacity-90 transition-opacity flex items-center gap-2"
+                  className="px-4 py-2 bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] text-white rounded-lg hover:opacity-90 transition-opacity flex items-center gap-2"
                 >
                   <Printer className="w-4 h-4" />
                   Print Report

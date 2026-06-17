@@ -1,16 +1,13 @@
-
-
 "use client";
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Sidebar from "@/components/patient/Sidebar";
 import { useRouter } from "next/navigation";
-import { Menu, X, Filter } from "lucide-react";
+import { Menu, X, Filter, Video, Calendar, Clock, User, Stethoscope } from "lucide-react";
 import toast from "react-hot-toast";
 import { appointmentsApi } from "@/lib/api/appointments";
 import RescheduleModal from "@/components/patient/RescheduleModal";
-import { Video } from "lucide-react";
 import { useTenant } from "@/contexts/TenantContext";
 import { MODULE_KEYS, PATIENT_FEATURES } from "@/lib/feature";
 
@@ -45,11 +42,10 @@ export default function HomePage() {
   const { tenant, isMicroFeatureEnabled, isLoading: tenantLoading } = useTenant();
 
   const isDashboardEnabled = isMicroFeatureEnabled(
-  MODULE_KEYS.PATIENT,
-  PATIENT_FEATURES.DASHBOARD
-);
+    MODULE_KEYS.PATIENT,
+    PATIENT_FEATURES.DASHBOARD
+  );
 
-  // Column filters (date and status removed)
   const [filters, setFilters] = useState({
     doctor: "",
     time: "",
@@ -60,10 +56,10 @@ export default function HomePage() {
   const filterRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   useEffect(() => {
-  if (!tenantLoading && !isDashboardEnabled) {
-    router.push("/unauthorized");
-  }
-}, [tenantLoading,isDashboardEnabled,router]);
+    if (!tenantLoading && !isDashboardEnabled) {
+      router.push("/unauthorized");
+    }
+  }, [tenantLoading, isDashboardEnabled, router]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -79,7 +75,6 @@ export default function HomePage() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [openFilter]);
 
-  // Helper to get full datetime from appointment
   const getFullDateTime = (apt: Appointment): Date => {
     const dateObj = new Date(apt.date);
 
@@ -146,7 +141,6 @@ export default function HomePage() {
     }
   })();
 
-  // Apply column filters (date and status removed)
   const displayedAppointments = baseDisplayed.filter((apt) => {
     const matchDoctor =
       !filters.doctor ||
@@ -176,7 +170,6 @@ export default function HomePage() {
     return aptDay >= todayDay;
   };
 
-  // Function to capitalize first letter of each word in a name
   const capitalizeName = (name: string) => {
     if (!name) return "Patient";
     return name
@@ -189,14 +182,12 @@ export default function HomePage() {
     const fetchData = async () => {
       try {
         const user = JSON.parse(localStorage.getItem("user") || "null");
-
-        // Capitalize the user name
         const rawName = user.full_name_en || user.name || "Patient";
         setUserName(capitalizeName(rawName));
         
         const patientId = user.patient_id || String(user.id);
         await fetchAppointments(patientId, selectedDate || undefined);
-      } catch  {
+      } catch {
         toast.error("Failed to load user data");
         setLoading(false);
       }
@@ -268,7 +259,7 @@ export default function HomePage() {
         if (upcomingCount > 0) setActiveTab("upcoming");
         else if (pastCount > 0) setActiveTab("past");
       }
-    } catch  {
+    } catch {
       setAppointments([]);
     } finally {
       setLoading(false);
@@ -302,7 +293,6 @@ export default function HomePage() {
     setFilters((prev) => ({ ...prev, [column]: value }));
   };
 
-  // FilterPopover with local state and Apply button
   const FilterPopover = ({
     column,
     placeholder,
@@ -345,7 +335,7 @@ export default function HomePage() {
       >
         <button
           onClick={() => setOpenFilter(isOpen ? null : column)}
-          className={`p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${filters[column] ? "text-blue-600" : "text-gray-400"}`}
+          className={`p-1 rounded-md hover:bg-[#EAF7F4] transition-colors ${filters[column] ? "text-[#2BB2A7]" : "text-gray-400"}`}
           aria-label={`Filter by ${column}`}
         >
           <Filter className="h-3.5 w-3.5" />
@@ -362,7 +352,7 @@ export default function HomePage() {
                 value={localValue}
                 onChange={(e) => setLocalValue(e.target.value)}
                 onKeyDown={handleKeyDown}
-                className="w-full px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-700 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white dark:bg-gray-900"
+                className="w-full px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-[#2BB2A7] bg-white dark:bg-gray-900"
                 autoFocus
               />
               <div className="flex justify-end gap-2">
@@ -374,7 +364,7 @@ export default function HomePage() {
                 </button>
                 <button
                   onClick={handleApply}
-                  className="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
+                  className="text-xs bg-[#2BB2A7] hover:bg-[#1F8F89] text-white px-3 py-1 rounded transition-colors"
                 >
                   Apply
                 </button>
@@ -402,7 +392,7 @@ export default function HomePage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "BOOKED":
-        return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300";
+        return "bg-[#EAF7F4] text-[#1A1A1A] dark:bg-[#1F8F89]/20 dark:text-[#2BB2A7]";
       case "COMPLETED":
         return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300";
       case "CANCELLED":
@@ -425,23 +415,22 @@ export default function HomePage() {
     }
   };
 
-  // Add this after the useEffect and before the loading check
-if (!tenantLoading && !isDashboardEnabled) {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="text-center">
-        <div className="text-red-500 text-6xl mb-4">🔒</div>
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h1>
-        <p className="text-gray-600">
-          Patient Dashboard is not enabled for {tenant?.name}.
-        </p>
+  if (!tenantLoading && !isDashboardEnabled) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="text-center bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg">
+          <div className="text-red-500 text-6xl mb-4">🔒</div>
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">Access Denied</h1>
+          <p className="text-gray-600 dark:text-gray-400">
+            Patient Dashboard is not enabled for {tenant?.name}.
+          </p>
+        </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 font-display antialiased">
+    <div className="flex flex-col md:flex-row min-h-screen bg-[#F8FAFC] dark:bg-gray-900 text-gray-800 dark:text-gray-100 font-display antialiased">
       <style jsx global>{`
         @import url("https://fonts.googleapis.com/icon?family=Material+Icons");
         @import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap");
@@ -455,7 +444,7 @@ if (!tenantLoading && !isDashboardEnabled) {
       `}</style>
 
       <button
-        className="lg:hidden fixed bottom-20 right-6 z-50 p-3 bg-green-600 hover:bg-green-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center"
+        className="lg:hidden fixed bottom-20 right-6 z-50 p-3 bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] hover:opacity-90 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center"
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
         aria-label="Toggle menu"
       >
@@ -479,8 +468,8 @@ if (!tenantLoading && !isDashboardEnabled) {
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-                Welcome, <span className="text-green-600">{userName}</span> 👋
+              <h1 className="text-2xl font-bold text-[#1A1A1A] dark:text-white mb-1">
+                Welcome, <span className="text-[#2BB2A7]">{userName}</span> 👋
               </h1>
               <p className="text-gray-500 dark:text-gray-400 text-sm">
                 Here's a quick look at your appointments.
@@ -491,10 +480,10 @@ if (!tenantLoading && !isDashboardEnabled) {
                 type="date"
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
-                className="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-800"
+                className="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-[#2BB2A7] focus:border-[#2BB2A7] bg-white dark:bg-gray-800"
               />
               <Link href="/appointments">
-                <button className="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 shadow-sm transition-colors whitespace-nowrap">
+                <button className="bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] hover:opacity-90 text-white px-5 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 shadow-sm transition-colors whitespace-nowrap">
                   <span className="material-icons text-lg">add</span>
                   Book New
                 </button>
@@ -525,14 +514,14 @@ if (!tenantLoading && !isDashboardEnabled) {
               <div
                 key={service.name}
                 onClick={() => router.push(service.path)}
-                className="group bg-white dark:bg-gray-800 rounded-xl p-4 border border-green-200 dark:border-green-900 shadow-sm hover:shadow-md hover:border-green-400 dark:hover:border-green-700 transition-all cursor-pointer flex flex-col items-center text-center"
+                className="group bg-white dark:bg-gray-800 rounded-xl p-4 border border-[#E2EFEA] dark:border-green-900 shadow-sm hover:shadow-md hover:border-[#2BB2A7] dark:hover:border-[#2BB2A7] transition-all cursor-pointer flex flex-col items-center text-center"
               >
-                <div className="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
-                  <span className="material-icons text-green-600 dark:text-green-400 text-2xl">
+                <div className="w-12 h-12 rounded-full bg-[#EAF7F4] dark:bg-[#1F8F89]/20 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                  <span className="material-icons text-[#2BB2A7] dark:text-[#2BB2A7] text-2xl">
                     {service.icon}
                   </span>
                 </div>
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+                <h3 className="text-sm font-semibold text-[#1A1A1A] dark:text-white">
                   {service.name}
                 </h3>
               </div>
@@ -540,14 +529,14 @@ if (!tenantLoading && !isDashboardEnabled) {
           </div>
 
           {/* Tabs & Consultation Type Filter */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-green-200 dark:border-green-900 pb-4 mb-8 gap-4">
-            <div className="flex space-x-1 bg-white dark:bg-gray-800 p-1 rounded-xl border border-green-200 dark:border-green-900">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-[#E2EFEA] dark:border-green-900 pb-4 mb-8 gap-4">
+            <div className="flex space-x-1 bg-white dark:bg-gray-800 p-1 rounded-xl border border-[#E2EFEA] dark:border-green-900">
               <button
                 onClick={() => setActiveTab("upcoming")}
                 className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
                   activeTab === "upcoming"
-                    ? "bg-green-600 text-white shadow-sm"
-                    : "text-gray-500 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20"
+                    ? "bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] text-white shadow-sm"
+                    : "text-[#333333] hover:text-[#2BB2A7] hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/20"
                 }`}
               >
                 Upcoming ({upcoming.length})
@@ -556,8 +545,8 @@ if (!tenantLoading && !isDashboardEnabled) {
                 onClick={() => setActiveTab("past")}
                 className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
                   activeTab === "past"
-                    ? "bg-green-600 text-white shadow-sm"
-                    : "text-gray-500 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20"
+                    ? "bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] text-white shadow-sm"
+                    : "text-[#333333] hover:text-[#2BB2A7] hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/20"
                 }`}
               >
                 Past ({past.length})
@@ -566,8 +555,8 @@ if (!tenantLoading && !isDashboardEnabled) {
                 onClick={() => setActiveTab("canceled")}
                 className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
                   activeTab === "canceled"
-                    ? "bg-green-600 text-white shadow-sm"
-                    : "text-gray-500 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20"
+                    ? "bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] text-white shadow-sm"
+                    : "text-[#333333] hover:text-[#2BB2A7] hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/20"
                 }`}
               >
                 Canceled ({canceled.length})
@@ -581,7 +570,7 @@ if (!tenantLoading && !isDashboardEnabled) {
               <select
                 value={consultationType}
                 onChange={(e) => setConsultationType(e.target.value)}
-                className="form-select bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-sm rounded-lg focus:ring-green-500 focus:border-green-500 py-1.5 pl-3 pr-8"
+                className="form-select bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-[#333333] dark:text-gray-300 text-sm rounded-lg focus:ring-[#2BB2A7] focus:border-[#2BB2A7] py-1.5 pl-3 pr-8"
               >
                 <option>All Types</option>
                 <option>teleconsultation</option>
@@ -592,7 +581,7 @@ if (!tenantLoading && !isDashboardEnabled) {
 
           {loading && (
             <div className="text-center py-12">
-              <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-green-600 border-r-transparent"></div>
+              <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[#2BB2A7] border-r-transparent"></div>
               <p className="mt-4 text-gray-600 dark:text-gray-400">
                 Loading your appointments...
               </p>
@@ -600,11 +589,11 @@ if (!tenantLoading && !isDashboardEnabled) {
           )}
 
           {!loading && displayedAppointments.length === 0 && (
-            <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-xl border border-dashed border-gray-300 dark:border-gray-700">
+            <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-xl border border-dashed border-[#E2EFEA] dark:border-gray-700">
               <span className="material-icons text-5xl text-gray-400 mb-3">
                 event_busy
               </span>
-              <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-1">
+              <h3 className="text-lg font-semibold text-[#1A1A1A] dark:text-gray-300 mb-1">
                 No {activeTab} appointments
               </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
@@ -616,7 +605,7 @@ if (!tenantLoading && !isDashboardEnabled) {
               </p>
               {activeTab === "upcoming" && (
                 <Link href="/doctor-selection">
-                  <button className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg text-sm font-medium">
+                  <button className="bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] hover:opacity-90 text-white px-5 py-2 rounded-lg text-sm font-medium">
                     Book an Appointment
                   </button>
                 </Link>
@@ -625,12 +614,12 @@ if (!tenantLoading && !isDashboardEnabled) {
           )}
 
           {!loading && displayedAppointments.length > 0 && (
-            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-[#E2EFEA] dark:border-gray-700 overflow-hidden">
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm border-collapse border border-gray-200 dark:border-gray-700">
-                  <thead className="bg-gray-50 dark:bg-black/20 text-gray-500 dark:text-gray-400">
+                <table className="w-full text-left text-sm border-collapse border border-[#E2EFEA] dark:border-gray-700">
+                  <thead className="bg-[#F4F9F7] dark:bg-black/20 text-gray-500 dark:text-gray-400">
                     <tr>
-                      <th className="px-6 py-4 border border-gray-200 dark:border-gray-700 font-medium">
+                      <th className="px-6 py-4 border border-[#E2EFEA] dark:border-gray-700 font-medium text-[#1F8F89]">
                         <div className="flex items-center gap-2">
                           <span>Doctor</span>
                           <FilterPopover
@@ -639,10 +628,10 @@ if (!tenantLoading && !isDashboardEnabled) {
                           />
                         </div>
                       </th>
-                      <th className="px-6 py-4 border border-gray-200 dark:border-gray-700 font-medium">
+                      <th className="px-6 py-4 border border-[#E2EFEA] dark:border-gray-700 font-medium text-[#1F8F89]">
                         Date
                       </th>
-                      <th className="px-6 py-4 border border-gray-200 dark:border-gray-700 font-medium">
+                      <th className="px-6 py-4 border border-[#E2EFEA] dark:border-gray-700 font-medium text-[#1F8F89]">
                         <div className="flex items-center gap-2">
                           <span>Time</span>
                           <FilterPopover
@@ -651,7 +640,7 @@ if (!tenantLoading && !isDashboardEnabled) {
                           />
                         </div>
                       </th>
-                      <th className="px-6 py-4 border border-gray-200 dark:border-gray-700 font-medium">
+                      <th className="px-6 py-4 border border-[#E2EFEA] dark:border-gray-700 font-medium text-[#1F8F89]">
                         <div className="flex items-center gap-2">
                           <span>Type</span>
                           <FilterPopover
@@ -660,10 +649,10 @@ if (!tenantLoading && !isDashboardEnabled) {
                           />
                         </div>
                       </th>
-                      <th className="px-6 py-4 border border-gray-200 dark:border-gray-700 font-medium">
+                      <th className="px-6 py-4 border border-[#E2EFEA] dark:border-gray-700 font-medium text-[#1F8F89]">
                         Status
                       </th>
-                      <th className="px-6 py-4 border border-gray-200 dark:border-gray-700 font-medium text-right">
+                      <th className="px-6 py-4 border border-[#E2EFEA] dark:border-gray-700 font-medium text-[#1F8F89] text-right">
                         Actions
                       </th>
                     </tr>
@@ -674,9 +663,9 @@ if (!tenantLoading && !isDashboardEnabled) {
                       return (
                         <tr
                           key={apt.id}
-                          className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+                          className="hover:bg-[#EAF7F4]/50 dark:hover:bg-gray-800/50 transition-colors"
                         >
-                          <td className="px-6 py-4 border border-gray-200 dark:border-gray-700">
+                          <td className="px-6 py-4 border border-[#E2EFEA] dark:border-gray-700">
                             <div className="flex items-center gap-3">
                               {apt.doctor_image ? (
                                 <img
@@ -689,14 +678,12 @@ if (!tenantLoading && !isDashboardEnabled) {
                                   }
                                 />
                               ) : (
-                                <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-500">
-                                  <span className="material-icons text-xl">
-                                    medication
-                                  </span>
+                                <div className="w-10 h-10 rounded-full bg-[#EAF7F4] dark:bg-gray-700 flex items-center justify-center text-[#2BB2A7]">
+                                  <Stethoscope className="w-5 h-5" />
                                 </div>
                               )}
                               <div>
-                                <p className="font-medium text-gray-900 dark:text-white">
+                                <p className="font-medium text-[#1A1A1A] dark:text-white">
                                   {apt.doctor_name}
                                 </p>
                                 <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -705,13 +692,13 @@ if (!tenantLoading && !isDashboardEnabled) {
                               </div>
                             </div>
                           </td>
-                          <td className="px-6 py-4 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300">
+                          <td className="px-6 py-4 border border-[#E2EFEA] dark:border-gray-700 text-[#333333] dark:text-gray-300">
                             {formattedDate.full}
                           </td>
-                          <td className="px-6 py-4 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300">
+                          <td className="px-6 py-4 border border-[#E2EFEA] dark:border-gray-700 text-[#333333] dark:text-gray-300">
                             {apt.time}
                           </td>
-                          <td className="px-6 py-4 border border-gray-200 dark:border-gray-700 text-center">
+                          <td className="px-6 py-4 border border-[#E2EFEA] dark:border-gray-700 text-center">
                             {apt.type === "teleconsultation" ? (
                               <button
                                 onClick={() => {
@@ -720,7 +707,7 @@ if (!tenantLoading && !isDashboardEnabled) {
                                     "_blank",
                                   );
                                 }}
-                                className="p-2 rounded-full bg-green-100 hover:bg-green-200 text-green-600 transition-colors"
+                                className="p-2 rounded-full bg-[#EAF7F4] hover:bg-[#2BB2A7] hover:text-white text-[#2BB2A7] transition-colors"
                                 title="Join Video Call"
                               >
                                 <Video className="w-4 h-4" />
@@ -729,19 +716,19 @@ if (!tenantLoading && !isDashboardEnabled) {
                               <span className="text-gray-400 text-xs">—</span>
                             )}
                           </td>
-                          <td className="px-6 py-4 border border-gray-200 dark:border-gray-700">
+                          <td className="px-6 py-4 border border-[#E2EFEA] dark:border-gray-700">
                             <span
                               className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${getStatusColor(apt.status)}`}
                             >
                               {getStatusText(apt.status)}
                             </span>
                           </td>
-                          <td className="px-6 py-4 border border-gray-200 dark:border-gray-700 text-right">
+                          <td className="px-6 py-4 border border-[#E2EFEA] dark:border-gray-700 text-right">
                             {isEditable(apt) ? (
                               <div className="flex justify-end gap-2">
                                 <button
                                   onClick={() => handleReschedule(apt)}
-                                  className="p-1.5 rounded-full hover:bg-green-50 dark:hover:bg-green-900/20 text-green-600 transition-colors"
+                                  className="p-1.5 rounded-full hover:bg-[#EAF7F4] text-[#2BB2A7] transition-colors"
                                   title="Reschedule"
                                 >
                                   <span className="material-icons text-xl">
@@ -761,7 +748,7 @@ if (!tenantLoading && !isDashboardEnabled) {
                             ) : apt.status === "COMPLETED" ? (
                               <Link
                                 href={`/ehr/${apt.doctor_id}`}
-                                className="inline-flex p-1.5 rounded-full hover:bg-green-50 dark:hover:bg-green-900/20 text-green-600 transition-colors"
+                                className="inline-flex p-1.5 rounded-full hover:bg-[#EAF7F4] text-[#2BB2A7] transition-colors"
                                 title="View Summary"
                               >
                                 <span className="material-icons text-xl">
@@ -801,7 +788,6 @@ if (!tenantLoading && !isDashboardEnabled) {
         onClose={() => setShowRescheduleModal(false)}
         appointment={rescheduleAppointment}
         onReschedule={() => {
-          // Refresh appointments after reschedule
           const user = JSON.parse(localStorage.getItem("user") || "null");
           if (user) {
             const patientId = user.patient_id || String(user.id);

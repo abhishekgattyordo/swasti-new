@@ -999,6 +999,9 @@
 //   );
 // }
 
+
+
+
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -1465,17 +1468,17 @@ export default function AdmissionForm() {
   // Patient modal
   const PatientModal = () => (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
-      <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-xl">
-        <h3 className="text-lg font-bold mb-4">Select Patient</h3>
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-md w-full mx-4 shadow-xl border border-[#E2EFEA] dark:border-gray-700">
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Select Patient</h3>
         <div className="space-y-2 max-h-96 overflow-y-auto">
           {searchResults.map((patient) => (
             <button
               key={patient.patient_id}
               onClick={() => selectPatient(patient)}
-              className="w-full text-left p-3 rounded-lg hover:bg-gray-100 transition-colors border border-gray-200"
+              className="w-full text-left p-3 rounded-lg hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/10 transition-colors border border-[#E2EFEA] dark:border-gray-700"
             >
-              <p className="font-medium">{patient.full_name_en || "Unknown"}</p>
-              <p className="text-sm text-gray-500">
+              <p className="font-medium text-gray-900 dark:text-white">{patient.full_name_en || "Unknown"}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 DOB: {patient.dob || "N/A"} • ID: {patient.patient_id}
               </p>
             </button>
@@ -1483,7 +1486,7 @@ export default function AdmissionForm() {
         </div>
         <button
           onClick={() => setShowPatientModal(false)}
-          className="mt-4 w-full py-2 text-gray-500 hover:text-gray-700"
+          className="mt-4 w-full py-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
         >
           Cancel
         </button>
@@ -1494,22 +1497,22 @@ export default function AdmissionForm() {
   // Emergency Assessment modal
   const AssessmentModal = () => (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
-      <div className="bg-white rounded-xl p-6 max-w-2xl w-full mx-4 shadow-xl">
-        <h3 className="text-lg font-bold mb-4">Select Completed Emergency Assessment</h3>
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-2xl w-full mx-4 shadow-xl border border-[#E2EFEA] dark:border-gray-700">
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Select Completed Emergency Assessment</h3>
         {loadingAssessments ? (
-          <div className="text-center py-8">Loading assessments...</div>
+          <div className="text-center py-8 text-gray-500 dark:text-gray-400">Loading assessments...</div>
         ) : completedAssessments.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">No completed assessments found.</div>
+          <div className="text-center py-8 text-gray-500 dark:text-gray-400">No completed assessments found.</div>
         ) : (
           <div className="space-y-2 max-h-96 overflow-y-auto">
             {completedAssessments.map((assessment) => (
               <button
                 key={assessment.id}
                 onClick={() => selectEmergencyAssessment(assessment)}
-                className="w-full text-left p-3 rounded-lg hover:bg-gray-100 transition-colors border border-gray-200"
+                className="w-full text-left p-3 rounded-lg hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/10 transition-colors border border-[#E2EFEA] dark:border-gray-700"
               >
-                <p className="font-medium">{assessment.patientName}</p>
-                <p className="text-sm text-gray-500">
+                <p className="font-medium text-gray-900 dark:text-white">{assessment.patientName}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   ID: {assessment.id} • UHID: {assessment.uhid} • Age: {assessment.age || "N/A"} • Chief: {assessment.chiefComplaints || "—"}
                 </p>
               </button>
@@ -1518,7 +1521,7 @@ export default function AdmissionForm() {
         )}
         <button
           onClick={() => setShowAssessmentModal(false)}
-          className="mt-4 w-full py-2 text-gray-500 hover:text-gray-700"
+          className="mt-4 w-full py-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
         >
           Cancel
         </button>
@@ -1528,11 +1531,11 @@ export default function AdmissionForm() {
 
   if (!tenantLoading && !isNewAdmissionEnabled) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="text-center bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-[#E2EFEA] dark:border-gray-700">
           <div className="text-red-500 text-6xl mb-4">🔒</div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h1>
-          <p className="text-gray-600">
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">Access Denied</h1>
+          <p className="text-gray-600 dark:text-gray-400">
             New Admission feature is not enabled for {tenant?.name}.
           </p>
         </div>
@@ -1541,7 +1544,7 @@ export default function AdmissionForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex">
       <HelpDeskSidebar
         isOpen={mobileMenuOpen}
         onClose={() => setMobileMenuOpen(false)}
@@ -1551,20 +1554,20 @@ export default function AdmissionForm() {
       />
 
       <div className="flex-1 flex flex-col min-h-screen">
-        <header className="lg:hidden bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3">
+        <header className="lg:hidden bg-white dark:bg-gray-800 border-b border-[#E2EFEA] dark:border-gray-700 px-4 py-3 flex items-center gap-3">
           <button
             onClick={() => setMobileMenuOpen(true)}
-            className="p-2 rounded-lg hover:bg-gray-100"
+            className="p-2 rounded-lg hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/20"
           >
-            <span className="material-icons">menu</span>
+            <Menu className="w-5 h-5 text-gray-700 dark:text-gray-300" />
           </button>
-          <h1 className="text-xl font-bold text-gray-800 truncate">
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white truncate">
             Patient Admission
           </h1>
         </header>
 
         <button
-          className="lg:hidden fixed bottom-20 right-6 z-50 p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center"
+          className="lg:hidden fixed bottom-20 right-6 z-50 p-3 bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] hover:opacity-90 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-label="Toggle menu"
         >
@@ -1575,8 +1578,8 @@ export default function AdmissionForm() {
           <div className="space-y-6">
             <div className="flex justify-between items-center">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Patient Admission</h1>
-                <p className="text-sm text-gray-500 mt-1">
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Patient Admission</h1>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                   Admit new or existing patients
                 </p>
               </div>
@@ -1586,8 +1589,8 @@ export default function AdmissionForm() {
                 onClick={() => setVoiceMode(!voiceMode)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                   voiceMode 
-                    ? "bg-green-500 text-white" 
-                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                    ? "bg-[#2BB2A7] text-white" 
+                    : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
                 }`}
               >
                 <Mic className="w-4 h-4" />
@@ -1597,23 +1600,23 @@ export default function AdmissionForm() {
 
             {/* Voice Mode Banner */}
             {voiceMode && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex items-center gap-2">
-                <Mic className="w-4 h-4 text-green-600" />
-                <p className="text-sm text-green-700">
+              <div className="bg-[#EAF7F4] dark:bg-[#1F8F89]/20 border border-[#2BB2A7]/30 dark:border-[#2BB2A7]/20 rounded-lg p-3 flex items-center gap-2">
+                <Mic className="w-4 h-4 text-[#2BB2A7]" />
+                <p className="text-sm text-[#1F8F89] dark:text-[#2BB2A7]">
                   Voice mode is ON! Click the microphone icon next to any field and speak to fill it automatically.
                 </p>
               </div>
             )}
 
             <div className="flex flex-wrap gap-3 items-center">
-              <div className="bg-gray-50 p-1.5 rounded-xl inline-flex items-center gap-1">
+              <div className="bg-gray-100 dark:bg-gray-800 p-1.5 rounded-xl inline-flex items-center gap-1">
                 <button
                   type="button"
                   onClick={() => setMode("new")}
                   className={`px-6 py-2 font-bold rounded-lg shadow-sm text-sm transition-colors ${
                     mode === "new"
-                      ? "bg-white text-blue-600"
-                      : "text-gray-500 hover:text-blue-600"
+                      ? "bg-white dark:bg-gray-700 text-[#2BB2A7] dark:text-[#2BB2A7]"
+                      : "text-gray-500 dark:text-gray-400 hover:text-[#2BB2A7]"
                   }`}
                 >
                   New Admission
@@ -1623,8 +1626,8 @@ export default function AdmissionForm() {
                   onClick={() => setMode("existing")}
                   className={`px-6 py-2 font-medium rounded-lg text-sm transition-colors ${
                     mode === "existing"
-                      ? "bg-white text-blue-600 font-bold shadow-sm"
-                      : "text-gray-500 hover:text-blue-600"
+                      ? "bg-white dark:bg-gray-700 text-[#2BB2A7] dark:text-[#2BB2A7] font-bold shadow-sm"
+                      : "text-gray-500 dark:text-gray-400 hover:text-[#2BB2A7]"
                   }`}
                 >
                   Existing Patient
@@ -1634,17 +1637,17 @@ export default function AdmissionForm() {
               <button
                 type="button"
                 onClick={fetchCompletedAssessments}
-                className="px-6 py-2 bg-green-600 text-white rounded-xl font-medium hover:bg-green-700 transition-colors"
+                className="px-6 py-2 bg-[#2BB2A7] text-white rounded-xl font-medium hover:bg-[#1F8F89] transition-colors"
               >
                 Load from Emergency
               </button>
             </div>
 
             {mode === "existing" && (
-              <div className="mb-6 p-6 bg-gray-50 rounded-2xl">
+              <div className="mb-6 p-6 bg-[#F4F9F7] dark:bg-gray-800/50 rounded-2xl border border-[#E2EFEA] dark:border-gray-700">
                 <div className="flex flex-row items-end gap-4">
                   <div className="flex-1">
-                    <label className="text-xs font-bold text-gray-600 ml-1 uppercase tracking-wider hidden md:block">
+                    <label className="text-xs font-bold text-[#1F8F89] dark:text-[#2BB2A7] ml-1 uppercase tracking-wider hidden md:block">
                       Search by Phone Number
                     </label>
                     <div className="relative">
@@ -1653,7 +1656,7 @@ export default function AdmissionForm() {
                         value={phoneSearch}
                         onChange={(e) => setPhoneSearch(e.target.value)}
                         placeholder="Enter patient phone number"
-                        className="w-full bg-white border border-gray-200 rounded-xl px-4 h-12 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition"
+                        className="w-full bg-white dark:bg-gray-700 border border-[#E2EFEA] dark:border-gray-600 rounded-xl px-4 h-12 focus:ring-2 focus:ring-[#2BB2A7]/20 focus:border-[#2BB2A7] outline-none transition text-gray-900 dark:text-white"
                       />
                       {voiceMode && (
                         <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -1671,7 +1674,7 @@ export default function AdmissionForm() {
                   <button
                     onClick={searchPatient}
                     disabled={loadingPatient}
-                    className="px-6 h-12 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 whitespace-nowrap"
+                    className="px-6 h-12 bg-[#2BB2A7] text-white rounded-xl font-medium hover:bg-[#1F8F89] transition-colors disabled:opacity-50 whitespace-nowrap"
                   >
                     {loadingPatient ? "Searching..." : "Search"}
                   </button>
@@ -1683,16 +1686,16 @@ export default function AdmissionForm() {
               {/* Section 1: Demographics */}
               <section>
                 <div className="flex items-center gap-4 mb-8">
-                  <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-800 flex items-center justify-center text-xs font-bold">
+                  <div className="w-8 h-8 rounded-full bg-[#EAF7F4] dark:bg-[#1F8F89]/20 text-[#2BB2A7] dark:text-[#2BB2A7] flex items-center justify-center text-xs font-bold border border-[#2BB2A7]/30 dark:border-[#2BB2A7]/20">
                     01
                   </div>
-                  <h3 className="text-xl font-bold font-headline text-gray-900">
+                  <h3 className="text-xl font-bold font-headline text-gray-900 dark:text-white">
                     Personal Demographics
                   </h3>
                 </div>
                 <div className="grid grid-cols-12 gap-6">
                   <div className="col-span-12 md:col-span-5 flex flex-col gap-2">
-                    <label className="text-xs font-bold text-gray-600 ml-1 uppercase tracking-wider">
+                    <label className="text-xs font-bold text-gray-600 dark:text-gray-400 ml-1 uppercase tracking-wider">
                       Full Name
                     </label>
                     <div className="relative">
@@ -1702,7 +1705,7 @@ export default function AdmissionForm() {
                         onChange={handleChange}
                         placeholder="First and last name"
                         required
-                        className={`w-full bg-white border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition ${
+                        className={`w-full bg-white dark:bg-gray-700 border border-[#E2EFEA] dark:border-gray-600 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#2BB2A7]/20 focus:border-[#2BB2A7] outline-none transition text-gray-900 dark:text-white ${
                           voiceMode ? "pr-12" : ""
                         }`}
                       />
@@ -1717,7 +1720,7 @@ export default function AdmissionForm() {
                     </div>
                   </div>
                   <div className="col-span-12 md:col-span-3 flex flex-col gap-2">
-                    <label className="text-xs font-bold text-gray-600 ml-1 uppercase tracking-wider">
+                    <label className="text-xs font-bold text-gray-600 dark:text-gray-400 ml-1 uppercase tracking-wider">
                       Date of Birth
                     </label>
                     <input
@@ -1726,18 +1729,18 @@ export default function AdmissionForm() {
                       value={form.dob}
                       onChange={handleChange}
                       required
-                      className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition"
+                      className="w-full bg-white dark:bg-gray-700 border border-[#E2EFEA] dark:border-gray-600 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#2BB2A7]/20 focus:border-[#2BB2A7] outline-none transition text-gray-900 dark:text-white"
                     />
                   </div>
                   <div className="col-span-12 md:col-span-4 flex flex-col gap-2">
-                    <label className="text-xs font-bold text-gray-600 ml-1 uppercase tracking-wider">
+                    <label className="text-xs font-bold text-gray-600 dark:text-gray-400 ml-1 uppercase tracking-wider">
                       Gender Identity
                     </label>
                     <select
                       name="gender"
                       value={form.gender}
                       onChange={handleChange}
-                      className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition"
+                      className="w-full bg-white dark:bg-gray-700 border border-[#E2EFEA] dark:border-gray-600 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#2BB2A7]/20 focus:border-[#2BB2A7] outline-none transition text-gray-900 dark:text-white"
                     >
                       <option value="">Select gender</option>
                       <option value="male">Male</option>
@@ -1747,7 +1750,7 @@ export default function AdmissionForm() {
                     </select>
                   </div>
                   <div className="col-span-12 md:col-span-8 flex flex-col gap-2">
-                    <label className="text-xs font-bold text-gray-600 ml-1 uppercase tracking-wider">
+                    <label className="text-xs font-bold text-gray-600 dark:text-gray-400 ml-1 uppercase tracking-wider">
                       Residential Address
                     </label>
                     <div className="relative">
@@ -1756,7 +1759,7 @@ export default function AdmissionForm() {
                         value={form.address}
                         onChange={handleChange}
                         placeholder="Street address, apartment, suite"
-                        className={`w-full bg-white border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition ${
+                        className={`w-full bg-white dark:bg-gray-700 border border-[#E2EFEA] dark:border-gray-600 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#2BB2A7]/20 focus:border-[#2BB2A7] outline-none transition text-gray-900 dark:text-white ${
                           voiceMode ? "pr-12" : ""
                         }`}
                       />
@@ -1771,7 +1774,7 @@ export default function AdmissionForm() {
                     </div>
                   </div>
                   <div className="col-span-12 md:col-span-4 flex flex-col gap-2">
-                    <label className="text-xs font-bold text-gray-600 ml-1 uppercase tracking-wider">
+                    <label className="text-xs font-bold text-gray-600 dark:text-gray-400 ml-1 uppercase tracking-wider">
                       City / Region
                     </label>
                     <div className="relative">
@@ -1780,7 +1783,7 @@ export default function AdmissionForm() {
                         value={form.city}
                         onChange={handleChange}
                         placeholder="City"
-                        className={`w-full bg-white border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition ${
+                        className={`w-full bg-white dark:bg-gray-700 border border-[#E2EFEA] dark:border-gray-600 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#2BB2A7]/20 focus:border-[#2BB2A7] outline-none transition text-gray-900 dark:text-white ${
                           voiceMode ? "pr-12" : ""
                         }`}
                       />
@@ -1795,7 +1798,7 @@ export default function AdmissionForm() {
                     </div>
                   </div>
                   <div className="col-span-12 md:col-span-4 flex flex-col gap-2">
-                    <label className="text-xs font-bold text-gray-600 ml-1 uppercase tracking-wider">
+                    <label className="text-xs font-bold text-gray-600 dark:text-gray-400 ml-1 uppercase tracking-wider">
                       Pincode
                     </label>
                     <div className="relative">
@@ -1805,7 +1808,7 @@ export default function AdmissionForm() {
                         onChange={handleChange}
                         placeholder="Pincode"
                         required
-                        className={`w-full bg-white border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition ${
+                        className={`w-full bg-white dark:bg-gray-700 border border-[#E2EFEA] dark:border-gray-600 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#2BB2A7]/20 focus:border-[#2BB2A7] outline-none transition text-gray-900 dark:text-white ${
                           voiceMode ? "pr-12" : ""
                         }`}
                       />
@@ -1823,7 +1826,7 @@ export default function AdmissionForm() {
                     </div>
                   </div>
                   <div className="col-span-12 md:col-span-4 flex flex-col gap-2">
-                    <label className="text-xs font-bold text-gray-600 ml-1 uppercase tracking-wider">
+                    <label className="text-xs font-bold text-gray-600 dark:text-gray-400 ml-1 uppercase tracking-wider">
                       State
                     </label>
                     <div className="relative">
@@ -1833,7 +1836,7 @@ export default function AdmissionForm() {
                         onChange={handleChange}
                         placeholder="State"
                         required
-                        className={`w-full bg-white border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition ${
+                        className={`w-full bg-white dark:bg-gray-700 border border-[#E2EFEA] dark:border-gray-600 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#2BB2A7]/20 focus:border-[#2BB2A7] outline-none transition text-gray-900 dark:text-white ${
                           voiceMode ? "pr-12" : ""
                         }`}
                       />
@@ -1854,28 +1857,25 @@ export default function AdmissionForm() {
               <section className="grid grid-cols-1 md:grid-cols-2 gap-12">
                 <div>
                   <div className="flex items-center gap-4 mb-8">
-                    <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-800 flex items-center justify-center text-xs font-bold">
+                    <div className="w-8 h-8 rounded-full bg-[#EAF7F4] dark:bg-[#1F8F89]/20 text-[#2BB2A7] dark:text-[#2BB2A7] flex items-center justify-center text-xs font-bold border border-[#2BB2A7]/30 dark:border-[#2BB2A7]/20">
                       02
                     </div>
-                    <h3 className="text-xl font-bold font-headline text-gray-900">
+                    <h3 className="text-xl font-bold font-headline text-gray-900 dark:text-white">
                       Contact Details
                     </h3>
                   </div>
                   <div className="space-y-6">
                     <div className="flex flex-col gap-2">
-                      <label className="text-xs font-bold text-gray-600 ml-1 uppercase tracking-wider">
+                      <label className="text-xs font-bold text-gray-600 dark:text-gray-400 ml-1 uppercase tracking-wider">
                         Phone Number
                       </label>
                       <div className="relative">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">
-                          +1
-                        </span>
                         <input
                           name="phone"
                           type="tel"
                           value={form.phone}
                           onChange={handleChange}
-                          className={`pl-10 w-full bg-white border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition ${
+                          className={`w-full bg-white dark:bg-gray-700 border border-[#E2EFEA] dark:border-gray-600 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#2BB2A7]/20 focus:border-[#2BB2A7] outline-none transition text-gray-900 dark:text-white ${
                             voiceMode ? "pr-12" : ""
                           }`}
                           placeholder="(555) 000-0000"
@@ -1894,7 +1894,7 @@ export default function AdmissionForm() {
                       </div>
                     </div>
                     <div className="flex flex-col gap-2">
-                      <label className="text-xs font-bold text-gray-600 ml-1 uppercase tracking-wider">
+                      <label className="text-xs font-bold text-gray-600 dark:text-gray-400 ml-1 uppercase tracking-wider">
                         Email Address
                       </label>
                       <div className="relative">
@@ -1904,7 +1904,7 @@ export default function AdmissionForm() {
                           value={form.email}
                           onChange={handleChange}
                           placeholder="patient@example.com"
-                          className={`w-full bg-white border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition ${
+                          className={`w-full bg-white dark:bg-gray-700 border border-[#E2EFEA] dark:border-gray-600 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#2BB2A7]/20 focus:border-[#2BB2A7] outline-none transition text-gray-900 dark:text-white ${
                             voiceMode ? "pr-12" : ""
                           }`}
                         />
@@ -1924,15 +1924,15 @@ export default function AdmissionForm() {
                   </div>
                 </div>
 
-                <div className="bg-gray-50 rounded-2xl p-8">
+                <div className="bg-[#F4F9F7] dark:bg-gray-800/50 rounded-2xl p-8 border border-[#E2EFEA] dark:border-gray-700">
                   <div className="flex items-center gap-4 mb-6">
-                    <h3 className="text-lg font-bold font-headline text-gray-900">
+                    <h3 className="text-lg font-bold font-headline text-gray-900 dark:text-white">
                       Emergency Contact
                     </h3>
                   </div>
                   <div className="space-y-4">
                     <div className="flex flex-col gap-1">
-                      <label className="text-[10px] font-bold text-gray-500 uppercase">
+                      <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase">
                         Contact Name
                       </label>
                       <div className="relative">
@@ -1940,7 +1940,7 @@ export default function AdmissionForm() {
                           name="emergencyName"
                           value={form.emergencyName}
                           onChange={handleChange}
-                          className={`!bg-white border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition ${
+                          className={`!bg-white dark:!bg-gray-700 border border-[#E2EFEA] dark:border-gray-600 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#2BB2A7]/20 focus:border-[#2BB2A7] outline-none transition text-gray-900 dark:text-white ${
                             voiceMode ? "pr-12" : ""
                           }`}
                           placeholder="Legal guardian or relative"
@@ -1957,7 +1957,7 @@ export default function AdmissionForm() {
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="flex flex-col gap-1">
-                        <label className="text-[10px] font-bold text-gray-500 uppercase">
+                        <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase">
                           Relationship
                         </label>
                         <div className="relative">
@@ -1965,7 +1965,7 @@ export default function AdmissionForm() {
                             name="emergencyRelation"
                             value={form.emergencyRelation}
                             onChange={handleChange}
-                            className={`!bg-white border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition ${
+                            className={`!bg-white dark:!bg-gray-700 border border-[#E2EFEA] dark:border-gray-600 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#2BB2A7]/20 focus:border-[#2BB2A7] outline-none transition text-gray-900 dark:text-white ${
                               voiceMode ? "pr-12" : ""
                             }`}
                             placeholder="e.g. Spouse"
@@ -1981,7 +1981,7 @@ export default function AdmissionForm() {
                         </div>
                       </div>
                       <div className="flex flex-col gap-1">
-                        <label className="text-[10px] font-bold text-gray-500 uppercase">
+                        <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase">
                           Contact Phone
                         </label>
                         <div className="relative">
@@ -1989,7 +1989,7 @@ export default function AdmissionForm() {
                             name="emergencyPhone"
                             value={form.emergencyPhone}
                             onChange={handleChange}
-                            className={`!bg-white border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition ${
+                            className={`!bg-white dark:!bg-gray-700 border border-[#E2EFEA] dark:border-gray-600 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#2BB2A7]/20 focus:border-[#2BB2A7] outline-none transition text-gray-900 dark:text-white ${
                               voiceMode ? "pr-12" : ""
                             }`}
                             placeholder="Phone"
@@ -2013,18 +2013,18 @@ export default function AdmissionForm() {
               </section>
 
               {/* Section 3: Admission Details */}
-              <section className="bg-blue-50 rounded-[2rem] p-10">
+              <section className="bg-[#EAF7F4] dark:bg-[#1F8F89]/10 rounded-[2rem] p-10 border border-[#2BB2A7]/20 dark:border-[#2BB2A7]/10">
                 <div className="flex items-center gap-4 mb-10">
-                  <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
+                  <div className="w-8 h-8 rounded-full bg-[#2BB2A7] text-white flex items-center justify-center text-xs font-bold">
                     03
                   </div>
-                  <h3 className="text-2xl font-bold font-headline text-gray-900">
+                  <h3 className="text-2xl font-bold font-headline text-gray-900 dark:text-white">
                     Clinical Admission Details
                   </h3>
                 </div>
                 <div className="grid grid-cols-12 gap-8">
                   <div className="col-span-12 flex flex-col gap-2">
-                    <label className="text-xs font-bold text-blue-700 ml-1 uppercase tracking-wider">
+                    <label className="text-xs font-bold text-[#1F8F89] dark:text-[#2BB2A7] ml-1 uppercase tracking-wider">
                       Reason for Admission
                     </label>
                     <div className="relative">
@@ -2032,7 +2032,7 @@ export default function AdmissionForm() {
                         name="reason"
                         value={form.reason}
                         onChange={handleChange}
-                        className={`resize-none w-full bg-white border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition ${
+                        className={`resize-none w-full bg-white dark:bg-gray-700 border border-[#E2EFEA] dark:border-gray-600 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#2BB2A7]/20 focus:border-[#2BB2A7] outline-none transition text-gray-900 dark:text-white ${
                           voiceMode ? "pr-12" : ""
                         }`}
                         placeholder="Primary diagnosis or symptoms justifying admission..."
@@ -2054,7 +2054,7 @@ export default function AdmissionForm() {
                     className="col-span-12 md:col-span-4 flex flex-col gap-2 relative"
                     ref={doctorDropdownRef}
                   >
-                    <label className="text-xs font-bold text-blue-700 ml-1 uppercase tracking-wider">
+                    <label className="text-xs font-bold text-[#1F8F89] dark:text-[#2BB2A7] ml-1 uppercase tracking-wider">
                       Assigned Physician
                     </label>
                     <div className="relative">
@@ -2067,7 +2067,7 @@ export default function AdmissionForm() {
                           setShowDoctorDropdown(true);
                         }}
                         onFocus={() => setShowDoctorDropdown(true)}
-                        className={`w-full bg-white border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition ${
+                        className={`w-full bg-white dark:bg-gray-700 border border-[#E2EFEA] dark:border-gray-600 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#2BB2A7]/20 focus:border-[#2BB2A7] outline-none transition text-gray-900 dark:text-white ${
                           voiceMode ? "pr-12" : ""
                         }`}
                       />
@@ -2084,7 +2084,7 @@ export default function AdmissionForm() {
                       )}
                     </div>
                     {showDoctorDropdown && (
-                      <div className="absolute top-full mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-y-auto z-50">
+                      <div className="absolute top-full mt-1 w-full bg-white dark:bg-gray-700 border border-[#E2EFEA] dark:border-gray-600 rounded-xl shadow-lg max-h-60 overflow-y-auto z-50">
                         {filteredDoctors.length > 0 ? (
                           filteredDoctors.map((doc) => (
                             <div
@@ -2097,19 +2097,19 @@ export default function AdmissionForm() {
                                 setDoctorSearch(`${doc.firstName} ${doc.lastName}`);
                                 setShowDoctorDropdown(false);
                               }}
-                              className="px-4 py-3 hover:bg-blue-50 cursor-pointer text-sm"
+                              className="px-4 py-3 hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/10 cursor-pointer text-sm"
                             >
-                              <div className="font-medium">
+                              <div className="font-medium text-gray-900 dark:text-white">
                                 Dr. {doc.firstName} {doc.lastName}
                               </div>
-                              <div className="text-xs text-gray-500">
+                              <div className="text-xs text-gray-500 dark:text-gray-400">
                                 {doc.department}
                                 {doc.specialty ? ` • ${doc.specialty}` : ""}
                               </div>
                             </div>
                           ))
                         ) : (
-                          <div className="px-4 py-3 text-sm text-gray-500">
+                          <div className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
                             No doctors found
                           </div>
                         )}
@@ -2119,7 +2119,7 @@ export default function AdmissionForm() {
 
                   {/* Ward & Bed Allocation */}
                   <div className="col-span-12 md:col-span-8 flex flex-col gap-2">
-                    <label className="text-xs font-bold text-blue-700 ml-1 uppercase tracking-wider">
+                    <label className="text-xs font-bold text-[#1F8F89] dark:text-[#2BB2A7] ml-1 uppercase tracking-wider">
                       Ward &amp; Bed Allocation
                     </label>
                     <div className="grid grid-cols-2 gap-2">
@@ -2127,7 +2127,7 @@ export default function AdmissionForm() {
                         name="ward"
                         value={form.ward}
                         onChange={handleChange}
-                        className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition"
+                        className="w-full bg-white dark:bg-gray-700 border border-[#E2EFEA] dark:border-gray-600 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#2BB2A7]/20 focus:border-[#2BB2A7] outline-none transition text-gray-900 dark:text-white"
                       >
                         <option value="">Select Ward</option>
                         {wards.map((ward) => (
@@ -2140,7 +2140,7 @@ export default function AdmissionForm() {
                         name="bed"
                         value={form.bed}
                         onChange={handleChange}
-                        className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition"
+                        className="w-full bg-white dark:bg-gray-700 border border-[#E2EFEA] dark:border-gray-600 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#2BB2A7]/20 focus:border-[#2BB2A7] outline-none transition text-gray-900 dark:text-white"
                         disabled={!form.ward}
                       >
                         <option value="">Select Bed</option>
@@ -2156,11 +2156,11 @@ export default function AdmissionForm() {
               </section>
 
               {/* Action Bar */}
-              <div className="flex items-center justify-between pt-8 border-t border-gray-200">
+              <div className="flex items-center justify-between pt-8 border-t border-[#E2EFEA] dark:border-gray-700">
                 <button
                   type="button"
                   onClick={handleDiscard}
-                  className="text-gray-500 font-bold hover:text-gray-800 transition-colors flex items-center gap-2"
+                  className="text-gray-500 dark:text-gray-400 font-bold hover:text-gray-800 dark:hover:text-white transition-colors flex items-center gap-2"
                 >
                   <span className="material-symbols-outlined">close</span>
                   Discard Draft
@@ -2169,14 +2169,14 @@ export default function AdmissionForm() {
                   <button
                     type="button"
                     onClick={handleSaveDraft}
-                    className="px-8 py-3 rounded-full text-blue-600 font-bold hover:bg-blue-50 transition-colors"
+                    className="px-8 py-3 rounded-full text-[#2BB2A7] dark:text-[#2BB2A7] font-bold hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/20 transition-colors"
                   >
                     Save as Draft
                   </button>
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="px-10 py-4 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-full font-bold shadow-lg shadow-blue-500/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-3"
+                    className="px-10 py-4 bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] text-white rounded-full font-bold shadow-lg shadow-[#2BB2A7]/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-3"
                   >
                     {submitting ? "Admitting..." : "Complete Admission"}
                   </button>

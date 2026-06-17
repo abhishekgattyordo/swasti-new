@@ -1,3 +1,944 @@
+// "use client";
+
+// import React, { useState, useEffect } from "react";
+// import Header from "@/components/admin/Header";
+// import Sidebar from "@/components/admin/Sidebar";
+// import { LucideIcon } from "lucide-react";
+// import { useRouter } from "next/navigation";
+// import { Button } from "@/components/ui/button";
+// import { Input } from "@/components/ui/input";
+// import { Label } from "@/components/ui/label";
+// import { Doctor } from '@/lib/api/types';
+// import {
+//   Users,
+//   UserCheck,
+//   UserX,
+//   FileCheck,
+//   Eye,
+//   Edit,
+//   Trash2,
+//   Filter,
+//   Plus,
+//   Loader2,
+//   RefreshCw,
+// } from "lucide-react";
+
+// // shadcn/ui components
+// import {
+//   Popover,
+//   PopoverContent,
+//   PopoverTrigger,
+// } from "@/components/ui/popover";
+// import {
+//   Command,
+//   CommandInput,
+//   CommandList,
+//   CommandEmpty,
+//   CommandGroup,
+//   CommandItem,
+// } from "@/components/ui/command";
+// import { Menu, X } from "lucide-react";
+// import { toast } from "sonner";
+
+// // Import API functions
+// import { doctorsApi } from "@/lib/api/doctors";
+// import DoctorImport from "@/components/admin/DoctorImport";
+
+// export interface Stat {
+//   title: string;
+//   value: string;
+//   color: string;
+//   icon: LucideIcon;
+// }
+
+// // Stats data
+// const statsData = [
+//   { title: "Total Doctors", value: "0", color: "purple", icon: Users },
+//   { title: "Active Now", value: "0", color: "emerald", icon: UserCheck },
+//   { title: "On Leave", value: "0", color: "amber", icon: UserX },
+//   { title: "Pending Approvals", value: "0", color: "red", icon: FileCheck },
+// ];
+
+// interface ColumnFilter {
+//   column: string;
+//   value: string;
+// }
+
+// // Column Filter Component
+// function ColumnFilter({
+//   column,
+//   placeholder = "Filter...",
+//   options,
+//   onFilter,
+//   currentValue,
+// }: {
+//   column: string;
+//   placeholder?: string;
+//   options?: string[];
+//   onFilter: (column: string, value: string) => void;
+//   currentValue?: string;
+// }) {
+//   const [open, setOpen] = useState(false);
+
+//   return (
+//     <Popover open={open} onOpenChange={setOpen}>
+//       <PopoverTrigger asChild>
+//         <button
+//           className={`ml-1 p-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors ${
+//             currentValue ? "text-purple-600 dark:text-purple-400" : "text-slate-400"
+//           }`}
+//         >
+//           <Filter className="h-3.5 w-3.5" />
+//         </button>
+//       </PopoverTrigger>
+//       <PopoverContent className="w-48 p-0" align="start">
+//         <Command>
+//           <CommandInput placeholder={placeholder} className="h-8" />
+//           <CommandList>
+//             <CommandEmpty>No results.</CommandEmpty>
+//             {options ? (
+//               <CommandGroup>
+//                 {options.map((opt) => (
+//                   <CommandItem
+//                     key={opt}
+//                     onSelect={() => {
+//                       onFilter(column, opt);
+//                       setOpen(false);
+//                     }}
+//                   >
+//                     {opt}
+//                   </CommandItem>
+//                 ))}
+//               </CommandGroup>
+//             ) : (
+//               <CommandGroup>
+//                 <CommandItem
+//                   onSelect={() => {
+//                     const input =
+//                       document.querySelector<HTMLInputElement>(
+//                         "[cmdk-input]",
+//                       )?.value;
+//                     if (input) onFilter(column, input);
+//                     setOpen(false);
+//                   }}
+//                 >
+//                   Apply
+//                 </CommandItem>
+//               </CommandGroup>
+//             )}
+//           </CommandList>
+//         </Command>
+//       </PopoverContent>
+//     </Popover>
+//   );
+// }
+
+// // Date Range Filter Component
+// function DateRangeFilter({
+//   column,
+//   onFilter,
+//   currentRange,
+// }: {
+//   column: string;
+//   onFilter: (column: string, from: string, to: string) => void;
+//   currentRange?: { from: string; to: string };
+// }) {
+//   const [open, setOpen] = useState(false);
+//   const [from, setFrom] = useState(currentRange?.from || "");
+//   const [to, setTo] = useState(currentRange?.to || "");
+
+//   const handleApply = () => {
+//     onFilter(column, from, to);
+//     setOpen(false);
+//   };
+
+//   const handleClear = () => {
+//     setFrom("");
+//     setTo("");
+//     onFilter(column, "", "");
+//     setOpen(false);
+//   };
+
+//   return (
+//     <Popover open={open} onOpenChange={setOpen}>
+//       <PopoverTrigger asChild>
+//         <button
+//           className={`ml-1 p-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors ${
+//             currentRange?.from || currentRange?.to
+//               ? "text-purple-600 dark:text-purple-400"
+//               : "text-slate-400"
+//           }`}
+//         >
+//           <Filter className="h-3.5 w-3.5" />
+//         </button>
+//       </PopoverTrigger>
+//       <PopoverContent className="w-64 p-4" align="start">
+//         <div className="space-y-4">
+//           <h4 className="font-medium text-sm">Date Range</h4>
+//           <div className="space-y-2">
+//             <div className="space-y-1">
+//               <Label htmlFor="from">From</Label>
+//               <Input
+//                 id="from"
+//                 type="date"
+//                 value={from}
+//                 onChange={(e) => setFrom(e.target.value)}
+//                 className="h-8"
+//               />
+//             </div>
+//             <div className="space-y-1">
+//               <Label htmlFor="to">To</Label>
+//               <Input
+//                 id="to"
+//                 type="date"
+//                 value={to}
+//                 onChange={(e) => setTo(e.target.value)}
+//                 className="h-8"
+//               />
+//             </div>
+//           </div>
+//           <div className="flex justify-between gap-2">
+//             <Button variant="outline" size="sm" onClick={handleClear} className="flex-1">
+//               Clear
+//             </Button>
+//             <Button size="sm" onClick={handleApply} className="flex-1 bg-[#3B1E6F] hover:bg-[#7A329F]">
+//               Apply
+//             </Button>
+//           </div>
+//         </div>
+//       </PopoverContent>
+//     </Popover>
+//   );
+// }
+
+// // Status Badge Component
+// const StatusBadge = ({ status }: { status: string }) => {
+//   const getStatusConfig = (status: string) => {
+//     switch (status) {
+//       case "active":
+//         return {
+//           bg: "bg-emerald-100 dark:bg-emerald-900/20",
+//           text: "text-emerald-800 dark:text-emerald-300",
+//           dot: "bg-emerald-500",
+//         };
+//       case "on-leave":
+//         return {
+//           bg: "bg-amber-100 dark:bg-amber-900/20",
+//           text: "text-amber-800 dark:text-amber-300",
+//           dot: "bg-amber-500",
+//         };
+//       default:
+//         return {
+//           bg: "bg-slate-100 dark:bg-slate-800/50",
+//           text: "text-slate-700 dark:text-slate-400",
+//           dot: "bg-slate-500",
+//         };
+//     }
+//   };
+
+//   const config = getStatusConfig(status);
+
+//   return (
+//     <div
+//       className={`inline-flex items-center gap-1 px-2 py-1 rounded-full ${config.bg} ${config.text} text-xs font-medium`}
+//     >
+//       <div className={`w-1.5 h-1.5 rounded-full ${config.dot}`}></div>
+//       <span>
+//         {status === "on-leave"
+//           ? "On Leave"
+//           : status.charAt(0).toUpperCase() + status.slice(1)}
+//       </span>
+//     </div>
+//   );
+// };
+
+// // Status Update Dropdown Component
+// const StatusUpdateDropdown = ({ 
+//   doctor, 
+//   onStatusUpdate 
+// }: { 
+//   doctor: Doctor; 
+//   onStatusUpdate: (id: number, newStatus: string) => void;
+// }) => {
+//   const [open, setOpen] = useState(false);
+//   const [updating, setUpdating] = useState(false);
+
+//   const statusOptions = [
+//     { value: "active", label: "Active", color: "green" },
+//     { value: "on-leave", label: "On Leave", color: "amber" },
+//     { value: "inactive", label: "Inactive", color: "slate" },
+//   ];
+
+//   const handleStatusChange = async (newStatus: string) => {
+//     if (newStatus === doctor.status) {
+//       setOpen(false);
+//       return;
+//     }
+
+//     setUpdating(true);
+//     try {
+//       const response = await doctorsApi.updateDoctor(doctor.id, { status: newStatus });
+      
+//       if (response.success) {
+//         toast.success(`Dr. ${doctor.firstName} ${doctor.lastName} status updated to ${newStatus}`);
+//         onStatusUpdate(doctor.id, newStatus);
+//       } else {
+//         toast.error(response.message || "Failed to update status");
+//       }
+//     } catch (error) {
+//       console.error("Status update error:", error);
+//       toast.error("An error occurred while updating status");
+//     } finally {
+//       setUpdating(false);
+//       setOpen(false);
+//     }
+//   };
+
+//   return (
+//     <Popover open={open} onOpenChange={setOpen}>
+//       <PopoverTrigger asChild>
+//         <button
+//           className="p-1 md:p-1.5 text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+//           title="Update Status"
+//           onClick={(e) => e.stopPropagation()}
+//           disabled={updating}
+//         >
+//           {updating ? (
+//             <Loader2 className="w-3 h-3 md:w-4 md:h-4 animate-spin" />
+//           ) : (
+//             <RefreshCw className="w-3 h-3 md:w-4 md:h-4" />
+//           )}
+//         </button>
+//       </PopoverTrigger>
+//       <PopoverContent className="w-48 p-2" align="end">
+//         <div className="space-y-1">
+//           <p className="text-xs font-medium text-slate-500 dark:text-slate-400 px-2 pb-2 border-b">
+//             Change Status
+//           </p>
+//           {statusOptions.map((option) => (
+//             <button
+//               key={option.value}
+//               className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
+//                 doctor.status === option.value
+//                   ? option.value === 'active'
+//                     ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 font-medium'
+//                     : option.value === 'on-leave'
+//                     ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 font-medium'
+//                     : 'bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 font-medium'
+//                   : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
+//               }`}
+//               onClick={(e) => {
+//                 e.stopPropagation();
+//                 handleStatusChange(option.value);
+//               }}
+//             >
+//               <div className="flex items-center gap-2">
+//                 <div className={`w-2 h-2 rounded-full ${
+//                   option.value === 'active' ? 'bg-emerald-500' : 
+//                   option.value === 'on-leave' ? 'bg-amber-500' : 'bg-slate-500'
+//                 }`}></div>
+//                 {option.label}
+//                 {doctor.status === option.value && (
+//                   <span className="ml-auto text-xs text-emerald-500">✓</span>
+//                 )}
+//               </div>
+//             </button>
+//           ))}
+//         </div>
+//       </PopoverContent>
+//     </Popover>
+//   );
+// };
+
+// const HealthAdminPage: React.FC = () => {
+//   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+//   const [searchQuery, setSearchQuery] = useState("");
+//   const [selectedSpecialty, setSelectedSpecialty] = useState("All Specialties");
+//   const [columnFilters, setColumnFilters] = useState<ColumnFilter[]>([]);
+//   const [dateFilters, setDateFilters] = useState<Record<string, { from: string; to: string }>>({});
+//   const [doctors, setDoctors] = useState<Doctor[]>([]);
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState<string | null>(null);
+//   const [specialtyOptions, setSpecialtyOptions] = useState<string[]>([]);
+//   const [departmentOptions, setDepartmentOptions] = useState<string[]>([]);
+//   const [stats, setStats] = useState(statsData);
+//   const router = useRouter();
+
+//   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+
+//   const handleImportSuccess = () => {
+//     fetchDoctors();
+//   };
+
+//   const fetchDoctors = async () => {
+//     setLoading(true);
+//     try {
+//       const response = await doctorsApi.getDoctors();
+//       console.log('API response:', response);
+
+//       let rawDoctors = [];
+//       if (Array.isArray(response.data)) {
+//         rawDoctors = response.data;
+//       } else if (response.data?.data && Array.isArray(response.data.data)) {
+//         rawDoctors = response.data.data;
+//       } else if (response.data?.success && Array.isArray(response.data.data)) {
+//         rawDoctors = response.data.data;
+//       } else {
+//         console.error('Unexpected API response format:', response.data);
+//         setError('Invalid data format from server');
+//         return;
+//       }
+
+//       const mapped: Doctor[] = rawDoctors.map((apiDoctor: any) => ({
+//         id: apiDoctor.id,
+//         firstName: apiDoctor.firstName || apiDoctor.first_name || '',
+//         lastName: apiDoctor.lastName || apiDoctor.last_name || '',
+//         email: apiDoctor.email || '',
+//         avatar: apiDoctor.avatar || null,
+//         specialty: apiDoctor.specialty || apiDoctor.speciality || '',
+//         department: apiDoctor.department || '',
+//         phone: apiDoctor.phone || '',
+//         dateJoined: (apiDoctor.dateJoined || apiDoctor.date_joined)
+//           ? new Date(apiDoctor.dateJoined || apiDoctor.date_joined).toLocaleDateString("en-US", {
+//               year: "numeric",
+//               month: "short",
+//               day: "numeric",
+//             })
+//           : 'N/A',
+//         status: apiDoctor.status || 'inactive',
+//         licenseNumber: apiDoctor.licenseNumber || apiDoctor.license_number,
+//         qualifications: apiDoctor.qualifications || [],
+//         experience: apiDoctor.experience || 0,
+//         bio: apiDoctor.bio || '',
+//       }));
+
+//       setDoctors(mapped);
+
+//       const active = mapped.filter((d: Doctor) => d.status === 'active').length;
+//       const onLeave = mapped.filter((d: Doctor) => d.status === 'on-leave').length;
+//       const inactive = mapped.filter((d: Doctor) => d.status === 'inactive').length;
+
+//       setStats([
+//         { ...statsData[0], value: mapped.length.toString() },
+//         { ...statsData[1], value: active.toString() },
+//         { ...statsData[2], value: onLeave.toString() },
+//         { ...statsData[3], value: inactive.toString() },
+//       ]);
+
+//       const specialties = Array.from(new Set(mapped.map((d) => d.specialty))) as string[];
+//       const departments = Array.from(new Set(mapped.map((d) => d.department))) as string[];
+//       setSpecialtyOptions(specialties.sort());
+//       setDepartmentOptions(departments.sort());
+//     } catch (err) {
+//       console.error('Error fetching doctors:', err);
+//       setError('Network error. Please try again.');
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const handleStatusUpdate = (doctorId: number, newStatus: string) => {
+//     const validStatus = newStatus as 'active' | 'inactive' | 'on-leave';
+//     setDoctors(prevDoctors =>
+//       prevDoctors.map(doctor =>
+//         doctor.id === doctorId ? { ...doctor, status: validStatus } : doctor
+//       )
+//     );
+//     setTimeout(() => fetchDoctors(), 500);
+//   };
+
+//   useEffect(() => {
+//     fetchDoctors();
+//   }, []);
+
+//   const handleDelete = async (id: number, name: string) => {
+//     if (!confirm(`Are you sure you want to delete Dr. ${name}?`)) return;
+
+//     try {
+//       const response = await doctorsApi.deleteDoctor(id);
+//       if (response.success) {
+//         toast.success("Doctor deleted successfully");
+//         fetchDoctors();
+//       } else {
+//         toast.error(response.message || "Failed to delete doctor");
+//       }
+//     } catch (error) {
+//       console.error("Delete error:", error);
+//       toast.error("An error occurred while deleting");
+//     }
+//   };
+
+//   const filteredDoctors = doctors.filter((doctor) => {
+//     const fullName = `${doctor.firstName} ${doctor.lastName}`;
+//     const matchesSearch =
+//       searchQuery === "" ||
+//       fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+//       doctor.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+//       doctor.specialty.toLowerCase().includes(searchQuery.toLowerCase()) ||
+//       doctor.department.toLowerCase().includes(searchQuery.toLowerCase());
+
+//     const matchesSpecialty =
+//       selectedSpecialty === "All Specialties" ||
+//       doctor.specialty === selectedSpecialty;
+
+//     const matchesColumnFilters = columnFilters.every((filter) => {
+//       if (filter.column === "name") {
+//         return fullName.toLowerCase().includes(filter.value.toLowerCase());
+//       }
+//       const value = doctor[filter.column as keyof Doctor];
+//       return value
+//         ?.toString()
+//         .toLowerCase()
+//         .includes(filter.value.toLowerCase());
+//     });
+
+//     const dateRange = dateFilters.dateJoined;
+//     let matchesDateRange = true;
+//     if (dateRange && (dateRange.from || dateRange.to)) {
+//       const doctorDate = new Date(doctor.dateJoined);
+//       if (dateRange.from) {
+//         const fromDate = new Date(dateRange.from);
+//         if (doctorDate < fromDate) matchesDateRange = false;
+//       }
+//       if (dateRange.to) {
+//         const toDate = new Date(dateRange.to);
+//         if (doctorDate > toDate) matchesDateRange = false;
+//       }
+//     }
+
+//     return (
+//       matchesSearch &&
+//       matchesSpecialty &&
+//       matchesColumnFilters &&
+//       matchesDateRange
+//     );
+//   });
+
+//   const filterButtons = [
+//     { label: "All Specialties", isActive: selectedSpecialty === "All Specialties" },
+//     ...specialtyOptions.map((spec) => ({
+//       label: spec,
+//       isActive: selectedSpecialty === spec,
+//     })),
+//   ];
+
+//   if (loading) {
+//     return (
+//       <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
+//         <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+//         <div className="flex-1 flex items-center justify-center">
+//           <Loader2 className="h-8 w-8 animate-spin text-[#3B1E6F]" />
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   if (error) {
+//     return (
+//       <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
+//         <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+//         <div className="flex-1 flex items-center justify-center text-red-500">
+//           Error: {error}
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   return (
+//     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900 font-sans text-gray-900 dark:text-gray-100">
+//       {/* Mobile Menu Button */}
+//       <button
+//         className="lg:hidden fixed bottom-20 right-6 z-50 p-3 bg-gradient-to-r from-[#3B1E6F] to-[#7A329F] hover:from-[#7A329F] hover:to-[#0D5CB3] text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
+//         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+//         aria-label="Toggle menu"
+//       >
+//         {isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+//       </button>
+
+//       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+
+//       {isSidebarOpen && (
+//         <div
+//           className="fixed inset-0 bg-black/30 backdrop-blur-sm z-30 lg:hidden"
+//           onClick={() => setIsSidebarOpen(false)}
+//         />
+//       )}
+
+//       {/* Main Content Area */}
+//       <div className="flex-1 flex flex-col w-full overflow-hidden">
+//         <Header />
+
+//         <main className="flex-1 overflow-y-auto p-3 md:p-4 lg:p-5">
+//           <div className="space-y-5">
+//             <div className="flex flex-col gap-4 md:gap-5">
+//               {/* Page Header */}
+//               <div className="flex flex-col gap-3 md:gap-4">
+//                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+//                   <div className="flex-1">
+//                     <h1 className="text-slate-900 dark:text-white text-xl md:text-2xl font-bold tracking-tight">
+//                       Doctor Management
+//                     </h1>
+//                     <p className="text-slate-500 dark:text-slate-400 text-xs md:text-sm mt-1">
+//                       Central hub for practitioner credentials, status updates, and administrative workflow.
+//                     </p>
+//                   </div>
+//                   <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+//                     <DoctorImport onSuccess={handleImportSuccess} />
+//                     <button
+//                       onClick={() => router.push("/admin/addnewdoctor")}
+//                       className="flex items-center justify-center gap-1.5 rounded-lg h-9 md:h-10 px-3 md:px-4 bg-gradient-to-r from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] text-white text-sm font-semibold shadow-lg shadow-[#3B1E6F]/20 hover:opacity-90 transition-all w-full md:w-auto"
+//                     >
+//                       <Plus className="w-4 h-4" />
+//                       <span>Add New Doctor</span>
+//                     </button>
+//                   </div>
+//                 </div>
+
+//                 {/* Stats Cards */}
+//                 <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+//                   {stats.map((stat, index) => {
+//                     const Icon = stat.icon;
+//                     const getStatColor = (color: string) => {
+//                       switch (color) {
+//                         case "purple":
+//                           return "bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400";
+//                         case "emerald":
+//                           return "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400";
+//                         case "amber":
+//                           return "bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400";
+//                         case "red":
+//                           return "bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400";
+//                         default:
+//                           return "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400";
+//                       }
+//                     };
+//                     return (
+//                       <div
+//                         key={index}
+//                         className="flex flex-col justify-between rounded-xl p-4 md:p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all duration-200"
+//                       >
+//                         <div className="flex justify-between items-start mb-3">
+//                           <div>
+//                             <p className="text-slate-500 dark:text-slate-400 text-xs md:text-sm font-medium mb-1">
+//                               {stat.title}
+//                             </p>
+//                             <p className="text-lg md:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">
+//                               {stat.value}
+//                             </p>
+//                           </div>
+//                           <div className={`p-2 md:p-3 rounded-lg ${getStatColor(stat.color)}`}>
+//                             <Icon className="w-5 h-5 md:w-6 md:h-6" />
+//                           </div>
+//                         </div>
+//                       </div>
+//                     );
+//                   })}
+//                 </div>
+//               </div>
+
+//               {/* Filters and Table Section */}
+//               <div className="flex flex-col gap-4 md:gap-5">
+//                 <div className="flex-1 flex flex-col gap-3 md:gap-4">
+//                   {/* Search and Filters */}
+//                   <div className="flex flex-col gap-3">
+//                     <div className="flex items-center justify-between">
+//                       <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400">
+//                         DOCTOR FILTERS
+//                       </h3>
+//                       {(columnFilters.length > 0 || Object.keys(dateFilters).length > 0) && (
+//                         <button
+//                           onClick={() => {
+//                             setColumnFilters([]);
+//                             setDateFilters({});
+//                           }}
+//                           className="text-xs text-[#7A329F] hover:underline"
+//                         >
+//                           Clear all filters
+//                         </button>
+//                       )}
+//                     </div>
+
+//                     {/* Search Input */}
+//                     <div className="relative">
+//                       <Input
+//                         type="text"
+//                         placeholder="Search by name, email, specialty, or department..."
+//                         value={searchQuery}
+//                         onChange={(e) => setSearchQuery(e.target.value)}
+//                         className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
+//                       />
+//                       <svg
+//                         className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400"
+//                         fill="none"
+//                         stroke="currentColor"
+//                         viewBox="0 0 24 24"
+//                       >
+//                         <path
+//                           strokeLinecap="round"
+//                           strokeLinejoin="round"
+//                           strokeWidth={2}
+//                           d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+//                         />
+//                       </svg>
+//                     </div>
+
+//                     {/* Filter Buttons */}
+//                     <div className="flex flex-wrap gap-2">
+//                       {filterButtons.map((filter) => (
+//                         <button
+//                           key={filter.label}
+//                           className={`
+//                             group relative flex items-center justify-center gap-x-1.5 h-8 md:h-9 rounded-full px-3 md:px-4 text-xs md:text-sm font-medium transition-all duration-300 backdrop-blur-sm whitespace-nowrap
+//                             ${
+//                               filter.isActive
+//                                 ? "bg-gradient-to-r from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] text-white shadow-lg shadow-[#3B1E6F]/25"
+//                                 : "bg-white/80 dark:bg-slate-800/50 border border-slate-300/50 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 hover:shadow-md hover:border-slate-400/30 dark:hover:border-slate-600"
+//                             }
+//                           `}
+//                           onClick={() => setSelectedSpecialty(filter.label)}
+//                         >
+//                           {filter.isActive && (
+//                             <div className="absolute inset-0 rounded-full border-2 border-[#7A329F]/30 animate-pulse"></div>
+//                           )}
+//                           <span>{filter.label}</span>
+//                         </button>
+//                       ))}
+//                     </div>
+//                   </div>
+
+//                   {/* Doctors Table */}
+//                   <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+//                     <div className="overflow-x-auto">
+//                       <div className="min-w-[900px]">
+//                         <table className="w-full text-left border-collapse">
+//                           <thead>
+//                             <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-300 dark:border-slate-700">
+//                               <th className="px-3 md:px-4 py-3 text-slate-900 dark:text-white text-xs md:text-sm font-bold uppercase tracking-wider whitespace-nowrap border-r border-slate-300 dark:border-slate-700">
+//                                 <div className="flex items-center">
+//                                   Doctor Name
+//                                   <ColumnFilter
+//                                     column="name"
+//                                     placeholder="Filter by name..."
+//                                     onFilter={(col, val) => {
+//                                       setColumnFilters((prev) => {
+//                                         const filtered = prev.filter((f) => f.column !== col);
+//                                         return val ? [...filtered, { column: col, value: val }] : filtered;
+//                                       });
+//                                     }}
+//                                     currentValue={columnFilters.find((f) => f.column === "name")?.value}
+//                                   />
+//                                 </div>
+//                               </th>
+//                               <th className="px-3 md:px-4 py-3 text-slate-900 dark:text-white text-xs md:text-sm font-bold uppercase tracking-wider whitespace-nowrap border-r border-slate-300 dark:border-slate-700">
+//                                 <div className="flex items-center">
+//                                   Specialty
+//                                   <ColumnFilter
+//                                     column="specialty"
+//                                     options={specialtyOptions}
+//                                     onFilter={(col, val) => {
+//                                       setColumnFilters((prev) => {
+//                                         const filtered = prev.filter((f) => f.column !== col);
+//                                         return val ? [...filtered, { column: col, value: val }] : filtered;
+//                                       });
+//                                     }}
+//                                     currentValue={columnFilters.find((f) => f.column === "specialty")?.value}
+//                                   />
+//                                 </div>
+//                               </th>
+//                               <th className="px-3 md:px-4 py-3 text-slate-900 dark:text-white text-xs md:text-sm font-bold uppercase tracking-wider whitespace-nowrap border-r border-slate-300 dark:border-slate-700">
+//                                 <div className="flex items-center">
+//                                   Department
+//                                   <ColumnFilter
+//                                     column="department"
+//                                     options={departmentOptions}
+//                                     onFilter={(col, val) => {
+//                                       setColumnFilters((prev) => {
+//                                         const filtered = prev.filter((f) => f.column !== col);
+//                                         return val ? [...filtered, { column: col, value: val }] : filtered;
+//                                       });
+//                                     }}
+//                                     currentValue={columnFilters.find((f) => f.column === "department")?.value}
+//                                   />
+//                                 </div>
+//                               </th>
+//                               <th className="px-3 md:px-4 py-3 text-slate-900 dark:text-white text-xs md:text-sm font-bold uppercase tracking-wider whitespace-nowrap border-r border-slate-300 dark:border-slate-700">
+//                                 <div className="flex items-center">
+//                                   Contact
+//                                   <ColumnFilter
+//                                     column="phone"
+//                                     placeholder="Filter by phone..."
+//                                     onFilter={(col, val) => {
+//                                       setColumnFilters((prev) => {
+//                                         const filtered = prev.filter((f) => f.column !== col);
+//                                         return val ? [...filtered, { column: col, value: val }] : filtered;
+//                                       });
+//                                     }}
+//                                     currentValue={columnFilters.find((f) => f.column === "phone")?.value}
+//                                   />
+//                                 </div>
+//                               </th>
+//                               <th className="px-3 md:px-4 py-3 text-slate-900 dark:text-white text-xs md:text-sm font-bold uppercase tracking-wider whitespace-nowrap border-r border-slate-300 dark:border-slate-700">
+//                                 <div className="flex items-center">
+//                                   Date Joined
+//                                   <DateRangeFilter
+//                                     column="dateJoined"
+//                                     onFilter={(col, from, to) => {
+//                                       setDateFilters((prev) => ({ ...prev, [col]: { from, to } }));
+//                                     }}
+//                                     currentRange={dateFilters.dateJoined}
+//                                   />
+//                                 </div>
+//                               </th>
+//                               <th className="px-3 md:px-4 py-3 text-slate-900 dark:text-white text-xs md:text-sm font-bold uppercase tracking-wider whitespace-nowrap border-r border-slate-300 dark:border-slate-700">
+//                                 <div className="flex items-center">
+//                                   Status
+//                                   <ColumnFilter
+//                                     column="status"
+//                                     options={["active", "on-leave", "inactive"]}
+//                                     onFilter={(col, val) => {
+//                                       setColumnFilters((prev) => {
+//                                         const filtered = prev.filter((f) => f.column !== col);
+//                                         return val ? [...filtered, { column: col, value: val }] : filtered;
+//                                       });
+//                                     }}
+//                                     currentValue={columnFilters.find((f) => f.column === "status")?.value}
+//                                   />
+//                                 </div>
+//                               </th>
+//                               <th className="px-3 md:px-4 py-3 text-slate-900 dark:text-white text-xs md:text-sm font-bold uppercase tracking-wider text-right whitespace-nowrap">
+//                                 Actions
+//                               </th>
+//                             </tr>
+//                           </thead>
+//                           <tbody>
+//                             {filteredDoctors.map((doctor) => (
+//                               <tr
+//                                 key={doctor.id}
+//                                 className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors cursor-pointer"
+//                                 onClick={() => router.push(`/admin/doctorsmanagement/${doctor.id}`)}
+//                               >
+//                                 <td className="px-3 md:px-4 py-3 whitespace-nowrap border-r border-slate-200 dark:border-slate-700">
+//                                   <div className="flex items-center gap-2 md:gap-3">
+//                                     <div
+//                                       className="h-8 w-8 md:h-10 md:w-10 rounded-full bg-gradient-to-br from-[#3B1E6F] to-[#7A329F] bg-cover bg-center ring-2 ring-slate-100 dark:ring-slate-800 flex-shrink-0 flex items-center justify-center text-white font-semibold text-sm"
+//                                       style={{
+//                                         backgroundImage: doctor.avatar
+//                                           ? `url(${doctor.avatar})`
+//                                           : "none",
+//                                       }}
+//                                     >
+//                                       {!doctor.avatar && doctor.firstName?.charAt(0)}
+//                                     </div>
+//                                     <div className="flex flex-col min-w-0">
+//                                       <span className="text-slate-900 dark:text-white font-semibold text-sm md:text-base truncate">
+//                                         Dr. {doctor.firstName} {doctor.lastName}
+//                                       </span>
+//                                       <span className="text-slate-500 text-xs md:text-sm truncate">
+//                                         {doctor.email}
+//                                       </span>
+//                                     </div>
+//                                   </div>
+//                                 </td>
+//                                 <td className="px-3 md:px-4 py-3 whitespace-nowrap border-r border-slate-200 dark:border-slate-700">
+//                                   <span className="inline-flex items-center px-2 py-1 rounded-full text-xs md:text-sm font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
+//                                     {doctor.specialty}
+//                                   </span>
+//                                 </td>
+//                                 <td className="px-3 md:px-4 py-3 text-slate-600 dark:text-slate-400 text-xs md:text-sm whitespace-nowrap border-r border-slate-200 dark:border-slate-700">
+//                                   {doctor.department}
+//                                 </td>
+//                                 <td className="px-3 md:px-4 py-3 text-slate-600 dark:text-slate-400 text-xs md:text-sm font-medium font-mono whitespace-nowrap border-r border-slate-200 dark:border-slate-700">
+//                                   <div className="truncate max-w-[120px] md:max-w-none">
+//                                     {doctor.phone}
+//                                   </div>
+//                                 </td>
+//                                 <td className="px-3 md:px-4 py-3 text-slate-600 dark:text-slate-400 text-xs md:text-sm whitespace-nowrap border-r border-slate-200 dark:border-slate-700">
+//                                   {doctor.dateJoined}
+//                                 </td>
+//                                 <td className="px-3 md:px-4 py-3 whitespace-nowrap border-r border-slate-200 dark:border-slate-700">
+//                                   <StatusBadge status={doctor.status} />
+//                                 </td>
+//                                 <td className="px-3 md:px-4 py-3 text-right whitespace-nowrap">
+//                                   <div className="flex items-center justify-end gap-1 md:gap-2">
+//                                     {/* Status Update Button */}
+//                                     <StatusUpdateDropdown
+//                                       doctor={doctor}
+//                                       onStatusUpdate={handleStatusUpdate}
+//                                     />
+//                                     <button
+//                                       className="p-1 md:p-1.5 text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+//                                       title="View"
+//                                       onClick={(e) => {
+//                                         e.stopPropagation();
+//                                         router.push(`/admin/doctorsmanagement/${doctor.id}`);
+//                                       }}
+//                                     >
+//                                       <Eye className="w-3 h-3 md:w-4 md:h-4" />
+//                                     </button>
+//                                     <button
+//                                       className="p-1 md:p-1.5 text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+//                                       title="Edit"
+//                                       onClick={(e) => {
+//                                         e.stopPropagation();
+//                                         router.push(`/admin/doctorsmanagement/edit/${doctor.id}`);
+//                                       }}
+//                                     >
+//                                       <Edit className="w-3 h-3 md:w-4 md:h-4" />
+//                                     </button>
+//                                     <button
+//                                       className="p-1 md:p-1.5 text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+//                                       title="Delete"
+//                                       onClick={(e) => {
+//                                         e.stopPropagation();
+//                                         handleDelete(doctor.id, `${doctor.firstName} ${doctor.lastName}`);
+//                                       }}
+//                                     >
+//                                       <Trash2 className="w-3 h-3 md:w-4 md:h-4" />
+//                                     </button>
+//                                   </div>
+//                                 </td>
+//                               </tr>
+//                             ))}
+//                           </tbody>
+//                         </table>
+//                       </div>
+//                     </div>
+
+//                     {/* Pagination */}
+//                     <div className="px-3 md:px-4 py-3 border-t border-slate-300 dark:border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-3">
+//                       <span className="text-xs md:text-sm text-slate-500 font-medium">
+//                         Showing {filteredDoctors.length} of {doctors.length} entries
+//                       </span>
+//                       <div className="flex gap-1 md:gap-2">
+//                         <button className="px-2 md:px-3 py-1.5 rounded border border-slate-300 dark:border-slate-700 text-xs md:text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors whitespace-nowrap">
+//                           Previous
+//                         </button>
+//                         <button className="px-2 md:px-3 py-1.5 rounded bg-gradient-to-r from-[#3B1E6F] to-[#7A329F] text-white text-xs md:text-sm font-semibold">
+//                           1
+//                         </button>
+//                         <button className="px-2 md:px-3 py-1.5 rounded border border-slate-300 dark:border-slate-700 text-xs md:text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+//                           2
+//                         </button>
+//                         <button className="px-2 md:px-3 py-1.5 rounded border border-slate-300 dark:border-slate-700 text-xs md:text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors whitespace-nowrap">
+//                           Next
+//                         </button>
+//                       </div>
+//                     </div>
+//                   </div>
+//                 </div>
+//               </div>
+//             </div>
+//           </div>
+//         </main>
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default HealthAdminPage;
+
+
+
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -53,7 +994,7 @@ export interface Stat {
 
 // Stats data
 const statsData = [
-  { title: "Total Doctors", value: "0", color: "purple", icon: Users },
+  { title: "Total Doctors", value: "0", color: "teal", icon: Users },
   { title: "Active Now", value: "0", color: "emerald", icon: UserCheck },
   { title: "On Leave", value: "0", color: "amber", icon: UserX },
   { title: "Pending Approvals", value: "0", color: "red", icon: FileCheck },
@@ -84,18 +1025,18 @@ function ColumnFilter({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button
-          className={`ml-1 p-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors ${
-            currentValue ? "text-purple-600 dark:text-purple-400" : "text-slate-400"
+          className={`ml-1 p-1 rounded-md hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/20 transition-colors ${
+            currentValue ? "text-[#2BB2A7] dark:text-[#2BB2A7]" : "text-slate-400"
           }`}
         >
           <Filter className="h-3.5 w-3.5" />
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-48 p-0" align="start">
-        <Command>
-          <CommandInput placeholder={placeholder} className="h-8" />
+      <PopoverContent className="w-48 p-0 border-[#E2EFEA] dark:border-slate-700" align="start">
+        <Command className="bg-white dark:bg-slate-800">
+          <CommandInput placeholder={placeholder} className="h-8 text-gray-900 dark:text-white" />
           <CommandList>
-            <CommandEmpty>No results.</CommandEmpty>
+            <CommandEmpty className="text-gray-500 dark:text-gray-400">No results.</CommandEmpty>
             {options ? (
               <CommandGroup>
                 {options.map((opt) => (
@@ -105,6 +1046,7 @@ function ColumnFilter({
                       onFilter(column, opt);
                       setOpen(false);
                     }}
+                    className="text-gray-700 dark:text-gray-300 hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/10"
                   >
                     {opt}
                   </CommandItem>
@@ -121,6 +1063,7 @@ function ColumnFilter({
                     if (input) onFilter(column, input);
                     setOpen(false);
                   }}
+                  className="text-gray-700 dark:text-gray-300 hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/10"
                 >
                   Apply
                 </CommandItem>
@@ -163,45 +1106,45 @@ function DateRangeFilter({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button
-          className={`ml-1 p-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors ${
+          className={`ml-1 p-1 rounded-md hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/20 transition-colors ${
             currentRange?.from || currentRange?.to
-              ? "text-purple-600 dark:text-purple-400"
+              ? "text-[#2BB2A7] dark:text-[#2BB2A7]"
               : "text-slate-400"
           }`}
         >
           <Filter className="h-3.5 w-3.5" />
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-64 p-4" align="start">
+      <PopoverContent className="w-64 p-4 border-[#E2EFEA] dark:border-slate-700 bg-white dark:bg-slate-800" align="start">
         <div className="space-y-4">
-          <h4 className="font-medium text-sm">Date Range</h4>
+          <h4 className="font-medium text-sm text-gray-900 dark:text-white">Date Range</h4>
           <div className="space-y-2">
             <div className="space-y-1">
-              <Label htmlFor="from">From</Label>
+              <Label htmlFor="from" className="text-gray-700 dark:text-gray-300">From</Label>
               <Input
                 id="from"
                 type="date"
                 value={from}
                 onChange={(e) => setFrom(e.target.value)}
-                className="h-8"
+                className="h-8 border-[#E2EFEA] dark:border-slate-600 focus:ring-[#2BB2A7] focus:border-[#2BB2A7]"
               />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="to">To</Label>
+              <Label htmlFor="to" className="text-gray-700 dark:text-gray-300">To</Label>
               <Input
                 id="to"
                 type="date"
                 value={to}
                 onChange={(e) => setTo(e.target.value)}
-                className="h-8"
+                className="h-8 border-[#E2EFEA] dark:border-slate-600 focus:ring-[#2BB2A7] focus:border-[#2BB2A7]"
               />
             </div>
           </div>
           <div className="flex justify-between gap-2">
-            <Button variant="outline" size="sm" onClick={handleClear} className="flex-1">
+            <Button variant="outline" size="sm" onClick={handleClear} className="flex-1 border-[#E2EFEA] dark:border-slate-600 hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/10">
               Clear
             </Button>
-            <Button size="sm" onClick={handleApply} className="flex-1 bg-[#3B1E6F] hover:bg-[#7A329F]">
+            <Button size="sm" onClick={handleApply} className="flex-1 bg-[#2BB2A7] hover:bg-[#1F8F89] text-white">
               Apply
             </Button>
           </div>
@@ -217,9 +1160,9 @@ const StatusBadge = ({ status }: { status: string }) => {
     switch (status) {
       case "active":
         return {
-          bg: "bg-emerald-100 dark:bg-emerald-900/20",
-          text: "text-emerald-800 dark:text-emerald-300",
-          dot: "bg-emerald-500",
+          bg: "bg-[#EAF7F4] dark:bg-[#1F8F89]/20",
+          text: "text-[#1F8F89] dark:text-[#2BB2A7]",
+          dot: "bg-[#2BB2A7]",
         };
       case "on-leave":
         return {
@@ -298,7 +1241,7 @@ const StatusUpdateDropdown = ({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button
-          className="p-1 md:p-1.5 text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+          className="p-1 md:p-1.5 text-slate-600 dark:text-slate-400 hover:text-[#2BB2A7] dark:hover:text-[#2BB2A7] hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/20 rounded-lg transition-colors"
           title="Update Status"
           onClick={(e) => e.stopPropagation()}
           disabled={updating}
@@ -310,9 +1253,9 @@ const StatusUpdateDropdown = ({
           )}
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-48 p-2" align="end">
+      <PopoverContent className="w-48 p-2 border-[#E2EFEA] dark:border-slate-700 bg-white dark:bg-slate-800" align="end">
         <div className="space-y-1">
-          <p className="text-xs font-medium text-slate-500 dark:text-slate-400 px-2 pb-2 border-b">
+          <p className="text-xs font-medium text-slate-500 dark:text-slate-400 px-2 pb-2 border-b border-[#E2EFEA] dark:border-slate-700">
             Change Status
           </p>
           {statusOptions.map((option) => (
@@ -321,11 +1264,11 @@ const StatusUpdateDropdown = ({
               className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
                 doctor.status === option.value
                   ? option.value === 'active'
-                    ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 font-medium'
+                    ? 'bg-[#EAF7F4] dark:bg-[#1F8F89]/20 text-[#1F8F89] dark:text-[#2BB2A7] font-medium'
                     : option.value === 'on-leave'
                     ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 font-medium'
                     : 'bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 font-medium'
-                  : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
+                  : 'hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/10 text-slate-700 dark:text-slate-300'
               }`}
               onClick={(e) => {
                 e.stopPropagation();
@@ -334,12 +1277,12 @@ const StatusUpdateDropdown = ({
             >
               <div className="flex items-center gap-2">
                 <div className={`w-2 h-2 rounded-full ${
-                  option.value === 'active' ? 'bg-emerald-500' : 
+                  option.value === 'active' ? 'bg-[#2BB2A7]' : 
                   option.value === 'on-leave' ? 'bg-amber-500' : 'bg-slate-500'
                 }`}></div>
                 {option.label}
                 {doctor.status === option.value && (
-                  <span className="ml-auto text-xs text-emerald-500">✓</span>
+                  <span className="ml-auto text-xs text-[#2BB2A7]">✓</span>
                 )}
               </div>
             </button>
@@ -527,7 +1470,7 @@ const HealthAdminPage: React.FC = () => {
       <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
         <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
         <div className="flex-1 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-[#3B1E6F]" />
+          <Loader2 className="h-8 w-8 animate-spin text-[#2BB2A7]" />
         </div>
       </div>
     );
@@ -548,7 +1491,7 @@ const HealthAdminPage: React.FC = () => {
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900 font-sans text-gray-900 dark:text-gray-100">
       {/* Mobile Menu Button */}
       <button
-        className="lg:hidden fixed bottom-20 right-6 z-50 p-3 bg-gradient-to-r from-[#3B1E6F] to-[#7A329F] hover:from-[#7A329F] hover:to-[#0D5CB3] text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
+        className="lg:hidden fixed bottom-20 right-6 z-50 p-3 bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] hover:opacity-90 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
         aria-label="Toggle menu"
       >
@@ -586,7 +1529,7 @@ const HealthAdminPage: React.FC = () => {
                     <DoctorImport onSuccess={handleImportSuccess} />
                     <button
                       onClick={() => router.push("/admin/addnewdoctor")}
-                      className="flex items-center justify-center gap-1.5 rounded-lg h-9 md:h-10 px-3 md:px-4 bg-gradient-to-r from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] text-white text-sm font-semibold shadow-lg shadow-[#3B1E6F]/20 hover:opacity-90 transition-all w-full md:w-auto"
+                      className="flex items-center justify-center gap-1.5 rounded-lg h-9 md:h-10 px-3 md:px-4 bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] text-white text-sm font-semibold shadow-lg shadow-[#2BB2A7]/20 hover:opacity-90 transition-all w-full md:w-auto"
                     >
                       <Plus className="w-4 h-4" />
                       <span>Add New Doctor</span>
@@ -600,8 +1543,8 @@ const HealthAdminPage: React.FC = () => {
                     const Icon = stat.icon;
                     const getStatColor = (color: string) => {
                       switch (color) {
-                        case "purple":
-                          return "bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400";
+                        case "teal":
+                          return "bg-[#EAF7F4] dark:bg-[#1F8F89]/20 text-[#2BB2A7] dark:text-[#2BB2A7]";
                         case "emerald":
                           return "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400";
                         case "amber":
@@ -615,7 +1558,7 @@ const HealthAdminPage: React.FC = () => {
                     return (
                       <div
                         key={index}
-                        className="flex flex-col justify-between rounded-xl p-4 md:p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all duration-200"
+                        className="flex flex-col justify-between rounded-xl p-4 md:p-5 bg-white dark:bg-slate-900 border border-[#E2EFEA] dark:border-slate-800 shadow-sm hover:shadow-md transition-all duration-200"
                       >
                         <div className="flex justify-between items-start mb-3">
                           <div>
@@ -651,7 +1594,7 @@ const HealthAdminPage: React.FC = () => {
                             setColumnFilters([]);
                             setDateFilters({});
                           }}
-                          className="text-xs text-[#7A329F] hover:underline"
+                          className="text-xs text-[#2BB2A7] hover:text-[#1F8F89] font-medium"
                         >
                           Clear all filters
                         </button>
@@ -665,7 +1608,7 @@ const HealthAdminPage: React.FC = () => {
                         placeholder="Search by name, email, specialty, or department..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
+                        className="w-full pl-10 pr-4 py-2 rounded-lg border border-[#E2EFEA] dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent text-gray-900 dark:text-white"
                       />
                       <svg
                         className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400"
@@ -691,14 +1634,14 @@ const HealthAdminPage: React.FC = () => {
                             group relative flex items-center justify-center gap-x-1.5 h-8 md:h-9 rounded-full px-3 md:px-4 text-xs md:text-sm font-medium transition-all duration-300 backdrop-blur-sm whitespace-nowrap
                             ${
                               filter.isActive
-                                ? "bg-gradient-to-r from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] text-white shadow-lg shadow-[#3B1E6F]/25"
+                                ? "bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] text-white shadow-lg shadow-[#2BB2A7]/25"
                                 : "bg-white/80 dark:bg-slate-800/50 border border-slate-300/50 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 hover:shadow-md hover:border-slate-400/30 dark:hover:border-slate-600"
                             }
                           `}
                           onClick={() => setSelectedSpecialty(filter.label)}
                         >
                           {filter.isActive && (
-                            <div className="absolute inset-0 rounded-full border-2 border-[#7A329F]/30 animate-pulse"></div>
+                            <div className="absolute inset-0 rounded-full border-2 border-[#2BB2A7]/30 animate-pulse"></div>
                           )}
                           <span>{filter.label}</span>
                         </button>
@@ -707,13 +1650,13 @@ const HealthAdminPage: React.FC = () => {
                   </div>
 
                   {/* Doctors Table */}
-                  <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+                  <div className="bg-white dark:bg-slate-900 rounded-lg border border-[#E2EFEA] dark:border-slate-800 overflow-hidden shadow-sm">
                     <div className="overflow-x-auto">
                       <div className="min-w-[900px]">
                         <table className="w-full text-left border-collapse">
                           <thead>
-                            <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-300 dark:border-slate-700">
-                              <th className="px-3 md:px-4 py-3 text-slate-900 dark:text-white text-xs md:text-sm font-bold uppercase tracking-wider whitespace-nowrap border-r border-slate-300 dark:border-slate-700">
+                            <tr className="bg-[#F4F9F7] dark:bg-slate-800/50 border-b border-[#E2EFEA] dark:border-slate-700">
+                              <th className="px-3 md:px-4 py-3 text-[#1F8F89] dark:text-[#2BB2A7] text-xs md:text-sm font-bold uppercase tracking-wider whitespace-nowrap border-r border-[#E2EFEA] dark:border-slate-700">
                                 <div className="flex items-center">
                                   Doctor Name
                                   <ColumnFilter
@@ -729,7 +1672,7 @@ const HealthAdminPage: React.FC = () => {
                                   />
                                 </div>
                               </th>
-                              <th className="px-3 md:px-4 py-3 text-slate-900 dark:text-white text-xs md:text-sm font-bold uppercase tracking-wider whitespace-nowrap border-r border-slate-300 dark:border-slate-700">
+                              <th className="px-3 md:px-4 py-3 text-[#1F8F89] dark:text-[#2BB2A7] text-xs md:text-sm font-bold uppercase tracking-wider whitespace-nowrap border-r border-[#E2EFEA] dark:border-slate-700">
                                 <div className="flex items-center">
                                   Specialty
                                   <ColumnFilter
@@ -745,7 +1688,7 @@ const HealthAdminPage: React.FC = () => {
                                   />
                                 </div>
                               </th>
-                              <th className="px-3 md:px-4 py-3 text-slate-900 dark:text-white text-xs md:text-sm font-bold uppercase tracking-wider whitespace-nowrap border-r border-slate-300 dark:border-slate-700">
+                              <th className="px-3 md:px-4 py-3 text-[#1F8F89] dark:text-[#2BB2A7] text-xs md:text-sm font-bold uppercase tracking-wider whitespace-nowrap border-r border-[#E2EFEA] dark:border-slate-700">
                                 <div className="flex items-center">
                                   Department
                                   <ColumnFilter
@@ -761,7 +1704,7 @@ const HealthAdminPage: React.FC = () => {
                                   />
                                 </div>
                               </th>
-                              <th className="px-3 md:px-4 py-3 text-slate-900 dark:text-white text-xs md:text-sm font-bold uppercase tracking-wider whitespace-nowrap border-r border-slate-300 dark:border-slate-700">
+                              <th className="px-3 md:px-4 py-3 text-[#1F8F89] dark:text-[#2BB2A7] text-xs md:text-sm font-bold uppercase tracking-wider whitespace-nowrap border-r border-[#E2EFEA] dark:border-slate-700">
                                 <div className="flex items-center">
                                   Contact
                                   <ColumnFilter
@@ -777,7 +1720,7 @@ const HealthAdminPage: React.FC = () => {
                                   />
                                 </div>
                               </th>
-                              <th className="px-3 md:px-4 py-3 text-slate-900 dark:text-white text-xs md:text-sm font-bold uppercase tracking-wider whitespace-nowrap border-r border-slate-300 dark:border-slate-700">
+                              <th className="px-3 md:px-4 py-3 text-[#1F8F89] dark:text-[#2BB2A7] text-xs md:text-sm font-bold uppercase tracking-wider whitespace-nowrap border-r border-[#E2EFEA] dark:border-slate-700">
                                 <div className="flex items-center">
                                   Date Joined
                                   <DateRangeFilter
@@ -789,7 +1732,7 @@ const HealthAdminPage: React.FC = () => {
                                   />
                                 </div>
                               </th>
-                              <th className="px-3 md:px-4 py-3 text-slate-900 dark:text-white text-xs md:text-sm font-bold uppercase tracking-wider whitespace-nowrap border-r border-slate-300 dark:border-slate-700">
+                              <th className="px-3 md:px-4 py-3 text-[#1F8F89] dark:text-[#2BB2A7] text-xs md:text-sm font-bold uppercase tracking-wider whitespace-nowrap border-r border-[#E2EFEA] dark:border-slate-700">
                                 <div className="flex items-center">
                                   Status
                                   <ColumnFilter
@@ -805,7 +1748,7 @@ const HealthAdminPage: React.FC = () => {
                                   />
                                 </div>
                               </th>
-                              <th className="px-3 md:px-4 py-3 text-slate-900 dark:text-white text-xs md:text-sm font-bold uppercase tracking-wider text-right whitespace-nowrap">
+                              <th className="px-3 md:px-4 py-3 text-[#1F8F89] dark:text-[#2BB2A7] text-xs md:text-sm font-bold uppercase tracking-wider text-right whitespace-nowrap">
                                 Actions
                               </th>
                             </tr>
@@ -814,13 +1757,13 @@ const HealthAdminPage: React.FC = () => {
                             {filteredDoctors.map((doctor) => (
                               <tr
                                 key={doctor.id}
-                                className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors cursor-pointer"
+                                className="border-b border-[#E2EFEA] dark:border-slate-700 hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/10 transition-colors cursor-pointer"
                                 onClick={() => router.push(`/admin/doctorsmanagement/${doctor.id}`)}
                               >
-                                <td className="px-3 md:px-4 py-3 whitespace-nowrap border-r border-slate-200 dark:border-slate-700">
+                                <td className="px-3 md:px-4 py-3 whitespace-nowrap border-r border-[#E2EFEA] dark:border-slate-700">
                                   <div className="flex items-center gap-2 md:gap-3">
                                     <div
-                                      className="h-8 w-8 md:h-10 md:w-10 rounded-full bg-gradient-to-br from-[#3B1E6F] to-[#7A329F] bg-cover bg-center ring-2 ring-slate-100 dark:ring-slate-800 flex-shrink-0 flex items-center justify-center text-white font-semibold text-sm"
+                                      className="h-8 w-8 md:h-10 md:w-10 rounded-full bg-gradient-to-br from-[#2BB2A7] to-[#86C94C] bg-cover bg-center ring-2 ring-slate-100 dark:ring-slate-800 flex-shrink-0 flex items-center justify-center text-white font-semibold text-sm"
                                       style={{
                                         backgroundImage: doctor.avatar
                                           ? `url(${doctor.avatar})`
@@ -839,23 +1782,23 @@ const HealthAdminPage: React.FC = () => {
                                     </div>
                                   </div>
                                 </td>
-                                <td className="px-3 md:px-4 py-3 whitespace-nowrap border-r border-slate-200 dark:border-slate-700">
-                                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs md:text-sm font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
+                                <td className="px-3 md:px-4 py-3 whitespace-nowrap border-r border-[#E2EFEA] dark:border-slate-700">
+                                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs md:text-sm font-medium bg-[#EAF7F4] text-[#1F8F89] dark:bg-[#1F8F89]/20 dark:text-[#2BB2A7]">
                                     {doctor.specialty}
                                   </span>
                                 </td>
-                                <td className="px-3 md:px-4 py-3 text-slate-600 dark:text-slate-400 text-xs md:text-sm whitespace-nowrap border-r border-slate-200 dark:border-slate-700">
+                                <td className="px-3 md:px-4 py-3 text-slate-600 dark:text-slate-400 text-xs md:text-sm whitespace-nowrap border-r border-[#E2EFEA] dark:border-slate-700">
                                   {doctor.department}
                                 </td>
-                                <td className="px-3 md:px-4 py-3 text-slate-600 dark:text-slate-400 text-xs md:text-sm font-medium font-mono whitespace-nowrap border-r border-slate-200 dark:border-slate-700">
+                                <td className="px-3 md:px-4 py-3 text-slate-600 dark:text-slate-400 text-xs md:text-sm font-medium font-mono whitespace-nowrap border-r border-[#E2EFEA] dark:border-slate-700">
                                   <div className="truncate max-w-[120px] md:max-w-none">
                                     {doctor.phone}
                                   </div>
                                 </td>
-                                <td className="px-3 md:px-4 py-3 text-slate-600 dark:text-slate-400 text-xs md:text-sm whitespace-nowrap border-r border-slate-200 dark:border-slate-700">
+                                <td className="px-3 md:px-4 py-3 text-slate-600 dark:text-slate-400 text-xs md:text-sm whitespace-nowrap border-r border-[#E2EFEA] dark:border-slate-700">
                                   {doctor.dateJoined}
                                 </td>
-                                <td className="px-3 md:px-4 py-3 whitespace-nowrap border-r border-slate-200 dark:border-slate-700">
+                                <td className="px-3 md:px-4 py-3 whitespace-nowrap border-r border-[#E2EFEA] dark:border-slate-700">
                                   <StatusBadge status={doctor.status} />
                                 </td>
                                 <td className="px-3 md:px-4 py-3 text-right whitespace-nowrap">
@@ -866,7 +1809,7 @@ const HealthAdminPage: React.FC = () => {
                                       onStatusUpdate={handleStatusUpdate}
                                     />
                                     <button
-                                      className="p-1 md:p-1.5 text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                                      className="p-1 md:p-1.5 text-slate-600 dark:text-slate-400 hover:text-[#2BB2A7] dark:hover:text-[#2BB2A7] hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/20 rounded-lg transition-colors"
                                       title="View"
                                       onClick={(e) => {
                                         e.stopPropagation();
@@ -876,7 +1819,7 @@ const HealthAdminPage: React.FC = () => {
                                       <Eye className="w-3 h-3 md:w-4 md:h-4" />
                                     </button>
                                     <button
-                                      className="p-1 md:p-1.5 text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                                      className="p-1 md:p-1.5 text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/20 rounded-lg transition-colors"
                                       title="Edit"
                                       onClick={(e) => {
                                         e.stopPropagation();
@@ -886,7 +1829,7 @@ const HealthAdminPage: React.FC = () => {
                                       <Edit className="w-3 h-3 md:w-4 md:h-4" />
                                     </button>
                                     <button
-                                      className="p-1 md:p-1.5 text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                                      className="p-1 md:p-1.5 text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/20 rounded-lg transition-colors"
                                       title="Delete"
                                       onClick={(e) => {
                                         e.stopPropagation();
@@ -905,21 +1848,21 @@ const HealthAdminPage: React.FC = () => {
                     </div>
 
                     {/* Pagination */}
-                    <div className="px-3 md:px-4 py-3 border-t border-slate-300 dark:border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <div className="px-3 md:px-4 py-3 border-t border-[#E2EFEA] dark:border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-3">
                       <span className="text-xs md:text-sm text-slate-500 font-medium">
                         Showing {filteredDoctors.length} of {doctors.length} entries
                       </span>
                       <div className="flex gap-1 md:gap-2">
-                        <button className="px-2 md:px-3 py-1.5 rounded border border-slate-300 dark:border-slate-700 text-xs md:text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors whitespace-nowrap">
+                        <button className="px-2 md:px-3 py-1.5 rounded border border-[#E2EFEA] dark:border-slate-700 text-xs md:text-sm font-semibold hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/10 transition-colors whitespace-nowrap text-gray-700 dark:text-gray-300">
                           Previous
                         </button>
-                        <button className="px-2 md:px-3 py-1.5 rounded bg-gradient-to-r from-[#3B1E6F] to-[#7A329F] text-white text-xs md:text-sm font-semibold">
+                        <button className="px-2 md:px-3 py-1.5 rounded bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] text-white text-xs md:text-sm font-semibold">
                           1
                         </button>
-                        <button className="px-2 md:px-3 py-1.5 rounded border border-slate-300 dark:border-slate-700 text-xs md:text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                        <button className="px-2 md:px-3 py-1.5 rounded border border-[#E2EFEA] dark:border-slate-700 text-xs md:text-sm font-semibold hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/10 transition-colors text-gray-700 dark:text-gray-300">
                           2
                         </button>
-                        <button className="px-2 md:px-3 py-1.5 rounded border border-slate-300 dark:border-slate-700 text-xs md:text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors whitespace-nowrap">
+                        <button className="px-2 md:px-3 py-1.5 rounded border border-[#E2EFEA] dark:border-slate-700 text-xs md:text-sm font-semibold hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/10 transition-colors whitespace-nowrap text-gray-700 dark:text-gray-300">
                           Next
                         </button>
                       </div>

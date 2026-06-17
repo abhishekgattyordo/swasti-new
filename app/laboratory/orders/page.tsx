@@ -854,7 +854,6 @@
 // }
 
 
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -1249,8 +1248,8 @@ export default function LabOrdersPage() {
         icon: <FlaskRound className="w-3.5 h-3.5 inline mr-1" />
       },
       Completed: { 
-        bg: "bg-emerald-50 dark:bg-emerald-900/20", 
-        text: "text-emerald-700 dark:text-emerald-300", 
+        bg: "bg-[#EAF7F4] dark:bg-[#1F8F89]/20", 
+        text: "text-[#1F8F89] dark:text-[#2BB2A7]", 
         icon: <CheckCircle className="w-3.5 h-3.5 inline mr-1" />
       },
       Cancelled: { 
@@ -1280,7 +1279,7 @@ export default function LabOrdersPage() {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-[#3B1E6F] border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <div className="w-12 h-12 border-4 border-[#2BB2A7] border-t-transparent rounded-full animate-spin mx-auto"></div>
           <p className="mt-4 text-gray-600 dark:text-gray-400">Loading...</p>
         </div>
       </div>
@@ -1290,7 +1289,7 @@ export default function LabOrdersPage() {
   if (!isLabOrdersEnabled) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="text-center bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg">
+        <div className="text-center bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-[#E2EFEA] dark:border-gray-700">
           <div className="text-red-500 text-6xl mb-4">🔒</div>
           <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">Access Denied</h1>
           <p className="text-gray-600 dark:text-gray-400">
@@ -1298,7 +1297,7 @@ export default function LabOrdersPage() {
           </p>
           <button
             onClick={() => router.push("/dashboard")}
-            className="mt-4 px-4 py-2 bg-gradient-to-r from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] text-white rounded-lg hover:opacity-90 transition-opacity"
+            className="mt-4 px-4 py-2 bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] text-white rounded-lg hover:opacity-90 transition-opacity"
           >
             Go to Dashboard
           </button>
@@ -1311,7 +1310,7 @@ export default function LabOrdersPage() {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-[#3B1E6F] border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <div className="w-12 h-12 border-4 border-[#2BB2A7] border-t-transparent rounded-full animate-spin mx-auto"></div>
           <p className="mt-4 text-gray-600 dark:text-gray-400">Loading orders...</p>
         </div>
       </div>
@@ -1321,17 +1320,17 @@ export default function LabOrdersPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 sticky top-0 z-10">
+      <div className="bg-white dark:bg-gray-800 border-b border-[#E2EFEA] dark:border-gray-700 px-6 py-4 sticky top-0 z-10">
         <div className="flex flex-wrap justify-between items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-[#3B1E6F] dark:text-white">Lab Orders</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Lab Orders</h1>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
               Create and manage laboratory orders
             </p>
           </div>
           <button
             onClick={() => setShowOrderModal(true)}
-            className="px-4 py-2 bg-gradient-to-r from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] text-white rounded-lg hover:opacity-90 transition-opacity shadow-sm flex items-center gap-2"
+            className="px-4 py-2 bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] text-white rounded-lg hover:opacity-90 transition-opacity shadow-sm flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
             New Order
@@ -1343,7 +1342,7 @@ export default function LabOrdersPage() {
             onClick={() => setActiveTab("pending")}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
               activeTab === "pending"
-                ? "bg-[#3B1E6F] text-white"
+                ? "bg-[#2BB2A7] text-white"
                 : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
             }`}
           >
@@ -1354,7 +1353,7 @@ export default function LabOrdersPage() {
             onClick={() => setActiveTab("all")}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
               activeTab === "all"
-                ? "bg-[#3B1E6F] text-white"
+                ? "bg-[#2BB2A7] text-white"
                 : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
             }`}
           >
@@ -1368,7 +1367,7 @@ export default function LabOrdersPage() {
       <div className="p-6">
         <div className="space-y-4">
           {filteredOrders.length === 0 ? (
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-12 text-center">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-[#E2EFEA] dark:border-gray-700 p-12 text-center">
               <Microscope className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
               <p className="text-gray-500 dark:text-gray-400">No orders found</p>
               <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
@@ -1381,7 +1380,7 @@ export default function LabOrdersPage() {
               return (
                 <div
                   key={order.id}
-                  className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 hover:shadow-md transition-shadow"
+                  className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-[#E2EFEA] dark:border-gray-700 p-6 hover:shadow-md transition-shadow"
                 >
                   <div className="flex flex-wrap justify-between items-start gap-4">
                     <div className="flex-1 min-w-0">
@@ -1423,7 +1422,7 @@ export default function LabOrdersPage() {
                       )}
                     </div>
                     <div className="text-right min-w-[120px]">
-                      <p className="text-2xl font-bold text-[#3B1E6F] dark:text-[#7A329F]">
+                      <p className="text-2xl font-bold text-[#2BB2A7]">
                         ₹{order.total_amount}
                       </p>
                       {order.status !== "Completed" && order.status !== "Cancelled" && (
@@ -1446,7 +1445,7 @@ export default function LabOrdersPage() {
       {/* New Order Modal */}
       {showOrderModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-[#E2EFEA] dark:border-gray-700">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
@@ -1488,13 +1487,13 @@ export default function LabOrdersPage() {
                         setShowPatientDropdown(false);
                         setAdmissionInfo(null);
                       }}
-                      className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#7A329F] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      className="flex-1 px-3 py-2 border border-[#E2EFEA] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       maxLength={10}
                     />
                     <button
                       onClick={searchPatientByPhone}
                       disabled={isSearching || phoneSearch.length < 10}
-                      className="px-4 py-2 bg-[#3B1E6F] text-white rounded-lg hover:bg-[#7A329F] transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                      className="px-4 py-2 bg-[#2BB2A7] text-white rounded-lg hover:bg-[#1F8F89] transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
                     >
                       {isSearching ? "Searching..." : "Search"}
                     </button>
@@ -1504,12 +1503,12 @@ export default function LabOrdersPage() {
                   )}
                   
                   {showPatientDropdown && patientList.length > 0 && (
-                    <div className="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    <div className="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 border border-[#E2EFEA] dark:border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                       {patientList.map((patient) => (
                         <button
                           key={patient.id}
                           onClick={() => selectPatient(patient)}
-                          className="w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 last:border-b-0 transition-colors"
+                          className="w-full text-left px-4 py-3 hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/10 border-b border-[#E2EFEA] dark:border-gray-700 last:border-b-0 transition-colors"
                         >
                           <div className="font-medium text-gray-900 dark:text-white">{patient.name}</div>
                           <div className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
@@ -1527,8 +1526,8 @@ export default function LabOrdersPage() {
                 </div>
 
                 {selectedPatient && (
-                  <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
-                    <p className="text-sm font-medium text-green-900 dark:text-green-400 mb-2 flex items-center gap-2">
+                  <div className="bg-[#EAF7F4] dark:bg-[#1F8F89]/20 border border-[#2BB2A7]/30 dark:border-[#2BB2A7]/20 rounded-lg p-4">
+                    <p className="text-sm font-medium text-[#1F8F89] dark:text-[#2BB2A7] mb-2 flex items-center gap-2">
                       <CheckCircle className="w-4 h-4" />
                       Patient Selected
                     </p>
@@ -1582,7 +1581,7 @@ export default function LabOrdersPage() {
                           onChange={(e) =>
                             setSelectedVisitType(e.target.value as "OP")
                           }
-                          className="mr-2"
+                          className="mr-2 accent-[#2BB2A7]"
                           disabled={admissionInfo?.isAdmitted}
                         />
                         OP Visit
@@ -1595,11 +1594,11 @@ export default function LabOrdersPage() {
                           onChange={(e) =>
                             setSelectedVisitType(e.target.value as "IP")
                           }
-                          className="mr-2"
+                          className="mr-2 accent-[#2BB2A7]"
                         />
                         IP Admission
                         {admissionInfo?.isAdmitted && (
-                          <span className="ml-2 text-xs text-green-600 dark:text-green-400">(Auto-selected)</span>
+                          <span className="ml-2 text-xs text-[#2BB2A7]">(Auto-selected)</span>
                         )}
                       </label>
                     </div>
@@ -1623,10 +1622,10 @@ export default function LabOrdersPage() {
                         placeholder="Search tests..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#7A329F] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white mb-3"
+                        className="w-full pl-9 pr-3 py-2 border border-[#E2EFEA] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white mb-3"
                       />
                     </div>
-                    <div className="space-y-2 max-h-64 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+                    <div className="space-y-2 max-h-64 overflow-y-auto border border-[#E2EFEA] dark:border-gray-700 rounded-lg p-3">
                       {availableTests
                         .filter((t) =>
                           t.test_name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -1634,7 +1633,7 @@ export default function LabOrdersPage() {
                         .map((test) => (
                           <label
                             key={test.id}
-                            className="flex items-center justify-between p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg cursor-pointer"
+                            className="flex items-center justify-between p-2 hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/10 rounded-lg cursor-pointer"
                           >
                             <div className="flex items-center flex-1">
                               <input
@@ -1649,7 +1648,7 @@ export default function LabOrdersPage() {
                                     );
                                   }
                                 }}
-                                className="mr-3 text-[#7A329F] focus:ring-[#7A329F]"
+                                className="mr-3 accent-[#2BB2A7]"
                               />
                               <div>
                                 <p className="text-sm font-medium text-gray-900 dark:text-white">
@@ -1675,7 +1674,7 @@ export default function LabOrdersPage() {
                 )}
 
                 {selectedTests.length > 0 && (
-                  <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                  <div className="border-t border-[#E2EFEA] dark:border-gray-700 pt-4">
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                         Selected Tests:
@@ -1692,11 +1691,11 @@ export default function LabOrdersPage() {
                         </div>
                       ))}
                     </div>
-                    <div className="flex justify-between items-center pt-2 border-t border-gray-200 dark:border-gray-700">
+                    <div className="flex justify-between items-center pt-2 border-t border-[#E2EFEA] dark:border-gray-700">
                       <span className="font-semibold text-gray-900 dark:text-white">
                         Total Amount
                       </span>
-                      <span className="text-xl font-bold text-[#3B1E6F] dark:text-[#7A329F]">
+                      <span className="text-xl font-bold text-[#2BB2A7]">
                         ₹{totalAmount}
                       </span>
                     </div>
@@ -1716,14 +1715,14 @@ export default function LabOrdersPage() {
                     setSelectedVisitType("OP");
                     setAdmissionInfo(null);
                   }}
-                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300"
+                  className="px-4 py-2 border border-[#E2EFEA] dark:border-gray-600 rounded-lg hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/10 transition-colors text-gray-700 dark:text-gray-300"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleOrderTest}
                   disabled={!selectedPatient || selectedTests.length === 0}
-                  className="px-4 py-2 bg-gradient-to-r from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Create Order & Add to Billing
                 </button>

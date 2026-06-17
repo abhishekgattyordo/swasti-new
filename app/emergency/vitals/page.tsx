@@ -371,7 +371,6 @@
 // }
 
 
-
 // app/emergency/vitals/page.tsx
 
 'use client';
@@ -440,12 +439,12 @@ function getTrendIcon(trend: string) {
 
 function VitalSign({ label, value, unit, trend, critical }: any) {
   return (
-    <div className="text-center p-2 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+    <div className="text-center p-2 rounded-lg bg-[#F4F9F7] dark:bg-gray-800/50">
       <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
         <span className="text-xs font-medium">{label}</span>
         {trend && getTrendIcon(trend)}
       </div>
-      <div className={cn("text-lg font-bold", critical && "text-red-600 dark:text-red-400")}>
+      <div className={cn("text-lg font-bold text-gray-900 dark:text-white", critical && "text-red-600 dark:text-red-400")}>
         {value !== null && value !== undefined ? `${value} ${unit}` : '—'} 
       </div>
     </div>
@@ -496,7 +495,7 @@ export default function VitalsMonitorPage() {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3B1E6F] mx-auto" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2BB2A7] mx-auto" />
           <p className="mt-2 text-sm text-muted-foreground">Loading vitals...</p>
         </div>
       </div>
@@ -508,7 +507,7 @@ export default function VitalsMonitorPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-[#3B1E6F] dark:text-white">Vitals Monitor</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Vitals Monitor</h1>
           <p className="text-sm text-muted-foreground">Real-time patient vital signs monitoring</p>
         </div>
         <div className="flex items-center gap-2">
@@ -520,7 +519,7 @@ export default function VitalsMonitorPage() {
             variant="outline" 
             size="sm" 
             onClick={handleRefresh}
-            className="border-[#3B1E6F] text-[#3B1E6F] hover:bg-[#3B1E6F] hover:text-white dark:border-[#7A329F] dark:text-[#7A329F] dark:hover:bg-[#7A329F] dark:hover:text-white"
+            className="border-[#2BB2A7] text-[#2BB2A7] hover:bg-[#2BB2A7] hover:text-white dark:border-[#2BB2A7] dark:text-[#2BB2A7] dark:hover:bg-[#2BB2A7] dark:hover:text-white"
           >
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
@@ -530,16 +529,16 @@ export default function VitalsMonitorPage() {
 
       {/* Stats Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="p-4 border-l-4 border-l-[#3B1E6F]">
+        <Card className="p-4 border-l-4 border-l-[#2BB2A7] border-[#E2EFEA] dark:border-slate-700">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Total Patients</p>
-              <p className="text-2xl font-bold text-[#3B1E6F] dark:text-white">{stats.total}</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
             </div>
-            <Activity className="h-8 w-8 text-[#3B1E6F] opacity-50" />
+            <Activity className="h-8 w-8 text-[#2BB2A7] opacity-50" />
           </div>
         </Card>
-        <Card className="p-4 border-l-4 border-l-red-500">
+        <Card className="p-4 border-l-4 border-l-red-500 border-[#E2EFEA] dark:border-slate-700">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Critical (Red)</p>
@@ -548,7 +547,7 @@ export default function VitalsMonitorPage() {
             <AlertTriangle className="h-8 w-8 text-red-500 opacity-50" />
           </div>
         </Card>
-        <Card className="p-4 border-l-4 border-l-yellow-500">
+        <Card className="p-4 border-l-4 border-l-yellow-500 border-[#E2EFEA] dark:border-slate-700">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Observation (Yellow)</p>
@@ -557,7 +556,7 @@ export default function VitalsMonitorPage() {
             <Activity className="h-8 w-8 text-yellow-500 opacity-50" />
           </div>
         </Card>
-        <Card className="p-4 border-l-4 border-l-green-500">
+        <Card className="p-4 border-l-4 border-l-green-500 border-[#E2EFEA] dark:border-slate-700">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Stable (Green)</p>
@@ -569,14 +568,14 @@ export default function VitalsMonitorPage() {
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex gap-2 border-b pb-2 flex-wrap">
+      <div className="flex gap-2 border-b border-[#E2EFEA] dark:border-slate-700 pb-2 flex-wrap">
         <button
           onClick={() => setSelectedTriage('all')}
           className={cn(
             "px-3 py-1 text-sm rounded-md transition-colors",
             selectedTriage === 'all' 
-              ? "bg-[#3B1E6F] text-white" 
-              : "hover:bg-purple-50 dark:hover:bg-purple-900/20 text-gray-600 dark:text-gray-300"
+              ? "bg-[#2BB2A7] text-white" 
+              : "hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/20 text-gray-600 dark:text-gray-300"
           )}
         >
           All Patients ({stats.total})
@@ -628,7 +627,7 @@ export default function VitalsMonitorPage() {
             <Card 
               key={patient.id} 
               className={cn(
-                "overflow-hidden hover:shadow-lg transition-all duration-200 dark:bg-gray-800",
+                "overflow-hidden hover:shadow-lg transition-all duration-200 border-[#E2EFEA] dark:border-slate-700",
                 patient.triage === 'Red' && "ring-1 ring-red-200 dark:ring-red-800"
               )}
             >
@@ -638,13 +637,13 @@ export default function VitalsMonitorPage() {
                 patient.triage === 'Red' && "bg-gradient-to-r from-red-600 to-red-700",
                 patient.triage === 'Yellow' && "bg-gradient-to-r from-yellow-600 to-yellow-700",
                 patient.triage === 'Green' && "bg-gradient-to-r from-green-600 to-green-700",
-                !patient.triage && "bg-gradient-to-r from-[#3B1E6F] to-[#7A329F]"
+                !patient.triage && "bg-gradient-to-r from-[#2BB2A7] to-[#86C94C]"
               )}>
                 <div className="flex items-start justify-between">
                   <div>
                     <div className="flex items-center gap-2">
                       <h3 className="font-semibold text-lg">{patient.patientName || "Unnamed Patient"}</h3>
-                      <Badge variant="secondary" className="bg-white/20 text-white">
+                      <Badge variant="secondary" className="bg-white/20 text-white border-0">
                         Bed {bedNo}
                       </Badge>
                     </div>
@@ -653,7 +652,7 @@ export default function VitalsMonitorPage() {
                     </p>
                   </div>
                   <Link href={`/emergency/assessments/${patient.id}`}>
-                    <Button size="sm" variant="secondary" className="bg-white/20 hover:bg-white/30 text-white">
+                    <Button size="sm" variant="secondary" className="bg-white/20 hover:bg-white/30 text-white border-0">
                       <Eye className="h-3 w-3 mr-1" />
                       View
                     </Button>
@@ -705,7 +704,7 @@ export default function VitalsMonitorPage() {
                   />
                 </div>
                 
-                <div className="flex items-center justify-between pt-3 border-t text-xs text-muted-foreground dark:border-gray-700">
+                <div className="flex items-center justify-between pt-3 border-t border-[#E2EFEA] dark:border-slate-700 text-xs text-muted-foreground">
                   <span>Last updated: {new Date(patient.updatedAt).toLocaleString()}</span>
                   <span className={cn(
                     "inline-flex items-center gap-1",

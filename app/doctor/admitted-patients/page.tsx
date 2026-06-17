@@ -90,20 +90,20 @@ export default function DoctorPatientsPage() {
       <div className="relative inline-block">
         <button
           onClick={(e) => { e.stopPropagation(); setOpenFilter(isOpen ? null : column); }}
-          className="ml-1 p-0.5 rounded hover:bg-purple-100 dark:hover:bg-purple-900/20 transition-colors"
+          className="ml-1 p-0.5 rounded hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/20 transition-colors"
         >
           <Filter size={10} className="text-gray-400" />
         </button>
         {isOpen && (
           <>
             <div className="fixed inset-0 z-40" onClick={() => setOpenFilter(null)} />
-            <div className="absolute left-0 top-6 mt-1 z-50 w-48 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-gray-200 dark:border-slate-700 p-2">
+            <div className="absolute left-0 top-6 mt-1 z-50 w-48 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-[#E2EFEA] dark:border-slate-700 p-2">
               <div className="max-h-48 overflow-y-auto">
                 {options.filter(Boolean).map((opt) => (
                   <button
                     key={opt}
                     onClick={() => { setSearchQuery(opt); setOpenFilter(null); }}
-                    className="w-full text-left px-3 py-1.5 text-xs hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded text-gray-700 dark:text-gray-300"
+                    className="w-full text-left px-3 py-1.5 text-xs hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/20 rounded text-gray-700 dark:text-gray-300"
                   >
                     {opt}
                   </button>
@@ -120,7 +120,7 @@ export default function DoctorPatientsPage() {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-slate-950 flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-[#3B1E6F] dark:text-[#7A329F] mx-auto" />
+          <Loader2 className="h-8 w-8 animate-spin text-[#2BB2A7] dark:text-[#2BB2A7] mx-auto" />
           <p className="mt-2 text-gray-500 dark:text-gray-400">Loading patients...</p>
         </div>
       </div>
@@ -130,20 +130,22 @@ export default function DoctorPatientsPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
       {/* Header */}
-      <header className="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 sticky top-0 z-40 shadow-sm">
+      <header className="border-b border-[#E2EFEA] dark:border-slate-800 bg-white dark:bg-slate-900 sticky top-0 z-40 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <div>
             <div className="flex items-center gap-2">
-              <Stethoscope size={24} className="text-[#3B1E6F] dark:text-[#7A329F]" />
-              <h1 className="text-2xl font-bold text-[#3B1E6F] dark:text-white">My Patients</h1>
+              <div className="w-9 h-9 rounded-xl bg-[#EAF7F4] dark:bg-[#1F8F89]/20 flex items-center justify-center">
+                <Stethoscope size={22} className="text-[#2BB2A7]" />
+              </div>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">My Patients</h1>
             </div>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 ml-11">
               Active: {stats.active_patients} • Discharged: {stats.discharged_patients} • Total: {stats.total_patients}
             </p>
           </div>
           <button 
             onClick={fetchPatients} 
-            className="p-2 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors"
+            className="p-2 hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/20 rounded-lg transition-colors"
           >
             <RefreshCw size={18} className="text-gray-500 dark:text-gray-400" />
           </button>
@@ -159,15 +161,15 @@ export default function DoctorPatientsPage() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 p-4 shadow-sm">
-            <p className="text-2xl font-bold text-[#3B1E6F] dark:text-white">{stats.total_patients}</p>
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-[#E2EFEA] dark:border-slate-800 p-4 shadow-sm hover:shadow-md transition-shadow">
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total_patients}</p>
             <p className="text-xs text-gray-500 dark:text-gray-400">Total Patients</p>
           </div>
-          <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 p-4 shadow-sm">
-            <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{stats.active_patients}</p>
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-[#E2EFEA] dark:border-slate-800 p-4 shadow-sm hover:shadow-md transition-shadow">
+            <p className="text-2xl font-bold text-[#2BB2A7] dark:text-[#2BB2A7]">{stats.active_patients}</p>
             <p className="text-xs text-gray-500 dark:text-gray-400">Active</p>
           </div>
-          <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 p-4 shadow-sm">
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-[#E2EFEA] dark:border-slate-800 p-4 shadow-sm hover:shadow-md transition-shadow">
             <p className="text-2xl font-bold text-gray-500 dark:text-gray-400">{stats.discharged_patients}</p>
             <p className="text-xs text-gray-500 dark:text-gray-400">Discharged</p>
           </div>
@@ -182,13 +184,13 @@ export default function DoctorPatientsPage() {
               placeholder="Search by name, ID, bed or diagnosis..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2.5 border border-[#E2EFEA] dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent placeholder:text-gray-400 dark:placeholder:text-gray-500"
             />
           </div>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
+            className="px-4 py-2.5 border border-[#E2EFEA] dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent"
           >
             <option value="all">All Status</option>
             <option value="active">Active</option>
@@ -197,38 +199,38 @@ export default function DoctorPatientsPage() {
         </div>
 
         {/* Patients Table */}
-        <div className="bg-white dark:bg-slate-900 rounded-xl border-2 border-slate-300 dark:border-slate-600 overflow-hidden shadow-md">
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-[#E2EFEA] dark:border-slate-700 overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
-                <tr className="bg-gradient-to-r from-purple-50 to-slate-50 dark:from-purple-900/20 dark:to-slate-800 border-b-2 border-slate-300 dark:border-slate-600">
-                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider border-r border-slate-200 dark:border-slate-700">
-                    <div className="flex items-center gap-1 text-[#3B1E6F] dark:text-white">Patient <FilterPopover column="patient" options={columnFilters.patient} /></div>
+                <tr className="bg-[#F4F9F7] dark:bg-slate-800/50 border-b border-[#E2EFEA] dark:border-slate-700">
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider border-r border-[#E2EFEA] dark:border-slate-700">
+                    <div className="flex items-center gap-1 text-[#1F8F89] dark:text-[#2BB2A7]">Patient <FilterPopover column="patient" options={columnFilters.patient} /></div>
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider border-r border-slate-200 dark:border-slate-700 text-[#3B1E6F] dark:text-white">Age/Gender</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider border-r border-slate-200 dark:border-slate-700">
-                    <div className="flex items-center gap-1 text-[#3B1E6F] dark:text-white">Diagnosis <FilterPopover column="diagnosis" options={columnFilters.diagnosis} /></div>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider border-r border-[#E2EFEA] dark:border-slate-700 text-[#1F8F89] dark:text-[#2BB2A7]">Age/Gender</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider border-r border-[#E2EFEA] dark:border-slate-700">
+                    <div className="flex items-center gap-1 text-[#1F8F89] dark:text-[#2BB2A7]">Diagnosis <FilterPopover column="diagnosis" options={columnFilters.diagnosis} /></div>
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider border-r border-slate-200 dark:border-slate-700">
-                    <div className="flex items-center gap-1 text-[#3B1E6F] dark:text-white">Ward/Bed <FilterPopover column="ward" options={columnFilters.ward} /></div>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider border-r border-[#E2EFEA] dark:border-slate-700">
+                    <div className="flex items-center gap-1 text-[#1F8F89] dark:text-[#2BB2A7]">Ward/Bed <FilterPopover column="ward" options={columnFilters.ward} /></div>
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider border-r border-slate-200 dark:border-slate-700 text-[#3B1E6F] dark:text-white">Admitted</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider border-r border-slate-200 dark:border-slate-700 text-[#3B1E6F] dark:text-white">Blood Group</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider border-r border-slate-200 dark:border-slate-700 text-[#3B1E6F] dark:text-white">Status</th>
-                  <th className="px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-[#3B1E6F] dark:text-white">Action</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider border-r border-[#E2EFEA] dark:border-slate-700 text-[#1F8F89] dark:text-[#2BB2A7]">Admitted</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider border-r border-[#E2EFEA] dark:border-slate-700 text-[#1F8F89] dark:text-[#2BB2A7]">Blood Group</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider border-r border-[#E2EFEA] dark:border-slate-700 text-[#1F8F89] dark:text-[#2BB2A7]">Status</th>
+                  <th className="px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-[#1F8F89] dark:text-[#2BB2A7]">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredPatients.map((p, index) => (
                   <tr
                     key={p.id}
-                    className={`hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-200 border-b border-slate-200 dark:border-slate-700 ${
+                    className={`hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/10 transition-all duration-200 border-b border-[#E2EFEA] dark:border-slate-700 ${
                       index % 2 === 0 ? 'bg-white dark:bg-slate-900' : 'bg-slate-50/50 dark:bg-slate-800/50'
                     }`}
                   >
-                    <td className="px-4 py-3 border-r border-slate-200 dark:border-slate-700">
+                    <td className="px-4 py-3 border-r border-[#E2EFEA] dark:border-slate-700">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#3B1E6F] to-[#7A329F] flex items-center justify-center flex-shrink-0 border border-purple-200 dark:border-purple-800">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#2BB2A7] to-[#86C94C] flex items-center justify-center flex-shrink-0">
                           <User size={14} className="text-white" />
                         </div>
                         <div>
@@ -237,19 +239,19 @@ export default function DoctorPatientsPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-sm border-r border-slate-200 dark:border-slate-700">
+                    <td className="px-4 py-3 text-sm border-r border-[#E2EFEA] dark:border-slate-700">
                       <p className="text-gray-700 dark:text-gray-300">
                         {p.dob ? new Date().getFullYear() - new Date(p.dob).getFullYear() : 'N/A'} yrs
                       </p>
                       <p className="text-xs text-gray-500 capitalize">{p.gender}</p>
                     </td>
-                    <td className="px-4 py-3 border-r border-slate-200 dark:border-slate-700">
+                    <td className="px-4 py-3 border-r border-[#E2EFEA] dark:border-slate-700">
                       <p className="text-sm text-gray-700 dark:text-gray-300">{p.diagnosis || p.reason || 'N/A'}</p>
                       {p.consultant_dept && (
                         <p className="text-xs text-gray-500">{p.consultant_dept}</p>
                       )}
                     </td>
-                    <td className="px-4 py-3 border-r border-slate-200 dark:border-slate-700">
+                    <td className="px-4 py-3 border-r border-[#E2EFEA] dark:border-slate-700">
                       <div className="flex items-center gap-1">
                         <Building2 size={12} className="text-gray-400" />
                         <span className="text-sm text-gray-700 dark:text-gray-300">{p.ward_name}</span>
@@ -259,25 +261,25 @@ export default function DoctorPatientsPage() {
                         <span className="text-xs text-gray-500">{p.bed_number}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-xs text-gray-500 border-r border-slate-200 dark:border-slate-700">
+                    <td className="px-4 py-3 text-xs text-gray-500 border-r border-[#E2EFEA] dark:border-slate-700">
                       <div className="flex items-center gap-1">
                         <Calendar size={12} />
                         {new Date(p.admission_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                       </div>
                     </td>
-                    <td className="px-4 py-3 border-r border-slate-200 dark:border-slate-700">
+                    <td className="px-4 py-3 border-r border-[#E2EFEA] dark:border-slate-700">
                       {p.blood_group ? (
-                        <span className="px-2 py-0.5 rounded text-xs font-bold bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 border border-purple-200 dark:border-purple-800">
+                        <span className="px-2 py-0.5 rounded text-xs font-bold bg-[#EAF7F4] text-[#1F8F89] dark:bg-[#1F8F89]/20 dark:text-[#2BB2A7] border border-[#2BB2A7]/30 dark:border-[#2BB2A7]/20">
                           {p.blood_group}
                         </span>
                       ) : (
                         <span className="text-xs text-gray-400">N/A</span>
                       )}
                     </td>
-                    <td className="px-4 py-3 border-r border-slate-200 dark:border-slate-700">
+                    <td className="px-4 py-3 border-r border-[#E2EFEA] dark:border-slate-700">
                       <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${
                         p.status === 'active' 
-                          ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800'
+                          ? 'bg-[#EAF7F4] text-[#1F8F89] dark:bg-[#1F8F89]/20 dark:text-[#2BB2A7] border-[#2BB2A7]/30 dark:border-[#2BB2A7]/20'
                           : 'bg-gray-100 text-gray-600 dark:bg-gray-900/30 dark:text-gray-400 border-gray-200 dark:border-gray-700'
                       }`}>
                         {p.status === 'active' ? 'Active' : 'Discharged'}
@@ -286,7 +288,7 @@ export default function DoctorPatientsPage() {
                     <td className="px-4 py-3 text-right">
                       <Link
                         href={`/doctor/admitted-patients/${p.patient_id}`}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-[#3B1E6F] to-[#7A329F] text-white rounded-lg text-xs font-medium hover:opacity-90 transition shadow-sm"
+                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] text-white rounded-lg text-xs font-medium hover:opacity-90 transition shadow-sm"
                       >
                         View <ChevronRight size={14} />
                       </Link>
@@ -297,11 +299,14 @@ export default function DoctorPatientsPage() {
             </table>
           </div>
           {filteredPatients.length === 0 && (
-            <div className="text-center py-16 border-t border-slate-200 dark:border-slate-700">
+            <div className="text-center py-16 border-t border-[#E2EFEA] dark:border-slate-700">
               <User size={48} className="mx-auto mb-3 text-gray-300 dark:text-gray-600" />
               <p className="text-gray-500 dark:text-gray-400">No patients found</p>
             </div>
           )}
+          <div className="px-4 sm:px-6 py-3 border-t border-[#E2EFEA] dark:border-slate-700 bg-[#F4F9F7] dark:bg-slate-800/50 text-xs text-gray-500 dark:text-gray-400">
+            Showing {filteredPatients.length} of {patients.length} patients
+          </div>
         </div>
       </main>
     </div>

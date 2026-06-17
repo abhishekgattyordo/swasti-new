@@ -339,9 +339,6 @@
 // }
 
 
-
-
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -359,6 +356,7 @@ import {
   X,
   Activity,
   LogOut,
+  Plus,
 } from 'lucide-react';
 import { useTenant } from '@/contexts/TenantContext';
 import { MODULE_KEYS, DOCTOR_FEATURES } from '@/lib/feature';
@@ -436,8 +434,11 @@ export default function DoctorSidebar({ isOpen, onClose }: DoctorSidebarProps) {
   });
 
   const quickAccessItems = [
-    { icon: User, label: 'New Appointment', href: '/doctor/patients/new' },
+    { icon: Plus, label: 'New Appointment', href: '/doctor/patients/new' },
+    { icon: User, label: 'Patient List', href: '/doctor/patients' },
   ];
+
+  const visibleQuickAccessItems = quickAccessItems;
 
   const handleLinkClick = () => {
     if (window.innerWidth < 1024) onClose();
@@ -475,24 +476,24 @@ export default function DoctorSidebar({ isOpen, onClose }: DoctorSidebarProps) {
           isOpen ? 'translate-x-0' : '-translate-x-full'
         } lg:translate-x-0 fixed lg:sticky top-0 z-40 ${
           isCollapsed ? 'w-20' : 'w-80'
-        } flex-shrink-0 bg-white border-r border-gray-100 flex flex-col transition-all duration-300 ease-out shadow-xl lg:shadow-none h-screen`}
+        } flex-shrink-0 bg-[#F4F9F7] border-r border-[#E2EFEA] flex flex-col transition-all duration-300 ease-out shadow-xl lg:shadow-none h-screen`}
       >
-        <div className={`p-6 flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} border-b border-gray-100 relative`}>
+        <div className={`p-6 flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} border-b border-[#E2EFEA] relative`}>
           {!isCollapsed && (
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center animate-pulse">
-                <Activity className="w-6 h-6 text-gray-400" />
+              <div className="w-12 h-12 bg-[#EAF7F4] rounded-xl flex items-center justify-center animate-pulse">
+                <Activity className="w-6 h-6 text-[#2BB2A7]" />
               </div>
               <div className="animate-pulse">
-                <div className="h-5 bg-gray-100 rounded w-32 mb-1"></div>
-                <div className="h-3 bg-gray-100 rounded w-24"></div>
+                <div className="h-5 bg-[#EAF7F4] rounded w-32 mb-1"></div>
+                <div className="h-3 bg-[#EAF7F4] rounded w-24"></div>
               </div>
             </div>
           )}
           {isCollapsed && (
             <div className="flex items-center justify-center w-full">
-              <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center animate-pulse">
-                <Activity className="w-6 h-6 text-gray-400" />
+              <div className="w-12 h-12 bg-[#EAF7F4] rounded-xl flex items-center justify-center animate-pulse">
+                <Activity className="w-6 h-6 text-[#2BB2A7]" />
               </div>
             </div>
           )}
@@ -508,36 +509,36 @@ export default function DoctorSidebar({ isOpen, onClose }: DoctorSidebarProps) {
           isOpen ? 'translate-x-0' : '-translate-x-full'
         } lg:translate-x-0 fixed lg:sticky top-0 z-40 ${
           isCollapsed ? 'w-24' : 'w-80'
-        } flex-shrink-0 bg-white border-r border-gray-100 flex flex-col transition-all duration-300 ease-out shadow-xl lg:shadow-none h-screen`}
+        } flex-shrink-0 bg-[#F4F9F7] border-r border-[#E2EFEA] flex flex-col transition-all duration-300 ease-out shadow-xl lg:shadow-none h-screen`}
       >
         <button
-          className="lg:hidden absolute top-6 right-6 p-2 text-gray-400 hover:text-gray-600 transition-colors"
+          className="lg:hidden absolute top-6 right-6 p-2 text-[#4A6B66] hover:text-[#2BB2A7] transition-colors"
           onClick={onClose}
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* Logo Section - Left aligned with Text Below */}
-        <div className={`px-4 py-1 flex flex-col items-start border-b border-gray-100 dark:border-gray-800 relative`}>
-          <Link href="/doctor/dashboard" className="flex flex-col items-start w-full" onClick={handleLinkClick}>
-            {/* Logo - Left aligned - Large size and no background */}
-            <div className="w-full flex justify-start">
-              <div className="w-40 relative -ml-6">
-                <img
-                  src="/OrDo%20New%20Logo.png"
-                  alt="OrDo Logo"
-                  className="w-full h-full object-contain"
-                />
-              </div>
+        <div className={`px-4 py-1 flex flex-col items-start border-b border-[#E2EFEA] relative`}>
+          <Link href="/doctor/dashboard" className="flex items-center gap-3 w-full" onClick={handleLinkClick}>
+            {/* Logo */}
+            <div className="w-24 h-24 flex-shrink-0">
+              <img
+                src="/swasti ai logo.png"
+                alt="Swasti AI Logo"
+                className="w-full h-full object-contain"
+              />
             </div>
-            
-            {/* Text - Doctor with Doctor Module subtitle */}
+
+            {/* Text */}
             {!isCollapsed && (
-              <div className="w-full mt-1">
-                <h1 className="text-lg font-bold tracking-tight text-[#3B1E6F] dark:text-white text-left">
-              Doctor Module
+              <div>
+                <h1 className="text-[32px] font-bold tracking-tight text-[#1A1A1A] leading-none">
+                  swasti.ai
                 </h1>
-               
+                <p className="text-sm font-medium text-[#1F8F89] mt-1">
+                  Doctor Module
+                </p>
               </div>
             )}
           </Link>
@@ -545,17 +546,17 @@ export default function DoctorSidebar({ isOpen, onClose }: DoctorSidebarProps) {
           {/* Collapse Button */}
           <button
             onClick={toggleCollapse}
-            className={`hidden lg:flex items-center justify-center w-6 h-6 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors z-50 ${
-              isCollapsed 
-                ? 'absolute -right-1 top-1/2 transform -translate-y-1/2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-sm' 
-                : 'absolute -right-1 top-1/2 transform -translate-y-1/2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-sm'
+            className={`hidden lg:flex items-center justify-center w-6 h-6 rounded-lg hover:bg-[#EAF7F4] transition-colors z-50 ${
+              isCollapsed
+                ? "absolute -right-1 top-1/2 transform -translate-y-1/2 bg-[#F4F9F7] border border-[#E2EFEA] shadow-sm"
+                : "absolute -right-1 top-1/2 transform -translate-y-1/2 bg-[#F4F9F7] border border-[#E2EFEA] shadow-sm"
             }`}
             title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             {isCollapsed ? (
-              <ChevronRight className="text-[#7A329F] text-sm" />
+              <ChevronRight className="text-[#2BB2A7] text-sm" />
             ) : (
-              <ChevronLeft className="text-[#7A329F] text-sm" />
+              <ChevronLeft className="text-[#2BB2A7] text-sm" />
             )}
           </button>
         </div>
@@ -564,7 +565,11 @@ export default function DoctorSidebar({ isOpen, onClose }: DoctorSidebarProps) {
           <nav className="flex-1 overflow-y-auto px-3 py-3">
             {visibleNavItems.length > 0 && (
               <div className="mb-4">
-                {!isCollapsed && <p className="text-[10px] font-medium text-[#3B1E6F] uppercase tracking-wider px-3 mb-2">Main Navigation</p>}
+                {!isCollapsed && (
+                  <p className="text-[10px] font-medium text-[#1F8F89] uppercase tracking-wider px-3 mb-2">
+                    Doctor Menu
+                  </p>
+                )}
                 <div className="space-y-1">
                   {visibleNavItems.map((item) => {
                     const active = isActive(item.href);
@@ -582,13 +587,13 @@ export default function DoctorSidebar({ isOpen, onClose }: DoctorSidebarProps) {
                             isCollapsed ? 'justify-center' : 'justify-between gap-3'
                           } px-3 py-2 rounded-lg transition-all ${
                             active
-                              ? 'bg-gradient-to-r from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] text-white shadow-sm'
-                              : 'text-[#1A438A] hover:bg-[#3B1E6F]/5'
+                              ? 'bg-[#EAF7F4] text-[#1A1A1A] font-semibold'
+                              : 'text-[#333333] hover:bg-[#EAF7F4]/60 hover:text-[#1A1A1A]'
                           }`}
                         >
                           <div className={`flex items-center ${isCollapsed ? '' : 'gap-3'}`}>
                             <div className={`w-7 h-7 flex items-center justify-center rounded-lg ${
-                              active ? 'text-white' : 'text-[#7A329F]'
+                              active ? 'text-[#2BB2A7]' : 'text-[#2BB2A7]'
                             }`}>
                               <item.icon className="text-sm" />
                             </div>
@@ -596,13 +601,13 @@ export default function DoctorSidebar({ isOpen, onClose }: DoctorSidebarProps) {
                           </div>
                           {!isCollapsed && item.badge && (
                             <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${
-                              active ? 'bg-white/20 text-white' : 'bg-gray-100 text-[#1A438A]'
+                              active ? 'bg-[#2BB2A7]/20 text-[#1F8F89]' : 'bg-[#EAF7F4] text-[#1F8F89]'
                             }`}>
                               {item.badge}
                             </span>
                           )}
                           {isCollapsed && item.badge && (
-                            <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-red-500 rounded-full ring-2 ring-white dark:ring-gray-900"></span>
+                            <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-red-500 rounded-full ring-2 ring-[#F4F9F7]"></span>
                           )}
                         </Link>
                       </div>
@@ -612,18 +617,20 @@ export default function DoctorSidebar({ isOpen, onClose }: DoctorSidebarProps) {
               </div>
             )}
 
-            {!isCollapsed && (
-              <div className="pt-4 border-t border-gray-100 dark:border-gray-800">
-                <p className="text-[10px] font-medium text-[#3B1E6F] uppercase tracking-wider px-3 mb-2">Quick Access</p>
+            {!isCollapsed && visibleQuickAccessItems.length > 0 && (
+              <div className="pt-4 border-t border-[#E2EFEA]">
+                <p className="text-[10px] font-medium text-[#1F8F89] uppercase tracking-wider px-3 mb-2">
+                  Quick Actions
+                </p>
                 <div className="space-y-1">
-                  {quickAccessItems.map((item) => (
+                  {visibleQuickAccessItems.map((item) => (
                     <Link
                       key={item.label}
                       href={item.href}
                       onClick={handleLinkClick}
-                      className="flex items-center gap-3 px-3 py-2 rounded-lg text-[#1A438A] hover:bg-[#3B1E6F]/5 transition-colors"
+                      className="flex items-center gap-3 px-3 py-2 rounded-lg text-[#333333] hover:bg-[#EAF7F4]/60 hover:text-[#1A1A1A] transition-colors"
                     >
-                      <div className="w-7 h-7 flex items-center justify-center rounded-lg text-[#7A329F]">
+                      <div className="w-7 h-7 flex items-center justify-center rounded-lg text-[#2BB2A7]">
                         <item.icon className="text-sm" />
                       </div>
                       <span className="text-sm font-medium">{item.label}</span>
@@ -633,9 +640,9 @@ export default function DoctorSidebar({ isOpen, onClose }: DoctorSidebarProps) {
               </div>
             )}
 
-            {isCollapsed && (
-              <div className="pt-4 border-t border-gray-100 dark:border-gray-800 space-y-1">
-                {quickAccessItems.map((item) => (
+            {isCollapsed && visibleQuickAccessItems.length > 0 && (
+              <div className="pt-4 border-t border-[#E2EFEA] space-y-1">
+                {visibleQuickAccessItems.map((item) => (
                   <div 
                     key={item.label} 
                     className="relative"
@@ -645,9 +652,9 @@ export default function DoctorSidebar({ isOpen, onClose }: DoctorSidebarProps) {
                     <Link
                       href={item.href}
                       onClick={handleLinkClick}
-                      className="flex items-center justify-center px-3 py-2 rounded-lg text-[#1A438A] hover:bg-[#3B1E6F]/5 transition-colors"
+                      className="flex items-center justify-center px-3 py-2 rounded-lg text-[#333333] hover:bg-[#EAF7F4]/60 hover:text-[#1A1A1A] transition-colors"
                     >
-                      <div className="w-7 h-7 flex items-center justify-center rounded-lg text-[#7A329F]">
+                      <div className="w-7 h-7 flex items-center justify-center rounded-lg text-[#2BB2A7]">
                         <item.icon className="text-sm" />
                       </div>
                     </Link>
@@ -658,44 +665,50 @@ export default function DoctorSidebar({ isOpen, onClose }: DoctorSidebarProps) {
           </nav>
 
           {/* User Profile & Logout */}
-          <div className="mt-auto border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900">
+          <div className="mt-auto border-t border-[#E2EFEA] bg-[#F4F9F7]">
             <div className="p-3">
               {!isCollapsed ? (
-                <div className="flex items-center justify-between gap-2 p-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                <div className="flex items-center justify-between gap-2 p-2 bg-[#EAF7F4] rounded-lg">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] flex items-center justify-center text-white font-semibold text-xs">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#2BB2A7] to-[#86C94C] flex items-center justify-center text-white font-semibold text-xs">
                       {userName.charAt(0).toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold truncate text-gray-900 dark:text-white">{userName}</p>
-                      <p className="text-[10px] text-[#1A438A] dark:text-gray-400 truncate">{doctorSpecialty}</p>
+                      <p className="text-xs font-semibold truncate text-[#1A1A1A]">
+                        {userName}
+                      </p>
+                      <p className="text-[10px] text-[#1F8F89] font-medium truncate">
+                        {doctorSpecialty}
+                      </p>
                     </div>
                   </div>
                   <button
                     onClick={handleLogout}
-                    className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                    className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
                     title="Logout"
                   >
-                    <LogOut className="w-3.5 h-3.5" />
+                    <LogOut className="text-sm" />
                   </button>
                 </div>
               ) : (
                 <div className="flex flex-col items-center gap-1.5">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] flex items-center justify-center text-white font-semibold text-xs">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#2BB2A7] to-[#86C94C] flex items-center justify-center text-white font-semibold text-xs">
                     {userName.charAt(0).toUpperCase()}
                   </div>
                   <button
                     onClick={handleLogout}
-                    className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                    className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
                     title="Logout"
                   >
-                    <LogOut className="w-3.5 h-3.5" />
+                    <LogOut className="text-sm" />
                   </button>
                 </div>
               )}
               {!isCollapsed && (
                 <div className="mt-2 px-2">
-                  <p className="text-[8px] text-[#1A438A]/50 dark:text-gray-500 text-center">Doctor Portal v1.0.0</p>
+                  <p className="text-[8px] text-[#1F8F89]/50 text-center">
+                    Doctor Portal v1.0.0
+                  </p>
                 </div>
               )}
             </div>

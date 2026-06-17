@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -45,7 +44,7 @@ export default function PatientsPage() {
   if (!tenantLoading && !isPatientsEnabled) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="text-center bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg">
+        <div className="text-center bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-[#E2EFEA] dark:border-gray-700">
           <div className="text-red-500 text-6xl mb-4">🔒</div>
           <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">Access Denied</h1>
           <p className="text-gray-600 dark:text-gray-400">
@@ -61,12 +60,17 @@ export default function PatientsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-[#3B1E6F] dark:text-white">Patients</h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Manage your patient list and records</p>
+          <div className="flex items-center gap-2">
+            <div className="w-9 h-9 rounded-xl bg-[#EAF7F4] dark:bg-[#1F8F89]/20 flex items-center justify-center">
+              <User className="w-5 h-5 text-[#2BB2A7]" />
+            </div>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Patients</h2>
+          </div>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 ml-11">Manage your patient list and records</p>
         </div>
         <button
           onClick={() => router.push('/doctor/patients/new')}
-          className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-[#3B1E6F] to-[#7A329F] text-white rounded-lg text-sm font-medium hover:opacity-90 transition shadow-lg shadow-[#3B1E6F]/20"
+          className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] text-white rounded-lg text-sm font-medium hover:opacity-90 transition shadow-lg shadow-[#2BB2A7]/20"
         >
           <Plus className="w-4 h-4" />
           Add New Patient
@@ -75,10 +79,10 @@ export default function PatientsPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-[#E2EFEA] dark:border-gray-700 p-4 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-purple-100 dark:bg-purple-900/20 rounded-lg">
-              <User className="w-5 h-5 text-[#3B1E6F] dark:text-[#7A329F]" />
+            <div className="p-2 bg-[#EAF7F4] dark:bg-[#1F8F89]/20 rounded-lg">
+              <User className="w-5 h-5 text-[#2BB2A7]" />
             </div>
             <div>
               <p className="text-xs text-gray-500 dark:text-gray-400">Total Patients</p>
@@ -86,7 +90,7 @@ export default function PatientsPage() {
             </div>
           </div>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-[#E2EFEA] dark:border-gray-700 p-4 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-red-100 dark:bg-red-900/20 rounded-lg">
               <Activity className="w-5 h-5 text-red-600 dark:text-red-400" />
@@ -97,10 +101,10 @@ export default function PatientsPage() {
             </div>
           </div>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-[#E2EFEA] dark:border-gray-700 p-4 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-emerald-100 dark:bg-emerald-900/20 rounded-lg">
-              <Activity className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            <div className="p-2 bg-[#EAF7F4] dark:bg-[#1F8F89]/20 rounded-lg">
+              <Activity className="w-5 h-5 text-[#86C94C]" />
             </div>
             <div>
               <p className="text-xs text-gray-500 dark:text-gray-400">Stable</p>
@@ -108,7 +112,7 @@ export default function PatientsPage() {
             </div>
           </div>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-[#E2EFEA] dark:border-gray-700 p-4 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-amber-100 dark:bg-amber-900/20 rounded-lg">
               <Calendar className="w-5 h-5 text-amber-600 dark:text-amber-400" />
@@ -129,33 +133,33 @@ export default function PatientsPage() {
           placeholder="Search patients by name or condition..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-[#7A329F] focus:border-transparent text-sm sm:text-base text-gray-900 dark:text-white"
+          className="w-full pl-10 pr-4 py-3 border border-[#E2EFEA] dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent text-sm sm:text-base text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
         />
       </div>
 
       {/* Patients Table */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-[#E2EFEA] dark:border-gray-700 overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[640px] sm:min-w-full border-collapse">
-            <thead className="bg-gray-50 dark:bg-gray-700/30">
+            <thead className="bg-[#F4F9F7] dark:bg-gray-700/30">
               <tr>
-                <th className="text-left p-3 sm:p-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase border border-gray-200 dark:border-gray-700">Patient</th>
-                <th className="text-left p-3 sm:p-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase border border-gray-200 dark:border-gray-700">Age/Gender</th>
-                <th className="text-left p-3 sm:p-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase border border-gray-200 dark:border-gray-700">Condition</th>
-                <th className="text-left p-3 sm:p-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase border border-gray-200 dark:border-gray-700">Last Visit</th>
-                <th className="text-left p-3 sm:p-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase border border-gray-200 dark:border-gray-700">Status</th>
-                <th className="text-left p-3 sm:p-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase border border-gray-200 dark:border-gray-700">Actions</th>
+                <th className="text-left p-3 sm:p-4 text-xs font-medium text-[#1F8F89] dark:text-[#2BB2A7] uppercase border border-[#E2EFEA] dark:border-gray-700">Patient</th>
+                <th className="text-left p-3 sm:p-4 text-xs font-medium text-[#1F8F89] dark:text-[#2BB2A7] uppercase border border-[#E2EFEA] dark:border-gray-700">Age/Gender</th>
+                <th className="text-left p-3 sm:p-4 text-xs font-medium text-[#1F8F89] dark:text-[#2BB2A7] uppercase border border-[#E2EFEA] dark:border-gray-700">Condition</th>
+                <th className="text-left p-3 sm:p-4 text-xs font-medium text-[#1F8F89] dark:text-[#2BB2A7] uppercase border border-[#E2EFEA] dark:border-gray-700">Last Visit</th>
+                <th className="text-left p-3 sm:p-4 text-xs font-medium text-[#1F8F89] dark:text-[#2BB2A7] uppercase border border-[#E2EFEA] dark:border-gray-700">Status</th>
+                <th className="text-left p-3 sm:p-4 text-xs font-medium text-[#1F8F89] dark:text-[#2BB2A7] uppercase border border-[#E2EFEA] dark:border-gray-700">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredPatients.map((patient) => (
                 <tr
                   key={patient.id}
-                  className="hover:bg-purple-50 dark:hover:bg-purple-900/20 cursor-pointer transition-colors"
+                  className="hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/10 cursor-pointer transition-colors"
                 >
-                  <td className="p-3 sm:p-4 border border-gray-200 dark:border-gray-700">
+                  <td className="p-3 sm:p-4 border border-[#E2EFEA] dark:border-gray-700">
                     <div className="flex items-center gap-2 sm:gap-3">
-                      <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-[#3B1E6F] to-[#7A329F] rounded-full flex items-center justify-center flex-shrink-0">
+                      <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-[#2BB2A7] to-[#86C94C] rounded-full flex items-center justify-center flex-shrink-0">
                         <span className="text-xs font-medium text-white">
                           {patient.name.split(' ').map(n => n[0]).join('')}
                         </span>
@@ -165,27 +169,27 @@ export default function PatientsPage() {
                       </span>
                     </div>
                   </td>
-                  <td className="p-3 sm:p-4 text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap border border-gray-200 dark:border-gray-700">
+                  <td className="p-3 sm:p-4 text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap border border-[#E2EFEA] dark:border-gray-700">
                     {patient.age} / {patient.gender}
                   </td>
-                  <td className="p-3 sm:p-4 text-sm text-gray-600 dark:text-gray-300 truncate max-w-[100px] sm:max-w-none border border-gray-200 dark:border-gray-700">
+                  <td className="p-3 sm:p-4 text-sm text-gray-600 dark:text-gray-300 truncate max-w-[100px] sm:max-w-none border border-[#E2EFEA] dark:border-gray-700">
                     {patient.condition}
                   </td>
-                  <td className="p-3 sm:p-4 text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap border border-gray-200 dark:border-gray-700">
+                  <td className="p-3 sm:p-4 text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap border border-[#E2EFEA] dark:border-gray-700">
                     {patient.lastVisit}
                   </td>
-                  <td className="p-3 sm:p-4 border border-gray-200 dark:border-gray-700">
+                  <td className="p-3 sm:p-4 border border-[#E2EFEA] dark:border-gray-700">
                     <span className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ${
                       patient.status === 'Critical' ? 'bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400' :
-                      patient.status === 'Stable' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400' :
+                      patient.status === 'Stable' ? 'bg-[#EAF7F4] text-[#1F8F89] dark:bg-[#1F8F89]/20 dark:text-[#2BB2A7]' :
                       'bg-amber-100 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400'
                     }`}>
                       {patient.status}
                     </span>
                   </td>
-                  <td className="p-3 sm:p-4 border border-gray-200 dark:border-gray-700">
+                  <td className="p-3 sm:p-4 border border-[#E2EFEA] dark:border-gray-700">
                     <Link href={`/doctor/patient-summary/${patient.id}`}>
-                      <button className="text-[#7A329F] dark:text-[#9B4DBF] text-sm hover:text-[#3B1E6F] dark:hover:text-[#7A329F] hover:underline whitespace-nowrap font-medium">
+                      <button className="text-[#2BB2A7] dark:text-[#2BB2A7] text-sm hover:text-[#1F8F89] dark:hover:text-[#1F8F89] hover:underline whitespace-nowrap font-medium">
                         View EHR
                       </button>
                     </Link>
@@ -202,7 +206,7 @@ export default function PatientsPage() {
             <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Try adjusting your search</p>
           </div>
         )}
-        <div className="px-4 sm:px-6 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30 text-xs text-gray-500 dark:text-gray-400">
+        <div className="px-4 sm:px-6 py-3 border-t border-[#E2EFEA] dark:border-gray-700 bg-[#F4F9F7] dark:bg-gray-700/30 text-xs text-gray-500 dark:text-gray-400">
           Showing {filteredPatients.length} of {patients.length} patients
         </div>
       </div>

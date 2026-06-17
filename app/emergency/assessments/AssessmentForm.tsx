@@ -1405,7 +1405,6 @@
 
 
 
-
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -1663,10 +1662,6 @@ export default function AssessmentFormPage() {
 
   // Generate MRN from backend
   const generateNewMRN = async () => {
-    if (isEditing) {
-      toast.error("Cannot change MRN for existing assessment");
-      return;
-    }
     setGeneratingMRN(true);
     try {
       const response = await fetch("/api/emergency/generate-mrn");
@@ -1739,24 +1734,30 @@ export default function AssessmentFormPage() {
     setAssessment((prev) => ({ ...prev, [k]: v }));
   }
 
+  // Updated validation function - only require UHID for editing
   function validate(complete: boolean): Errors {
     const e: Errors = {};
 
+    // Only require UHID if editing existing assessment
     if (isEditing) {
       if (!assessment.uhid?.trim()) e.uhid = "Required";
     }
 
+    // Always require patient name
     if (!assessment.patientName?.trim()) e.patientName = "Required";
 
+    // Age and gender are required only when completing the assessment
     if (complete) {
       if (assessment.age === "" || Number(assessment.age) <= 0)
         e.age = "Enter a valid age";
       if (!assessment.gender) e.gender = "Required";
     } else {
+      // For draft, if age is provided, validate it; otherwise ignore
       if (assessment.age !== "" && Number(assessment.age) <= 0)
         e.age = "Enter a valid age";
     }
 
+    // Fields always validated if present (for both modes)
     if (
       assessment.spo2 !== "" &&
       (Number(assessment.spo2) < 0 || Number(assessment.spo2) > 100)
@@ -1770,6 +1771,7 @@ export default function AssessmentFormPage() {
       e.gcs = "3–15 only";
     }
 
+    // Additional required fields for completion
     if (complete) {
       if (!assessment.triage) e.triage = "Triage is required";
       if (assessment.systolic === "" || assessment.diastolic === "")
@@ -1889,6 +1891,7 @@ export default function AssessmentFormPage() {
     return "";
   }, [assessment.triage]);
 
+  // Updated validateSection function
   function validateSection(s: SectionId): string | null {
     if (s === "A") {
       if (isEditing) {
@@ -1949,7 +1952,7 @@ export default function AssessmentFormPage() {
     return (
       <div className="container mx-auto py-6 flex justify-center items-center min-h-[400px]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3B1E6F] mx-auto"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2BB2A7] mx-auto"></div>
           <p className="mt-2 text-sm text-muted-foreground">
             Loading assessment...
           </p>
@@ -1967,7 +1970,7 @@ export default function AssessmentFormPage() {
             variant="ghost" 
             size="icon" 
             onClick={() => router.back()}
-            className="hover:bg-purple-50 dark:hover:bg-purple-900/20"
+            className="hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/20"
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
@@ -1975,7 +1978,7 @@ export default function AssessmentFormPage() {
             <p className="text-xs font-mono text-muted-foreground">
               {assessment.id}
             </p>
-            <h1 className="text-2xl font-bold tracking-tight text-[#3B1E6F] dark:text-white">
+            <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
               {isEditing ? "Edit" : "New"} Emergency Assessment
             </h1>
           </div>
@@ -1985,7 +1988,7 @@ export default function AssessmentFormPage() {
             variant="outline"
             onClick={handleSaveDraft}
             disabled={loading}
-            className="border-[#3B1E6F] text-[#3B1E6F] hover:bg-[#3B1E6F] hover:text-white dark:border-[#7A329F] dark:text-[#7A329F] dark:hover:bg-[#7A329F] dark:hover:text-white"
+            className="border-[#2BB2A7] text-[#2BB2A7] hover:bg-[#2BB2A7] hover:text-white dark:border-[#2BB2A7] dark:text-[#2BB2A7] dark:hover:bg-[#2BB2A7] dark:hover:text-white"
           >
             <Save className="h-4 w-4 mr-2" /> Save Draft
           </Button>
@@ -1995,7 +1998,7 @@ export default function AssessmentFormPage() {
               variant="outline"
               onClick={() => setDischargeOpen(true)}
               disabled={loading}
-              className="border-[#3B1E6F] text-[#3B1E6F] hover:bg-[#3B1E6F] hover:text-white dark:border-[#7A329F] dark:text-[#7A329F] dark:hover:bg-[#7A329F] dark:hover:text-white"
+              className="border-[#2BB2A7] text-[#2BB2A7] hover:bg-[#2BB2A7] hover:text-white dark:border-[#2BB2A7] dark:text-[#2BB2A7] dark:hover:bg-[#2BB2A7] dark:hover:text-white"
             >
               <LogOut className="h-4 w-4 mr-2" /> Discharge Patient
             </Button>
@@ -2003,7 +2006,7 @@ export default function AssessmentFormPage() {
           <Button 
             onClick={handleComplete} 
             disabled={loading}
-            className="bg-gradient-to-r from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] hover:opacity-90 text-white shadow-lg shadow-[#3B1E6F]/20"
+            className="bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] hover:opacity-90 text-white shadow-lg shadow-[#2BB2A7]/20"
           >
             <CheckCircle2 className="h-4 w-4 mr-2" /> Complete
           </Button>
@@ -2028,13 +2031,13 @@ export default function AssessmentFormPage() {
                 <TabsTrigger
                   key={s.id}
                   value={s.id}
-                  className="gap-2 data-[state=active]:bg-[#3B1E6F] data-[state=active]:text-white"
+                  className="gap-2 data-[state=active]:bg-[#2BB2A7] data-[state=active]:text-white"
                 >
                   <span
                     className={cn(
                       "flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold",
                       done[s.id]
-                        ? "bg-emerald-500 text-white"
+                        ? "bg-[#2BB2A7] text-white"
                         : "bg-muted text-muted-foreground",
                     )}
                   >
@@ -2064,7 +2067,7 @@ export default function AssessmentFormPage() {
                       data-invalid={!!errors.uhid}
                       className={cn(
                         errors.uhid && "border-red-500",
-                        "flex-1 focus:ring-2 focus:ring-[#7A329F] focus:border-transparent",
+                        "flex-1 focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent",
                         !isEditing && "bg-muted/50",
                       )}
                       value={assessment.uhid || ""}
@@ -2080,7 +2083,7 @@ export default function AssessmentFormPage() {
                         onClick={generateNewMRN}
                         disabled={generatingMRN}
                         title="Generate new MRN"
-                        className="border-[#3B1E6F] text-[#3B1E6F] hover:bg-[#3B1E6F] hover:text-white dark:border-[#7A329F] dark:text-[#7A329F] dark:hover:bg-[#7A329F] dark:hover:text-white"
+                        className="border-[#2BB2A7] text-[#2BB2A7] hover:bg-[#2BB2A7] hover:text-white dark:border-[#2BB2A7] dark:text-[#2BB2A7] dark:hover:bg-[#2BB2A7] dark:hover:text-white"
                       >
                         <RefreshCw
                           className={cn(
@@ -2103,7 +2106,7 @@ export default function AssessmentFormPage() {
                     data-invalid={!!errors.patientName}
                     className={cn(
                       errors.patientName && "border-red-500",
-                      "focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
+                      "focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent"
                     )}
                     value={assessment.patientName || ""}
                     onChange={(e) => update("patientName", e.target.value)}
@@ -2116,7 +2119,7 @@ export default function AssessmentFormPage() {
                     data-invalid={!!errors.age}
                     className={cn(
                       errors.age && "border-red-500",
-                      "focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
+                      "focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent"
                     )}
                     value={assessment.age}
                     onChange={(e) =>
@@ -2140,7 +2143,7 @@ export default function AssessmentFormPage() {
                       data-invalid={!!errors.gender}
                       className={cn(
                         errors.gender && "border-red-500",
-                        "focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
+                        "focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent"
                       )}
                     >
                       <SelectValue placeholder="Select" />
@@ -2167,7 +2170,7 @@ export default function AssessmentFormPage() {
                         new Date(e.target.value).toISOString(),
                       )
                     }
-                    className="focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
+                    className="focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent"
                   />
                 </Field>
               </div>
@@ -2194,7 +2197,7 @@ export default function AssessmentFormPage() {
                       data-invalid={!!errors.triage}
                       className={cn(
                         errors.triage && "border-red-500",
-                        "focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
+                        "focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent"
                       )}
                     >
                       <SelectValue placeholder="Select triage" />
@@ -2230,7 +2233,7 @@ export default function AssessmentFormPage() {
                       data-invalid={!!errors.systolic}
                       className={cn(
                         errors.systolic && "border-red-500",
-                        "focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
+                        "focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent"
                       )}
                     />
                     <span className="text-muted-foreground">/</span>
@@ -2244,7 +2247,7 @@ export default function AssessmentFormPage() {
                           e.target.value === "" ? "" : Number(e.target.value),
                         )
                       }
-                      className="focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
+                      className="focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent"
                     />
                   </div>
                 </Field>
@@ -2262,7 +2265,7 @@ export default function AssessmentFormPage() {
                       data-invalid={!!errors.heartRate}
                       className={cn(
                         errors.heartRate && "border-red-500",
-                        "focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
+                        "focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent"
                       )}
                     />
                     <span className="text-sm text-muted-foreground">bpm</span>
@@ -2286,7 +2289,7 @@ export default function AssessmentFormPage() {
                       data-invalid={!!errors.respiratoryRate}
                       className={cn(
                         errors.respiratoryRate && "border-red-500",
-                        "focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
+                        "focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent"
                       )}
                     />
                     <span className="text-sm text-muted-foreground">/min</span>
@@ -2307,14 +2310,14 @@ export default function AssessmentFormPage() {
                       data-invalid={!!errors.temperature}
                       className={cn(
                         errors.temperature && "border-red-500",
-                        "focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
+                        "focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent"
                       )}
                     />
                     <Select
                       value={assessment.tempUnit}
                       onValueChange={(v) => update("tempUnit", v as "C" | "F")}
                     >
-                      <SelectTrigger className="w-20 focus:ring-2 focus:ring-[#7A329F] focus:border-transparent">
+                      <SelectTrigger className="w-20 focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -2340,7 +2343,7 @@ export default function AssessmentFormPage() {
                       data-invalid={!!errors.spo2}
                       className={cn(
                         errors.spo2 && "border-red-500",
-                        "focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
+                        "focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent"
                       )}
                     />
                     <span className="text-sm text-muted-foreground">%</span>
@@ -2356,7 +2359,7 @@ export default function AssessmentFormPage() {
                     min={0}
                     max={10}
                     step={1}
-                    className="[&_[role=slider]]:bg-[#3B1E6F]"
+                    className="[&_[role=slider]]:bg-[#2BB2A7]"
                   />
                 </Field>
                 <Field label="GCS (3–15)" hint="Optional" error={errors.gcs}>
@@ -2374,7 +2377,7 @@ export default function AssessmentFormPage() {
                     data-invalid={!!errors.gcs}
                     className={cn(
                       errors.gcs && "border-red-500",
-                      "focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
+                      "focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent"
                     )}
                   />
                 </Field>
@@ -2400,7 +2403,7 @@ export default function AssessmentFormPage() {
                         e.target.value === "" ? "" : Number(e.target.value),
                       )
                     }
-                    className="focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
+                    className="focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent"
                   />
                 </Field>
                 {showUPT && (
@@ -2411,7 +2414,7 @@ export default function AssessmentFormPage() {
                         update("upt", v as Assessment["upt"])
                       }
                     >
-                      <SelectTrigger className="focus:ring-2 focus:ring-[#7A329F] focus:border-transparent">
+                      <SelectTrigger className="focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent">
                         <SelectValue placeholder="Select" />
                       </SelectTrigger>
                       <SelectContent>
@@ -2434,7 +2437,7 @@ export default function AssessmentFormPage() {
                           onCheckedChange={(v) =>
                             update("ecgReportAttached", !!v)
                           }
-                          className="data-[state=checked]:bg-[#3B1E6F] data-[state=checked]:border-[#3B1E6F]"
+                          className="data-[state=checked]:bg-[#2BB2A7] data-[state=checked]:border-[#2BB2A7]"
                         />
                         Report attached
                       </label>
@@ -2453,7 +2456,7 @@ export default function AssessmentFormPage() {
                           onCheckedChange={(v) =>
                             update("cxrReportAttached", !!v)
                           }
-                          className="data-[state=checked]:bg-[#3B1E6F] data-[state=checked]:border-[#3B1E6F]"
+                          className="data-[state=checked]:bg-[#2BB2A7] data-[state=checked]:border-[#2BB2A7]"
                         />
                         Report attached
                       </label>
@@ -2467,7 +2470,7 @@ export default function AssessmentFormPage() {
                   extra={
                     assessment.usgDone === "Yes" && (
                       <Textarea
-                        className="mt-2 focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
+                        className="mt-2 focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent"
                         placeholder="Findings"
                         value={assessment.usgFindings}
                         onChange={(e) => update("usgFindings", e.target.value)}
@@ -2487,9 +2490,9 @@ export default function AssessmentFormPage() {
               title="Lab Orders"
               description="Emergency laboratory investigations"
             >
-              <div className="overflow-hidden rounded-md border">
+              <div className="overflow-hidden rounded-md border border-[#E2EFEA] dark:border-slate-700">
                 <table className="w-full text-sm">
-                  <thead className="bg-muted/40 text-left text-xs uppercase text-muted-foreground">
+                  <thead className="bg-[#F4F9F7] dark:bg-slate-800/30 text-left text-xs uppercase text-[#1F8F89] dark:text-[#2BB2A7]">
                     <tr>
                       <th className="px-4 py-2">Lab</th>
                       <th className="px-4 py-2">Status</th>
@@ -2497,8 +2500,8 @@ export default function AssessmentFormPage() {
                   </thead>
                   <tbody>
                     {assessment.labs?.map((lab, i) => (
-                      <tr key={lab.name} className="border-t">
-                        <td className="px-4 py-2 font-medium">{lab.name}</td>
+                      <tr key={lab.name} className="border-t border-[#E2EFEA] dark:border-slate-700">
+                        <td className="px-4 py-2 font-medium text-gray-700 dark:text-gray-300">{lab.name}</td>
                         <td className="px-4 py-2">
                           <Select
                             value={lab.status}
@@ -2508,7 +2511,7 @@ export default function AssessmentFormPage() {
                               update("labs", next);
                             }}
                           >
-                            <SelectTrigger className="w-56 focus:ring-2 focus:ring-[#7A329F] focus:border-transparent">
+                            <SelectTrigger className="w-56 focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent border-[#E2EFEA] dark:border-slate-700">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -2552,7 +2555,7 @@ export default function AssessmentFormPage() {
                   <Textarea
                     data-invalid={!!errors.chiefComplaints}
                     className={cn(
-                      "min-h-24 focus:ring-2 focus:ring-[#7A329F] focus:border-transparent",
+                      "min-h-24 focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent",
                       errors.chiefComplaints && "border-red-500",
                     )}
                     value={assessment.chiefComplaints || ""}
@@ -2566,19 +2569,19 @@ export default function AssessmentFormPage() {
                       update("complaintDuration", e.target.value)
                     }
                     placeholder="e.g. 3 days"
-                    className="focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
+                    className="focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent"
                   />
                 </Field>
                 <Field label="Relevant Past History">
                   <Textarea
-                    className="min-h-20 focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
+                    className="min-h-20 focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent"
                     value={assessment.pastHistory || ""}
                     onChange={(e) => update("pastHistory", e.target.value)}
                   />
                 </Field>
                 <Field label="Provisional Diagnosis" className="md:col-span-2">
                   <Textarea
-                    className="min-h-20 focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
+                    className="min-h-20 focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent"
                     value={assessment.provisionalDiagnosis || ""}
                     onChange={(e) =>
                       update("provisionalDiagnosis", e.target.value)
@@ -2590,7 +2593,7 @@ export default function AssessmentFormPage() {
                   className="md:col-span-2"
                 >
                   <Textarea
-                    className="min-h-24 focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
+                    className="min-h-24 focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent"
                     value={assessment.examFindings || ""}
                     onChange={(e) => update("examFindings", e.target.value)}
                   />
@@ -2601,7 +2604,7 @@ export default function AssessmentFormPage() {
                   hint="e.g. IV fluids, oxygen support, injections"
                 >
                   <Textarea
-                    className="min-h-20 focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
+                    className="min-h-20 focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent"
                     value={assessment.intervention || ""}
                     onChange={(e) => update("intervention", e.target.value)}
                   />
@@ -2625,7 +2628,7 @@ export default function AssessmentFormPage() {
                       update("decision", v as Assessment["decision"])
                     }
                   >
-                    <SelectTrigger className="focus:ring-2 focus:ring-[#7A329F] focus:border-transparent">
+                    <SelectTrigger className="focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent">
                       <SelectValue placeholder="Select" />
                     </SelectTrigger>
                     <SelectContent>
@@ -2644,7 +2647,7 @@ export default function AssessmentFormPage() {
                     onValueChange={(v) => update("mainDoctor", v)}
                     disabled={loadingDoctors}
                   >
-                    <SelectTrigger className="focus:ring-2 focus:ring-[#7A329F] focus:border-transparent">
+                    <SelectTrigger className="focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent">
                       <SelectValue
                         placeholder={
                           loadingDoctors
@@ -2675,7 +2678,7 @@ export default function AssessmentFormPage() {
                     value={assessment.referral || undefined}
                     onValueChange={(v) => update("referral", v)}
                   >
-                    <SelectTrigger className="focus:ring-2 focus:ring-[#7A329F] focus:border-transparent">
+                    <SelectTrigger className="focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent">
                       <SelectValue placeholder="Select specialty" />
                     </SelectTrigger>
                     <SelectContent>
@@ -2696,7 +2699,7 @@ export default function AssessmentFormPage() {
                     data-invalid={!!errors.dutyDoctorName}
                     className={cn(
                       errors.dutyDoctorName && "border-red-500",
-                      "focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
+                      "focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent"
                     )}
                     value={assessment.dutyDoctorName || ""}
                     onChange={(e) => update("dutyDoctorName", e.target.value)}
@@ -2716,13 +2719,13 @@ export default function AssessmentFormPage() {
           </TabsContent>
 
           {/* Navigation Buttons */}
-          <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border bg-card p-3 shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#E2EFEA] dark:border-slate-700 bg-card p-3 shadow-sm">
             <Button
               type="button"
               variant="ghost"
               onClick={goPrev}
               disabled={currentIdx === 0}
-              className="hover:bg-purple-50 dark:hover:bg-purple-900/20"
+              className="hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/20"
             >
               <ChevronLeft className="h-4 w-4 mr-2" /> Previous
             </Button>
@@ -2735,7 +2738,7 @@ export default function AssessmentFormPage() {
                 type="button"
                 variant={done[activeTab] ? "secondary" : "default"}
                 onClick={() => markSectionComplete(activeTab)}
-                className={!done[activeTab] ? "bg-[#3B1E6F] hover:bg-[#7A329F] text-white" : ""}
+                className={!done[activeTab] ? "bg-[#2BB2A7] hover:bg-[#1F8F89] text-white" : ""}
               >
                 <Check className="h-4 w-4 mr-2" />
                 {done[activeTab] ? "Section complete" : "Mark section complete"}
@@ -2745,7 +2748,7 @@ export default function AssessmentFormPage() {
                 variant="outline"
                 onClick={goNext}
                 disabled={currentIdx === SECTIONS.length - 1}
-                className="border-[#3B1E6F] text-[#3B1E6F] hover:bg-[#3B1E6F] hover:text-white dark:border-[#7A329F] dark:text-[#7A329F] dark:hover:bg-[#7A329F] dark:hover:text-white"
+                className="border-[#2BB2A7] text-[#2BB2A7] hover:bg-[#2BB2A7] hover:text-white dark:border-[#2BB2A7] dark:text-[#2BB2A7] dark:hover:bg-[#2BB2A7] dark:hover:text-white"
               >
                 Next <ChevronRight className="h-4 w-4 ml-2" />
               </Button>
@@ -2754,7 +2757,7 @@ export default function AssessmentFormPage() {
         </Tabs>
 
         {/* Sticky Footer */}
-        <div className="sticky bottom-3 z-20 flex flex-wrap items-center justify-end gap-2 rounded-xl border bg-card/90 p-3 shadow-sm backdrop-blur">
+        <div className="sticky bottom-3 z-20 flex flex-wrap items-center justify-end gap-2 rounded-xl border border-[#E2EFEA] dark:border-slate-700 bg-card/90 p-3 shadow-sm backdrop-blur">
           <p className="mr-auto text-xs text-muted-foreground">
             Status:{" "}
             <span className="font-medium text-foreground">
@@ -2769,7 +2772,7 @@ export default function AssessmentFormPage() {
             variant="outline"
             onClick={handleSaveDraft}
             disabled={loading}
-            className="border-[#3B1E6F] text-[#3B1E6F] hover:bg-[#3B1E6F] hover:text-white dark:border-[#7A329F] dark:text-[#7A329F] dark:hover:bg-[#7A329F] dark:hover:text-white"
+            className="border-[#2BB2A7] text-[#2BB2A7] hover:bg-[#2BB2A7] hover:text-white dark:border-[#2BB2A7] dark:text-[#2BB2A7] dark:hover:bg-[#2BB2A7] dark:hover:text-white"
           >
             <Save className="h-4 w-4 mr-2" /> Save Draft
           </Button>
@@ -2777,14 +2780,14 @@ export default function AssessmentFormPage() {
             variant="outline"
             onClick={() => setConvertOpen(true)}
             disabled={loading}
-            className="border-[#3B1E6F] text-[#3B1E6F] hover:bg-[#3B1E6F] hover:text-white dark:border-[#7A329F] dark:text-[#7A329F] dark:hover:bg-[#7A329F] dark:hover:text-white"
+            className="border-[#2BB2A7] text-[#2BB2A7] hover:bg-[#2BB2A7] hover:text-white dark:border-[#2BB2A7] dark:text-[#2BB2A7] dark:hover:bg-[#2BB2A7] dark:hover:text-white"
           >
             <Hospital className="h-4 w-4 mr-2" /> Convert
           </Button>
           <Button 
             onClick={handleComplete} 
             disabled={loading}
-            className="bg-gradient-to-r from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] hover:opacity-90 text-white shadow-lg shadow-[#3B1E6F]/20"
+            className="bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] hover:opacity-90 text-white shadow-lg shadow-[#2BB2A7]/20"
           >
             <CheckCircle2 className="h-4 w-4 mr-2" /> Complete
           </Button>
@@ -2793,9 +2796,9 @@ export default function AssessmentFormPage() {
 
       {/* Convert Dialog */}
       <Dialog open={convertOpen} onOpenChange={setConvertOpen}>
-        <DialogContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+        <DialogContent className="bg-white dark:bg-gray-800 border-[#E2EFEA] dark:border-gray-700">
           <DialogHeader>
-            <DialogTitle className="text-[#3B1E6F] dark:text-white">Convert to Admission</DialogTitle>
+            <DialogTitle className="text-gray-900 dark:text-white">Convert to Admission</DialogTitle>
             <DialogDescription className="text-gray-500 dark:text-gray-400">
               Enter the hospital admission ID this assessment is linked to.
             </DialogDescription>
@@ -2805,13 +2808,13 @@ export default function AssessmentFormPage() {
             placeholder="e.g. ADM-2026-00451"
             value={admissionId}
             onChange={(e) => setAdmissionId(e.target.value)}
-            className="focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
+            className="focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent"
           />
           <DialogFooter>
-            <Button variant="outline" onClick={() => setConvertOpen(false)} className="border-gray-300 dark:border-gray-600">
+            <Button variant="outline" onClick={() => setConvertOpen(false)} className="border-[#E2EFEA] dark:border-gray-600">
               Cancel
             </Button>
-            <Button onClick={handleConvert} disabled={loading} className="bg-[#3B1E6F] hover:bg-[#7A329F] text-white">
+            <Button onClick={handleConvert} disabled={loading} className="bg-[#2BB2A7] hover:bg-[#1F8F89] text-white">
               <FileText className="h-4 w-4 mr-2" /> Convert
             </Button>
           </DialogFooter>
@@ -2855,10 +2858,10 @@ function YesNoBlock({
         className="flex gap-4"
       >
         <label className="flex items-center gap-2 text-sm">
-          <RadioGroupItem value="Yes" className="data-[state=checked]:border-[#3B1E6F] data-[state=checked]:bg-[#3B1E6F]" /> Yes
+          <RadioGroupItem value="Yes" className="data-[state=checked]:border-[#2BB2A7] data-[state=checked]:bg-[#2BB2A7]" /> Yes
         </label>
         <label className="flex items-center gap-2 text-sm">
-          <RadioGroupItem value="No" className="data-[state=checked]:border-[#3B1E6F] data-[state=checked]:bg-[#3B1E6F]" /> No
+          <RadioGroupItem value="No" className="data-[state=checked]:border-[#2BB2A7] data-[state=checked]:bg-[#2BB2A7]" /> No
         </label>
       </RadioGroup>
       {extra}

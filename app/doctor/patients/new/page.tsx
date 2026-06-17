@@ -200,7 +200,7 @@ export default function QuickAddPatientPage() {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-[#3B1E6F] border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <div className="w-12 h-12 border-4 border-[#2BB2A7] border-t-transparent rounded-full animate-spin mx-auto"></div>
           <p className="mt-4 text-gray-600 dark:text-gray-400">Loading...</p>
         </div>
       </div>
@@ -224,24 +224,24 @@ export default function QuickAddPatientPage() {
         <div className="flex items-center gap-4">
           <button
             onClick={() => router.back()}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition"
+            className="p-2 hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/20 rounded-lg transition"
           >
             <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
           </button>
           <div className="flex items-center gap-3">
-            <div className="p-3 rounded-lg bg-purple-100 dark:bg-purple-900/20">
-              <UserPlus className="w-6 h-6 text-[#3B1E6F] dark:text-[#7A329F]" />
+            <div className="p-3 rounded-xl bg-[#EAF7F4] dark:bg-[#1F8F89]/20">
+              <UserPlus className="w-6 h-6 text-[#2BB2A7]" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-[#3B1E6F] dark:text-white">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                 Quick Add Patient
               </h2>
               <div className="flex items-center gap-3 mt-1 text-sm text-gray-600 dark:text-gray-400">
                 <span className="flex items-center gap-1">
-                  <Calendar className="w-4 h-4" /> {selectedDate}
+                  <Calendar className="w-4 h-4 text-[#2BB2A7]" /> {selectedDate}
                 </span>
                 <span className="flex items-center gap-1">
-                  <Clock className="w-4 h-4" /> {selectedTime}
+                  <Clock className="w-4 h-4 text-[#2BB2A7]" /> {selectedTime}
                 </span>
               </div>
             </div>
@@ -254,7 +254,7 @@ export default function QuickAddPatientPage() {
             onClick={() => setVoiceMode(!voiceMode)}
             className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
               voiceMode 
-                ? "bg-emerald-500 text-white" 
+                ? "bg-[#2BB2A7] text-white shadow-sm" 
                 : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
             }`}
           >
@@ -271,16 +271,16 @@ export default function QuickAddPatientPage() {
 
       {/* Voice Mode Info Banner */}
       {voiceMode && (
-        <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-3 flex items-center gap-2">
-          <Mic className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-          <p className="text-sm text-emerald-700 dark:text-emerald-400">
+        <div className="bg-[#EAF7F4] dark:bg-[#1F8F89]/20 border border-[#2BB2A7]/30 dark:border-[#2BB2A7]/20 rounded-lg p-3 flex items-center gap-2">
+          <Mic className="w-4 h-4 text-[#2BB2A7]" />
+          <p className="text-sm text-[#1F8F89] dark:text-[#2BB2A7]">
             Voice mode is ON! Click the microphone icon next to any field and speak to fill it automatically.
           </p>
         </div>
       )}
 
       {/* Form */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-[#E2EFEA] dark:border-gray-700 p-6 shadow-sm">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Full Name */}
@@ -294,8 +294,8 @@ export default function QuickAddPatientPage() {
                   name="full_name_en"
                   value={formData.full_name_en}
                   onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7A329F] focus:border-transparent pr-12 bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
-                    errors.full_name_en ? "border-red-500 dark:border-red-500" : "border-gray-200 dark:border-gray-600"
+                  className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent pr-12 bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
+                    errors.full_name_en ? "border-red-500 dark:border-red-500" : "border-[#E2EFEA] dark:border-gray-600"
                   }`}
                   placeholder="John Doe"
                 />
@@ -325,8 +325,8 @@ export default function QuickAddPatientPage() {
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7A329F] focus:border-transparent pr-12 bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
-                    errors.phone ? "border-red-500 dark:border-red-500" : "border-gray-200 dark:border-gray-600"
+                  className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent pr-12 bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
+                    errors.phone ? "border-red-500 dark:border-red-500" : "border-[#E2EFEA] dark:border-gray-600"
                   }`}
                   placeholder="9876543210"
                 />
@@ -359,8 +359,8 @@ export default function QuickAddPatientPage() {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7A329F] focus:border-transparent pr-12 bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
-                    errors.email ? "border-red-500 dark:border-red-500" : "border-gray-200 dark:border-gray-600"
+                  className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent pr-12 bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
+                    errors.email ? "border-red-500 dark:border-red-500" : "border-[#E2EFEA] dark:border-gray-600"
                   }`}
                   placeholder="john@example.com"
                 />
@@ -393,7 +393,7 @@ export default function QuickAddPatientPage() {
                   name="dob"
                   value={formData.dob}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7A329F] focus:border-transparent pr-12 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-4 py-2.5 border border-[#E2EFEA] dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent pr-12 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
                 {voiceMode && (
                   <div className="absolute right-2 top-1/2 -translate-y-1/2">
@@ -414,7 +414,7 @@ export default function QuickAddPatientPage() {
                 )}
               </div>
               {formData.dob && (
-                <p className="text-xs text-emerald-600 dark:text-emerald-400">
+                <p className="text-xs text-[#2BB2A7]">
                   Selected: {new Date(formData.dob).toLocaleDateString()}
                 </p>
               )}
@@ -429,7 +429,7 @@ export default function QuickAddPatientPage() {
                 name="gender"
                 value={formData.gender}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7A329F] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="w-full px-4 py-2.5 border border-[#E2EFEA] dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               >
                 <option value="">Select</option>
                 <option value="male">Male</option>
@@ -449,7 +449,7 @@ export default function QuickAddPatientPage() {
                   name="blood_group"
                   value={formData.blood_group}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7A329F] focus:border-transparent pr-12 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-4 py-2.5 border border-[#E2EFEA] dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent pr-12 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   placeholder="O+"
                 />
                 {voiceMode && (
@@ -478,7 +478,7 @@ export default function QuickAddPatientPage() {
                   name="allergies"
                   value={formData.allergies}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7A329F] focus:border-transparent pr-12 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-4 py-2.5 border border-[#E2EFEA] dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent pr-12 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   placeholder="Penicillin"
                 />
                 {voiceMode && (
@@ -496,29 +496,29 @@ export default function QuickAddPatientPage() {
 
           {/* Voice Tips */}
           {voiceMode && (
-            <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-3 border border-purple-200 dark:border-purple-800">
-              <h4 className="text-xs font-semibold text-[#3B1E6F] dark:text-[#7A329F] mb-1 flex items-center gap-1">
+            <div className="bg-[#EAF7F4] dark:bg-[#1F8F89]/20 rounded-lg p-3 border border-[#2BB2A7]/30 dark:border-[#2BB2A7]/20">
+              <h4 className="text-xs font-semibold text-[#1F8F89] dark:text-[#2BB2A7] mb-1 flex items-center gap-1">
                 <Mic className="w-3 h-3" /> Voice Tips
               </h4>
-              <p className="text-xs text-[#7A329F] dark:text-[#9B4DBF]">
+              <p className="text-xs text-[#1F8F89] dark:text-[#2BB2A7]/80">
                 Click microphone → Speak naturally → Field auto-fills
               </p>
             </div>
           )}
 
           {/* Form actions */}
-          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex justify-end gap-3 pt-4 border-t border-[#E2EFEA] dark:border-gray-700">
             <button
               type="button"
               onClick={() => router.back()}
-              className="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+              className="px-6 py-2.5 border border-[#E2EFEA] dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-[#EAF7F4] dark:hover:bg-gray-700 transition"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="px-6 py-2 bg-gradient-to-r from-[#3B1E6F] to-[#7A329F] text-white rounded-lg hover:opacity-90 transition disabled:opacity-50 shadow-lg shadow-[#3B1E6F]/20"
+              className="px-6 py-2.5 bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] text-white rounded-lg hover:opacity-90 transition disabled:opacity-50 shadow-lg shadow-[#2BB2A7]/20"
             >
               {submitting ? "Saving..." : "Add Patient & Book"}
             </button>

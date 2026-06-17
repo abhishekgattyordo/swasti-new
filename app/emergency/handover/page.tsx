@@ -402,24 +402,26 @@ Date/Time: _________________
             </div>
           </div>
         </header>
-        <main className="max-w-7xl mx-auto px-4 py-12">
-          <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800 p-8 shadow-sm text-center max-w-2xl mx-auto">
-            <div className="w-20 h-20 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-              <BookOpen size={40} className="text-indigo-600" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-              {patients.length > 0 ? `Handover ${patients.length} Patients` : 'Start Shift Handover'}
-            </h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Create a comprehensive handover document to transfer patient care information 
-              to the next shift nurse. You have {patients.length} active patient{patients.length !== 1 ? 's' : ''}.
-            </p>
-            <button onClick={handleStartHandover}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition flex items-center gap-2 mx-auto">
-              <Send size={20} /> Begin Handover
-            </button>
-          </div>
-        </main>
+       <main className="max-w-7xl mx-auto px-4 py-12">
+  <div className="bg-white dark:bg-slate-900 rounded-xl border border-[#E2EFEA] dark:border-slate-700 p-8 shadow-sm text-center max-w-2xl mx-auto hover:shadow-md transition-shadow duration-200">
+    <div className="w-20 h-20 bg-[#EAF7F4] dark:bg-[#1F8F89]/20 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-[#2BB2A7]/30 dark:border-[#2BB2A7]/20">
+      <BookOpen size={40} className="text-[#2BB2A7]" />
+    </div>
+    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+      {patients.length > 0 ? `Handover ${patients.length} Patient${patients.length !== 1 ? 's' : ''}` : 'Start Shift Handover'}
+    </h2>
+    <p className="text-gray-600 dark:text-gray-400 mb-6">
+      Create a comprehensive handover document to transfer patient care information 
+      to the next shift nurse. You have <span className="font-semibold text-[#2BB2A7]">{patients.length}</span> active patient{patients.length !== 1 ? 's' : ''}.
+    </p>
+    <button 
+      onClick={handleStartHandover}
+      className="bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] hover:opacity-90 text-white font-semibold py-3 px-6 rounded-lg transition flex items-center gap-2 mx-auto shadow-lg shadow-[#2BB2A7]/20 hover:shadow-xl hover:shadow-[#2BB2A7]/30"
+    >
+      <Send size={20} /> Begin Handover
+    </button>
+  </div>
+</main>
       </div>
     );
   }

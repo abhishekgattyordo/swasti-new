@@ -36,14 +36,14 @@ export default function DashboardPage() {
     {
       title: "Today's Appointments",
       value: appointments.length.toString(),
-      icon: <Calendar className="w-5 h-5 text-[#3B1E6F]" />,
-      color: "bg-purple-50 dark:bg-purple-900/20",
+      icon: <Calendar className="w-5 h-5 text-[#2BB2A7]" />,
+      color: "bg-[#EAF7F4] dark:bg-[#1F8F89]/20",
     },
     {
       title: "Total Patients",
       value: patients.length.toString(),
-      icon: <Users className="w-5 h-5 text-emerald-600" />,
-      color: "bg-emerald-50 dark:bg-emerald-900/20",
+      icon: <Users className="w-5 h-5 text-[#86C94C]" />,
+      color: "bg-green-50 dark:bg-green-900/20",
     },
     {
       title: "Pending Payments",
@@ -54,8 +54,8 @@ export default function DashboardPage() {
     {
       title: "Completed Today",
       value: appointments.filter(a => a.status === "Completed").length.toString(),
-      icon: <CheckCircle2 className="w-5 h-5 text-[#7A329F]" />,
-      color: "bg-purple-50 dark:bg-purple-900/20",
+      icon: <CheckCircle2 className="w-5 h-5 text-[#2BB2A7]" />,
+      color: "bg-[#EAF7F4] dark:bg-[#1F8F89]/20",
     },
   ];
 
@@ -64,7 +64,7 @@ export default function DashboardPage() {
   if (!tenantLoading && !isDashboardEnabled) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="text-center bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg">
+        <div className="text-center bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-[#E2EFEA] dark:border-gray-700">
           <div className="text-red-500 text-6xl mb-4">🔒</div>
           <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">Access Denied</h1>
           <p className="text-gray-600 dark:text-gray-400">
@@ -80,7 +80,7 @@ export default function DashboardPage() {
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {stats.map((stat, index) => (
-          <div key={index} className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
+          <div key={index} className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-[#E2EFEA] dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
             <div className={`p-2 rounded-lg w-fit mb-3 ${stat.color}`}>
               {stat.icon}
             </div>
@@ -93,23 +93,23 @@ export default function DashboardPage() {
       {/* Two Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Today's Schedule Preview */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-            <h3 className="font-semibold text-[#3B1E6F] dark:text-white text-sm flex items-center gap-2">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-[#E2EFEA] dark:border-gray-700 shadow-sm">
+          <div className="p-4 border-b border-[#E2EFEA] dark:border-gray-700 flex items-center justify-between">
+            <h3 className="font-semibold text-[#1F8F89] dark:text-[#2BB2A7] text-sm flex items-center gap-2">
               <Clock className="w-4 h-4" />
               Today's Schedule
             </h3>
-            <Link href="/doctor/schedule" className="text-xs text-[#7A329F] dark:text-[#9B4DBF] hover:underline font-medium">
+            <Link href="/doctor/schedule" className="text-xs text-[#2BB2A7] dark:text-[#2BB2A7] hover:underline font-medium">
               View All
             </Link>
           </div>
           <div className="p-3">
             {upcomingAppointments.map((apt) => (
-              <div key={apt.id} className="flex items-center gap-3 p-2 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition mb-1">
+              <div key={apt.id} className="flex items-center gap-3 p-2 hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/10 rounded-lg transition mb-1">
                 <div className="w-14 text-xs font-medium text-gray-600 dark:text-gray-400">{apt.time}</div>
                 <div className={`w-2 h-2 rounded-full ${
-                  apt.status === 'Ready' ? 'bg-emerald-500' :
-                  apt.status === 'Checked-in' ? 'bg-amber-500' : 'bg-[#7A329F]'
+                  apt.status === 'Ready' ? 'bg-[#86C94C]' :
+                  apt.status === 'Checked-in' ? 'bg-amber-500' : 'bg-[#2BB2A7]'
                 }`}></div>
                 <div className="flex-1">
                   <div className="text-sm font-medium text-gray-900 dark:text-white">
@@ -118,9 +118,9 @@ export default function DashboardPage() {
                   <p className="text-xs text-gray-500 dark:text-gray-400">{apt.reason}</p>
                 </div>
                 <span className={`text-xs px-2 py-0.5 rounded-full ${
-                  apt.status === 'Ready' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400' :
+                  apt.status === 'Ready' ? 'bg-[#EAF7F4] text-[#1F8F89] dark:bg-[#1F8F89]/20 dark:text-[#2BB2A7]' :
                   apt.status === 'Checked-in' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400' :
-                  'bg-purple-100 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400'
+                  'bg-[#EAF7F4] text-[#1F8F89] dark:bg-[#1F8F89]/20 dark:text-[#2BB2A7]'
                 }`}>
                   {apt.status}
                 </span>
@@ -133,19 +133,19 @@ export default function DashboardPage() {
         </div>
 
         {/* Recent Invoices */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-            <h3 className="font-semibold text-[#3B1E6F] dark:text-white text-sm flex items-center gap-2">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-[#E2EFEA] dark:border-gray-700 shadow-sm">
+          <div className="p-4 border-b border-[#E2EFEA] dark:border-gray-700 flex items-center justify-between">
+            <h3 className="font-semibold text-[#1F8F89] dark:text-[#2BB2A7] text-sm flex items-center gap-2">
               <DollarSign className="w-4 h-4" />
               Recent Invoices
             </h3>
-            <Link href="/doctor/billing" className="text-xs text-[#7A329F] dark:text-[#9B4DBF] hover:underline font-medium">
+            <Link href="/doctor/billing" className="text-xs text-[#2BB2A7] dark:text-[#2BB2A7] hover:underline font-medium">
               View All
             </Link>
           </div>
           <div className="p-3">
             {invoices.slice(0, 3).map((invoice) => (
-              <div key={invoice.id} className="flex items-center justify-between p-2 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition mb-1">
+              <div key={invoice.id} className="flex items-center justify-between p-2 hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/10 rounded-lg transition mb-1">
                 <div>
                   <p className="text-sm font-medium text-gray-900 dark:text-white">{invoice.patientName}</p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">{invoice.date}</p>
@@ -153,7 +153,7 @@ export default function DashboardPage() {
                 <div className="text-right">
                   <p className="text-sm font-medium text-gray-900 dark:text-white">${invoice.amount.toFixed(2)}</p>
                   <span className={`text-xs px-2 py-0.5 rounded-full ${
-                    invoice.status === 'Paid' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400' :
+                    invoice.status === 'Paid' ? 'bg-[#EAF7F4] text-[#1F8F89] dark:bg-[#1F8F89]/20 dark:text-[#2BB2A7]' :
                     invoice.status === 'Pending' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400' :
                     'bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400'
                   }`}>
@@ -168,9 +168,6 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
-
- 
-      
     </div>
   );
 }

@@ -320,11 +320,13 @@
 
 
 
+
+
 'use client';
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { BarChart3, Users, AlertCircle, Pill, FileText, CheckSquare, Bell, BookOpen, Loader2 } from 'lucide-react';
+import { BarChart3, Users, AlertCircle, Pill, FileText, CheckSquare, Bell, BookOpen, Loader2, Activity, Clock } from 'lucide-react';
 import { nurseApi } from '@/lib/api/nurse';
 import toast from 'react-hot-toast';
 
@@ -335,15 +337,6 @@ interface DashboardStats {
   activeMedications: number;
 }
 
-interface RecentActivity {
-  id: string;
-  type: 'vitals' | 'medication' | 'alert' | 'task' | 'note';
-  description: string;
-  patientName: string;
-  timestamp: string;
-  timeAgo: string;
-}
-
 export default function Dashboard() {
   const [stats, setStats] = useState<DashboardStats>({
     totalPatients: 0,
@@ -351,7 +344,6 @@ export default function Dashboard() {
     criticalAlerts: 0,
     activeMedications: 0,
   });
-  const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
   const [loading, setLoading] = useState(true);
   const [nurseName, setNurseName] = useState('');
 
@@ -419,60 +411,12 @@ export default function Dashboard() {
         t.priority === 'critical' || t.status === 'overdue'
       ).length;
 
-      const activities: RecentActivity[] = [];
-
-      const recentTasks = allTasks
-        .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
-        .slice(0, 5);
-      
-      recentTasks.forEach((task: any) => {
-        activities.push({
-          id: task.id,
-          type: 'task',
-          description: `Task "${task.title}" ${task.status === 'completed' ? 'completed' : 'assigned'}`,
-          patientName: task.patient_name || 'Unknown',
-          timestamp: task.created_at,
-          timeAgo: getTimeAgo(task.created_at),
-        });
-      });
-
-      for (const patient of patientsToFetch.slice(0, 3)) {
-        try {
-          const notesResult = await nurseApi.getNotes(patient.patient_id);
-          let notes = [];
-          if (notesResult?.success && notesResult?.data) {
-            notes = notesResult.data;
-          } else if (Array.isArray(notesResult)) {
-            notes = notesResult;
-          }
-          
-          const recentNotes = notes.slice(0, 2);
-          recentNotes.forEach((note: any) => {
-            activities.push({
-              id: note.id,
-              type: 'note',
-              description: `Nursing note added: ${note.title || 'Clinical note'}`,
-              patientName: patient.patient_name,
-              timestamp: note.createdAt || note.created_at,
-              timeAgo: getTimeAgo(note.createdAt || note.created_at),
-            });
-          });
-        } catch (err) {
-          console.error('Error fetching notes for patient:', patient.patient_id);
-        }
-      }
-
-      const sortedActivities = activities
-        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-        .slice(0, 5);
-
       setStats({
         totalPatients,
         pendingTasks: totalPendingTasks,
         criticalAlerts,
         activeMedications: totalActiveMeds,
       });
-      setRecentActivities(sortedActivities);
 
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -482,59 +426,26 @@ export default function Dashboard() {
     }
   };
 
-  const getTimeAgo = (timestamp: string) => {
-    if (!timestamp) return 'Recently';
-    
-    const now = new Date();
-    const past = new Date(timestamp);
-    const diffMs = now.getTime() - past.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins} min ago`;
-    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-    return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-  };
-
   const statsCards = [
-    { label: 'Total Patients', value: stats.totalPatients.toString(), icon: Users, color: 'bg-[#3B1E6F]/10 text-[#3B1E6F]' },
-    { label: 'Pending Tasks', value: stats.pendingTasks.toString(), icon: CheckSquare, color: 'bg-[#7A329F]/10 text-[#7A329F]' },
+    { label: 'Total Patients', value: stats.totalPatients.toString(), icon: Users, color: 'bg-[#EAF7F4] text-[#2BB2A7]' },
+    { label: 'Pending Tasks', value: stats.pendingTasks.toString(), icon: CheckSquare, color: 'bg-[#EAF7F4] text-[#2BB2A7]' },
     { label: 'Critical Alerts', value: stats.criticalAlerts.toString(), icon: AlertCircle, color: 'bg-red-100 text-red-700' },
-    { label: 'Active Medications', value: stats.activeMedications.toString(), icon: Pill, color: 'bg-[#0D5CB3]/10 text-[#0D5CB3]' },
+    { label: 'Active Medications', value: stats.activeMedications.toString(), icon: Pill, color: 'bg-[#EAF7F4] text-[#86C94C]' },
   ];
 
   const navItems = [
     { href: '/nurse/patients', label: 'My Patients', icon: Users },
-    { href: '/nurse/vitals', label: 'Vitals Entry', icon: BarChart3 },
+    { href: '/nurse/vitals', label: 'Vitals Entry', icon: Activity },
     { href: '/nurse/medications', label: 'Medications', icon: Pill },
     { href: '/nurse/nursing-notes', label: 'Nursing Notes', icon: FileText },
     { href: '/nurse/tasks', label: 'Tasks', icon: CheckSquare },
     { href: '/nurse/handover', label: 'Shift Handover', icon: BookOpen },
   ];
 
-  const getActivityIcon = (type: string) => {
-    switch (type) {
-      case 'vitals':
-        return 'bg-[#3B1E6F]';
-      case 'medication':
-        return 'bg-[#7A329F]';
-      case 'alert':
-        return 'bg-red-500';
-      case 'task':
-        return 'bg-[#0D5CB3]';
-      case 'note':
-        return 'bg-[#1A438A]';
-      default:
-        return 'bg-gray-500';
-    }
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-slate-900 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-[#7A329F]" />
+        <Loader2 className="h-8 w-8 animate-spin text-[#2BB2A7]" />
       </div>
     );
   }
@@ -542,12 +453,17 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
       {/* Header */}
-      <header className="border-b border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-800 sticky top-0 z-30 shadow-sm">
+      <header className="border-b border-[#E2EFEA] dark:border-slate-800 bg-white dark:bg-slate-800 sticky top-0 z-30 shadow-sm">
         <div className="px-4 md:px-8 py-4">
-          <h1 className="text-3xl font-bold text-[#3B1E6F] dark:text-white">
-            Welcome back, {nurseName.split(' ')[0]}!
-          </h1>
-          <p className="text-sm text-[#1A438A] dark:text-gray-400 mt-1">
+          <div className="flex items-center gap-2">
+            <div className="w-9 h-9 rounded-xl bg-[#EAF7F4] dark:bg-[#1F8F89]/20 flex items-center justify-center">
+              <Activity className="w-5 h-5 text-[#2BB2A7]" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Welcome back, {nurseName.split(' ')[0]}!
+            </h1>
+          </div>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 ml-11">
             {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
           </p>
         </div>
@@ -560,11 +476,11 @@ export default function Dashboard() {
           {statsCards.map((stat) => {
             const Icon = stat.icon;
             return (
-              <div key={stat.label} className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-6 shadow-sm hover:shadow-md transition-shadow">
+              <div key={stat.label} className="bg-white dark:bg-slate-800 rounded-xl border border-[#E2EFEA] dark:border-slate-700 p-6 shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{stat.label}</p>
-                    <p className="text-3xl font-bold mt-1 text-[#1A438A] dark:text-white">{stat.value}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{stat.label}</p>
+                    <p className="text-3xl font-bold mt-1 text-gray-900 dark:text-white">{stat.value}</p>
                   </div>
                   <div className={`p-3 rounded-lg ${stat.color}`}>
                     <Icon size={24} />
@@ -576,28 +492,26 @@ export default function Dashboard() {
         </div>
 
         {/* Navigation Grid */}
-        <h2 className="text-2xl font-bold mb-4 text-[#3B1E6F] dark:text-white">Quick Access</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Quick Access</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
           {navItems.map((item) => {
             const Icon = item.icon;
             return (
               <Link key={item.href} href={item.href}>
-                <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-6 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer group">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="p-2 bg-[#3B1E6F]/10 dark:bg-[#3B1E6F]/30 rounded-lg group-hover:bg-[#3B1E6F]/20 dark:group-hover:bg-[#3B1E6F]/40 transition">
-                      <Icon size={20} className="text-[#7A329F] dark:text-[#7A329F]" />
+                <div className="bg-white dark:bg-slate-800 rounded-xl border border-[#E2EFEA] dark:border-slate-700 p-6 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer group">
+                  <div className="flex flex-col items-center text-center">
+                    <div className="p-3 bg-[#EAF7F4] dark:bg-[#1F8F89]/20 rounded-xl group-hover:bg-[#2BB2A7] group-hover:text-white transition-all">
+                      <Icon size={24} className="text-[#2BB2A7] group-hover:text-white transition-all" />
                     </div>
-                    <h3 className="font-semibold text-[#1A438A] dark:text-white group-hover:text-[#7A329F] dark:group-hover:text-[#7A329F] transition">{item.label}</h3>
+                    <h3 className="font-semibold text-sm text-gray-900 dark:text-white mt-3 group-hover:text-[#2BB2A7] transition">
+                      {item.label}
+                    </h3>
                   </div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">→ Access {item.label.toLowerCase()}</p>
                 </div>
               </Link>
             );
           })}
         </div>
-
-        {/* Recent Activity - Uncommented and styled */}
-        
       </main>
     </div>
   );

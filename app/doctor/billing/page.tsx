@@ -162,13 +162,13 @@ export default function BillingPage() {
       <div className="relative inline-block" ref={el => { filterRefs.current[column] = el; }}>
         <button
           onClick={() => setOpenFilter(isOpen ? null : column)}
-          className={`ml-1 p-1 rounded-md hover:bg-purple-100 dark:hover:bg-purple-900/20 transition-colors ${value ? 'text-[#7A329F] dark:text-[#9B4DBF]' : 'text-gray-400'}`}
+          className={`ml-1 p-1 rounded-md hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/20 transition-colors ${value ? 'text-[#2BB2A7] dark:text-[#2BB2A7]' : 'text-gray-400'}`}
           aria-label={`Filter by ${label}`}
         >
           <Filter className="h-3.5 w-3.5" />
         </button>
         {isOpen && (
-          <div className="absolute left-0 top-full mt-1 z-50 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-3">
+          <div className="absolute left-0 top-full mt-1 z-50 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-[#E2EFEA] dark:border-gray-700 p-3">
             <div className="space-y-2">
               <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Filter by {label}
@@ -178,7 +178,7 @@ export default function BillingPage() {
                 placeholder={placeholder}
                 value={value}
                 onChange={e => handleFilterChange(column, e.target.value)}
-                className="w-full px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-[#7A329F] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="w-full px-3 py-1.5 text-sm border border-[#E2EFEA] dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 autoFocus
               />
               <div className="flex justify-end gap-2">
@@ -190,7 +190,7 @@ export default function BillingPage() {
                 </button>
                 <button
                   onClick={() => setOpenFilter(null)}
-                  className="text-xs bg-[#3B1E6F] hover:bg-[#7A329F] text-white px-3 py-1 rounded transition-colors"
+                  className="text-xs bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] hover:opacity-90 text-white px-3 py-1 rounded transition-colors"
                 >
                   Apply
                 </button>
@@ -213,7 +213,7 @@ export default function BillingPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-[#3B1E6F] dark:text-[#7A329F]" />
+        <Loader2 className="h-8 w-8 animate-spin text-[#2BB2A7] dark:text-[#2BB2A7]" />
       </div>
     );
   }
@@ -221,7 +221,7 @@ export default function BillingPage() {
   if (!tenantLoading && !isBillingEnabled) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="text-center bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg">
+        <div className="text-center bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-[#E2EFEA] dark:border-gray-700">
           <div className="text-red-500 text-6xl mb-4">🔒</div>
           <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">Access Denied</h1>
           <p className="text-gray-600 dark:text-gray-400">
@@ -234,15 +234,20 @@ export default function BillingPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h2 className="text-2xl font-bold text-[#3B1E6F] dark:text-white">Billing</h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Manage invoices and payments</p>
+          <div className="flex items-center gap-2">
+            <div className="w-9 h-9 rounded-xl bg-[#EAF7F4] dark:bg-[#1F8F89]/20 flex items-center justify-center">
+              <DollarSign className="w-5 h-5 text-[#2BB2A7]" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Billing</h2>
+          </div>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 ml-11">Manage invoices and payments</p>
         </div>
         {hasActiveFilters && (
           <button
             onClick={clearAllFilters}
-            className="text-xs text-[#7A329F] dark:text-[#9B4DBF] hover:text-[#3B1E6F] dark:hover:text-[#7A329F] flex items-center gap-1"
+            className="text-xs text-[#2BB2A7] hover:text-[#1F8F89] flex items-center gap-1"
           >
             <X className="h-3 w-3" /> Clear Filters
           </button>
@@ -250,17 +255,17 @@ export default function BillingPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-[#E2EFEA] dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-purple-100 dark:bg-purple-900/20 rounded-lg">
-              <DollarSign className="w-5 h-5 text-[#3B1E6F] dark:text-[#7A329F]" />
+            <div className="p-2 bg-[#EAF7F4] dark:bg-[#1F8F89]/20 rounded-lg">
+              <DollarSign className="w-5 h-5 text-[#2BB2A7]" />
             </div>
             <p className="text-sm text-gray-500 dark:text-gray-400">Total Revenue</p>
           </div>
           <p className="text-2xl font-bold text-gray-900 dark:text-white">₹{totalRevenue.toFixed(2)}</p>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-[#E2EFEA] dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 bg-amber-100 dark:bg-amber-900/20 rounded-lg">
               <Clock className="w-5 h-5 text-amber-600 dark:text-amber-400" />
@@ -269,21 +274,21 @@ export default function BillingPage() {
           </div>
           <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">₹{pendingAmount.toFixed(2)}</p>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-[#E2EFEA] dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-emerald-100 dark:bg-emerald-900/20 rounded-lg">
-              <CreditCard className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            <div className="p-2 bg-[#EAF7F4] dark:bg-[#1F8F89]/20 rounded-lg">
+              <CreditCard className="w-5 h-5 text-[#2BB2A7]" />
             </div>
             <p className="text-sm text-gray-500 dark:text-gray-400">Paid</p>
           </div>
-          <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">₹{paidAmount.toFixed(2)}</p>
+          <p className="text-2xl font-bold text-[#2BB2A7] dark:text-[#2BB2A7]">₹{paidAmount.toFixed(2)}</p>
         </div>
       </div>
 
       {/* Date Filter Row */}
-      <div className="flex flex-wrap items-center gap-4 bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+      <div className="flex flex-wrap items-center gap-4 bg-white dark:bg-gray-800 p-4 rounded-xl border border-[#E2EFEA] dark:border-gray-700 shadow-sm">
         <div className="flex items-center gap-2">
-          <Calendar className="h-4 w-4 text-gray-400" />
+          <Calendar className="h-4 w-4 text-[#2BB2A7]" />
           <span className="text-sm text-gray-600 dark:text-gray-300">Date Range:</span>
         </div>
         <div className="flex flex-wrap gap-3">
@@ -293,7 +298,7 @@ export default function BillingPage() {
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#7A329F] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="px-3 py-1.5 border border-[#E2EFEA] dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             />
           </div>
           <div>
@@ -302,7 +307,7 @@ export default function BillingPage() {
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#7A329F] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="px-3 py-1.5 border border-[#E2EFEA] dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             />
           </div>
           {(startDate || endDate) && (
@@ -317,42 +322,42 @@ export default function BillingPage() {
       </div>
 
       {/* Invoices Table */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-[#E2EFEA] dark:border-gray-700 overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-sm border-collapse">
-            <thead className="bg-gray-50 dark:bg-gray-700/30">
-              <tr className="border-b border-gray-200 dark:border-gray-700">
-                <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-400 border-r border-gray-200 dark:border-gray-700">
+            <thead className="bg-[#F4F9F7] dark:bg-gray-700/30">
+              <tr className="border-b border-[#E2EFEA] dark:border-gray-700">
+                <th className="px-4 py-3 text-left font-medium text-[#1F8F89] dark:text-[#2BB2A7] border-r border-[#E2EFEA] dark:border-gray-700">
                   <div className="flex items-center gap-1">
                     Invoice ID
                     <FilterPopover column="invoiceId" placeholder="Filter by ID..." label="Invoice ID" />
                   </div>
                 </th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-400 border-r border-gray-200 dark:border-gray-700">
+                <th className="px-4 py-3 text-left font-medium text-[#1F8F89] dark:text-[#2BB2A7] border-r border-[#E2EFEA] dark:border-gray-700">
                   <div className="flex items-center gap-1">
                     Patient
                     <FilterPopover column="patient" placeholder="Filter by name..." label="Patient" />
                   </div>
                 </th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-400 border-r border-gray-200 dark:border-gray-700">
+                <th className="px-4 py-3 text-left font-medium text-[#1F8F89] dark:text-[#2BB2A7] border-r border-[#E2EFEA] dark:border-gray-700">
                   <div className="flex items-center gap-1">
                     Date
                     <FilterPopover column="date" placeholder="YYYY-MM-DD" label="Date" />
                   </div>
                 </th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-400 border-r border-gray-200 dark:border-gray-700">
+                <th className="px-4 py-3 text-left font-medium text-[#1F8F89] dark:text-[#2BB2A7] border-r border-[#E2EFEA] dark:border-gray-700">
                   <div className="flex items-center gap-1">
                     Amount (₹)
                     <FilterPopover column="amount" placeholder="e.g., 500" label="Amount" />
                   </div>
                 </th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-400 border-r border-gray-200 dark:border-gray-700">
+                <th className="px-4 py-3 text-left font-medium text-[#1F8F89] dark:text-[#2BB2A7] border-r border-[#E2EFEA] dark:border-gray-700">
                   <div className="flex items-center gap-1">
                     Status
                     <FilterPopover column="status" placeholder="Paid/Pending" label="Status" />
                   </div>
                 </th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-400">
+                <th className="px-4 py-3 text-left font-medium text-[#1F8F89] dark:text-[#2BB2A7]">
                   <div className="flex items-center gap-1">
                     Method
                     <FilterPopover column="method" placeholder="Cash/Card/UPI" label="Method" />
@@ -360,17 +365,17 @@ export default function BillingPage() {
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+            <tbody className="divide-y divide-[#E2EFEA] dark:divide-gray-700">
               {filteredInvoices.map((invoice) => (
-                <tr key={invoice.id} className="hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors">
-                  <td className="px-4 py-3 border-r border-gray-200 dark:border-gray-700 font-mono text-xs text-gray-900 dark:text-white">{invoice.id}</td>
-                  <td className="px-4 py-3 border-r border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white">{invoice.patientName}</td>
-                  <td className="px-4 py-3 border-r border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300">{invoice.date}</td>
-                  <td className="px-4 py-3 border-r border-gray-200 dark:border-gray-700 font-medium text-[#3B1E6F] dark:text-[#7A329F]">₹{invoice.amount.toFixed(2)}</td>
-                  <td className="px-4 py-3 border-r border-gray-200 dark:border-gray-700">
+                <tr key={invoice.id} className="hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/10 transition-colors">
+                  <td className="px-4 py-3 border-r border-[#E2EFEA] dark:border-gray-700 font-mono text-xs text-gray-900 dark:text-white">{invoice.id}</td>
+                  <td className="px-4 py-3 border-r border-[#E2EFEA] dark:border-gray-700 text-gray-900 dark:text-white">{invoice.patientName}</td>
+                  <td className="px-4 py-3 border-r border-[#E2EFEA] dark:border-gray-700 text-gray-600 dark:text-gray-300">{invoice.date}</td>
+                  <td className="px-4 py-3 border-r border-[#E2EFEA] dark:border-gray-700 font-medium text-[#2BB2A7]">₹{invoice.amount.toFixed(2)}</td>
+                  <td className="px-4 py-3 border-r border-[#E2EFEA] dark:border-gray-700">
                     <span className={`px-2 py-1 text-xs rounded-full ${
                       invoice.status.toLowerCase() === "paid"
-                        ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400"
+                        ? "bg-[#EAF7F4] text-[#1F8F89] dark:bg-[#1F8F89]/20 dark:text-[#2BB2A7]"
                         : invoice.status.toLowerCase() === "pending"
                         ? "bg-amber-100 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400"
                         : "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400"
@@ -392,7 +397,7 @@ export default function BillingPage() {
           </table>
         </div>
         {filteredInvoices.length > 0 && (
-          <div className="px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30 text-xs text-gray-500 dark:text-gray-400">
+          <div className="px-4 py-3 border-t border-[#E2EFEA] dark:border-gray-700 bg-[#F4F9F7] dark:bg-gray-700/30 text-xs text-gray-500 dark:text-gray-400">
             Showing {filteredInvoices.length} invoices
           </div>
         )}

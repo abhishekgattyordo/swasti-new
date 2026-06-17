@@ -717,8 +717,6 @@
 
 
 
-
-
 "use client";
 
 import React, { useState, useMemo, useEffect, ReactNode } from "react";
@@ -1058,7 +1056,7 @@ export default function SchedulePage() {
   if (!tenantLoading && !isScheduleEnabled) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="text-center bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg">
+        <div className="text-center bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-[#E2EFEA] dark:border-gray-700">
           <div className="text-red-500 text-6xl mb-4">🔒</div>
           <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">Access Denied</h1>
           <p className="text-gray-600 dark:text-gray-400">
@@ -1075,8 +1073,10 @@ export default function SchedulePage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <div className="flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-[#3B1E6F]" />
-            <h1 className="text-xl sm:text-2xl font-bold text-[#3B1E6F] dark:text-white">
+            <div className="w-9 h-9 rounded-xl bg-[#EAF7F4] dark:bg-[#1F8F89]/20 flex items-center justify-center">
+              <Calendar className="w-5 h-5 text-[#2BB2A7]" />
+            </div>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
               Schedule
             </h1>
           </div>
@@ -1084,58 +1084,58 @@ export default function SchedulePage() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 sm:p-5 shadow-sm hover:shadow-md transition-shadow">
+          <div className="bg-white dark:bg-gray-800 border border-[#E2EFEA] dark:border-gray-700 rounded-xl p-4 sm:p-5 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-center gap-2 mb-2">
-              <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/20">
-                <ClipboardList className="w-5 h-5 text-[#3B1E6F] dark:text-[#7A329F]" />
+              <div className="p-2 rounded-lg bg-[#EAF7F4] dark:bg-[#1F8F89]/20">
+                <ClipboardList className="w-5 h-5 text-[#2BB2A7]" />
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wider">
                 TOTAL APPOINTMENTS
               </p>
             </div>
-            <p className="text-2xl sm:text-3xl font-bold mt-1 text-gray-800 dark:text-white">
+            <p className="text-2xl sm:text-3xl font-bold mt-1 text-gray-900 dark:text-white">
               {appointments.length}
             </p>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 sm:p-5 shadow-sm hover:shadow-md transition-shadow">
+          <div className="bg-white dark:bg-gray-800 border border-[#E2EFEA] dark:border-gray-700 rounded-xl p-4 sm:p-5 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-center gap-2 mb-2">
-              <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/20">
-                <Video className="w-5 h-5 text-[#7A329F] dark:text-[#9B4DBF]" />
+              <div className="p-2 rounded-lg bg-[#EAF7F4] dark:bg-[#1F8F89]/20">
+                <Video className="w-5 h-5 text-[#2BB2A7]" />
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wider">
                 TELEMEDICINE
               </p>
             </div>
-            <p className="text-2xl sm:text-3xl font-bold mt-1 text-gray-800 dark:text-white">
+            <p className="text-2xl sm:text-3xl font-bold mt-1 text-gray-900 dark:text-white">
               {appointments.filter((a) => a.type === "teleconsultation").length}
             </p>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 sm:p-5 shadow-sm hover:shadow-md transition-shadow">
+          <div className="bg-white dark:bg-gray-800 border border-[#E2EFEA] dark:border-gray-700 rounded-xl p-4 sm:p-5 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-center gap-2 mb-2">
-              <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-900/20">
-                <Clock className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+              <div className="p-2 rounded-lg bg-[#EAF7F4] dark:bg-[#1F8F89]/20">
+                <Clock className="w-5 h-5 text-[#2BB2A7]" />
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wider">
                 AVAILABLE SLOTS
               </p>
             </div>
-            <p className="text-2xl sm:text-3xl font-bold mt-1 text-gray-800 dark:text-white">
+            <p className="text-2xl sm:text-3xl font-bold mt-1 text-gray-900 dark:text-white">
               {slotsData.length}
             </p>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 sm:p-5 shadow-sm hover:shadow-md transition-shadow">
+          <div className="bg-white dark:bg-gray-800 border border-[#E2EFEA] dark:border-gray-700 rounded-xl p-4 sm:p-5 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-center gap-2 mb-2">
-              <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/20">
-                <Calendar className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+              <div className="p-2 rounded-lg bg-[#EAF7F4] dark:bg-[#1F8F89]/20">
+                <Calendar className="w-5 h-5 text-[#2BB2A7]" />
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wider">
                 TODAYS APPOINTMENTS
               </p>
             </div>
-            <p className="text-2xl sm:text-3xl font-bold mt-1 text-gray-800 dark:text-white">
+            <p className="text-2xl sm:text-3xl font-bold mt-1 text-gray-900 dark:text-white">
               {appointments.length}
             </p>
           </div>
@@ -1144,14 +1144,14 @@ export default function SchedulePage() {
         {/* View Slots Button */}
         {viewMode === "day" && (
           <div className="overflow-hidden">
-            <div className="p-3 font-medium text-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+            <div className="p-3 font-medium text-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 bg-white dark:bg-gray-800 rounded-xl border border-[#E2EFEA] dark:border-gray-700 shadow-sm">
               <span className="text-gray-600 dark:text-gray-300">
                 Schedule for {format(currentDate, "PPP")}
               </span>
               <button
                 onClick={handleViewSlots}
                 disabled={loadingSlots}
-                className="w-full sm:w-auto text-xs bg-[#3B1E6F] hover:bg-[#7A329F] text-white px-3 py-2 rounded-lg disabled:opacity-50 transition-colors"
+                className="w-full sm:w-auto text-xs bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] hover:opacity-90 text-white px-3 py-2 rounded-lg disabled:opacity-50 transition-opacity"
               >
                 {loadingSlots ? "Loading..." : "View Available Slots"}
               </button>
@@ -1160,7 +1160,7 @@ export default function SchedulePage() {
         )}
 
         {viewMode !== "day" && (
-          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 text-center text-gray-500 dark:text-gray-400">
+          <div className="bg-white dark:bg-gray-800 border border-[#E2EFEA] dark:border-gray-700 rounded-xl p-6 text-center text-gray-500 dark:text-gray-400">
             {viewMode === "week"
               ? "Weekly calendar view (coming soon)"
               : "Monthly calendar view (coming soon)"}
@@ -1171,20 +1171,20 @@ export default function SchedulePage() {
         {(columnFilters.length > 0 || sortConfig) && (
           <button
             onClick={clearAllFilters}
-            className="text-sm text-[#7A329F] dark:text-[#9B4DBF] hover:text-[#3B1E6F] dark:hover:text-[#7A329F] border border-[#7A329F]/30 dark:border-[#7A329F]/20 px-3 py-1 rounded-lg transition-colors"
+            className="text-sm text-[#2BB2A7] hover:text-[#1F8F89] border border-[#2BB2A7]/30 px-3 py-1 rounded-lg transition-colors"
           >
             Clear all filters
           </button>
         )}
 
         {/* Table */}
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-sm">
+        <div className="bg-white dark:bg-gray-800 border border-[#E2EFEA] dark:border-gray-700 rounded-xl overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
             <div className="min-w-[640px] lg:min-w-full">
               <table className="w-full border-collapse">
-                <thead className="bg-gray-50 dark:bg-gray-700/30">
+                <thead className="bg-[#F4F9F7] dark:bg-gray-700/30">
                   <tr>
-                    <th className="p-3 sm:p-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase border border-gray-200 dark:border-gray-700">
+                    <th className="p-3 sm:p-4 text-left text-xs font-medium text-[#1F8F89] dark:text-[#2BB2A7] uppercase border border-[#E2EFEA] dark:border-gray-700">
                       <div className="flex items-center gap-1">
                         <Clock className="w-3 h-3" /> TIME
                         <button
@@ -1195,7 +1195,7 @@ export default function SchedulePage() {
                         </button>
                       </div>
                     </th>
-                    <th className="p-3 sm:p-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase border border-gray-200 dark:border-gray-700">
+                    <th className="p-3 sm:p-4 text-left text-xs font-medium text-[#1F8F89] dark:text-[#2BB2A7] uppercase border border-[#E2EFEA] dark:border-gray-700">
                       <div className="flex items-center gap-1">
                         <User className="w-3 h-3" /> PATIENT DETAILS
                         <ColumnFilterPopover
@@ -1215,7 +1215,7 @@ export default function SchedulePage() {
                         </button>
                       </div>
                     </th>
-                    <th className="p-3 sm:p-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase border border-gray-200 dark:border-gray-700">
+                    <th className="p-3 sm:p-4 text-left text-xs font-medium text-[#1F8F89] dark:text-[#2BB2A7] uppercase border border-[#E2EFEA] dark:border-gray-700">
                       <div className="flex items-center gap-1">
                         TYPE
                         <ColumnFilterPopover
@@ -1232,7 +1232,7 @@ export default function SchedulePage() {
                         </button>
                       </div>
                     </th>
-                    <th className="p-3 sm:p-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase border border-gray-200 dark:border-gray-700">
+                    <th className="p-3 sm:p-4 text-left text-xs font-medium text-[#1F8F89] dark:text-[#2BB2A7] uppercase border border-[#E2EFEA] dark:border-gray-700">
                       <div className="flex items-center gap-1">
                         STATUS
                         <ColumnFilterPopover
@@ -1249,13 +1249,13 @@ export default function SchedulePage() {
                         </button>
                       </div>
                     </th>
-                    <th className="w-24 p-3 sm:p-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase border border-gray-200 dark:border-gray-700">
+                    <th className="w-24 p-3 sm:p-4 text-left text-xs font-medium text-[#1F8F89] dark:text-[#2BB2A7] uppercase border border-[#E2EFEA] dark:border-gray-700">
                       EHR
                     </th>
-                    <th className="w-32 p-3 sm:p-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase border border-gray-200 dark:border-gray-700">
+                    <th className="w-32 p-3 sm:p-4 text-left text-xs font-medium text-[#1F8F89] dark:text-[#2BB2A7] uppercase border border-[#E2EFEA] dark:border-gray-700">
                       Teleconsultation
                     </th>
-                    <th className="w-32 p-3 sm:p-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase border border-gray-200 dark:border-gray-700">
+                    <th className="w-32 p-3 sm:p-4 text-left text-xs font-medium text-[#1F8F89] dark:text-[#2BB2A7] uppercase border border-[#E2EFEA] dark:border-gray-700">
                       Cancel
                     </th>
                   </tr>
@@ -1265,9 +1265,9 @@ export default function SchedulePage() {
                     return (
                       <tr
                         key={appointment.id}
-                        className={`hover:bg-purple-50 dark:hover:bg-purple-900/20 ${appointment.highlight ? "bg-purple-50 dark:bg-purple-900/10" : ""}`}
+                        className={`hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/10 ${appointment.highlight ? "bg-[#EAF7F4] dark:bg-[#1F8F89]/10" : ""}`}
                       >
-                        <td className="p-3 sm:p-4 border border-gray-200 dark:border-gray-700">
+                        <td className="p-3 sm:p-4 border border-[#E2EFEA] dark:border-gray-700">
                           <div className="flex items-center gap-1">
                             <Clock className="w-3.5 h-3.5 text-gray-400" />
                             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -1275,16 +1275,16 @@ export default function SchedulePage() {
                             </span>
                           </div>
                         </td>
-                        <td className="p-3 sm:p-4 border border-gray-200 dark:border-gray-700">
-                          <div className="font-bold text-gray-800 dark:text-white">
+                        <td className="p-3 sm:p-4 border border-[#E2EFEA] dark:border-gray-700">
+                          <div className="font-bold text-gray-900 dark:text-white">
                             {appointment.name}
                           </div>
                           <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                             {appointment.meta}
                           </p>
                         </td>
-                        <td className="p-3 sm:p-4 border border-gray-200 dark:border-gray-700">
-                          <span className="px-2 py-1 rounded-full text-xs font-medium inline-flex items-center gap-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+                        <td className="p-3 sm:p-4 border border-[#E2EFEA] dark:border-gray-700">
+                          <span className="px-2 py-1 rounded-full text-xs font-medium inline-flex items-center gap-1 bg-[#EAF7F4] dark:bg-gray-700 text-[#1F8F89] dark:text-gray-300">
                             {appointment.type === "teleconsultation" ? (
                               <Video className="w-3 h-3" />
                             ) : (
@@ -1295,20 +1295,20 @@ export default function SchedulePage() {
                               : appointment.type}
                           </span>
                         </td>
-                        <td className="p-3 sm:p-4 border border-gray-200 dark:border-gray-700">
+                        <td className="p-3 sm:p-4 border border-[#E2EFEA] dark:border-gray-700">
                           <span
                             className={`px-2 py-1 rounded-full text-xs font-medium inline-flex items-center gap-1 ${appointment.statusColor}`}
                           >
                             {appointment.status}
                           </span>
                         </td>
-                        <td className="p-3 sm:p-4 border border-gray-200 dark:border-gray-700">
+                        <td className="p-3 sm:p-4 border border-[#E2EFEA] dark:border-gray-700">
                           {appointment.patientId ? (
                             <button
                               onClick={(e) =>
                                 handleViewEHR(e, appointment.patientId!)
                               }
-                              className="p-1 rounded-md hover:bg-purple-100 dark:hover:bg-purple-900/20 text-[#7A329F] dark:text-[#9B4DBF] transition-colors text-sm font-medium"
+                              className="p-1 rounded-md hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/20 text-[#2BB2A7] transition-colors text-sm font-medium"
                               title="View Electronic Health Record"
                             >
                               EHR
@@ -1317,7 +1317,7 @@ export default function SchedulePage() {
                             <span className="text-gray-400 dark:text-gray-500 text-sm">—</span>
                           )}
                         </td>
-                        <td className="p-3 sm:p-4 border border-gray-200 dark:border-gray-700">
+                        <td className="p-3 sm:p-4 border border-[#E2EFEA] dark:border-gray-700">
                           {appointment.type === "teleconsultation" ? (
                             <button
                               onClick={() =>
@@ -1325,14 +1325,14 @@ export default function SchedulePage() {
                                   `/doctor/teleconsultation/${appointment.id}`,
                                 )
                               }
-                              className="flex items-center gap-1 px-2 py-1 rounded-md bg-purple-50 dark:bg-purple-900/20 text-[#7A329F] dark:text-[#9B4DBF] hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors text-sm font-medium"
+                              className="flex items-center gap-1 px-2 py-1 rounded-md bg-[#EAF7F4] dark:bg-[#1F8F89]/20 text-[#2BB2A7] hover:bg-[#2BB2A7] hover:text-white transition-colors text-sm font-medium"
                             >
                               <Video className="w-4 h-4" />
                               Join
                             </button>
                           ) : null}
                         </td>
-                        <td className="p-3 sm:p-4 border border-gray-200 dark:border-gray-700">
+                        <td className="p-3 sm:p-4 border border-[#E2EFEA] dark:border-gray-700">
                           <div className="flex gap-2">
                             <button
                               onClick={() => handleCancel(appointment)}
@@ -1350,7 +1350,7 @@ export default function SchedulePage() {
               </table>
             </div>
           </div>
-          <div className="px-4 sm:px-6 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30 text-xs text-gray-500 dark:text-gray-400">
+          <div className="px-4 sm:px-6 py-3 border-t border-[#E2EFEA] dark:border-gray-700 bg-[#F4F9F7] dark:bg-gray-700/30 text-xs text-gray-500 dark:text-gray-400">
             Showing {filteredAppointments.length} of {appointments.length}{" "}
             appointments
           </div>

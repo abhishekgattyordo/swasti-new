@@ -566,7 +566,6 @@
 
 
 
-
 'use client';
 
 import { useState, useMemo, useEffect, useRef } from "react";
@@ -868,13 +867,13 @@ export default function WardPage() {
   };
 
   const statCards = [
-    { label: "Total Beds", value: stats.total, icon: BedDouble, filter: "all", color: "text-[#3B1E6F]" },
+    { label: "Total Beds", value: stats.total, icon: BedDouble, filter: "all", color: "text-[#2BB2A7]" },
     { label: "Occupied", value: stats.occupied, icon: Activity, filter: "occupied", color: "text-blue-600" },
     { label: "Available", value: stats.available, icon: BedDouble, filter: "available", color: "text-emerald-600" },
     { label: "Cleaning", value: stats.cleaning, icon: BedDouble, filter: "cleaning", color: "text-amber-600" },
     { label: "Maintenance", value: stats.maintenance, icon: BedDouble, filter: "maintenance", color: "text-red-600" },
     { label: "Reserved", value: stats.reserved, icon: BedDouble, filter: "reserved", color: "text-purple-600" },
-    { label: "Predicted", value: stats.predictedOccupancy, icon: BarChart3, filter: "all", color: "text-[#7A329F]" },
+    { label: "Predicted", value: stats.predictedOccupancy, icon: BarChart3, filter: "all", color: "text-[#86C94C]" },
   ];
 
   if (loading && localBeds.length === 0) {
@@ -893,7 +892,7 @@ export default function WardPage() {
         )}
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <Loader2 className="h-12 w-12 animate-spin text-[#3B1E6F] mx-auto mb-4" />
+            <Loader2 className="h-12 w-12 animate-spin text-[#2BB2A7] mx-auto mb-4" />
             <p className="text-gray-500 dark:text-gray-400">Loading ward data...</p>
           </div>
         </main>
@@ -904,7 +903,7 @@ export default function WardPage() {
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900 font-sans text-gray-900 dark:text-gray-100">
       <button
-        className="lg:hidden fixed bottom-20 right-6 z-50 p-3 bg-gradient-to-r from-[#3B1E6F] to-[#7A329F] hover:from-[#7A329F] hover:to-[#0D5CB3] text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
+        className="lg:hidden fixed bottom-20 right-6 z-50 p-3 bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] hover:opacity-90 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
         aria-label="Toggle menu"
       >
@@ -933,7 +932,7 @@ export default function WardPage() {
         <div className="p-5 lg:p-6 space-y-6">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <div>
-              <h2 className="text-xl lg:text-2xl font-bold tracking-tight text-[#3B1E6F] dark:text-white">
+              <h2 className="text-xl lg:text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
                 Ward & Bed Management
               </h2>
               <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
@@ -945,7 +944,7 @@ export default function WardPage() {
               size="sm" 
               onClick={refresh} 
               disabled={loading}
-              className="border-[#3B1E6F] text-[#3B1E6F] hover:bg-[#3B1E6F] hover:text-white dark:border-[#7A329F] dark:text-[#7A329F] dark:hover:bg-[#7A329F] dark:hover:text-white"
+              className="border-[#2BB2A7] text-[#2BB2A7] hover:bg-[#2BB2A7] hover:text-white dark:border-[#2BB2A7] dark:text-[#2BB2A7] dark:hover:bg-[#2BB2A7] dark:hover:text-white"
             >
               <RefreshCw className={`h-4 w-4 mr-1 ${loading ? 'animate-spin' : ''}`} />
               Refresh
@@ -957,7 +956,7 @@ export default function WardPage() {
               <button
                 key={s.label}
                 onClick={() => setStatusFilter(s.filter === "all" ? "all" : s.filter)}
-                className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-2.5 text-left hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors"
+                className="rounded-lg border border-[#E2EFEA] dark:border-gray-700 bg-white dark:bg-gray-800 p-2.5 text-left hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/20 transition-colors"
               >
                 <div className="flex items-center gap-1.5 mb-1">
                   <s.icon className={`h-3.5 w-3.5 ${s.color || "text-muted-foreground"}`} />
@@ -971,16 +970,16 @@ export default function WardPage() {
           <Tabs defaultValue="beds" className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
               <TabsList className="bg-gray-100 dark:bg-gray-800">
-                <TabsTrigger value="beds" className="data-[state=active]:bg-[#3B1E6F] data-[state=active]:text-white">
+                <TabsTrigger value="beds" className="data-[state=active]:bg-[#2BB2A7] data-[state=active]:text-white">
                   <BedDouble className="h-4 w-4 mr-1" /> Beds
                 </TabsTrigger>
-                <TabsTrigger value="heatmap" className="data-[state=active]:bg-[#3B1E6F] data-[state=active]:text-white">
+                <TabsTrigger value="heatmap" className="data-[state=active]:bg-[#2BB2A7] data-[state=active]:text-white">
                   <BarChart3 className="h-4 w-4 mr-1" /> Heatmap
                 </TabsTrigger>
-                <TabsTrigger value="handover" className="data-[state=active]:bg-[#3B1E6F] data-[state=active]:text-white">
+                <TabsTrigger value="handover" className="data-[state=active]:bg-[#2BB2A7] data-[state=active]:text-white">
                   <ClipboardList className="h-4 w-4 mr-1" /> Handover
                 </TabsTrigger>
-                <TabsTrigger value="analytics" className="data-[state=active]:bg-[#3B1E6F] data-[state=active]:text-white">
+                <TabsTrigger value="analytics" className="data-[state=active]:bg-[#2BB2A7] data-[state=active]:text-white">
                   <TrendingUp className="h-4 w-4 mr-1" /> Analytics
                 </TabsTrigger>
               </TabsList>
@@ -990,14 +989,14 @@ export default function WardPage() {
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder="Search bed, patient, MRN…"
-                    className="pl-9 h-9 w-full focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
+                    className="pl-9 h-9 w-full focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent border-[#E2EFEA] dark:border-gray-700"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                   />
                 </div>
 
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="h-9 w-full sm:w-32 focus:ring-2 focus:ring-[#7A329F] focus:border-transparent">
+                  <SelectTrigger className="h-9 w-full sm:w-32 focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent border-[#E2EFEA] dark:border-gray-700">
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1011,7 +1010,7 @@ export default function WardPage() {
                 </Select>
 
                 <Select value={typeFilter} onValueChange={setTypeFilter}>
-                  <SelectTrigger className="h-9 w-full sm:w-32 focus:ring-2 focus:ring-[#7A329F] focus:border-transparent">
+                  <SelectTrigger className="h-9 w-full sm:w-32 focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent border-[#E2EFEA] dark:border-gray-700">
                     <SelectValue placeholder="Type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1024,14 +1023,14 @@ export default function WardPage() {
                   </SelectContent>
                 </Select>
 
-                <div className="flex rounded-md border border-gray-200 dark:border-gray-700 self-start sm:self-auto">
+                <div className="flex rounded-md border border-[#E2EFEA] dark:border-gray-700 self-start sm:self-auto">
                   <Button
                     variant={viewMode === "grid" ? "default" : "ghost"}
                     size="icon"
                     className={`h-9 w-9 rounded-r-none ${
                       viewMode === "grid" 
-                        ? "bg-[#3B1E6F] hover:bg-[#7A329F] text-white" 
-                        : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                        ? "bg-[#2BB2A7] hover:bg-[#1F8F89] text-white" 
+                        : "text-gray-600 dark:text-gray-400 hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/20"
                     }`}
                     onClick={() => setViewMode("grid")}
                   >
@@ -1042,8 +1041,8 @@ export default function WardPage() {
                     size="icon"
                     className={`h-9 w-9 rounded-l-none ${
                       viewMode === "floor" 
-                        ? "bg-[#3B1E6F] hover:bg-[#7A329F] text-white" 
-                        : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                        ? "bg-[#2BB2A7] hover:bg-[#1F8F89] text-white" 
+                        : "text-gray-600 dark:text-gray-400 hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/20"
                     }`}
                     onClick={() => setViewMode("floor")}
                   >
@@ -1107,9 +1106,9 @@ export default function WardPage() {
       />
 
       <Dialog open={!!manualDischargeBed} onOpenChange={() => setManualDischargeBed(null)}>
-        <DialogContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+        <DialogContent className="bg-white dark:bg-gray-800 border-[#E2EFEA] dark:border-gray-700">
           <DialogHeader>
-            <DialogTitle className="text-[#3B1E6F] dark:text-white">Discharge Patient</DialogTitle>
+            <DialogTitle className="text-gray-900 dark:text-white">Discharge Patient</DialogTitle>
             <DialogDescription className="text-gray-500 dark:text-gray-400">
               Enter a unique discharge ID and optional notes.
             </DialogDescription>
@@ -1122,7 +1121,7 @@ export default function WardPage() {
                 placeholder="e.g., DISC-1775107620404-1"
                 value={dischargeIdInput}
                 onChange={(e) => setDischargeIdInput(e.target.value)}
-                className="focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
+                className="focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent border-[#E2EFEA] dark:border-gray-700"
               />
             </div>
             <div>
@@ -1132,7 +1131,7 @@ export default function WardPage() {
                 placeholder="Clinical notes..."
                 value={dischargeNotesInput}
                 onChange={(e) => setDischargeNotesInput(e.target.value)}
-                className="focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
+                className="focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent border-[#E2EFEA] dark:border-gray-700"
               />
             </div>
           </div>
@@ -1140,14 +1139,14 @@ export default function WardPage() {
             <Button 
               variant="outline" 
               onClick={() => setManualDischargeBed(null)}
-              className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+              className="border-[#E2EFEA] dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/20"
             >
               Cancel
             </Button>
             <Button 
               onClick={performDischarge} 
               disabled={discharging}
-              className="bg-[#3B1E6F] hover:bg-[#7A329F] text-white"
+              className="bg-[#2BB2A7] hover:bg-[#1F8F89] text-white"
             >
               {discharging && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Confirm Discharge

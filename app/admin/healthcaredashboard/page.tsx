@@ -790,7 +790,6 @@
 // }
 
 
-
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -1004,7 +1003,7 @@ export default function HealthcareDashboard() {
           value: totalPatients.toLocaleString(),
           change: 5.2,
           icon: <Groups className="w-6 h-6" />,
-          color: "purple",
+          color: "teal",
           trend: "up",
         },
         {
@@ -1116,7 +1115,7 @@ export default function HealthcareDashboard() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "active":
-        return "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400";
+        return "bg-[#EAF7F4] dark:bg-[#1F8F89]/20 text-[#1F8F89] dark:text-[#2BB2A7]";
       case "pending":
         return "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400";
       default:
@@ -1129,7 +1128,7 @@ export default function HealthcareDashboard() {
       case "warning":
         return "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400";
       case "success":
-        return "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400";
+        return "bg-[#EAF7F4] dark:bg-[#1F8F89]/20 text-[#1F8F89] dark:text-[#2BB2A7]";
       case "info":
         return "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400";
       case "update":
@@ -1166,8 +1165,8 @@ export default function HealthcareDashboard() {
 
   const getKpiColor = (color: string) => {
     switch (color) {
-      case "purple":
-        return "bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400";
+      case "teal":
+        return "bg-[#EAF7F4] dark:bg-[#1F8F89]/20 text-[#2BB2A7] dark:text-[#2BB2A7]";
       case "emerald":
         return "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400";
       case "blue":
@@ -1185,7 +1184,7 @@ export default function HealthcareDashboard() {
         <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <div className="w-12 h-12 border-4 border-[#3B1E6F] border-t-transparent animate-spin rounded-full mx-auto mb-4"></div>
+            <div className="w-12 h-12 border-4 border-[#2BB2A7] border-t-transparent animate-spin rounded-full mx-auto mb-4"></div>
             <p className="text-gray-600 dark:text-gray-400">Loading dashboard data...</p>
           </div>
         </main>
@@ -1202,7 +1201,7 @@ export default function HealthcareDashboard() {
             <p className="text-red-600 dark:text-red-400 mb-4">{error}</p>
             <button
               onClick={fetchData}
-              className="px-4 py-2 bg-gradient-to-r from-[#3B1E6F] to-[#7A329F] text-white rounded-lg hover:opacity-90 transition-opacity"
+              className="px-4 py-2 bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] text-white rounded-lg hover:opacity-90 transition-opacity"
             >
               Retry
             </button>
@@ -1215,7 +1214,7 @@ export default function HealthcareDashboard() {
   if (!tenantLoading && !isDashboardEnabled) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="text-center bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg">
+        <div className="text-center bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-[#E2EFEA] dark:border-gray-700">
           <div className="text-red-500 text-6xl mb-4">🔒</div>
           <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">Access Denied</h1>
           <p className="text-gray-600 dark:text-gray-400">
@@ -1230,7 +1229,7 @@ export default function HealthcareDashboard() {
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900 font-sans text-gray-900 dark:text-gray-100">
       {/* Mobile Menu Button */}
       <button
-        className="lg:hidden fixed bottom-20 right-6 z-50 p-3 bg-[#3B1E6F] hover:bg-[#7A329F] text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center"
+        className="lg:hidden fixed bottom-20 right-6 z-50 p-3 bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] hover:opacity-90 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center"
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
         aria-label="Toggle menu"
       >
@@ -1253,7 +1252,7 @@ export default function HealthcareDashboard() {
           {/* Page Header */}
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <div>
-              <h2 className="text-xl lg:text-2xl font-bold tracking-tight text-[#3B1E6F] dark:text-white">
+              <h2 className="text-xl lg:text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
                 System Dashboard
               </h2>
               <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
@@ -1261,11 +1260,11 @@ export default function HealthcareDashboard() {
               </p>
             </div>
             <div className="flex gap-2">
-              <button className="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm font-medium flex items-center gap-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/80 transition-colors shadow-sm text-gray-700 dark:text-gray-300">
+              <button className="px-3 py-2 border border-[#E2EFEA] dark:border-gray-700 rounded-lg text-sm font-medium flex items-center gap-2 bg-white dark:bg-gray-800 hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/10 transition-colors shadow-sm text-gray-700 dark:text-gray-300">
                 <DateRange className="text-sm" />
                 <span>Last 30 Days</span>
               </button>
-              <button className="px-3 py-2 bg-gradient-to-r from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] text-white rounded-lg text-sm font-medium flex items-center gap-2 hover:opacity-90 transition-all shadow-lg shadow-[#3B1E6F]/20">
+              <button className="px-3 py-2 bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] text-white rounded-lg text-sm font-medium flex items-center gap-2 hover:opacity-90 transition-all shadow-lg shadow-[#2BB2A7]/20">
                 <Download className="text-sm" />
                 <span>Export Report</span>
               </button>
@@ -1277,7 +1276,7 @@ export default function HealthcareDashboard() {
             {kpiData.map((kpi, index) => (
               <div
                 key={index}
-                className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow duration-200"
+                className="bg-white dark:bg-gray-800 rounded-xl border border-[#E2EFEA] dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow duration-200"
               >
                 <div className="p-5">
                   <div className="flex justify-between items-start mb-3">
@@ -1298,7 +1297,7 @@ export default function HealthcareDashboard() {
                     <div className="space-y-1.5">
                       <div className="w-full bg-gray-100 dark:bg-gray-700 h-1.5 rounded-full overflow-hidden">
                         <div
-                          className="bg-gradient-to-r from-[#7A329F] to-[#0D5CB3] h-full rounded-full"
+                          className="bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] h-full rounded-full"
                           style={{ width: `${kpi.progressPercent}%` }}
                         />
                       </div>
@@ -1313,7 +1312,7 @@ export default function HealthcareDashboard() {
           </div>
 
           {/* Patient Growth Chart */}
-          <div className="xl:col-span-2 bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+          <div className="xl:col-span-2 bg-white dark:bg-gray-800 p-4 rounded-xl border border-[#E2EFEA] dark:border-gray-700 shadow-sm">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-4 gap-3">
               <div>
                 <h3 className="text-base font-semibold text-gray-900 dark:text-white">
@@ -1375,10 +1374,10 @@ export default function HealthcareDashboard() {
                   <Area
                     type="monotone"
                     dataKey="admissions"
-                    stroke="#7A329F"
+                    stroke="#2BB2A7"
                     fill="url(#colorAdmissions)"
                     strokeWidth={2}
-                    dot={{ stroke: "#7A329F", strokeWidth: 2, r: 3 }}
+                    dot={{ stroke: "#2BB2A7", strokeWidth: 2, r: 3 }}
                     activeDot={{ r: 4, strokeWidth: 0 }}
                   />
                   <defs>
@@ -1389,8 +1388,8 @@ export default function HealthcareDashboard() {
                       x2="0"
                       y2="1"
                     >
-                      <stop offset="0%" stopColor="#7A329F" stopOpacity={0.2} />
-                      <stop offset="100%" stopColor="#7A329F" stopOpacity={0} />
+                      <stop offset="0%" stopColor="#2BB2A7" stopOpacity={0.2} />
+                      <stop offset="100%" stopColor="#2BB2A7" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                 </LineChart>
@@ -1401,16 +1400,16 @@ export default function HealthcareDashboard() {
           {/* Recent Personnel & Alerts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Recent Registrations */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-              <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-[#E2EFEA] dark:border-gray-700 shadow-sm overflow-hidden">
+              <div className="p-4 border-b border-[#E2EFEA] dark:border-gray-700">
                 <h3 className="text-base font-semibold text-gray-900 dark:text-white">
                   Recent Registrations
                 </h3>
               </div>
-              <div className="divide-y divide-gray-100 dark:divide-gray-700">
+              <div className="divide-y divide-[#E2EFEA] dark:divide-gray-700">
                 {personnelData.map((person) => (
                   <div key={person.id} className="p-4 flex items-start gap-3">
-                    <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[#3B1E6F] to-[#7A329F] flex items-center justify-center text-white text-sm font-medium">
+                    <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[#2BB2A7] to-[#86C94C] flex items-center justify-center text-white text-sm font-medium">
                       {person.avatar}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -1440,21 +1439,21 @@ export default function HealthcareDashboard() {
                   </div>
                 )}
               </div>
-              <div className="p-3 border-t border-gray-100 dark:border-gray-700 text-center">
-                <button className="text-sm text-[#7A329F] dark:text-[#9B4DBF] hover:underline">
+              <div className="p-3 border-t border-[#E2EFEA] dark:border-gray-700 text-center">
+                <button className="text-sm text-[#2BB2A7] hover:text-[#1F8F89] font-medium">
                   View All Personnel
                 </button>
               </div>
             </div>
 
             {/* Alerts */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-              <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-[#E2EFEA] dark:border-gray-700 shadow-sm overflow-hidden">
+              <div className="p-4 border-b border-[#E2EFEA] dark:border-gray-700">
                 <h3 className="text-base font-semibold text-gray-900 dark:text-white">
                   Recent Activity
                 </h3>
               </div>
-              <div className="divide-y divide-gray-100 dark:divide-gray-700">
+              <div className="divide-y divide-[#E2EFEA] dark:divide-gray-700">
                 {alertsData.map((alert) => (
                   <div key={alert.id} className="p-4">
                     <div className="flex gap-3">
@@ -1479,8 +1478,8 @@ export default function HealthcareDashboard() {
                   </div>
                 )}
               </div>
-              <div className="p-3 border-t border-gray-100 dark:border-gray-700 text-center">
-                <button className="text-sm text-[#7A329F] dark:text-[#9B4DBF] hover:underline">
+              <div className="p-3 border-t border-[#E2EFEA] dark:border-gray-700 text-center">
+                <button className="text-sm text-[#2BB2A7] hover:text-[#1F8F89] font-medium">
                   View All Activity
                 </button>
               </div>

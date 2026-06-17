@@ -526,7 +526,6 @@
 // }
 
 
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -765,7 +764,7 @@ export default function LabTestsPage() {
 
   const getCategoryColor = (category: string) => {
     const colors = {
-      Blood: "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800",
+      Blood: "bg-[#EAF7F4] text-[#1F8F89] border-[#2BB2A7]/30 dark:bg-[#1F8F89]/20 dark:text-[#2BB2A7] dark:border-[#2BB2A7]/20",
       Urine: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800",
       Other: "bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-700/30 dark:text-gray-300 dark:border-gray-600",
     };
@@ -793,7 +792,7 @@ export default function LabTestsPage() {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-[#3B1E6F] border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <div className="w-12 h-12 border-4 border-[#2BB2A7] border-t-transparent rounded-full animate-spin mx-auto"></div>
           <p className="mt-4 text-gray-600 dark:text-gray-400">Loading...</p>
         </div>
       </div>
@@ -803,7 +802,7 @@ export default function LabTestsPage() {
   if (!isTestCatalogEnabled) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="text-center bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg">
+        <div className="text-center bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-[#E2EFEA] dark:border-gray-700">
           <div className="text-red-500 text-6xl mb-4">🔒</div>
           <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">Access Denied</h1>
           <p className="text-gray-600 dark:text-gray-400">
@@ -811,7 +810,7 @@ export default function LabTestsPage() {
           </p>
           <button
             onClick={() => router.push("/dashboard")}
-            className="mt-4 px-4 py-2 bg-gradient-to-r from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] text-white rounded-lg hover:opacity-90 transition-opacity"
+            className="mt-4 px-4 py-2 bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] text-white rounded-lg hover:opacity-90 transition-opacity"
           >
             Go to Dashboard
           </button>
@@ -824,7 +823,7 @@ export default function LabTestsPage() {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-[#3B1E6F] border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <div className="w-12 h-12 border-4 border-[#2BB2A7] border-t-transparent rounded-full animate-spin mx-auto"></div>
           <p className="mt-4 text-gray-600 dark:text-gray-400">Loading tests...</p>
         </div>
       </div>
@@ -834,13 +833,13 @@ export default function LabTestsPage() {
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-center bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg">
+        <div className="text-center bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-[#E2EFEA] dark:border-gray-700">
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-3" />
           <p className="font-semibold text-gray-800 dark:text-white">Error loading tests</p>
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{error}</p>
           <button 
             onClick={fetchTests}
-            className="mt-3 px-4 py-2 bg-gradient-to-r from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] text-white rounded-lg hover:opacity-90 transition-opacity"
+            className="mt-3 px-4 py-2 bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] text-white rounded-lg hover:opacity-90 transition-opacity"
           >
             Retry
           </button>
@@ -852,17 +851,17 @@ export default function LabTestsPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 sticky top-0 z-10">
+      <div className="bg-white dark:bg-gray-800 border-b border-[#E2EFEA] dark:border-gray-700 px-6 py-4 sticky top-0 z-10">
         <div className="flex flex-wrap justify-between items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-[#3B1E6F] dark:text-white">Test Catalog</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Test Catalog</h1>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
               Manage laboratory test configurations
             </p>
           </div>
           <button
             onClick={() => openModal()}
-            className="px-4 py-2 bg-gradient-to-r from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] text-white rounded-lg hover:opacity-90 transition-opacity shadow-sm flex items-center gap-2"
+            className="px-4 py-2 bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] text-white rounded-lg hover:opacity-90 transition-opacity shadow-sm flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
             Add New Test
@@ -875,7 +874,7 @@ export default function LabTestsPage() {
           <input
             type="text"
             placeholder="Search tests by name or code..."
-            className="w-full sm:w-80 pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#7A329F] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            className="w-full sm:w-80 pl-9 pr-4 py-2 border border-[#E2EFEA] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -886,10 +885,10 @@ export default function LabTestsPage() {
       <div className="p-6">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-[#E2EFEA] dark:border-gray-700 p-4 hover:shadow-md transition-shadow">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-[#3B1E6F]/10 flex items-center justify-center">
-                <FolderOpen className="w-5 h-5 text-[#3B1E6F]" />
+              <div className="w-10 h-10 rounded-lg bg-[#EAF7F4] dark:bg-[#1F8F89]/20 flex items-center justify-center">
+                <FolderOpen className="w-5 h-5 text-[#2BB2A7]" />
               </div>
               <div>
                 <p className="text-sm text-gray-500 dark:text-gray-400">Total Tests</p>
@@ -897,10 +896,10 @@ export default function LabTestsPage() {
               </div>
             </div>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-[#E2EFEA] dark:border-gray-700 p-4 hover:shadow-md transition-shadow">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                <CheckCircle className="w-5 h-5 text-emerald-500" />
+              <div className="w-10 h-10 rounded-lg bg-emerald-500/10 dark:bg-emerald-900/20 flex items-center justify-center">
+                <CheckCircle className="w-5 h-5 text-emerald-500 dark:text-emerald-400" />
               </div>
               <div>
                 <p className="text-sm text-gray-500 dark:text-gray-400">Active Tests</p>
@@ -908,10 +907,10 @@ export default function LabTestsPage() {
               </div>
             </div>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-[#E2EFEA] dark:border-gray-700 p-4 hover:shadow-md transition-shadow">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-gray-500/10 flex items-center justify-center">
-                <Clock className="w-5 h-5 text-gray-500" />
+              <div className="w-10 h-10 rounded-lg bg-gray-500/10 dark:bg-gray-700/50 flex items-center justify-center">
+                <Clock className="w-5 h-5 text-gray-500 dark:text-gray-400" />
               </div>
               <div>
                 <p className="text-sm text-gray-500 dark:text-gray-400">Inactive Tests</p>
@@ -923,7 +922,7 @@ export default function LabTestsPage() {
 
         {/* Test List */}
         {filteredTests.length === 0 ? (
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-12 text-center">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-[#E2EFEA] dark:border-gray-700 p-12 text-center">
             <Microscope className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
             <p className="text-gray-500 dark:text-gray-400">No tests found</p>
             <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
@@ -935,7 +934,7 @@ export default function LabTestsPage() {
             {filteredTests.map((test) => (
               <div
                 key={test.id}
-                className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 hover:shadow-md transition-shadow"
+                className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-[#E2EFEA] dark:border-gray-700 p-6 hover:shadow-md transition-shadow"
               >
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
@@ -956,7 +955,7 @@ export default function LabTestsPage() {
                         </span>
                       )}
                       {test.active && (
-                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-[#EAF7F4] text-[#1F8F89] dark:bg-[#1F8F89]/20 dark:text-[#2BB2A7] border border-[#2BB2A7]/30 dark:border-[#2BB2A7]/20">
                           Active
                         </span>
                       )}
@@ -973,7 +972,7 @@ export default function LabTestsPage() {
                     </div>
                   </div>
                   <div className="text-right min-w-[120px]">
-                    <p className="text-2xl font-bold text-[#3B1E6F] dark:text-[#7A329F]">
+                    <p className="text-2xl font-bold text-[#2BB2A7]">
                       ₹{test.price}
                     </p>
                     <div className="flex items-center justify-end gap-2 mt-2">
@@ -981,7 +980,7 @@ export default function LabTestsPage() {
                         onClick={() => toggleActive(test.id, test.active)}
                         className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
                           test.active
-                            ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/30"
+                            ? "bg-[#EAF7F4] dark:bg-[#1F8F89]/20 text-[#1F8F89] dark:text-[#2BB2A7] hover:bg-[#2BB2A7] hover:text-white dark:hover:bg-[#2BB2A7] dark:hover:text-white"
                             : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"
                         }`}
                       >
@@ -989,7 +988,7 @@ export default function LabTestsPage() {
                       </button>
                       <button
                         onClick={() => openModal(test)}
-                        className="p-1.5 rounded-lg text-[#7A329F] hover:bg-[#7A329F]/10 transition-colors"
+                        className="p-1.5 rounded-lg text-[#2BB2A7] hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/20 transition-colors"
                         title="Edit"
                       >
                         <Edit className="w-4 h-4" />
@@ -1018,7 +1017,7 @@ export default function LabTestsPage() {
       {/* Add/Edit Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md border border-[#E2EFEA] dark:border-gray-700">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
@@ -1043,7 +1042,7 @@ export default function LabTestsPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, test_name: e.target.value })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#7A329F] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    className="w-full px-3 py-2 border border-[#E2EFEA] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     placeholder="e.g., Complete Blood Count"
                   />
                 </div>
@@ -1058,7 +1057,7 @@ export default function LabTestsPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, test_code: e.target.value })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#7A329F] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    className="w-full px-3 py-2 border border-[#E2EFEA] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     placeholder="e.g., CBC001"
                   />
                 </div>
@@ -1078,7 +1077,7 @@ export default function LabTestsPage() {
                           | "Other",
                       })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#7A329F] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    className="w-full px-3 py-2 border border-[#E2EFEA] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   >
                     <option value="Blood">Blood</option>
                     <option value="Urine">Urine</option>
@@ -1100,7 +1099,7 @@ export default function LabTestsPage() {
                       onChange={(e) =>
                         setFormData({ ...formData, price: e.target.value })
                       }
-                      className="w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#7A329F] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      className="w-full pl-9 pr-3 py-2 border border-[#E2EFEA] dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       placeholder="e.g., 500"
                     />
                   </div>
@@ -1113,7 +1112,7 @@ export default function LabTestsPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, active: e.target.checked })
                     }
-                    className="h-4 w-4 text-[#7A329F] focus:ring-[#7A329F] border-gray-300 rounded"
+                    className="h-4 w-4 text-[#2BB2A7] focus:ring-[#2BB2A7] border-gray-300 rounded"
                   />
                   <label className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
                     Active
@@ -1124,13 +1123,13 @@ export default function LabTestsPage() {
               <div className="flex justify-end gap-3 mt-6">
                 <button
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300"
+                  className="px-4 py-2 border border-[#E2EFEA] dark:border-gray-600 rounded-lg hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/10 transition-colors text-gray-700 dark:text-gray-300"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSave}
-                  className="px-4 py-2 bg-gradient-to-r from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] text-white rounded-lg hover:opacity-90 transition-opacity"
+                  className="px-4 py-2 bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] text-white rounded-lg hover:opacity-90 transition-opacity"
                 >
                   {editingTest ? "Update" : "Add"} Test
                 </button>

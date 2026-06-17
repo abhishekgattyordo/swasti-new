@@ -89,18 +89,18 @@ function ColumnFilter({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button
-          className={`ml-1 p-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors ${
-            currentValue ? "text-purple-600 dark:text-purple-400" : "text-slate-400"
+          className={`ml-1 p-1 rounded-md hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/20 transition-colors ${
+            currentValue ? "text-[#2BB2A7] dark:text-[#2BB2A7]" : "text-slate-400"
           }`}
         >
           <Filter className="h-3.5 w-3.5" />
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-48 p-0" align="start">
-        <Command>
-          <CommandInput placeholder={placeholder} className="h-8" />
+      <PopoverContent className="w-48 p-0 border-[#E2EFEA] dark:border-slate-700" align="start">
+        <Command className="bg-white dark:bg-slate-800">
+          <CommandInput placeholder={placeholder} className="h-8 text-gray-900 dark:text-white" />
           <CommandList>
-            <CommandEmpty>No results.</CommandEmpty>
+            <CommandEmpty className="text-gray-500 dark:text-gray-400">No results.</CommandEmpty>
             {options ? (
               <CommandGroup>
                 {options.map((opt) => (
@@ -110,6 +110,7 @@ function ColumnFilter({
                       onFilter(column, opt);
                       setOpen(false);
                     }}
+                    className="text-gray-700 dark:text-gray-300 hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/10"
                   >
                     {opt}
                   </CommandItem>
@@ -126,6 +127,7 @@ function ColumnFilter({
                     if (input) onFilter(column, input);
                     setOpen(false);
                   }}
+                  className="text-gray-700 dark:text-gray-300 hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/10"
                 >
                   Apply
                 </CommandItem>
@@ -163,37 +165,37 @@ function DateRangeFilter({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button
-          className={`ml-1 p-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors ${
+          className={`ml-1 p-1 rounded-md hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/20 transition-colors ${
             currentRange?.from || currentRange?.to
-              ? "text-purple-600 dark:text-purple-400"
+              ? "text-[#2BB2A7] dark:text-[#2BB2A7]"
               : "text-slate-400"
           }`}
         >
           <CalendarIcon className="h-3.5 w-3.5" />
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-64 p-4" align="start">
+      <PopoverContent className="w-64 p-4 border-[#E2EFEA] dark:border-slate-700 bg-white dark:bg-slate-800" align="start">
         <div className="space-y-4">
-          <h4 className="font-medium text-sm">Date Range</h4>
+          <h4 className="font-medium text-sm text-gray-900 dark:text-white">Date Range</h4>
           <div className="space-y-2">
             <div className="space-y-1">
-              <Label htmlFor="from">From</Label>
+              <Label htmlFor="from" className="text-gray-700 dark:text-gray-300">From</Label>
               <Input
                 id="from"
                 type="date"
                 value={from}
                 onChange={(e) => setFrom(e.target.value)}
-                className="h-8"
+                className="h-8 border-[#E2EFEA] dark:border-slate-600 focus:ring-[#2BB2A7] focus:border-[#2BB2A7]"
               />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="to">To</Label>
+              <Label htmlFor="to" className="text-gray-700 dark:text-gray-300">To</Label>
               <Input
                 id="to"
                 type="date"
                 value={to}
                 onChange={(e) => setTo(e.target.value)}
-                className="h-8"
+                className="h-8 border-[#E2EFEA] dark:border-slate-600 focus:ring-[#2BB2A7] focus:border-[#2BB2A7]"
               />
             </div>
           </div>
@@ -202,14 +204,14 @@ function DateRangeFilter({
               variant="outline"
               size="sm"
               onClick={handleClear}
-              className="flex-1"
+              className="flex-1 border-[#E2EFEA] dark:border-slate-600 hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/10"
             >
               Clear
             </Button>
             <Button 
               size="sm" 
               onClick={handleApply} 
-              className="flex-1 bg-gradient-to-r from-[#3B1E6F] to-[#7A329F] hover:opacity-90 text-white"
+              className="flex-1 bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] hover:opacity-90 text-white"
             >
               Apply
             </Button>
@@ -242,7 +244,7 @@ const PatientManagementPage: React.FC = () => {
   const [totalItems, setTotalItems] = useState(0);
 
   const [statsData, setStatsData] = useState([
-    { title: "Total Patients", value: "0", color: "purple", icon: <Users /> },
+    { title: "Total Patients", value: "0", color: "teal", icon: <Users /> },
     { title: "Active Cases", value: "0", color: "emerald", icon: <Activity /> },
     { title: "ICU Patients", value: "0", color: "red", icon: <HeartPulse /> },
     {
@@ -263,7 +265,7 @@ const PatientManagementPage: React.FC = () => {
   const getStatusColor = (status: string): string => {
     switch (status) {
       case "active":
-        return "text-emerald-700 dark:text-emerald-400";
+        return "text-[#1F8F89] dark:text-[#2BB2A7]";
       case "critical":
         return "text-rose-700 dark:text-rose-400";
       default:
@@ -314,7 +316,7 @@ const PatientManagementPage: React.FC = () => {
           | "active"
           | "inactive"
           | "critical";
-        const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(item.full_name_en || "Patient")}&background=6C2BD9&color=fff&size=128`;
+        const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(item.full_name_en || "Patient")}&background=2BB2A7&color=fff&size=128`;
 
         return {
           id: item.patient_id?.toString() || item.id?.toString() || "",
@@ -334,7 +336,7 @@ const PatientManagementPage: React.FC = () => {
           bloodGroup: item.blood_group || "Unknown",
           condition,
           conditionColor:
-            "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
+            "bg-[#EAF7F4] text-[#1F8F89] dark:bg-[#1F8F89]/20 dark:text-[#2BB2A7]",
           department,
           contact: item.phone || "",
           lastVisit: "N/A",
@@ -450,7 +452,7 @@ const PatientManagementPage: React.FC = () => {
       {
         title: "Total Patients",
         value: total.toString(),
-        color: "purple",
+        color: "teal",
         icon: <Users />,
       },
       {
@@ -500,7 +502,6 @@ const PatientManagementPage: React.FC = () => {
           const updated = prev.filter((p) => p.id !== patientId);
           setTotalItems(updated.length);
           updateStats(updated);
-          // If current page has no items after deletion, go to previous page
           if (currentPage > 1 && updated.length <= (currentPage - 1) * itemsPerPage) {
             setCurrentPage(currentPage - 1);
           }
@@ -630,7 +631,6 @@ const PatientManagementPage: React.FC = () => {
   const handlePageChange = (page: number) => {
     if (page < 1 || page > totalPages) return;
     setCurrentPage(page);
-    // Scroll to top of table
     const tableElement = document.querySelector('.table-container');
     if (tableElement) {
       tableElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -643,7 +643,6 @@ const PatientManagementPage: React.FC = () => {
     setCurrentPage(1);
   };
 
-  // Generate page numbers for pagination
   const getPageNumbers = () => {
     const pageNumbers = [];
     const maxVisiblePages = 5;
@@ -684,9 +683,9 @@ const PatientManagementPage: React.FC = () => {
       switch (status) {
         case "active":
           return {
-            bg: "bg-emerald-100 dark:bg-emerald-900/20",
-            text: "text-emerald-800 dark:text-emerald-300",
-            dot: "bg-emerald-500",
+            bg: "bg-[#EAF7F4] dark:bg-[#1F8F89]/20",
+            text: "text-[#1F8F89] dark:text-[#2BB2A7]",
+            dot: "bg-[#2BB2A7]",
           };
         case "critical":
           return {
@@ -723,8 +722,8 @@ const PatientManagementPage: React.FC = () => {
 
   const getStatColor = (color: string) => {
     switch (color) {
-      case "purple":
-        return "bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400";
+      case "teal":
+        return "bg-[#EAF7F4] dark:bg-[#1F8F89]/20 text-[#2BB2A7] dark:text-[#2BB2A7]";
       case "emerald":
         return "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400";
       case "red":
@@ -740,7 +739,7 @@ const PatientManagementPage: React.FC = () => {
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900 font-sans text-gray-900 dark:text-gray-100">
       {/* Mobile Menu Button */}
       <button
-        className="lg:hidden fixed bottom-20 right-6 z-50 p-3 bg-gradient-to-r from-[#3B1E6F] to-[#7A329F] hover:from-[#7A329F] hover:to-[#0D5CB3] text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center"
+        className="lg:hidden fixed bottom-20 right-6 z-50 p-3 bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] hover:opacity-90 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center"
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
         aria-label="Toggle menu"
       >
@@ -781,7 +780,7 @@ const PatientManagementPage: React.FC = () => {
                     <PatientImport onSuccess={handleImportSuccess} />
                     <button
                       onClick={() => router.push("/admin/addnewpatient")}
-                      className="flex items-center justify-center gap-1.5 rounded-lg h-9 md:h-10 px-3 md:px-4 bg-gradient-to-r from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] text-white text-sm font-semibold shadow-lg shadow-[#3B1E6F]/20 hover:opacity-90 transition-all w-full md:w-auto"
+                      className="flex items-center justify-center gap-1.5 rounded-lg h-9 md:h-10 px-3 md:px-4 bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] text-white text-sm font-semibold shadow-lg shadow-[#2BB2A7]/20 hover:opacity-90 transition-all w-full md:w-auto"
                     >
                       <Plus className="w-4 h-4" />
                       <span>Add New Patient</span>
@@ -794,7 +793,7 @@ const PatientManagementPage: React.FC = () => {
                   {statsData.map((stat, index) => (
                     <div
                       key={index}
-                      className="flex flex-col justify-between rounded-xl p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all duration-200"
+                      className="flex flex-col justify-between rounded-xl p-5 bg-white dark:bg-slate-900 border border-[#E2EFEA] dark:border-slate-800 shadow-sm hover:shadow-md transition-all duration-200"
                     >
                       <div className="flex justify-between items-start mb-4">
                         <div>
@@ -831,7 +830,7 @@ const PatientManagementPage: React.FC = () => {
                           setColumnFilters([]);
                           setDateFilters({});
                         }}
-                        className="text-xs text-purple-600 dark:text-purple-400 hover:underline"
+                        className="text-xs text-[#2BB2A7] hover:text-[#1F8F89] font-medium"
                       >
                         Clear all filters
                       </button>
@@ -847,14 +846,14 @@ const PatientManagementPage: React.FC = () => {
                           group relative flex items-center justify-center gap-x-2 h-10 rounded-full px-5 text-sm font-medium transition-all duration-300 backdrop-blur-sm
                           ${
                             selectedFilter === filter.label
-                              ? "bg-gradient-to-r from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] text-white shadow-lg shadow-[#3B1E6F]/25"
+                              ? "bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] text-white shadow-lg shadow-[#2BB2A7]/25"
                               : "bg-white/80 dark:bg-slate-800/50 border border-slate-300/50 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 hover:shadow-md hover:border-slate-400/30 dark:hover:border-slate-600"
                           }
                         `}
                         onClick={() => setSelectedFilter(filter.label)}
                       >
                         {selectedFilter === filter.label && (
-                          <div className="absolute inset-0 rounded-full border-2 border-[#7A329F]/30 animate-pulse"></div>
+                          <div className="absolute inset-0 rounded-full border-2 border-[#2BB2A7]/30 animate-pulse"></div>
                         )}
                         <span>{filter.label}</span>
                         {selectedFilter !== filter.label && (
@@ -880,13 +879,13 @@ const PatientManagementPage: React.FC = () => {
 
                   {/* Patients Table */}
                   {!loading && !error && (
-                    <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm table-container">
+                    <div className="bg-white dark:bg-slate-900 rounded-lg border border-[#E2EFEA] dark:border-slate-800 overflow-hidden shadow-sm table-container">
                       <div className="overflow-x-auto">
                         <div className="min-w-[1000px]">
                           <table className="w-full text-left border-collapse">
                             <thead>
-                              <tr className="bg-gradient-to-r from-purple-50 to-slate-50 dark:from-purple-900/20 dark:to-slate-800/50 border-b border-slate-300 dark:border-slate-700">
-                                <th className="px-4 py-3 text-slate-900 dark:text-white text-sm font-bold uppercase tracking-wider whitespace-nowrap border-r border-slate-300 dark:border-slate-700">
+                              <tr className="bg-[#F4F9F7] dark:bg-slate-800/50 border-b border-[#E2EFEA] dark:border-slate-700">
+                                <th className="px-4 py-3 text-[#1F8F89] dark:text-[#2BB2A7] text-sm font-bold uppercase tracking-wider whitespace-nowrap border-r border-[#E2EFEA] dark:border-slate-700">
                                   <div className="flex items-center">
                                     Patient
                                     <ColumnFilter
@@ -914,7 +913,7 @@ const PatientManagementPage: React.FC = () => {
                                   </div>
                                 </th>
 
-                                <th className="px-4 py-3 text-slate-900 dark:text-white text-sm font-bold uppercase tracking-wider whitespace-nowrap border-r border-slate-300 dark:border-slate-700">
+                                <th className="px-4 py-3 text-[#1F8F89] dark:text-[#2BB2A7] text-sm font-bold uppercase tracking-wider whitespace-nowrap border-r border-[#E2EFEA] dark:border-slate-700">
                                   <div className="flex items-center">
                                     Last Visit
                                     <DateRangeFilter
@@ -929,7 +928,7 @@ const PatientManagementPage: React.FC = () => {
                                     />
                                   </div>
                                 </th>
-                                <th className="px-4 py-3 text-slate-900 dark:text-white text-sm font-bold uppercase tracking-wider whitespace-nowrap border-r border-slate-300 dark:border-slate-700">
+                                <th className="px-4 py-3 text-[#1F8F89] dark:text-[#2BB2A7] text-sm font-bold uppercase tracking-wider whitespace-nowrap border-r border-[#E2EFEA] dark:border-slate-700">
                                   <div className="flex items-center">
                                     Next Appointment
                                     <DateRangeFilter
@@ -944,7 +943,7 @@ const PatientManagementPage: React.FC = () => {
                                     />
                                   </div>
                                 </th>
-                                <th className="px-4 py-3 text-slate-900 dark:text-white text-sm font-bold uppercase tracking-wider whitespace-nowrap border-r border-slate-300 dark:border-slate-700">
+                                <th className="px-4 py-3 text-[#1F8F89] dark:text-[#2BB2A7] text-sm font-bold uppercase tracking-wider whitespace-nowrap border-r border-[#E2EFEA] dark:border-slate-700">
                                   <div className="flex items-center">
                                     Status
                                     <ColumnFilter
@@ -975,7 +974,7 @@ const PatientManagementPage: React.FC = () => {
                                     />
                                   </div>
                                 </th>
-                                <th className="px-4 py-3 text-slate-900 dark:text-white text-sm font-bold uppercase tracking-wider text-right whitespace-nowrap">
+                                <th className="px-4 py-3 text-[#1F8F89] dark:text-[#2BB2A7] text-sm font-bold uppercase tracking-wider text-right whitespace-nowrap">
                                   Actions
                                 </th>
                               </tr>
@@ -985,17 +984,17 @@ const PatientManagementPage: React.FC = () => {
                                 currentItems.map((patient) => (
                                   <tr
                                     key={patient.id}
-                                    className="border-b border-slate-200 dark:border-slate-700 hover:bg-purple-50 dark:hover:bg-slate-800/30 transition-colors cursor-pointer"
+                                    className="border-b border-[#E2EFEA] dark:border-slate-700 hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/10 transition-colors cursor-pointer"
                                     onClick={() =>
                                       router.push(
                                         `/admin/patientmanagement/${patient.id}`,
                                       )
                                     }
                                   >
-                                    <td className="px-4 py-3 whitespace-nowrap border-r border-slate-200 dark:border-slate-700">
+                                    <td className="px-4 py-3 whitespace-nowrap border-r border-[#E2EFEA] dark:border-slate-700">
                                       <div className="flex items-center gap-3">
                                         <div
-                                          className="h-10 w-10 rounded-full bg-gradient-to-br from-[#3B1E6F] to-[#7A329F] bg-cover bg-center ring-2 ring-purple-100 dark:ring-purple-800 flex-shrink-0 flex items-center justify-center text-white font-semibold text-sm"
+                                          className="h-10 w-10 rounded-full bg-gradient-to-br from-[#2BB2A7] to-[#86C94C] bg-cover bg-center ring-2 ring-[#2BB2A7]/30 dark:ring-[#2BB2A7]/20 flex-shrink-0 flex items-center justify-center text-white font-semibold text-sm"
                                           style={{
                                             backgroundImage: patient.avatarUrl.includes('ui-avatars') 
                                               ? `url(${patient.avatarUrl})` 
@@ -1015,19 +1014,19 @@ const PatientManagementPage: React.FC = () => {
                                       </div>
                                     </td>
 
-                                    <td className="px-4 py-3 text-slate-600 dark:text-slate-400 text-sm whitespace-nowrap border-r border-slate-200 dark:border-slate-700">
+                                    <td className="px-4 py-3 text-slate-600 dark:text-slate-400 text-sm whitespace-nowrap border-r border-[#E2EFEA] dark:border-slate-700">
                                       {patient.lastVisit}
                                     </td>
-                                    <td className="px-4 py-3 text-slate-600 dark:text-slate-400 text-sm whitespace-nowrap border-r border-slate-200 dark:border-slate-700">
+                                    <td className="px-4 py-3 text-slate-600 dark:text-slate-400 text-sm whitespace-nowrap border-r border-[#E2EFEA] dark:border-slate-700">
                                       {patient.nextAppointment}
                                     </td>
-                                    <td className="px-4 py-3 whitespace-nowrap border-r border-slate-200 dark:border-slate-700">
+                                    <td className="px-4 py-3 whitespace-nowrap border-r border-[#E2EFEA] dark:border-slate-700">
                                       <StatusBadge status={patient.status} />
                                     </td>
                                     <td className="px-4 py-3 text-right whitespace-nowrap">
                                       <div className="flex items-center justify-end gap-2">
                                         <button
-                                          className="p-1.5 text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                                          className="p-1.5 text-slate-600 dark:text-slate-400 hover:text-[#2BB2A7] dark:hover:text-[#2BB2A7] hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/20 rounded-lg transition-colors"
                                           onClick={(e) => {
                                             e.stopPropagation();
                                             router.push(
@@ -1038,7 +1037,7 @@ const PatientManagementPage: React.FC = () => {
                                           <Edit className="w-4 h-4" />
                                         </button>
                                         <button
-                                          className="p-1.5 text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                                          className="p-1.5 text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/20 rounded-lg transition-colors"
                                           onClick={(e) => {
                                             e.stopPropagation();
                                             handleDelete(patient.id);
@@ -1063,7 +1062,7 @@ const PatientManagementPage: React.FC = () => {
                       </div>
                       
                       {/* Pagination Controls */}
-                      <div className="px-4 py-3 border-t border-slate-300 dark:border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-3">
+                      <div className="px-4 py-3 border-t border-[#E2EFEA] dark:border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-3">
                         <div className="flex items-center gap-3 text-sm text-slate-500">
                           <span>
                             Showing {startIndex + 1} to {endIndex} of {totalFilteredItems} patients
@@ -1071,7 +1070,7 @@ const PatientManagementPage: React.FC = () => {
                           <select
                             value={itemsPerPage}
                             onChange={handleItemsPerPageChange}
-                            className="px-2 py-1 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-800 text-sm focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
+                            className="px-2 py-1 border border-[#E2EFEA] dark:border-slate-600 rounded bg-white dark:bg-slate-800 text-sm focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent"
                           >
                             <option value={5}>5</option>
                             <option value={10}>10</option>
@@ -1088,8 +1087,8 @@ const PatientManagementPage: React.FC = () => {
                             disabled={currentPage === 1}
                             className={`px-3 py-1.5 rounded border text-sm font-medium transition-colors ${
                               currentPage === 1
-                                ? "border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-600 cursor-not-allowed"
-                                : "border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+                                ? "border-[#E2EFEA] dark:border-slate-700 text-slate-400 dark:text-slate-600 cursor-not-allowed"
+                                : "border-[#E2EFEA] dark:border-slate-600 hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/10 text-slate-700 dark:text-slate-300"
                             }`}
                           >
                             <ChevronLeft className="w-4 h-4" />
@@ -1101,9 +1100,9 @@ const PatientManagementPage: React.FC = () => {
                               onClick={() => typeof page === 'number' ? handlePageChange(page) : null}
                               className={`px-3 py-1.5 rounded border text-sm font-medium transition-colors ${
                                 page === currentPage
-                                  ? "bg-gradient-to-r from-[#3B1E6F] to-[#7A329F] text-white border-transparent"
+                                  ? "bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] text-white border-transparent"
                                   : typeof page === 'number'
-                                  ? "border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+                                  ? "border-[#E2EFEA] dark:border-slate-600 hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/10 text-slate-700 dark:text-slate-300"
                                   : "border-transparent text-slate-500 dark:text-slate-400 cursor-default"
                               }`}
                               disabled={typeof page !== 'number'}
@@ -1117,8 +1116,8 @@ const PatientManagementPage: React.FC = () => {
                             disabled={currentPage === totalPages || totalPages === 0}
                             className={`px-3 py-1.5 rounded border text-sm font-medium transition-colors ${
                               currentPage === totalPages || totalPages === 0
-                                ? "border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-600 cursor-not-allowed"
-                                : "border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+                                ? "border-[#E2EFEA] dark:border-slate-700 text-slate-400 dark:text-slate-600 cursor-not-allowed"
+                                : "border-[#E2EFEA] dark:border-slate-600 hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/10 text-slate-700 dark:text-slate-300"
                             }`}
                           >
                             <ChevronRight className="w-4 h-4" />

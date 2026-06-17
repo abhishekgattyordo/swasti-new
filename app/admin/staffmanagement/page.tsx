@@ -36,7 +36,7 @@ const StatusBadge = ({ status }: { status: string }) => {
   const getStatusConfig = (status: string) => {
     switch (status) {
       case "active":
-        return { bg: "bg-emerald-100 dark:bg-emerald-900/20", text: "text-emerald-800 dark:text-emerald-300", dot: "bg-emerald-500" };
+        return { bg: "bg-[#EAF7F4] dark:bg-[#1F8F89]/20", text: "text-[#1F8F89] dark:text-[#2BB2A7]", dot: "bg-[#2BB2A7]" };
       case "on-leave":
         return { bg: "bg-amber-100 dark:bg-amber-900/20", text: "text-amber-800 dark:text-amber-300", dot: "bg-amber-500" };
       default:
@@ -185,7 +185,7 @@ const StaffManagementPage: React.FC = () => {
   const inactiveStaff = staff.filter(s => s.status === "inactive").length;
 
   const statsData = [
-    { title: "Total Staff", value: totalStaff.toString(), color: "purple", icon: Users },
+    { title: "Total Staff", value: totalStaff.toString(), color: "teal", icon: Users },
     { title: "Active Now", value: activeStaff.toString(), color: "emerald", icon: UserCheck },
     { title: "On Leave", value: onLeaveStaff.toString(), color: "amber", icon: UserX },
     { title: "Inactive", value: inactiveStaff.toString(), color: "red", icon: FileCheck },
@@ -253,8 +253,8 @@ const StaffManagementPage: React.FC = () => {
 
   const getStatColor = (color: string) => {
     switch (color) {
-      case "purple":
-        return "bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400";
+      case "teal":
+        return "bg-[#EAF7F4] dark:bg-[#1F8F89]/20 text-[#2BB2A7] dark:text-[#2BB2A7]";
       case "emerald":
         return "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400";
       case "amber":
@@ -272,7 +272,7 @@ const StaffManagementPage: React.FC = () => {
         <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <Loader2 className="h-8 w-8 animate-spin text-[#3B1E6F] mx-auto" />
+            <Loader2 className="h-8 w-8 animate-spin text-[#2BB2A7] mx-auto" />
             <p className="mt-2 text-slate-500">Loading staff data...</p>
           </div>
         </div>
@@ -287,7 +287,7 @@ const StaffManagementPage: React.FC = () => {
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="text-red-500 mb-4">⚠️ {error}</div>
-            <Button onClick={fetchStaff} className="bg-gradient-to-r from-[#3B1E6F] to-[#7A329F] hover:opacity-90">
+            <Button onClick={fetchStaff} className="bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] hover:opacity-90 text-white">
               Retry
             </Button>
           </div>
@@ -300,7 +300,7 @@ const StaffManagementPage: React.FC = () => {
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900 font-sans text-gray-900 dark:text-gray-100">
       {/* Mobile Menu Button */}
       <button
-        className="lg:hidden fixed bottom-20 right-6 z-50 p-3 bg-gradient-to-r from-[#3B1E6F] to-[#7A329F] hover:from-[#7A329F] hover:to-[#0D5CB3] text-white rounded-full shadow-lg transition-all duration-200"
+        className="lg:hidden fixed bottom-20 right-6 z-50 p-3 bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] hover:opacity-90 text-white rounded-full shadow-lg transition-all duration-200"
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
       >
         {isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -323,7 +323,7 @@ const StaffManagementPage: React.FC = () => {
             {/* Page Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div>
-                <h1 className="text-2xl font-bold tracking-tight text-[#3B1E6F] dark:text-white">Staff Management</h1>
+                <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Staff Management</h1>
                 <p className="text-slate-500 dark:text-slate-400 mt-1">
                   Manage hospital staff members and their information
                 </p>
@@ -331,7 +331,7 @@ const StaffManagementPage: React.FC = () => {
 
               <Button 
                 onClick={() => router.push("/admin/addnewstaff")}
-                className="bg-gradient-to-r from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] hover:opacity-90 flex items-center gap-2 text-white"
+                className="bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] hover:opacity-90 flex items-center gap-2 text-white shadow-lg shadow-[#2BB2A7]/20"
               >
                 <Plus className="w-4 h-4" />
                 Add New Staff
@@ -343,7 +343,7 @@ const StaffManagementPage: React.FC = () => {
               {statsData.map((stat, index) => {
                 const Icon = stat.icon;
                 return (
-                  <div key={index} className="bg-white dark:bg-slate-900 rounded-xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm">
+                  <div key={index} className="bg-white dark:bg-slate-900 rounded-xl p-5 border border-[#E2EFEA] dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow">
                     <div className="flex justify-between items-start">
                       <div>
                         <p className="text-slate-500 dark:text-slate-400 text-sm">{stat.title}</p>
@@ -369,7 +369,7 @@ const StaffManagementPage: React.FC = () => {
                 placeholder="Search by name, email, role, department or employee ID..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 focus:ring-2 focus:ring-[#7A329F] focus:border-transparent"
+                className="w-full px-4 py-3 border border-[#E2EFEA] dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 focus:ring-2 focus:ring-[#2BB2A7] focus:border-transparent text-gray-900 dark:text-white"
               />
 
               <div className="flex flex-wrap gap-2">
@@ -379,8 +379,8 @@ const StaffManagementPage: React.FC = () => {
                     onClick={() => setSelectedRole(filter.label)}
                     className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                       filter.isActive
-                        ? "bg-gradient-to-r from-[#3B1E6F] via-[#7A329F] to-[#0D5CB3] text-white shadow-md"
-                        : "bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:border-slate-400"
+                        ? "bg-gradient-to-r from-[#2BB2A7] to-[#86C94C] text-white shadow-md"
+                        : "bg-white dark:bg-slate-800 border border-[#E2EFEA] dark:border-slate-700 hover:border-[#2BB2A7]"
                     }`}
                   >
                     {filter.label}
@@ -390,20 +390,20 @@ const StaffManagementPage: React.FC = () => {
             </div>
 
             {/* Staff Table */}
-            <div className="bg-white dark:bg-slate-900 rounded-xl border-2 border-slate-300 dark:border-slate-600 overflow-hidden shadow-md">
+            <div className="bg-white dark:bg-slate-900 rounded-xl border border-[#E2EFEA] dark:border-slate-700 overflow-hidden shadow-sm">
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
-                    <tr className="bg-gradient-to-r from-purple-50 to-slate-50 dark:from-purple-900/20 dark:to-slate-800 border-b-2 border-slate-300 dark:border-slate-600">
-                      <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700">Staff Member</th>
-                      <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700">Employee ID</th>
-                      <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700">Role</th>
-                      <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700">Department</th>
-                      <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700">Ward</th>
-                      <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700">Contact</th>
-                      <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700">Joined</th>
-                      <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700">Status</th>
-                      <th className="px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Actions</th>
+                    <tr className="bg-[#F4F9F7] dark:bg-slate-800/50 border-b border-[#E2EFEA] dark:border-slate-700">
+                      <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-[#1F8F89] dark:text-[#2BB2A7] border-r border-[#E2EFEA] dark:border-slate-700">Staff Member</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-[#1F8F89] dark:text-[#2BB2A7] border-r border-[#E2EFEA] dark:border-slate-700">Employee ID</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-[#1F8F89] dark:text-[#2BB2A7] border-r border-[#E2EFEA] dark:border-slate-700">Role</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-[#1F8F89] dark:text-[#2BB2A7] border-r border-[#E2EFEA] dark:border-slate-700">Department</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-[#1F8F89] dark:text-[#2BB2A7] border-r border-[#E2EFEA] dark:border-slate-700">Ward</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-[#1F8F89] dark:text-[#2BB2A7] border-r border-[#E2EFEA] dark:border-slate-700">Contact</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-[#1F8F89] dark:text-[#2BB2A7] border-r border-[#E2EFEA] dark:border-slate-700">Joined</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-[#1F8F89] dark:text-[#2BB2A7] border-r border-[#E2EFEA] dark:border-slate-700">Status</th>
+                      <th className="px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-[#1F8F89] dark:text-[#2BB2A7]">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -411,14 +411,14 @@ const StaffManagementPage: React.FC = () => {
                       filteredStaff.map((member, index) => (
                         <tr
                           key={member.id}
-                          className={`hover:bg-purple-50 dark:hover:bg-slate-700/50 transition-all duration-200 border-b border-slate-200 dark:border-slate-700 ${
+                          className={`hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/10 transition-all duration-200 border-b border-[#E2EFEA] dark:border-slate-700 ${
                             index % 2 === 0 ? 'bg-white dark:bg-slate-900' : 'bg-slate-50/50 dark:bg-slate-800/50'
                           }`}
                         >
                           {/* Staff Member */}
-                          <td className="px-4 py-3 border-r border-slate-200 dark:border-slate-700">
+                          <td className="px-4 py-3 border-r border-[#E2EFEA] dark:border-slate-700">
                             <div className="flex items-center gap-2">
-                              <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[#3B1E6F] to-[#7A329F] flex-shrink-0 overflow-hidden border border-purple-200 flex items-center justify-center text-white font-semibold text-xs">
+                              <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[#2BB2A7] to-[#86C94C] flex-shrink-0 overflow-hidden border border-[#2BB2A7]/30 flex items-center justify-center text-white font-semibold text-xs">
                                 {member.avatar ? (
                                   <img src={member.avatar} alt="" className="h-full w-full object-cover" />
                                 ) : (
@@ -426,37 +426,37 @@ const StaffManagementPage: React.FC = () => {
                                 )}
                               </div>
                               <div>
-                                <p className="font-semibold text-sm text-slate-900 dark:text-slate-100">{member.firstName} {member.lastName}</p>
+                                <p className="font-semibold text-sm text-gray-900 dark:text-white">{member.firstName} {member.lastName}</p>
                                 <p className="text-xs text-slate-500">{member.email}</p>
                               </div>
                             </div>
                           </td>
                           
                           {/* Employee ID */}
-                          <td className="px-4 py-3 font-mono text-xs text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700">
+                          <td className="px-4 py-3 font-mono text-xs text-gray-700 dark:text-gray-300 border-r border-[#E2EFEA] dark:border-slate-700">
                             <span className="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">{member.employeeId}</span>
                           </td>
                           
                           {/* Role */}
-                          <td className="px-4 py-3 border-r border-slate-200 dark:border-slate-700">
-                            <span className="inline-flex px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 text-xs font-medium">
+                          <td className="px-4 py-3 border-r border-[#E2EFEA] dark:border-slate-700">
+                            <span className="inline-flex px-2 py-0.5 rounded-full bg-[#EAF7F4] text-[#1F8F89] dark:bg-[#1F8F89]/20 dark:text-[#2BB2A7] text-xs font-medium">
                               {member.role}
                             </span>
                           </td>
                           
                           {/* Department */}
-                          <td className="px-4 py-3 text-xs text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700">
+                          <td className="px-4 py-3 text-xs text-gray-700 dark:text-gray-300 border-r border-[#E2EFEA] dark:border-slate-700">
                             {member.department}
                           </td>
                           
                           {/* Ward - EDITABLE */}
-                          <td className="px-4 py-3 border-r border-slate-200 dark:border-slate-700" onClick={e => e.stopPropagation()}>
+                          <td className="px-4 py-3 border-r border-[#E2EFEA] dark:border-slate-700" onClick={e => e.stopPropagation()}>
                             {editingWardId === member.id ? (
                               <div className="flex items-center gap-1">
                                 <select
                                   defaultValue={member.wardId || ''}
                                   onChange={(e) => quickUpdateStaff(member.id, 'wardId', e.target.value)}
-                                  className="w-full px-1 py-0.5 text-xs border border-[#7A329F] rounded bg-white dark:bg-slate-800 focus:ring-1 focus:ring-[#7A329F]"
+                                  className="w-full px-1 py-0.5 text-xs border border-[#2BB2A7] rounded bg-white dark:bg-slate-800 focus:ring-1 focus:ring-[#2BB2A7] text-gray-900 dark:text-white"
                                   autoFocus
                                 >
                                   <option value="">None</option>
@@ -470,11 +470,11 @@ const StaffManagementPage: React.FC = () => {
                               </div>
                             ) : (
                               <div 
-                                className="flex items-center gap-1 cursor-pointer hover:bg-purple-50 dark:hover:bg-slate-700 rounded px-1 py-0.5 group"
+                                className="flex items-center gap-1 cursor-pointer hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/10 rounded px-1 py-0.5 group"
                                 onClick={() => setEditingWardId(member.id)}
                               >
                                 {savingField === `wardId-${member.id}` ? (
-                                  <Loader2 size={12} className="animate-spin text-[#7A329F]" />
+                                  <Loader2 size={12} className="animate-spin text-[#2BB2A7]" />
                                 ) : member.wardName ? (
                                   <span className="text-xs flex items-center gap-1">
                                     <Building2 size={10} className="text-slate-400" />
@@ -489,23 +489,23 @@ const StaffManagementPage: React.FC = () => {
                           </td>
                           
                           {/* Contact */}
-                          <td className="px-4 py-3 text-xs text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700">
+                          <td className="px-4 py-3 text-xs text-gray-700 dark:text-gray-300 border-r border-[#E2EFEA] dark:border-slate-700">
                             {member.phone}
                           </td>
                           
                           {/* Date Joined */}
-                          <td className="px-4 py-3 text-xs text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700">
+                          <td className="px-4 py-3 text-xs text-gray-700 dark:text-gray-300 border-r border-[#E2EFEA] dark:border-slate-700">
                             {member.dateJoined}
                           </td>
                           
                           {/* Status - EDITABLE */}
-                          <td className="px-4 py-3 border-r border-slate-200 dark:border-slate-700" onClick={e => e.stopPropagation()}>
+                          <td className="px-4 py-3 border-r border-[#E2EFEA] dark:border-slate-700" onClick={e => e.stopPropagation()}>
                             {editingStatusId === member.id ? (
                               <div className="flex items-center gap-1">
                                 <select
                                   defaultValue={member.status}
                                   onChange={(e) => quickUpdateStaff(member.id, 'status', e.target.value)}
-                                  className="w-full px-1 py-0.5 text-xs border border-[#7A329F] rounded bg-white dark:bg-slate-800 focus:ring-1 focus:ring-[#7A329F]"
+                                  className="w-full px-1 py-0.5 text-xs border border-[#2BB2A7] rounded bg-white dark:bg-slate-800 focus:ring-1 focus:ring-[#2BB2A7] text-gray-900 dark:text-white"
                                   autoFocus
                                 >
                                   <option value="active">Active</option>
@@ -522,7 +522,7 @@ const StaffManagementPage: React.FC = () => {
                                 onClick={() => setEditingStatusId(member.id)}
                               >
                                 {savingField === `status-${member.id}` ? (
-                                  <Loader2 size={14} className="animate-spin text-[#7A329F]" />
+                                  <Loader2 size={14} className="animate-spin text-[#2BB2A7]" />
                                 ) : (
                                   <StatusBadge status={member.status} />
                                 )}
@@ -536,7 +536,7 @@ const StaffManagementPage: React.FC = () => {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="hover:bg-purple-50 dark:hover:bg-purple-900/20 text-purple-600 hover:text-purple-700"
+                                className="hover:bg-[#EAF7F4] dark:hover:bg-[#1F8F89]/20 text-[#2BB2A7] hover:text-[#1F8F89]"
                                 onClick={() => router.push(`/admin/staffmanagement/edit/${member.id}`)}
                                 title="Edit Staff"
                               >
@@ -577,11 +577,11 @@ const StaffManagementPage: React.FC = () => {
               </div>
               
               {/* Table Footer */}
-              <div className="border-t-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-6 py-3">
+              <div className="border-t border-[#E2EFEA] dark:border-slate-700 bg-[#F4F9F7] dark:bg-slate-800/50 px-6 py-3">
                 <div className="flex items-center justify-between text-sm text-slate-600 dark:text-slate-400">
                   <span>Showing {filteredStaff.length} of {staff.length} staff members</span>
                   <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                    <span className="w-2 h-2 rounded-full bg-[#2BB2A7]"></span>
                     <span>Active: {activeStaff}</span>
                     <span className="w-2 h-2 rounded-full bg-amber-400 ml-3"></span>
                     <span>On Leave: {onLeaveStaff}</span>
