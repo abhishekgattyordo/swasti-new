@@ -14,7 +14,7 @@ yarn dev
 # or
  
 pnpm devw
-# or
+# or 
 bun dev
 ```
 
