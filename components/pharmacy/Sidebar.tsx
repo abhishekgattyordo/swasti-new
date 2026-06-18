@@ -278,6 +278,9 @@
 //   );
 // }
 
+
+
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -455,38 +458,43 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         </button>
 
         {/* Logo Section - Left aligned with Text Below */}
-        <div className={`px-4 py-1 flex flex-col items-start border-b border-[#E2EFEA] relative`}>
-          <Link href="/pharmacy/dashboard" className="flex items-center gap-3 w-full" onClick={handleLinkClick}>
-            {/* Logo */}
-            <div className="w-24 h-24 flex-shrink-0">
-              <img
-                src="/swasti ai logo.png"
-                alt="Swasti AI Logo"
-                className="w-full h-full object-contain"
-              />
-            </div>
-
-            {/* Text */}
-            {!isCollapsed && (
-              <div>
-                <h1 className="text-[32px] font-bold tracking-tight text-[#1A1A1A] leading-none">
-                  swasti.ai
-                </h1>
-                <p className="text-sm font-medium text-[#1F8F89] mt-1">
-                  Pharmacy Module
-                </p>
+         <div className="px-4 py-3 border-b border-[#E2EFEA] relative">
+          <Link
+            href="/patient/dashboard"
+            className="flex flex-col items-start w-full"
+            onClick={handleLinkClick}
+          >
+            {isCollapsed ? (
+              <div className="flex justify-center items-center py-2">
+                <img
+                  src="/swasti ai logo.png"
+                  alt="Swasti AI"
+                  className="w-20 h-20 object-contain"
+                />
               </div>
+            ) : (
+              <>
+                <div className="w-full max-w-[250px] flex-shrink-0">
+                  <img
+                    src="/Swasti.ai bg rm logo.png"
+                    alt="Swasti AI Logo"
+                    className="w-auto h-25 object-fill"
+                  />
+                </div>
+
+                <div className="mt-2 ml-1">
+                  <h2 className="text-xs font-semibold uppercase tracking-wider text-[#1F8F89]">
+                 Pharmacy Module
+                  </h2>
+                </div>
+              </>
             )}
           </Link>
 
           {/* Collapse Button */}
           <button
             onClick={toggleCollapse}
-            className={`hidden lg:flex items-center justify-center w-6 h-6 rounded-lg hover:bg-[#EAF7F4] transition-colors z-50 ${
-              isCollapsed
-                ? "absolute -right-1 top-1/2 transform -translate-y-1/2 bg-[#F4F9F7] border border-[#E2EFEA] shadow-sm"
-                : "absolute -right-1 top-1/2 transform -translate-y-1/2 bg-[#F4F9F7] border border-[#E2EFEA] shadow-sm"
-            }`}
+            className="hidden lg:flex items-center justify-center w-6 h-6 rounded-lg hover:bg-[#EAF7F4] transition-colors z-50 absolute -right-1 top-1/2 transform -translate-y-1/2 bg-[#F4F9F7] border border-[#E2EFEA] shadow-sm"
             title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             {isCollapsed ? (
@@ -502,7 +510,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             <div className="mb-4">
               {!isCollapsed && (
                 <p className="text-[10px] font-medium text-[#1F8F89] uppercase tracking-wider px-3 mb-2">
-                  Main Menu
+                  
                 </p>
               )}
               <div className="space-y-1">

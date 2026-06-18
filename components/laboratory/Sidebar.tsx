@@ -125,48 +125,52 @@ export function LabSidebar({ collapsed, onToggle, isOpen = false, onClose = () =
           <X className="w-5 h-5" />
         </button>
 
-        {/* Logo Section - Left aligned with Text Below */}
-        <div className={`px-4 py-1 flex flex-col items-start border-b border-[#E2EFEA] dark:border-gray-800 relative`}>
-          <Link href="/laboratory" className="flex items-center gap-3 w-full" onClick={handleLinkClick}>
-            {/* Logo */}
-            <div className="w-24 h-24 flex-shrink-0">
-              <img
-                src="/swasti ai logo.png"
-                alt="Swasti AI Logo"
-                className="w-full h-full object-contain"
-              />
-            </div>
-
-            {/* Text */}
-            {!collapsed && (
-              <div>
-                <h1 className="text-[32px] font-bold tracking-tight text-[#1A1A1A] leading-none">
-                  swasti.ai
-                </h1>
-                <p className="text-sm font-medium text-[#1F8F89] mt-1">
-                  Lab Module
-                </p>
-              </div>
-            )}
-          </Link>
-
-          {/* Collapse Button */}
-          <button
-            onClick={onToggle}
-            className={`hidden lg:flex items-center justify-center w-6 h-6 rounded-lg hover:bg-[#EAF7F4] transition-colors z-50 ${
-              collapsed 
-                ? "absolute -right-1 top-1/2 transform -translate-y-1/2 bg-[#F4F9F7] border border-[#E2EFEA] shadow-sm"
-                : "absolute -right-1 top-1/2 transform -translate-y-1/2 bg-[#F4F9F7] border border-[#E2EFEA] shadow-sm"
-            }`}
-            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          >
-            {collapsed ? (
-              <ChevronRight className="text-[#2BB2A7] text-sm" />
-            ) : (
-              <ChevronLeft className="text-[#2BB2A7] text-sm" />
-            )}
-          </button>
+        {/* Logo Section - Left aligned with increased size */}
+      <div className="px-2 py-3 border-b border-[#E2EFEA] relative">
+  <Link
+    href="/laboratory"
+    className="flex flex-col items-start w-full"
+    onClick={handleLinkClick}
+  >
+    {collapsed ? (
+      <div className="flex justify-center items-center py-2 w-full">
+        <img
+          src="/swasti ai logo.png"
+          alt="Swasti AI"
+          className="w-20 h-20 object-contain"
+        />
+      </div>
+    ) : (
+      <>
+        <div className="w-full max-w-[300px] flex-shrink-0 -ml-3">
+          <img
+            src="/Swasti.ai bg rm logo.png"
+            alt="Swasti AI Logo"
+            className="w-full h-20 object-contain"
+          />
         </div>
+
+        <div className="mt-2 ml-1">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-[#1F8F89]">
+            Lab Module
+          </h2>
+        </div>
+      </>
+    )}
+  </Link>
+
+  <button
+    onClick={onToggle}
+    className="hidden lg:flex items-center justify-center w-6 h-6 rounded-lg hover:bg-[#EAF7F4] transition-colors z-50 absolute -right-1 top-1/2 transform -translate-y-1/2 bg-[#F4F9F7] border border-[#E2EFEA] shadow-sm"
+    title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+  >
+    {collapsed ? (
+      <ChevronRight className="text-[#2BB2A7] text-sm" />
+    ) : (
+      <ChevronLeft className="text-[#2BB2A7] text-sm" />
+    )}
+  </button>
+</div>
 
         {/* Navigation */}
         <div className="flex-1 flex flex-col min-h-0">
