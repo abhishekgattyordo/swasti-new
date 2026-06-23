@@ -6,14 +6,8 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { currentVisitApi } from "@/lib/api/ehr";
+import { LiveTranscriptionSession } from "@/lib/speech";
 import toast from "react-hot-toast";
-
-declare global {
-  interface Window {
-    SpeechRecognition: any;
-    webkitSpeechRecognition: any;
-  }
-}
 
 // Types for SOAP response
 interface SoapResponse {
@@ -65,14 +59,30 @@ export default function CurrentVisitPage() {
   const [interimTranscript, setInterimTranscript] = useState("");
   const [editMode, setEditMode] = useState(false);
   const [editableTranscript, setEditableTranscript] = useState("");
-  const [restartCount, setRestartCount] = useState(0);
   const [recordingDuration, setRecordingDuration] = useState(0);
-  
-  const recognitionRef = useRef<any>(null);
+
+  const liveSessionRef = useRef<LiveTranscriptionSession | null>(null);
   const finalTranscriptRef = useRef("");
-  const shouldRestartRef = useRef(false);
-  const restartTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const micLanguageLabels: Record<string, string> = {
+    "kn-IN": "Kannada",
+    "hi-IN": "Hindi",
+    "ta-IN": "Tamil",
+    "ml-IN": "Malayalam",
+    tulu: "Tulu",
+    "en-IN": "Indian English",
+    "en-US": "US English",
+  };
+
+  const mapMicLanguage = (micLang: string): string => {
+    if (micLang === "kn-IN" || micLang === "tulu") return "kn";
+    if (micLang === "hi-IN") return "hi";
+    if (micLang === "ta-IN") return "ta";
+    if (micLang === "ml-IN") return "ml";
+    if (micLang === "en-IN" || micLang === "en-US") return "en";
+    return "multi";
+  };
 
   // Store the appointment ID after save
   const [currentAppointmentId, setCurrentAppointmentId] = useState<string>("");
@@ -150,7 +160,7 @@ export default function CurrentVisitPage() {
   useEffect(() => {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
-      if (restartTimeoutRef.current) clearTimeout(restartTimeoutRef.current);
+      liveSessionRef.current?.cancel();
     };
   }, []);
 
@@ -170,182 +180,82 @@ export default function CurrentVisitPage() {
     }
   };
 
-  // ✅ Initialize speech recognition with language support
-  const initSpeechRecognition = () => {
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      toast.error("Speech recognition is not supported in this browser. Please use Chrome, Edge, or Safari.");
-      return null;
-    }
-
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-    
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    // ✅ Map language for better accuracy
-    recognition.lang = micLanguage === "tulu" ? "kn-IN" : micLanguage;
-    recognition.maxAlternatives = 3; // ✅ Get multiple alternatives for better accuracy
-    
-    return recognition;
-  };
-
-  const startRecognitionEngine = () => {
-    if (!recognitionRef.current) return;
-    try {
-      recognitionRef.current.start();
-      console.log("Recognition engine started");
-    } catch (err) {
-      console.error("Start error:", err);
-    }
-  };
-
-  // ✅ Start recording with microphone
   const startRecording = async () => {
-    try {
-      await navigator.mediaDevices.getUserMedia({ audio: true });
-    } catch (err) {
-      toast.error("Microphone permission denied. Please allow access and try again.");
-      return;
+    if (liveSessionRef.current) {
+      liveSessionRef.current.cancel();
+      liveSessionRef.current = null;
     }
 
-    if (recognitionRef.current) {
-      try {
-        recognitionRef.current.abort();
-      } catch (e) {}
-    }
-
-    const recognition = initSpeechRecognition();
-    if (!recognition) return;
-
-    recognitionRef.current = recognition;
     setTranscript("");
     setInterimTranscript("");
     finalTranscriptRef.current = "";
     setEditableTranscript("");
-    setRestartCount(0);
-    shouldRestartRef.current = true;
-    
-    // ✅ Improved onresult handler with multiple alternatives
-    recognition.onresult = (event: any) => {
-      let interim = "";
-      let final = "";
-      let bestFinal = "";
-      let confidenceScore = 0;
-      
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const result = event.results[i];
-        const transcriptPiece = result[0].transcript;
-        const confidence = result[0].confidence;
-        
-        // ✅ Pick the best confidence result
-        if (confidence > confidenceScore) {
-          confidenceScore = confidence;
-          bestFinal = transcriptPiece;
-        }
-        
-        if (result.isFinal) {
-          final += transcriptPiece + " ";
-        } else {
-          interim += transcriptPiece;
-        }
-      }
-      
-      // ✅ Use the best confidence result for final
-      if (bestFinal && final) {
-        final = bestFinal + " ";
-      }
-      
-      if (final) {
-        finalTranscriptRef.current += final;
-        setTranscript(finalTranscriptRef.current);
-        setEditableTranscript(finalTranscriptRef.current);
-      }
-      setInterimTranscript(interim);
-    };
-    
-    recognition.onerror = (event: any) => {
-      console.error("Speech recognition error:", event.error);
-      if (event.error === 'no-speech') {
-        // ✅ Show a subtle hint instead of error
-        toast("No speech detected. Please speak clearly.", { icon: "🎤" });
-        return;
-      }
-      if (event.error === 'network' || event.error === 'not-allowed') {
-        toast.error(`Recording error: ${event.error}. Please check microphone.`);
-        shouldRestartRef.current = false;
-        setIsRecording(false);
-        stopDurationTimer();
-      }
-    };
-    
-    recognition.onend = () => {
-      if (shouldRestartRef.current) {
-        console.log("Auto-restarting recognition...");
-        setRestartCount((prev) => prev + 1);
-        if (restartTimeoutRef.current) clearTimeout(restartTimeoutRef.current);
-        restartTimeoutRef.current = setTimeout(() => {
-          if (shouldRestartRef.current && recognitionRef.current) {
-            try {
-              recognitionRef.current.start();
-            } catch (err) {
-              console.error("Failed to restart, creating new instance:", err);
-              const newRec = initSpeechRecognition();
-              if (newRec) {
-                newRec.onresult = recognition.onresult;
-                newRec.onerror = recognition.onerror;
-                newRec.onend = recognition.onend;
-                recognitionRef.current = newRec;
-                try {
-                  newRec.start();
-                } catch (e) {
-                  toast.error("Auto-restart failed. Please click 'Restart Mic'.");
-                  shouldRestartRef.current = false;
-                  setIsRecording(false);
-                  stopDurationTimer();
-                }
-              }
-            }
-          }
-        }, 50);
-      } else {
-        setIsRecording(false);
-        stopDurationTimer();
-        if (finalTranscriptRef.current) {
-          toast.success("Recording stopped. Click 'View Transcript' to see and edit the conversation.");
-        }
-      }
-    };
-    
-    startRecognitionEngine();
-    setIsRecording(true);
-    startDurationTimer();
-    toast.success(`🎤 Microphone calibrated for [${micLanguage}]. Speak continuously!`);
-  };
 
-  // ✅ Stop recording
-  const stopRecording = () => {
-    shouldRestartRef.current = false;
-    if (restartTimeoutRef.current) clearTimeout(restartTimeoutRef.current);
-    if (recognitionRef.current) {
-      try {
-        recognitionRef.current.stop();
-      } catch (e) {
-        console.error("Stop error", e);
+    const session = new LiveTranscriptionSession();
+    liveSessionRef.current = session;
+
+    try {
+      await session.start(
+        (state) => {
+          finalTranscriptRef.current = state.finalLines.join(" ");
+          setTranscript(state.fullText);
+          setEditableTranscript(state.fullText);
+          setInterimTranscript(state.interimText);
+        },
+        { language: mapMicLanguage(micLanguage) }
+      );
+
+      setIsRecording(true);
+      startDurationTimer();
+      toast.success(
+        `🎤 Recording in ${micLanguageLabels[micLanguage] ?? micLanguage}. Speak continuously!`
+      );
+    } catch (err) {
+      liveSessionRef.current = null;
+      const message = err instanceof Error ? err.message : "Failed to start recording";
+      if (message.toLowerCase().includes("permission")) {
+        toast.error("Microphone permission denied. Please allow access and try again.");
+      } else {
+        toast.error(message);
       }
     }
-    setIsRecording(false);
-    stopDurationTimer();
   };
 
-  // ✅ Restart recording
+  const stopRecording = async () => {
+    const session = liveSessionRef.current;
+    if (!session) {
+      setIsRecording(false);
+      stopDurationTimer();
+      return;
+    }
+
+    try {
+      const state = await session.stop();
+      finalTranscriptRef.current = state.finalLines.join(" ");
+      setTranscript(state.fullText);
+      setEditableTranscript(state.fullText);
+      setInterimTranscript("");
+      if (state.fullText.trim()) {
+        toast.success("Recording stopped. Click 'View Transcript' to see and edit the conversation.");
+      }
+    } catch (err) {
+      console.error("Stop error:", err);
+    } finally {
+      liveSessionRef.current = null;
+      setIsRecording(false);
+      stopDurationTimer();
+    }
+  };
+
   const restartRecording = () => {
     if (isRecording) {
-      stopRecording();
-      setTimeout(() => {
-        startRecording();
-      }, 100);
+      void stopRecording().then(() => {
+        setTimeout(() => {
+          void startRecording();
+        }, 100);
+      });
     } else {
-      startRecording();
+      void startRecording();
     }
   };
 
@@ -856,8 +766,11 @@ export default function CurrentVisitPage() {
                 value={micLanguage}
                 onChange={(e) => {
                   setMicLanguage(e.target.value);
-                  toast.success(`Microphone calibrated to: ${e.target.value === "kn-IN" ? "Kannada" : e.target.value}`);
+                  toast.success(
+                    `Language set to: ${micLanguageLabels[e.target.value] ?? e.target.value}`
+                  );
                 }}
+                disabled={isRecording}
               >
                 <option value="kn-IN">ಕನ್ನಡ (Kannada)</option>
                 <option value="hi-IN">हिंदी (Hindi / Hinglish)</option>
@@ -935,8 +848,7 @@ export default function CurrentVisitPage() {
           <div className="mt-3 flex items-center gap-2 text-sm text-red-600 bg-red-50 p-2.5 rounded-lg border border-red-100">
             <div className="w-2 h-2 bg-red-600 rounded-full animate-ping"></div>
             <span>
-              Listening continuously... Calibrated for <strong>{micLanguage}</strong>. Speak naturally!
-              {restartCount > 0 && ` (Auto-restarted ${restartCount} times)`}
+              Listening... <strong>{micLanguageLabels[micLanguage] ?? micLanguage}</strong>. Speak naturally!
             </span>
           </div>
         )}
