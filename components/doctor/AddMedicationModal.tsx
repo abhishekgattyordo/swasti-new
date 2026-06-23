@@ -1,7 +1,9 @@
+
+
+
 // "use client";
 
-// import React, { useState } from "react";
-
+// import React, { useState, useEffect, useRef } from "react";
 
 // export interface NewMedicationData {
 //   name: string;
@@ -14,7 +16,7 @@
 
 // interface AddMedicationModalProps {
 //   onClose: () => void;
-//   onAdd: (medications: NewMedicationData[]) => void; // Now accepts an array
+//   onAdd: (medications: NewMedicationData[]) => void;
 //   initialValues?: Partial<NewMedicationData>;
 // }
 
@@ -26,6 +28,160 @@
 //     { name: "", category: "", dosage: "", frequency: "", duration: "", instructions: "" },
 //   ]);
 
+//   // Voice dictation states
+//   const [transcript, setTranscript] = useState("");
+//   const [isListening, setIsListening] = useState(false);
+//   const [recognition, setRecognition] = useState<any>(null);
+//   const [isProcessing, setIsProcessing] = useState(false);
+//   const [inputMode, setInputMode] = useState<"speak" | "text">("speak");
+
+//   // For waveform animation (optional, simplified)
+//   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+//   const animationRef = useRef<number | null>(null);
+
+//   // Initialize Web Speech API
+//   useEffect(() => {
+//     const SpeechObj = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+//     if (SpeechObj) {
+//       const recInstance = new SpeechObj();
+//       recInstance.continuous = true;
+//       recInstance.interimResults = false;
+//       recInstance.lang = "en-US";
+
+//       recInstance.onresult = (event: any) => {
+//         const parts: string[] = [];
+//         for (let i = 0; i < event.results.length; i++) {
+//           const t = event.results[i][0].transcript;
+//           if (t && event.results[i].isFinal) {
+//             parts.push(t.trim());
+//           }
+//         }
+//         if (parts.length > 0) {
+//           setTranscript(parts.join(" "));
+//         }
+//       };
+
+//       recInstance.onerror = (err: any) => {
+//         console.error("Speech recognition error:", err);
+//         setIsListening(false);
+//       };
+
+//       setRecognition(recInstance);
+//     }
+//   }, []);
+
+//   // Simple canvas animation while listening (mirrors reference but simplified)
+//   useEffect(() => {
+//     if (isListening && canvasRef.current) {
+//       const canvas = canvasRef.current;
+//       const ctx = canvas.getContext("2d");
+//       if (!ctx) return;
+//       let step = 0;
+
+//       const drawWave = () => {
+//         ctx.clearRect(0, 0, canvas.width, canvas.height);
+//         ctx.strokeStyle = "#137fec";
+//         ctx.lineWidth = 2;
+//         ctx.beginPath();
+//         const points = 40;
+//         const width = canvas.width;
+//         const height = canvas.height;
+//         const midY = height / 2;
+//         for (let i = 0; i <= points; i++) {
+//           const x = (i / points) * width;
+//           const amplitude = Math.sin((i / 4) - step / 8) * (5 + Math.random() * 8);
+//           const y = midY + amplitude;
+//           if (i === 0) ctx.moveTo(x, y);
+//           else ctx.lineTo(x, y);
+//         }
+//         ctx.stroke();
+//         step += 1.2;
+//         animationRef.current = requestAnimationFrame(drawWave);
+//       };
+//       drawWave();
+//     } else {
+//       if (animationRef.current) {
+//         cancelAnimationFrame(animationRef.current);
+//         animationRef.current = null;
+//       }
+//       // Draw flat line
+//       if (canvasRef.current) {
+//         const canvas = canvasRef.current;
+//         const ctx = canvas.getContext("2d");
+//         if (ctx) {
+//           ctx.clearRect(0, 0, canvas.width, canvas.height);
+//           ctx.strokeStyle = "#cbd5e1";
+//           ctx.lineWidth = 1.5;
+//           ctx.beginPath();
+//           ctx.moveTo(0, canvas.height / 2);
+//           ctx.lineTo(canvas.width, canvas.height / 2);
+//           ctx.stroke();
+//         }
+//       }
+//     }
+//     return () => {
+//       if (animationRef.current) cancelAnimationFrame(animationRef.current);
+//     };
+//   }, [isListening]);
+
+//   const handleToggleListening = () => {
+//     if (!recognition) {
+//       alert("Speech recognition is not supported in this browser. Please use Text input mode.");
+//       return;
+//     }
+//     if (isListening) {
+//       recognition.stop();
+//       setIsListening(false);
+//     } else {
+//       setTranscript("");
+//       try {
+//         recognition.start();
+//         setIsListening(true);
+//       } catch (err) {
+//         alert("Could not access microphone. Please check permissions.");
+//       }
+//     }
+//   };
+
+//   const handleProcessTranscript = async () => {
+//     if (!transcript.trim()) {
+//       alert("Please speak or type a prescription order.");
+//       return;
+//     }
+//     setIsProcessing(true);
+//     try {
+//       const response = await fetch("/api/doctors/parse-prescription", {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify({ transcript: transcript.trim() }),
+//       });
+//       if (!response.ok) throw new Error("Failed to parse prescription.");
+//       const parsedMeds = await response.json();
+//       if (parsedMeds && parsedMeds.length > 0) {
+//         // Map parsed medications to our NewMedicationData shape
+//         const newMeds: NewMedicationData[] = parsedMeds.map((med: any) => ({
+//           name: med.name || "",
+//           category: med.category || "Other",
+//           dosage: med.dosage || "",
+//           frequency: med.frequency || "Once daily",
+//           duration: med.duration || "7 days",
+//           instructions: med.instructions || "",
+//         }));
+//         // Append to existing medications list
+//         setMedications((prev) => [...prev, ...newMeds]);
+//         setTranscript(""); // clear after successful addition
+//       } else {
+//         alert("No medications could be extracted. Please rephrase (e.g., 'Amoxicillin 500mg twice daily for 7 days').");
+//       }
+//     } catch (err: any) {
+//       console.error(err);
+//       alert("Error processing voice: " + err.message);
+//     } finally {
+//       setIsProcessing(false);
+//     }
+//   };
+
+//   // Manual row management (unchanged)
 //   const handleAddRow = () => {
 //     setMedications([
 //       ...medications,
@@ -41,11 +197,7 @@
 //     }
 //   };
 
-//   const handleChange = (
-//     index: number,
-//     field: keyof NewMedicationData,
-//     value: string
-//   ) => {
+//   const handleChange = (index: number, field: keyof NewMedicationData, value: string) => {
 //     const updated = [...medications];
 //     updated[index][field] = value;
 //     setMedications(updated);
@@ -53,7 +205,6 @@
 
 //   const handleSubmit = (e: React.FormEvent) => {
 //     e.preventDefault();
-//     // Filter out rows that are missing required fields (name and dosage)
 //     const validMedications = medications.filter(
 //       (med) => med.name.trim() && med.dosage.trim()
 //     );
@@ -75,7 +226,7 @@
 //             </div>
 //             <div>
 //               <h2 className="text-lg font-semibold text-slate-900">Add Medications</h2>
-//               <p className="text-xs text-slate-500 mt-0.5">Enter one or more prescriptions</p>
+//               <p className="text-xs text-slate-500 mt-0.5">Enter prescriptions manually or via voice AI</p>
 //             </div>
 //           </div>
 //           <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
@@ -84,114 +235,213 @@
 //         </div>
 
 //         <form onSubmit={handleSubmit} className="p-6 space-y-6">
-//           {medications.map((med, index) => (
-//             <div
-//               key={index}
-//               className="p-4 border border-slate-200 rounded-lg bg-slate-50/50 relative"
-//             >
-//               <div className="flex justify-between items-center mb-3">
-//                 <h4 className="font-medium text-slate-700">Medication #{index + 1}</h4>
-//                 {medications.length > 1 && (
-//                   <button
-//                     type="button"
-//                     onClick={() => handleRemoveRow(index)}
-//                     className="text-red-500 hover:text-red-700 text-sm"
-//                   >
-//                     Remove
-//                   </button>
-//                 )}
-//               </div>
-
-//               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-//                 <div>
-//                   <label className="block text-xs font-medium text-slate-500 uppercase mb-1">
-//                     Name *
-//                   </label>
-//                   <input
-//                     type="text"
-//                     value={med.name}
-//                     onChange={(e) => handleChange(index, "name", e.target.value)}
-//                     className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
-//                     placeholder="e.g. Amoxicillin"
-//                   />
-//                 </div>
-//                 <div>
-//                   <label className="block text-xs font-medium text-slate-500 uppercase mb-1">
-//                     Category
-//                   </label>
-//                   <select
-//                     value={med.category}
-//                     onChange={(e) => handleChange(index, "category", e.target.value)}
-//                     className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
-//                   >
-//                     <option value="">Select</option>
-//                     <option value="Antibiotic">Antibiotic</option>
-//                     <option value="Analgesic">Analgesic</option>
-//                     <option value="Antihypertensive">Antihypertensive</option>
-//                     <option value="Antidiabetic">Antidiabetic</option>
-//                     <option value="Other">Other</option>
-//                   </select>
-//                 </div>
-//                 <div>
-//                   <label className="block text-xs font-medium text-slate-500 uppercase mb-1">
-//                     Dosage *
-//                   </label>
-//                   <input
-//                     type="text"
-//                     value={med.dosage}
-//                     onChange={(e) => handleChange(index, "dosage", e.target.value)}
-//                     className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
-//                     placeholder="e.g. 500mg"
-//                   />
-//                 </div>
-//                 <div>
-//                   <label className="block text-xs font-medium text-slate-500 uppercase mb-1">
-//                     Frequency
-//                   </label>
-//                   <input
-//                     type="text"
-//                     value={med.frequency}
-//                     onChange={(e) => handleChange(index, "frequency", e.target.value)}
-//                     className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
-//                     placeholder="e.g. Twice daily"
-//                   />
-//                 </div>
-//                 <div>
-//                   <label className="block text-xs font-medium text-slate-500 uppercase mb-1">
-//                     Duration
-//                   </label>
-//                   <input
-//                     type="text"
-//                     value={med.duration}
-//                     onChange={(e) => handleChange(index, "duration", e.target.value)}
-//                     className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
-//                     placeholder="e.g. 7 days"
-//                   />
-//                 </div>
-//                 <div className="md:col-span-2">
-//                   <label className="block text-xs font-medium text-slate-500 uppercase mb-1">
-//                     Instructions
-//                   </label>
-//                   <textarea
-//                     value={med.instructions}
-//                     onChange={(e) => handleChange(index, "instructions", e.target.value)}
-//                     rows={2}
-//                     className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm resize-none"
-//                     placeholder="e.g. Take with food"
-//                   />
-//                 </div>
+//           {/* Voice dictation section */}
+//           <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-4">
+//             <div className="flex justify-between items-center">
+//               <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+//                 AI Prescription Dictation
+//               </span>
+//               <div className="flex gap-2">
+//                 <button
+//                   type="button"
+//                   onClick={() => setInputMode("speak")}
+//                   className={`px-3 py-1 text-xs font-bold rounded-lg transition ${
+//                     inputMode === "speak"
+//                       ? "bg-[#137fec] text-white"
+//                       : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
+//                   }`}
+//                 >
+//                   🎤 Speak
+//                 </button>
+//                 <button
+//                   type="button"
+//                   onClick={() => setInputMode("text")}
+//                   className={`px-3 py-1 text-xs font-bold rounded-lg transition ${
+//                     inputMode === "text"
+//                       ? "bg-[#137fec] text-white"
+//                       : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
+//                   }`}
+//                 >
+//                   ⌨️ Type
+//                 </button>
 //               </div>
 //             </div>
-//           ))}
 
-//           <button
-//             type="button"
-//             onClick={handleAddRow}
-//             className="w-full py-3 border-2 border-dashed border-slate-300 rounded-lg text-slate-600 hover:text-[#137fec] hover:border-[#137fec] transition flex items-center justify-center gap-2"
-//           >
-//             <span className="material-symbols-outlined">add</span>
-//             Add Another Medication
-//           </button>
+//             {inputMode === "speak" ? (
+//               <div className="space-y-3">
+//                 <div className="flex items-center gap-4">
+//                   <button
+//                     type="button"
+//                     onClick={handleToggleListening}
+//                     className={`w-14 h-14 rounded-full flex items-center justify-center text-white shadow-lg transition-transform active:scale-95 ${
+//                       isListening
+//                         ? "bg-rose-500 hover:bg-rose-600 animate-pulse"
+//                         : "bg-[#137fec] hover:bg-blue-600"
+//                     }`}
+//                   >
+//                     {isListening ? (
+//                       <span className="material-symbols-outlined text-2xl">mic_off</span>
+//                     ) : (
+//                       <span className="material-symbols-outlined text-2xl">mic</span>
+//                     )}
+//                   </button>
+//                   <div className="flex-1 h-12 bg-white rounded-xl border border-slate-200 overflow-hidden">
+//                     <canvas ref={canvasRef} width={400} height={48} className="w-full h-full"></canvas>
+//                   </div>
+//                 </div>
+//                 <div>
+//                   <label className="block text-xs font-medium text-slate-500 mb-1">Transcript</label>
+//                   <textarea
+//                     value={transcript}
+//                     onChange={(e) => setTranscript(e.target.value)}
+//                     rows={2}
+//                     className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+//                     placeholder={isListening ? "Listening... speak clearly" : "Click the microphone and say e.g. 'Amoxicillin 500mg twice daily for 7 days'"}
+//                   />
+//                 </div>
+//               </div>
+//             ) : (
+//               <div>
+//                 <label className="block text-xs font-medium text-slate-500 mb-1">Raw Text Order</label>
+//                 <textarea
+//                   value={transcript}
+//                   onChange={(e) => setTranscript(e.target.value)}
+//                   rows={3}
+//                   className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+//                   placeholder="Type prescription directions, e.g.: 'Azithromycin 250mg once daily for 5 days, and Ibuprofen 400mg every 8 hours as needed'"
+//                 />
+//               </div>
+//             )}
+
+//             <div className="flex justify-end">
+//               <button
+//                 type="button"
+//                 onClick={handleProcessTranscript}
+//                 disabled={isProcessing || !transcript.trim()}
+//                 className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition"
+//               >
+//                 {isProcessing ? (
+//                   <>
+//                     <span className="material-symbols-outlined text-base animate-spin">progress_activity</span>
+//                     Processing...
+//                   </>
+//                 ) : (
+//                   <>
+//                     <span className="material-symbols-outlined text-base">auto_awesome</span>
+//                     Extract Medications with AI
+//                   </>
+//                 )}
+//               </button>
+//             </div>
+//           </div>
+
+//           {/* Manual medications list (existing) */}
+//           <div className="space-y-4">
+//             <div className="flex justify-between items-center">
+//               <h3 className="text-sm font-semibold text-slate-700">Medications to Add ({medications.length})</h3>
+//               <button
+//                 type="button"
+//                 onClick={handleAddRow}
+//                 className="text-xs text-[#137fec] font-medium hover:underline flex items-center gap-1"
+//               >
+//                 <span className="material-symbols-outlined text-sm">add</span> Add Row
+//               </button>
+//             </div>
+
+//             {medications.map((med, index) => (
+//               <div key={index} className="p-4 border border-slate-200 rounded-lg bg-slate-50/50 relative">
+//                 <div className="flex justify-between items-center mb-3">
+//                   <h4 className="font-medium text-slate-700">Medication #{index + 1}</h4>
+//                   {medications.length > 1 && (
+//                     <button
+//                       type="button"
+//                       onClick={() => handleRemoveRow(index)}
+//                       className="text-red-500 hover:text-red-700 text-sm"
+//                     >
+//                       Remove
+//                     </button>
+//                   )}
+//                 </div>
+
+//                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+//                   <div>
+//                     <label className="block text-xs font-medium text-slate-500 uppercase mb-1">Name *</label>
+//                     <input
+//                       type="text"
+//                       value={med.name}
+//                       onChange={(e) => handleChange(index, "name", e.target.value)}
+//                       className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+//                       placeholder="e.g. Amoxicillin"
+//                     />
+//                   </div>
+//                   <div>
+//                     <label className="block text-xs font-medium text-slate-500 uppercase mb-1">Category</label>
+//                     <select
+//                       value={med.category}
+//                       onChange={(e) => handleChange(index, "category", e.target.value)}
+//                       className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+//                     >
+//                       <option value="">Select</option>
+//                       <option value="Antibiotic">Antibiotic</option>
+//                       <option value="Analgesic">Analgesic</option>
+//                       <option value="Antihypertensive">Antihypertensive</option>
+//                       <option value="Antidiabetic">Antidiabetic</option>
+//                       <option value="Other">Other</option>
+//                     </select>
+//                   </div>
+//                   <div>
+//                     <label className="block text-xs font-medium text-slate-500 uppercase mb-1">Dosage *</label>
+//                     <input
+//                       type="text"
+//                       value={med.dosage}
+//                       onChange={(e) => handleChange(index, "dosage", e.target.value)}
+//                       className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+//                       placeholder="e.g. 500mg"
+//                     />
+//                   </div>
+//                   <div>
+//                     <label className="block text-xs font-medium text-slate-500 uppercase mb-1">Frequency</label>
+//                     <input
+//                       type="text"
+//                       value={med.frequency}
+//                       onChange={(e) => handleChange(index, "frequency", e.target.value)}
+//                       className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+//                       placeholder="e.g. Twice daily"
+//                     />
+//                   </div>
+//                   <div>
+//                     <label className="block text-xs font-medium text-slate-500 uppercase mb-1">Duration</label>
+//                     <input
+//                       type="text"
+//                       value={med.duration}
+//                       onChange={(e) => handleChange(index, "duration", e.target.value)}
+//                       className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+//                       placeholder="e.g. 7 days"
+//                     />
+//                   </div>
+//                   <div className="md:col-span-2">
+//                     <label className="block text-xs font-medium text-slate-500 uppercase mb-1">Instructions</label>
+//                     <textarea
+//                       value={med.instructions}
+//                       onChange={(e) => handleChange(index, "instructions", e.target.value)}
+//                       rows={2}
+//                       className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm resize-none"
+//                       placeholder="e.g. Take with food"
+//                     />
+//                   </div>
+//                 </div>
+//               </div>
+//             ))}
+
+//             <button
+//               type="button"
+//               onClick={handleAddRow}
+//               className="w-full py-3 border-2 border-dashed border-slate-300 rounded-lg text-slate-600 hover:text-[#137fec] hover:border-[#137fec] transition flex items-center justify-center gap-2"
+//             >
+//               <span className="material-symbols-outlined">add</span>
+//               Add Another Medication
+//             </button>
+//           </div>
 
 //           <div className="flex justify-end gap-3 pt-4">
 //             <button
@@ -234,17 +484,31 @@ interface AddMedicationModalProps {
   onClose: () => void;
   onAdd: (medications: NewMedicationData[]) => void;
   initialValues?: Partial<NewMedicationData>;
+  patientId?: string;
+  appointmentId?: string;
+}
+
+interface WhatsAppStatus {
+  patient: { sent: boolean; error?: string; messageId?: string };
+  pharmacy: { sent: boolean; error?: string; messageId?: string };
 }
 
 export default function AddMedicationModal({
   onClose,
   onAdd,
+  patientId,
+  appointmentId,
 }: AddMedicationModalProps) {
   const [medications, setMedications] = useState<NewMedicationData[]>([
     { name: "", category: "", dosage: "", frequency: "", duration: "", instructions: "" },
   ]);
 
-  // Voice dictation states
+  // ✅ WhatsApp states
+  const [sendWhatsApp, setSendWhatsApp] = useState(true);
+  const [whatsappStatus, setWhatsappStatus] = useState<WhatsAppStatus | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Voice dictation states (unchanged)
   const [transcript, setTranscript] = useState("");
   const [isListening, setIsListening] = useState(false);
   const [recognition, setRecognition] = useState<any>(null);
@@ -255,7 +519,7 @@ export default function AddMedicationModal({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animationRef = useRef<number | null>(null);
 
-  // Initialize Web Speech API
+  // Initialize Web Speech API (unchanged)
   useEffect(() => {
     const SpeechObj = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (SpeechObj) {
@@ -286,7 +550,7 @@ export default function AddMedicationModal({
     }
   }, []);
 
-  // Simple canvas animation while listening (mirrors reference but simplified)
+  // Canvas animation (unchanged)
   useEffect(() => {
     if (isListening && canvasRef.current) {
       const canvas = canvasRef.current;
@@ -320,7 +584,6 @@ export default function AddMedicationModal({
         cancelAnimationFrame(animationRef.current);
         animationRef.current = null;
       }
-      // Draw flat line
       if (canvasRef.current) {
         const canvas = canvasRef.current;
         const ctx = canvas.getContext("2d");
@@ -374,7 +637,6 @@ export default function AddMedicationModal({
       if (!response.ok) throw new Error("Failed to parse prescription.");
       const parsedMeds = await response.json();
       if (parsedMeds && parsedMeds.length > 0) {
-        // Map parsed medications to our NewMedicationData shape
         const newMeds: NewMedicationData[] = parsedMeds.map((med: any) => ({
           name: med.name || "",
           category: med.category || "Other",
@@ -383,9 +645,8 @@ export default function AddMedicationModal({
           duration: med.duration || "7 days",
           instructions: med.instructions || "",
         }));
-        // Append to existing medications list
         setMedications((prev) => [...prev, ...newMeds]);
-        setTranscript(""); // clear after successful addition
+        setTranscript("");
       } else {
         alert("No medications could be extracted. Please rephrase (e.g., 'Amoxicillin 500mg twice daily for 7 days').");
       }
@@ -397,7 +658,7 @@ export default function AddMedicationModal({
     }
   };
 
-  // Manual row management (unchanged)
+  // Manual row management
   const handleAddRow = () => {
     setMedications([
       ...medications,
@@ -419,8 +680,10 @@ export default function AddMedicationModal({
     setMedications(updated);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // ✅ Updated submit with WhatsApp integration
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     const validMedications = medications.filter(
       (med) => med.name.trim() && med.dosage.trim()
     );
@@ -428,8 +691,51 @@ export default function AddMedicationModal({
       alert("Please add at least one medication with name and dosage.");
       return;
     }
-    onAdd(validMedications);
-    onClose();
+
+    // ✅ If patientId and appointmentId exist, save via API with WhatsApp
+    if (patientId && appointmentId) {
+      setIsSaving(true);
+      setWhatsappStatus(null);
+
+      try {
+        const response = await fetch(`/api/ehr/${patientId}/prescriptions`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            appointmentId,
+            medications: validMedications,
+            recordedBy: "Doctor",
+            sendWhatsApp, // ✅ Pass WhatsApp toggle
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || "Failed to save prescription");
+        }
+
+        // ✅ Update WhatsApp status
+        if (data.whatsapp) {
+          setWhatsappStatus(data.whatsapp);
+        }
+
+        // ✅ Show success with WhatsApp status
+        alert(`✅ Prescription saved successfully!\n\n📱 WhatsApp Status:\nPatient: ${data.whatsapp?.patient?.sent ? '✅ Sent' : '❌ Failed'}\nPharmacy: ${data.whatsapp?.pharmacy?.sent ? '✅ Sent' : '❌ Failed'}`);
+
+        onAdd(validMedications);
+        onClose();
+
+      } catch (error: any) {
+        alert(`❌ Error: ${error.message}`);
+      } finally {
+        setIsSaving(false);
+      }
+    } else {
+      // Fallback: Just call onAdd without API
+      onAdd(validMedications);
+      onClose();
+    }
   };
 
   return (
@@ -451,7 +757,7 @@ export default function AddMedicationModal({
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Voice dictation section */}
+          {/* Voice dictation section (unchanged) */}
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-4">
             <div className="flex justify-between items-center">
               <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
@@ -551,7 +857,7 @@ export default function AddMedicationModal({
             </div>
           </div>
 
-          {/* Manual medications list (existing) */}
+          {/* Manual medications list (unchanged) */}
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <h3 className="text-sm font-semibold text-slate-700">Medications to Add ({medications.length})</h3>
@@ -659,20 +965,78 @@ export default function AddMedicationModal({
             </button>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4">
+          {/* ✅ NEW: WhatsApp Toggle & Status */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <input
+                type="checkbox"
+                id="sendWhatsApp"
+                checked={sendWhatsApp}
+                onChange={(e) => setSendWhatsApp(e.target.checked)}
+                className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+                disabled={!patientId || !appointmentId}
+              />
+              <label htmlFor="sendWhatsApp" className="text-sm font-medium text-gray-700">
+                Send WhatsApp notifications to patient and pharmacy
+                {(!patientId || !appointmentId) && (
+                  <span className="text-xs text-gray-400 ml-2">(Patient ID & Appointment ID required)</span>
+                )}
+              </label>
+            </div>
+
+            {/* ✅ WhatsApp Status Display */}
+            {whatsappStatus && (
+              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 space-y-2">
+                <h4 className="font-semibold text-sm text-gray-700">📱 WhatsApp Status</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className={`p-3 rounded-lg ${whatsappStatus.patient.sent ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'} border`}>
+                    <span className="font-medium text-sm">Patient:</span>
+                    {whatsappStatus.patient.sent ? (
+                      <span className="text-green-600 ml-2">✅ Sent</span>
+                    ) : (
+                      <span className="text-red-600 ml-2">❌ {whatsappStatus.patient.error || 'Failed'}</span>
+                    )}
+                  </div>
+                  <div className={`p-3 rounded-lg ${whatsappStatus.pharmacy.sent ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'} border`}>
+                    <span className="font-medium text-sm">Pharmacy:</span>
+                    {whatsappStatus.pharmacy.sent ? (
+                      <span className="text-green-600 ml-2">✅ Sent</span>
+                    ) : (
+                      <span className="text-red-600 ml-2">❌ {whatsappStatus.pharmacy.error || 'Failed'}</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Saving indicator */}
+            {isSaving && (
+              <div className="flex items-center justify-center gap-2 text-blue-600">
+                <span className="material-symbols-outlined animate-spin">progress_activity</span>
+                Saving prescription and sending notifications...
+              </div>
+            )}
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
             <button
               type="button"
               onClick={onClose}
               className="px-4 py-2 text-sm font-medium text-slate-600 border border-slate-300 rounded-lg hover:bg-slate-100"
+              disabled={isSaving}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-[#137fec] text-white text-sm font-medium rounded-lg hover:bg-blue-600 flex items-center gap-2"
+              disabled={isSaving}
+              className="px-4 py-2 bg-[#137fec] text-white text-sm font-medium rounded-lg hover:bg-blue-600 disabled:opacity-50 flex items-center gap-2"
             >
-              <span className="material-symbols-outlined text-[18px]">check</span>
-              Save All Medications
+              <span className="material-symbols-outlined text-[18px]">
+                {isSaving ? 'progress_activity' : 'check'}
+              </span>
+              {isSaving ? 'Saving...' : 'Save All Medications'}
             </button>
           </div>
         </form>

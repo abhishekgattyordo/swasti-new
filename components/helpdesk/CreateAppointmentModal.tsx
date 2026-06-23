@@ -727,7 +727,7 @@ export default function CreateAppointmentModal({
       doctorId: formData.doctorId,
       appointmentDate: formData.appointmentDate,
       appointmentTime: formData.appointmentTime,
-      consultationType: formData.consultationType,
+     consultationType: formData.consultationType,
       notes: formData.notes || undefined,
     };
 
@@ -1215,7 +1215,7 @@ export default function CreateAppointmentModal({
                 className="w-full px-4 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20"
               >
                 <option value="in-person">In-Person</option>
-                <option value="video">Video Consultation</option>
+               <option value="teleconsultation">Teleconsultation</option>
               </select>
             </div>
             <div>
