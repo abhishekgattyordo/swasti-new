@@ -1169,7 +1169,7 @@ export default function CurrentVisitPage() {
   
   // ✅ Multi-Language Voice Recording States
   const [isRecording, setIsRecording] = useState(false);
-  const [micLanguage, setMicLanguage] = useState("kn-IN");
+  const [micLanguage, setMicLanguage] = useState("en-IN"); // Default: Indian English
   const [transcript, setTranscript] = useState("");
   const [showTranscriptDialog, setShowTranscriptDialog] = useState(false);
   const [interimTranscript, setInterimTranscript] = useState("");
