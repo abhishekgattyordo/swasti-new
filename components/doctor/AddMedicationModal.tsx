@@ -5,6 +5,16 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { LiveTranscriptionSession } from "@/lib/speech";
+
+function mapMicLanguage(micLang: string): string {
+  if (micLang === "kn-IN" || micLang === "tulu") return "kn";
+  if (micLang === "hi-IN") return "hi";
+  if (micLang === "ta-IN") return "ta";
+  if (micLang === "ml-IN") return "ml";
+  if (micLang === "en-IN" || micLang === "en-US") return "en";
+  return "multi";
+}
 
 export interface NewMedicationData {
   name: string;
@@ -43,92 +53,22 @@ export default function AddMedicationModal({
   const [whatsappStatus, setWhatsappStatus] = useState<WhatsAppStatus | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  // ✅ Voice dictation states – improved
   const [transcript, setTranscript] = useState("");
-  const [interimTranscript, setInterimTranscript] = useState(""); // for live feedback
+  const [interimTranscript, setInterimTranscript] = useState("");
   const [isListening, setIsListening] = useState(false);
-  const [recognition, setRecognition] = useState<any>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [inputMode, setInputMode] = useState<"speak" | "text">("speak");
-  const [micLanguage, setMicLanguage] = useState("en-IN"); // Default: Indian English
+  const [micLanguage, setMicLanguage] = useState("en-IN");
 
-  // For waveform animation
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animationRef = useRef<number | null>(null);
-  const recognitionRef = useRef<any>(null); // to access current recognition instance
+  const liveSessionRef = useRef<LiveTranscriptionSession | null>(null);
 
-  // ✅ Initialize Web Speech API with improved settings
   useEffect(() => {
-    const SpeechObj = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechObj) {
-      console.warn("Speech recognition not supported");
-      return;
-    }
-
-    const createRecognition = () => {
-      const rec = new SpeechObj();
-      rec.continuous = true;
-      rec.interimResults = true;      // ✅ enable interim for live feedback
-      rec.maxAlternatives = 3;        // ✅ get multiple options for better accuracy
-      rec.lang = micLanguage === "tulu" ? "kn-IN" : micLanguage;
-      return rec;
+    return () => {
+      liveSessionRef.current?.cancel();
     };
-
-    const recInstance = createRecognition();
-
-    recInstance.onresult = (event: any) => {
-      let interim = "";
-      let final = "";
-      let bestFinal = "";
-      let confidenceScore = 0;
-
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const result = event.results[i];
-        const transcriptPiece = result[0].transcript;
-        const confidence = result[0].confidence;
-
-        // Pick the best confidence result for final
-        if (confidence > confidenceScore) {
-          confidenceScore = confidence;
-          bestFinal = transcriptPiece;
-        }
-
-        if (result.isFinal) {
-          final += transcriptPiece + " ";
-        } else {
-          interim += transcriptPiece;
-        }
-      }
-
-      // Use best confidence for final if confidence > 0.5
-      if (bestFinal && confidenceScore > 0.5) {
-        final = bestFinal + " ";
-      }
-
-      if (final) {
-        setTranscript((prev) => prev + final);
-      }
-      setInterimTranscript(interim);
-    };
-
-    recInstance.onerror = (err: any) => {
-      console.error("Speech recognition error:", err);
-      if (err.error === "not-allowed") {
-        alert("Microphone access denied. Please allow microphone permissions.");
-      }
-      setIsListening(false);
-    };
-
-    recInstance.onend = () => {
-      // Auto-restart if still listening? We'll handle manually.
-      setIsListening(false);
-    };
-
-    recognitionRef.current = recInstance;
-    setRecognition(recInstance);
-  }, [micLanguage]); // Re-initialize when language changes
-
-  // Canvas animation (unchanged)
+  }, []);
   useEffect(() => {
     if (isListening && canvasRef.current) {
       const canvas = canvasRef.current;
@@ -181,24 +121,49 @@ export default function AddMedicationModal({
     };
   }, [isListening]);
 
-  const handleToggleListening = () => {
-    if (!recognition) {
-      alert("Speech recognition is not supported in this browser. Please use Text input mode.");
+  const handleToggleListening = async () => {
+    if (isListening) {
+      const session = liveSessionRef.current;
+      if (session) {
+        try {
+          const state = await session.stop();
+          setTranscript(state.fullText);
+          setInterimTranscript("");
+        } catch (err) {
+          console.error("Stop error:", err);
+        }
+      }
+      liveSessionRef.current = null;
+      setIsListening(false);
       return;
     }
-    if (isListening) {
-      recognition.stop();
-      setIsListening(false);
-      // Keep the final transcript, clear interim
-      setInterimTranscript("");
-    } else {
-      setTranscript(""); // start fresh
-      setInterimTranscript("");
-      try {
-        recognition.start();
-        setIsListening(true);
-      } catch (err) {
-        alert("Could not access microphone. Please check permissions.");
+
+    liveSessionRef.current?.cancel();
+    setTranscript("");
+    setInterimTranscript("");
+
+    const session = new LiveTranscriptionSession();
+    liveSessionRef.current = session;
+
+    try {
+      await session.start(
+        (state) => {
+          setTranscript(state.fullText);
+          setInterimTranscript(state.interimText);
+        },
+        { language: mapMicLanguage(micLanguage) }
+      );
+      setIsListening(true);
+    } catch (err) {
+      liveSessionRef.current = null;
+      const message = err instanceof Error ? err.message : "Failed to start recording";
+      if (
+        err instanceof DOMException &&
+        (err.name === "NotAllowedError" || err.name === "PermissionDeniedError")
+      ) {
+        alert("Microphone access denied. Please allow microphone permissions.");
+      } else {
+        alert(message);
       }
     }
   };
@@ -378,6 +343,7 @@ export default function AddMedicationModal({
                       className="text-xs font-bold text-slate-700 bg-transparent border-none outline-none cursor-pointer pr-1"
                       value={micLanguage}
                       onChange={(e) => setMicLanguage(e.target.value)}
+                      disabled={isListening}
                     >
                       <option value="kn-IN">ಕನ್ನಡ (Kannada)</option>
                       <option value="hi-IN">हिंदी (Hindi / Hinglish)</option>
@@ -390,7 +356,7 @@ export default function AddMedicationModal({
                   </div>
                   <button
                     type="button"
-                    onClick={handleToggleListening}
+                    onClick={() => void handleToggleListening()}
                     className={`w-12 h-12 rounded-full flex items-center justify-center text-white shadow-lg transition-transform active:scale-95 ${
                       isListening
                         ? "bg-rose-500 hover:bg-rose-600 animate-pulse"
