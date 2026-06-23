@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { LiveTranscriptionSession, mapMicLocale } from '@/lib/speech';
 
 // ------------------------------------------------------------------
 // Types and Templates (same as before)
@@ -189,69 +190,57 @@ export default function CreateNoteModal({ isOpen, onClose, onSave, patientName, 
     patientResponse: '',
   });
 
-  // ---------- AI Voice Dictation (continuous stream) ----------
+  // ---------- AI Voice Dictation (live streaming) ----------
   const [isListening, setIsListening] = useState(false);
   const [speechTranscript, setSpeechTranscript] = useState("");
+  const [interimText, setInterimText] = useState("");
   const [isParsing, setIsParsing] = useState(false);
-  const recognitionRef = useRef<any>(null);
+  const [micLanguage, setMicLanguage] = useState('en-IN');
+  const liveSessionRef = useRef<LiveTranscriptionSession | null>(null);
 
-  // Set up continuous speech recognition
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      if (SpeechRecognition) {
-        const recognition = new SpeechRecognition();
-        recognition.continuous = true;
-        recognition.interimResults = true;
-        recognition.lang = 'en-US';
-
-        recognition.onresult = (event: any) => {
-          let final = '';
-          for (let i = event.resultIndex; i < event.results.length; ++i) {
-            if (event.results[i].isFinal) {
-              final += event.results[i][0].transcript;
-            }
-          }
-          if (final) {
-            setSpeechTranscript(prev => prev + (prev ? ' ' : '') + final);
-          }
-        };
-
-        recognition.onerror = (event: any) => {
-          console.error('Speech error:', event.error);
-          setIsListening(false);
-        };
-
-        recognition.onend = () => {
-          setIsListening(false);
-        };
-
-        recognitionRef.current = recognition;
-      }
-    }
     return () => {
-      if (recognitionRef.current) {
-        try { recognitionRef.current.stop(); } catch(e) {}
-      }
+      liveSessionRef.current?.cancel();
     };
   }, []);
 
-  const toggleListening = () => {
-    if (!recognitionRef.current) {
-      alert('Speech recognition not supported in this browser.');
+  const toggleListening = async () => {
+    if (isListening) {
+      const session = liveSessionRef.current;
+      if (session) {
+        try {
+          const state = await session.stop();
+          setSpeechTranscript(state.fullText);
+          setInterimText('');
+        } catch (err) {
+          console.error('Stop error:', err);
+        }
+      }
+      liveSessionRef.current = null;
+      setIsListening(false);
       return;
     }
-    if (isListening) {
-      recognitionRef.current.stop();
-      setIsListening(false);
-    } else {
-      setSpeechTranscript('');
-      try {
-        recognitionRef.current.start();
-        setIsListening(true);
-      } catch (err) {
-        console.error(err);
-      }
+
+    liveSessionRef.current?.cancel();
+    setSpeechTranscript('');
+    setInterimText('');
+
+    const session = new LiveTranscriptionSession();
+    liveSessionRef.current = session;
+
+    try {
+      await session.start(
+        (state) => {
+          setSpeechTranscript(state.fullText);
+          setInterimText(state.interimText);
+        },
+        { language: mapMicLocale(micLanguage) }
+      );
+      setIsListening(true);
+    } catch (err) {
+      liveSessionRef.current = null;
+      console.error('Microphone error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to start dictation');
     }
   };
 
@@ -462,9 +451,22 @@ export default function CreateNoteModal({ isOpen, onClose, onSave, patientName, 
                 rows={4}
                 className="bg-white dark:bg-slate-800"
               />
+              {isListening && interimText && (
+                <p className="text-xs text-purple-600 italic">{interimText}</p>
+              )}
               <div className="flex flex-wrap gap-2 justify-between">
-                <div className="flex gap-2">
-                  <Button type="button" variant={isListening ? "destructive" : "default"} onClick={toggleListening} className="gap-2">
+                <div className="flex gap-2 items-center">
+                  <select
+                    value={micLanguage}
+                    onChange={(e) => setMicLanguage(e.target.value)}
+                    disabled={isListening}
+                    className="text-xs border rounded-lg px-2 py-1.5 bg-white dark:bg-slate-800"
+                  >
+                    <option value="en-IN">English</option>
+                    <option value="kn-IN">Kannada</option>
+                    <option value="hi-IN">Hindi</option>
+                  </select>
+                  <Button type="button" variant={isListening ? "destructive" : "default"} onClick={() => void toggleListening()} className="gap-2">
                     {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
                     {isListening ? "Stop Dictation" : "Start Dictation"}
                   </Button>

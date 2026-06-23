@@ -365,6 +365,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { X, Loader2, Pill, Clock, Repeat, Search, Mic, MicOff, Sparkles } from 'lucide-react';
+import { LiveTranscriptionSession, mapMicLocale } from '@/lib/speech';
 
 interface Medication {
   name: string;
@@ -420,9 +421,11 @@ export default function AdministerMedicationForm({
   
   // AI Dictation State
   const [aiCommand, setAiCommand] = useState('');
+  const [interimText, setInterimText] = useState('');
   const [isAiListening, setIsAiListening] = useState(false);
   const [isAiProcessing, setIsAiProcessing] = useState(false);
-  const aiRecognitionRef = useRef<any>(null);
+  const [micLanguage, setMicLanguage] = useState('en-IN');
+  const liveSessionRef = useRef<LiveTranscriptionSession | null>(null);
   
   const dropdownRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -445,45 +448,48 @@ export default function AdministerMedicationForm({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // AI Speech Recognition Setup
   useEffect(() => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) return;
-    const recognition = new SpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = 'en-US';
-    recognition.onresult = (event: any) => {
-      let finalTranscript = '';
-      for (let i = event.resultIndex; i < event.results.length; ++i) {
-        if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
-      }
-      if (finalTranscript) {
-        setAiCommand(prev => prev + (prev ? ' ' : '') + finalTranscript);
-      }
-    };
-    recognition.onerror = () => {
-      setIsAiListening(false);
-    };
-    recognition.onend = () => setIsAiListening(false);
-    aiRecognitionRef.current = recognition;
     return () => {
-      if (aiRecognitionRef.current) aiRecognitionRef.current.stop();
+      liveSessionRef.current?.cancel();
     };
   }, []);
 
-  const startAiListening = () => {
+  const startAiListening = async () => {
     if (isAiListening) {
-      aiRecognitionRef.current?.stop();
-      setIsAiListening(false);
-    } else {
-      setAiCommand('');
-      try {
-        aiRecognitionRef.current?.start();
-        setIsAiListening(true);
-      } catch (err) {
-        console.error('Microphone error:', err);
+      const session = liveSessionRef.current;
+      if (session) {
+        try {
+          const state = await session.stop();
+          setAiCommand(state.fullText);
+          setInterimText('');
+        } catch (err) {
+          console.error('Stop error:', err);
+        }
       }
+      liveSessionRef.current = null;
+      setIsAiListening(false);
+      return;
+    }
+
+    liveSessionRef.current?.cancel();
+    setAiCommand('');
+    setInterimText('');
+
+    const session = new LiveTranscriptionSession();
+    liveSessionRef.current = session;
+
+    try {
+      await session.start(
+        (state) => {
+          setAiCommand(state.fullText);
+          setInterimText(state.interimText);
+        },
+        { language: mapMicLocale(micLanguage) }
+      );
+      setIsAiListening(true);
+    } catch (err) {
+      liveSessionRef.current = null;
+      console.error('Microphone error:', err);
     }
   };
 
@@ -610,9 +616,19 @@ export default function AdministerMedicationForm({
                 <Sparkles size={16} /> AI Voice Medication Entry
               </span>
               <div className="flex gap-2">
+                <select
+                  value={micLanguage}
+                  onChange={(e) => setMicLanguage(e.target.value)}
+                  disabled={isAiListening}
+                  className="text-xs border rounded-lg px-2 py-1 bg-white"
+                >
+                  <option value="en-IN">English</option>
+                  <option value="kn-IN">Kannada</option>
+                  <option value="hi-IN">Hindi</option>
+                </select>
                 <button
                   type="button"
-                  onClick={startAiListening}
+                  onClick={() => void startAiListening()}
                   className={`p-2 rounded-full transition ${isAiListening ? 'bg-red-500 text-white animate-pulse' : 'bg-white border text-purple-600'}`}
                 >
                   {isAiListening ? <MicOff size={16} /> : <Mic size={16} />}
@@ -636,7 +652,7 @@ export default function AdministerMedicationForm({
             />
             {isAiListening && (
               <p className="text-xs text-purple-600 mt-2 animate-pulse flex items-center gap-1">
-                <Mic size={12} /> Listening... Speak your medication order
+                <Mic size={12} /> Listening... {interimText || 'Speak your medication order'}
               </p>
             )}
           </div>

@@ -1106,7 +1106,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { currentVisitApi } from "@/lib/api/ehr";
-import { LiveTranscriptionSession } from "@/lib/speech";
+import { LiveTranscriptionSession, mapMicLocale } from "@/lib/speech";
 import toast from "react-hot-toast";
 
 // ✅ Import Insurance components
@@ -1171,7 +1171,7 @@ export default function CurrentVisitPage() {
   
   // ✅ Multi-Language Voice Recording States
   const [isRecording, setIsRecording] = useState(false);
-  const [micLanguage, setMicLanguage] = useState("en-IN"); // Default: Indian English
+  const [micLanguage, setMicLanguage] = useState("en-IN");
   const [transcript, setTranscript] = useState("");
   const [showTranscriptDialog, setShowTranscriptDialog] = useState(false);
   const [interimTranscript, setInterimTranscript] = useState("");
@@ -1187,20 +1187,7 @@ export default function CurrentVisitPage() {
   const micLanguageLabels: Record<string, string> = {
     "kn-IN": "Kannada",
     "hi-IN": "Hindi",
-    "ta-IN": "Tamil",
-    "ml-IN": "Malayalam",
-    tulu: "Tulu",
-    "en-IN": "Indian English",
-    "en-US": "US English",
-  };
-
-  const mapMicLanguage = (micLang: string): string => {
-    if (micLang === "kn-IN" || micLang === "tulu") return "kn";
-    if (micLang === "hi-IN") return "hi";
-    if (micLang === "ta-IN") return "ta";
-    if (micLang === "ml-IN") return "ml";
-    if (micLang === "en-IN" || micLang === "en-US") return "en";
-    return "multi";
+    "en-IN": "English",
   };
 
   const [currentAppointmentId, setCurrentAppointmentId] = useState<string>("");
@@ -1319,7 +1306,7 @@ export default function CurrentVisitPage() {
           setEditableTranscript(state.fullText);
           setInterimTranscript(state.interimText);
         },
-        { language: mapMicLanguage(micLanguage) }
+        { language: mapMicLocale(micLanguage) }
       );
 
       setIsRecording(true);
@@ -2065,13 +2052,9 @@ export default function CurrentVisitPage() {
                 }}
                 disabled={isRecording}
               >
+                <option value="en-IN">English</option>
                 <option value="kn-IN">ಕನ್ನಡ (Kannada)</option>
                 <option value="hi-IN">हिंदी (Hindi / Hinglish)</option>
-                <option value="ta-IN">தமிழ் (Tamil)</option>
-                <option value="ml-IN">മലയാളം (Malayalam)</option>
-                <option value="tulu">Tulu (ತುಳು)</option>
-                <option value="en-IN">Indian English Accent</option>
-                <option value="en-US">US English (Standard)</option>
               </select>
             </div>
 

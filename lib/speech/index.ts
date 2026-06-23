@@ -8,6 +8,7 @@ export {
   getSpeechStreamingOptions,
   PRIMARY_LANGUAGES,
   isMultilingualMode,
+  mapMicLocale,
 } from "./config";
 
 export {

@@ -31,9 +31,7 @@ export function getModelForLanguage(language: string): string {
   if (
     language === "multi" ||
     language === "hi" ||
-    language === "kn" ||
-    language === "ta" ||
-    language === "ml"
+    language === "kn"
   ) {
     return "nova-3";
   }
@@ -43,6 +41,14 @@ export function getModelForLanguage(language: string): string {
 
 export function getSpeechModel(): string {
   return getModelForLanguage(getSpeechLanguage());
+}
+
+/** Map UI locale codes (e.g. en-IN) to speech API language codes. */
+export function mapMicLocale(micLang: string): string {
+  if (micLang === "kn-IN") return "kn";
+  if (micLang === "hi-IN") return "hi";
+  if (micLang === "en-IN" || micLang === "en") return "en";
+  return "multi";
 }
 
 export function getSpeechTranscriptionOptions() {

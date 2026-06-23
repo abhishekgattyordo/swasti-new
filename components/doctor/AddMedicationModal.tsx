@@ -5,16 +5,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { LiveTranscriptionSession } from "@/lib/speech";
-
-function mapMicLanguage(micLang: string): string {
-  if (micLang === "kn-IN" || micLang === "tulu") return "kn";
-  if (micLang === "hi-IN") return "hi";
-  if (micLang === "ta-IN") return "ta";
-  if (micLang === "ml-IN") return "ml";
-  if (micLang === "en-IN" || micLang === "en-US") return "en";
-  return "multi";
-}
+import { LiveTranscriptionSession, mapMicLocale } from "@/lib/speech";
 
 export interface NewMedicationData {
   name: string;
@@ -151,7 +142,7 @@ export default function AddMedicationModal({
           setTranscript(state.fullText);
           setInterimTranscript(state.interimText);
         },
-        { language: mapMicLanguage(micLanguage) }
+        { language: mapMicLocale(micLanguage) }
       );
       setIsListening(true);
     } catch (err) {
@@ -345,13 +336,9 @@ export default function AddMedicationModal({
                       onChange={(e) => setMicLanguage(e.target.value)}
                       disabled={isListening}
                     >
+                      <option value="en-IN">English</option>
                       <option value="kn-IN">ಕನ್ನಡ (Kannada)</option>
                       <option value="hi-IN">हिंदी (Hindi / Hinglish)</option>
-                      <option value="ta-IN">தமிழ் (Tamil)</option>
-                      <option value="ml-IN">മലയാളം (Malayalam)</option>
-                      <option value="tulu">Tulu (ತುಳು)</option>
-                      <option value="en-IN">Indian English</option>
-                      <option value="en-US">US English</option>
                     </select>
                   </div>
                   <button
