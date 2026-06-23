@@ -186,8 +186,7 @@ export async function getStreamingConnectionConfig(options?: {
   const language = options?.language?.trim() || getSpeechLanguage();
   const model = getModelForLanguage(language);
 
-  const token = await createLiveTranscriptionToken();
-
+  // Use the API key directly — many keys lack token-grant permission but can still listen.
   return {
     model,
     language,
@@ -196,8 +195,8 @@ export async function getStreamingConnectionConfig(options?: {
       language,
     },
     websocketUrl: LIVE_LISTEN_URL,
-    access_token: token.access_token,
-    expires_in: token.expires_in,
+    access_token: getSpeechApiKey(),
+    expires_in: 600,
   };
 }
 

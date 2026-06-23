@@ -213,7 +213,10 @@ export default function CurrentVisitPage() {
     } catch (err) {
       liveSessionRef.current = null;
       const message = err instanceof Error ? err.message : "Failed to start recording";
-      if (message.toLowerCase().includes("permission")) {
+      if (
+        err instanceof DOMException &&
+        (err.name === "NotAllowedError" || err.name === "PermissionDeniedError")
+      ) {
         toast.error("Microphone permission denied. Please allow access and try again.");
       } else {
         toast.error(message);

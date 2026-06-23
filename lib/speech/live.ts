@@ -54,10 +54,6 @@ export class LiveTranscriptionSession {
     onUpdate: (state: LiveTranscriptState) => void,
     options?: { language?: string }
   ): Promise<void> {
-    this.mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    this.audioContext = new AudioContext();
-    const sampleRate = Math.round(this.audioContext.sampleRate);
-
     const configResponse = await fetch("/api/speech/live", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -68,9 +64,12 @@ export class LiveTranscriptionSession {
     const config = (await configResponse.json()) as StreamingConfigResponse;
 
     if (!configResponse.ok) {
-      this.cleanup();
       throw new Error(config.error ?? config.message ?? "Failed to start streaming");
     }
+
+    this.mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    this.audioContext = new AudioContext();
+    const sampleRate = Math.round(this.audioContext.sampleRate);
 
     const params = new URLSearchParams({
       model: config.model,
