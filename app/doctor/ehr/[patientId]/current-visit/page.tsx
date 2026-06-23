@@ -1110,6 +1110,7 @@ import { LiveTranscriptionSession } from "@/lib/speech";
 import toast from "react-hot-toast";
 
 // ✅ Import Insurance components
+<<<<<<< HEAD
 import InsuranceWorkspace from "@/components/doctor/InsuranceWorkspace";
 
 
@@ -1223,6 +1224,12 @@ interface AnalysisResult {
   _generatedAt?: string;
 }
 
+=======
+import InsuranceWorkspace, {
+  type AnalysisResult,
+  type PreAuthForm,
+} from "@/components/doctor/InsuranceWorkspace";
+>>>>>>> c9c10f55c35a54bb7621c22eff35fe56103ad5a6
 
 // Types for SOAP response
 interface SoapResponse {
@@ -1280,7 +1287,7 @@ export default function CurrentVisitPage() {
   
   // ✅ Multi-Language Voice Recording States
   const [isRecording, setIsRecording] = useState(false);
-  const [micLanguage, setMicLanguage] = useState("kn-IN");
+  const [micLanguage, setMicLanguage] = useState("en-IN"); // Default: Indian English
   const [transcript, setTranscript] = useState("");
   const [showTranscriptDialog, setShowTranscriptDialog] = useState(false);
   const [interimTranscript, setInterimTranscript] = useState("");
