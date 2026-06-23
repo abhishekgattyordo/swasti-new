@@ -997,3 +997,52 @@ CREATE INDEX IF NOT EXISTS idx_health_analysis_patient_data ON health_analysis_h
 CREATE INDEX IF NOT EXISTS idx_health_analysis_analysis_report ON health_analysis_history USING GIN(analysis_report);
 
 SELECT '✅ Table created successfully!' as status;
+
+
+
+
+-- ============================================
+-- INSURANCE PRE-AUTHORIZATION HISTORY TABLE
+-- ============================================
+
+CREATE TABLE IF NOT EXISTS insurance_pre_auth_history (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER,
+  patient_id VARCHAR(100),
+  transcript TEXT,
+  patient_summary TEXT,
+  soap_note JSONB,
+  icd10_codes JSONB,
+  procedure_codes JSONB,
+  laboratory_orders JSONB,
+  hospitalization_recommend JSONB,
+  pre_auth_form JSONB,
+  billing_checklist JSONB,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ============================================
+-- CREATE INDEXES FOR BETTER PERFORMANCE
+-- ============================================
+
+CREATE INDEX IF NOT EXISTS idx_insurance_patient_id 
+ON insurance_pre_auth_history(patient_id);
+
+CREATE INDEX IF NOT EXISTS idx_insurance_user_id 
+ON insurance_pre_auth_history(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_insurance_created_at 
+ON insurance_pre_auth_history(created_at DESC);
+
+-- ============================================
+-- CREATE INDEX FOR JSONB QUERIES
+-- ============================================
+
+CREATE INDEX IF NOT EXISTS idx_insurance_pre_auth_gin 
+ON insurance_pre_auth_history 
+USING gin (pre_auth_form);
+
+-- ============================================
+-- VERIFY TABLE CREATION
+-- ============================================
+
