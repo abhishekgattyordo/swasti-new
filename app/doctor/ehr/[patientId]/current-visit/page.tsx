@@ -1110,8 +1110,10 @@ import { LiveTranscriptionSession } from "@/lib/speech";
 import toast from "react-hot-toast";
 
 // ✅ Import Insurance components
-import InsuranceWorkspace from "@/components/doctor/InsuranceWorkspace";
-import { AnalysisResult, PreAuthForm } from "@/types/insurance";
+import InsuranceWorkspace, {
+  type AnalysisResult,
+  type PreAuthForm,
+} from "@/components/doctor/InsuranceWorkspace";
 
 // Types for SOAP response
 interface SoapResponse {
