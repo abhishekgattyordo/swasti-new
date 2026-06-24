@@ -365,7 +365,8 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { X, Loader2, Pill, Clock, Repeat, Search, Mic, MicOff, Sparkles } from 'lucide-react';
-import { LiveTranscriptionSession, mapMicLocale } from '@/lib/speech';
+import { useLiveTranscription } from '@/hooks/useLiveTranscription';
+import { LiveMicButton, LiveMicStatusLine } from '@/components/speech/LiveMicButton';
 
 interface Medication {
   name: string;
@@ -420,13 +421,26 @@ export default function AdministerMedicationForm({
   const [searchTerm, setSearchTerm] = useState('');
   
   // AI Dictation State
-  const [aiCommand, setAiCommand] = useState('');
-  const [interimText, setInterimText] = useState('');
-  const [isAiListening, setIsAiListening] = useState(false);
   const [isAiProcessing, setIsAiProcessing] = useState(false);
   const [micLanguage, setMicLanguage] = useState('en-IN');
-  const liveSessionRef = useRef<LiveTranscriptionSession | null>(null);
-  
+
+  const {
+    status: micStatus,
+    isConnecting,
+    isListening: isAiListening,
+    isActive,
+    fullText: aiCommand,
+    interimText,
+    setFullText: setAiCommand,
+    toggle: toggleAiListening,
+  } = useLiveTranscription({
+    onError: (message) => console.error('Microphone error:', message),
+  });
+
+  const startAiListening = () => {
+    void toggleAiListening({ micLanguage, clearOnStart: true });
+  };
+
   const dropdownRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -447,51 +461,6 @@ export default function AdministerMedicationForm({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  useEffect(() => {
-    return () => {
-      liveSessionRef.current?.cancel();
-    };
-  }, []);
-
-  const startAiListening = async () => {
-    if (isAiListening) {
-      const session = liveSessionRef.current;
-      if (session) {
-        try {
-          const state = await session.stop();
-          setAiCommand(state.fullText);
-          setInterimText('');
-        } catch (err) {
-          console.error('Stop error:', err);
-        }
-      }
-      liveSessionRef.current = null;
-      setIsAiListening(false);
-      return;
-    }
-
-    liveSessionRef.current?.cancel();
-    setAiCommand('');
-    setInterimText('');
-
-    const session = new LiveTranscriptionSession();
-    liveSessionRef.current = session;
-
-    try {
-      await session.start(
-        (state) => {
-          setAiCommand(state.fullText);
-          setInterimText(state.interimText);
-        },
-        { language: mapMicLocale(micLanguage) }
-      );
-      setIsAiListening(true);
-    } catch (err) {
-      liveSessionRef.current = null;
-      console.error('Microphone error:', err);
-    }
-  };
 
   const processAiCommand = async () => {
     if (!aiCommand.trim()) return;
@@ -619,20 +588,24 @@ export default function AdministerMedicationForm({
                 <select
                   value={micLanguage}
                   onChange={(e) => setMicLanguage(e.target.value)}
-                  disabled={isAiListening}
+                  disabled={isActive}
                   className="text-xs border rounded-lg px-2 py-1 bg-white"
                 >
                   <option value="en-IN">English</option>
                   <option value="kn-IN">Kannada</option>
                   <option value="hi-IN">Hindi</option>
                 </select>
-                <button
-                  type="button"
-                  onClick={() => void startAiListening()}
-                  className={`p-2 rounded-full transition ${isAiListening ? 'bg-red-500 text-white animate-pulse' : 'bg-white border text-purple-600'}`}
-                >
-                  {isAiListening ? <MicOff size={16} /> : <Mic size={16} />}
-                </button>
+                <LiveMicButton
+                  status={micStatus}
+                  onClick={startAiListening}
+                  className={`p-2 rounded-full transition ${
+                    isAiListening
+                      ? 'bg-red-500 text-white animate-pulse'
+                      : isConnecting
+                        ? 'bg-amber-500 text-white'
+                        : 'bg-white border text-purple-600'
+                  }`}
+                />
                 <button
                   type="button"
                   onClick={processAiCommand}
@@ -650,11 +623,7 @@ export default function AdministerMedicationForm({
               rows={2}
               className="w-full px-3 py-2 border rounded-lg text-sm resize-none bg-white"
             />
-            {isAiListening && (
-              <p className="text-xs text-purple-600 mt-2 animate-pulse flex items-center gap-1">
-                <Mic size={12} /> Listening... {interimText || 'Speak your medication order'}
-              </p>
-            )}
+            <LiveMicStatusLine status={micStatus} interimText={interimText} className="text-xs mt-2" />
           </div>
 
           {/* Medication Name - Searchable Input */}

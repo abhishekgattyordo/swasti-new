@@ -298,7 +298,8 @@ import {
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ComposedChart, Bar } from 'recharts';
 import { nurseApi } from '@/lib/api/nurse';
-import { LiveTranscriptionSession, mapMicLocale } from '@/lib/speech';
+import { useLiveTranscription } from '@/hooks/useLiveTranscription';
+import { LiveMicButton, LiveMicStatusLine } from '@/components/speech/LiveMicButton';
 import toast from 'react-hot-toast';
 
 const REFERENCE_RANGES = {
@@ -331,67 +332,27 @@ export default function VitalsEntryPage() {
   });
 
   // --- AI Voice Dictation States ---
-  const [isListening, setIsListening] = useState(false);
-  const [spokenText, setSpokenText] = useState('');
-  const [interimText, setInterimText] = useState('');
   const [isParsing, setIsParsing] = useState(false);
   const [micLanguage, setMicLanguage] = useState('en-IN');
   const [highlightedFields, setHighlightedFields] = useState<Record<string, boolean>>({});
-  const liveSessionRef = useRef<LiveTranscriptionSession | null>(null);
 
-  useEffect(() => {
-    return () => {
-      liveSessionRef.current?.cancel();
-    };
-  }, []);
+  const {
+    status: micStatus,
+    isConnecting,
+    isListening,
+    isActive,
+    fullText: spokenText,
+    interimText,
+    setFullText: setSpokenText,
+    toggle: handleMicToggle,
+  } = useLiveTranscription({
+    onError: (message) => toast.error(message),
+    onStart: () => toast.success('Listening... Speak vitals clearly.'),
+    onStop: () => toast.success('Stopped listening. Click "Parse with AI" to extract values.'),
+  });
 
-  const handleMicToggle = async () => {
-    if (isListening) {
-      const session = liveSessionRef.current;
-      if (session) {
-        try {
-          const state = await session.stop();
-          setSpokenText(state.fullText);
-          setInterimText('');
-          toast.success('Stopped listening. Click "Parse with AI" to extract values.');
-        } catch (err) {
-          console.error('Stop error:', err);
-        }
-      }
-      liveSessionRef.current = null;
-      setIsListening(false);
-      return;
-    }
-
-    liveSessionRef.current?.cancel();
-    setSpokenText('');
-    setInterimText('');
-
-    const session = new LiveTranscriptionSession();
-    liveSessionRef.current = session;
-
-    try {
-      await session.start(
-        (state) => {
-          setSpokenText(state.fullText);
-          setInterimText(state.interimText);
-        },
-        { language: mapMicLocale(micLanguage) }
-      );
-      setIsListening(true);
-      toast.success('Listening... Speak vitals clearly.');
-    } catch (err) {
-      liveSessionRef.current = null;
-      const message = err instanceof Error ? err.message : 'Failed to start recording';
-      if (
-        err instanceof DOMException &&
-        (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError')
-      ) {
-        toast.error('Microphone permission denied. Use presets or type manually.');
-      } else {
-        toast.error(message);
-      }
-    }
+  const handleMicClick = () => {
+    void handleMicToggle({ micLanguage, clearOnStart: true });
   };
 
   const extractVitalsWithAI = async (transcript: string) => {
@@ -587,20 +548,24 @@ export default function VitalsEntryPage() {
                   <select
                     value={micLanguage}
                     onChange={(e) => setMicLanguage(e.target.value)}
-                    disabled={isListening}
+                    disabled={isActive}
                     className="text-xs border rounded-lg px-2 py-1 bg-white"
                   >
                     <option value="en-IN">English</option>
                     <option value="kn-IN">Kannada</option>
                     <option value="hi-IN">Hindi</option>
                   </select>
-                  <button
-                    type="button"
-                    onClick={() => void handleMicToggle()}
-                    className={`p-2 rounded-full transition ${isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-blue-100 text-blue-600'}`}
-                  >
-                    {isListening ? <MicOff size={16} /> : <Mic size={16} />}
-                  </button>
+                  <LiveMicButton
+                    status={micStatus}
+                    onClick={handleMicClick}
+                    className={`p-2 rounded-full transition ${
+                      isListening
+                        ? 'bg-red-500 text-white animate-pulse'
+                        : isConnecting
+                          ? 'bg-amber-500 text-white'
+                          : 'bg-blue-100 text-blue-600'
+                    }`}
+                  />
                 </div>
               </div>
               <textarea
@@ -609,9 +574,7 @@ export default function VitalsEntryPage() {
                 placeholder="Speak or type vitals: 'BP 120 over 80, heart rate 72, temperature 36.8...'"
                 className="w-full p-3 border rounded-lg text-sm h-24 resize-none"
               />
-              {isListening && interimText && (
-                <p className="text-xs text-blue-600 italic mt-1">{interimText}</p>
-              )}
+              <LiveMicStatusLine status={micStatus} interimText={interimText} className="text-xs mt-1" />
               <div className="flex justify-between mt-3 gap-2">
                 <button
                   onClick={() => setSpokenText('')}

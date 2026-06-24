@@ -10,7 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { LiveTranscriptionSession, mapMicLocale } from '@/lib/speech';
+import { useLiveTranscription } from '@/hooks/useLiveTranscription';
+import { LiveMicStatusLine, liveMicButtonLabel } from '@/components/speech/LiveMicButton';
 
 // ------------------------------------------------------------------
 // Types and Templates (same as before)
@@ -191,57 +192,24 @@ export default function CreateNoteModal({ isOpen, onClose, onSave, patientName, 
   });
 
   // ---------- AI Voice Dictation (live streaming) ----------
-  const [isListening, setIsListening] = useState(false);
-  const [speechTranscript, setSpeechTranscript] = useState("");
-  const [interimText, setInterimText] = useState("");
   const [isParsing, setIsParsing] = useState(false);
   const [micLanguage, setMicLanguage] = useState('en-IN');
-  const liveSessionRef = useRef<LiveTranscriptionSession | null>(null);
 
-  useEffect(() => {
-    return () => {
-      liveSessionRef.current?.cancel();
-    };
-  }, []);
+  const {
+    status: micStatus,
+    isConnecting,
+    isListening,
+    isActive,
+    fullText: speechTranscript,
+    interimText,
+    setFullText: setSpeechTranscript,
+    toggle: toggleListening,
+  } = useLiveTranscription({
+    onError: (message) => setError(message),
+  });
 
-  const toggleListening = async () => {
-    if (isListening) {
-      const session = liveSessionRef.current;
-      if (session) {
-        try {
-          const state = await session.stop();
-          setSpeechTranscript(state.fullText);
-          setInterimText('');
-        } catch (err) {
-          console.error('Stop error:', err);
-        }
-      }
-      liveSessionRef.current = null;
-      setIsListening(false);
-      return;
-    }
-
-    liveSessionRef.current?.cancel();
-    setSpeechTranscript('');
-    setInterimText('');
-
-    const session = new LiveTranscriptionSession();
-    liveSessionRef.current = session;
-
-    try {
-      await session.start(
-        (state) => {
-          setSpeechTranscript(state.fullText);
-          setInterimText(state.interimText);
-        },
-        { language: mapMicLocale(micLanguage) }
-      );
-      setIsListening(true);
-    } catch (err) {
-      liveSessionRef.current = null;
-      console.error('Microphone error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to start dictation');
-    }
+  const handleToggleListening = () => {
+    void toggleListening({ micLanguage, clearOnStart: true });
   };
 
   // Call Gemini API to parse the transcript and fill all fields
@@ -441,7 +409,12 @@ export default function CreateNoteModal({ isOpen, onClose, onSave, patientName, 
                 <h3 className="text-base font-bold text-purple-800 dark:text-purple-300 flex items-center gap-2">
                   <Wand2 className="w-4 h-4" /> AI Voice Dictation Scribe
                 </h3>
-                {isListening && <span className="text-xs text-rose-500 animate-pulse flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" /> Recording...</span>}
+                {isActive && (
+                  <span className="text-xs text-rose-500 animate-pulse flex items-center gap-1">
+                    <span className={`w-2 h-2 rounded-full shrink-0 ${isConnecting ? 'bg-amber-500 animate-ping' : 'bg-rose-500 animate-ping'}`} />
+                    {isConnecting ? 'Connecting...' : 'Recording...'}
+                  </span>
+                )}
               </div>
               <p className="text-xs text-gray-500">Dictate your entire clinical assessment in a single speech stream. Gemini AI will parse and auto‑fill all fields below.</p>
               <Textarea
@@ -451,24 +424,28 @@ export default function CreateNoteModal({ isOpen, onClose, onSave, patientName, 
                 rows={4}
                 className="bg-white dark:bg-slate-800"
               />
-              {isListening && interimText && (
-                <p className="text-xs text-purple-600 italic">{interimText}</p>
-              )}
+              <LiveMicStatusLine status={micStatus} interimText={interimText} className="text-xs" />
               <div className="flex flex-wrap gap-2 justify-between">
                 <div className="flex gap-2 items-center">
                   <select
                     value={micLanguage}
                     onChange={(e) => setMicLanguage(e.target.value)}
-                    disabled={isListening}
+                    disabled={isActive}
                     className="text-xs border rounded-lg px-2 py-1.5 bg-white dark:bg-slate-800"
                   >
                     <option value="en-IN">English</option>
                     <option value="kn-IN">Kannada</option>
                     <option value="hi-IN">Hindi</option>
                   </select>
-                  <Button type="button" variant={isListening ? "destructive" : "default"} onClick={() => void toggleListening()} className="gap-2">
-                    {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-                    {isListening ? "Stop Dictation" : "Start Dictation"}
+                  <Button
+                    type="button"
+                    variant={isListening ? "destructive" : isConnecting ? "secondary" : "default"}
+                    onClick={handleToggleListening}
+                    disabled={isConnecting}
+                    className="gap-2"
+                  >
+                    {isConnecting ? <Loader2 className="w-4 h-4 animate-spin" /> : isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                    {liveMicButtonLabel(micStatus)}
                   </Button>
                   <Button type="button" variant="outline" onClick={() => setSpeechTranscript('')} disabled={!speechTranscript}>
                     <Trash2 className="w-4 h-4 mr-1" /> Clear

@@ -1171,6 +1171,7 @@ export default function CurrentVisitPage() {
   
   // ✅ Multi-Language Voice Recording States
   const [isRecording, setIsRecording] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
   const [micLanguage, setMicLanguage] = useState("en-IN");
   const [transcript, setTranscript] = useState("");
   const [showTranscriptDialog, setShowTranscriptDialog] = useState(false);
@@ -1297,6 +1298,7 @@ export default function CurrentVisitPage() {
 
     const session = new LiveTranscriptionSession();
     liveSessionRef.current = session;
+    setIsConnecting(true);
 
     try {
       await session.start(
@@ -1309,6 +1311,7 @@ export default function CurrentVisitPage() {
         { language: mapMicLocale(micLanguage) }
       );
 
+      setIsConnecting(false);
       setIsRecording(true);
       startDurationTimer();
       toast.success(
@@ -1316,6 +1319,7 @@ export default function CurrentVisitPage() {
       );
     } catch (err) {
       liveSessionRef.current = null;
+      setIsConnecting(false);
       const message = err instanceof Error ? err.message : "Failed to start recording";
       if (
         err instanceof DOMException &&
@@ -1331,6 +1335,7 @@ export default function CurrentVisitPage() {
   const stopRecording = async () => {
     const session = liveSessionRef.current;
     if (!session) {
+      setIsConnecting(false);
       setIsRecording(false);
       stopDurationTimer();
       return;
@@ -1349,6 +1354,7 @@ export default function CurrentVisitPage() {
       console.error("Stop error:", err);
     } finally {
       liveSessionRef.current = null;
+      setIsConnecting(false);
       setIsRecording(false);
       stopDurationTimer();
     }
@@ -2050,7 +2056,7 @@ export default function CurrentVisitPage() {
                     `Language set to: ${micLanguageLabels[e.target.value] ?? e.target.value}`
                   );
                 }}
-                disabled={isRecording}
+                disabled={isRecording || isConnecting}
               >
                 <option value="en-IN">English</option>
                 <option value="kn-IN">ಕನ್ನಡ (Kannada)</option>
@@ -2062,16 +2068,23 @@ export default function CurrentVisitPage() {
             <button
               type="button"
               onClick={isRecording ? stopRecording : startRecording}
-              className={`px-5 py-2.5 rounded-lg transition-all duration-200 flex items-center gap-2 shadow-md text-xs font-bold ${
+              disabled={isConnecting}
+              className={`px-5 py-2.5 rounded-lg transition-all duration-200 flex items-center gap-2 shadow-md text-xs font-bold disabled:opacity-80 ${
                 isRecording 
                   ? "bg-red-600 hover:bg-red-700 text-white animate-pulse" 
-                  : "bg-slate-900 hover:bg-slate-800 text-white"
+                  : isConnecting
+                    ? "bg-amber-500 hover:bg-amber-600 text-white"
+                    : "bg-slate-900 hover:bg-slate-800 text-white"
               }`}
             >
-              <span className="material-symbols-outlined text-[18px]">
-                {isRecording ? "mic" : "mic"}
+              <span className={`material-symbols-outlined text-[18px] ${isConnecting ? "animate-spin" : ""}`}>
+                {isConnecting ? "progress_activity" : "mic"}
               </span>
-              {isRecording ? `Recording... ${recordingDuration}s` : "Start Recording"}
+              {isConnecting
+                ? "Connecting..."
+                : isRecording
+                  ? `Recording... ${recordingDuration}s`
+                  : "Start Recording"}
             </button>
             
             {/* ✅ Stop Button */}
@@ -2132,7 +2145,13 @@ export default function CurrentVisitPage() {
           </div>
         </div>
         
-        {/* ✅ Recording Status Indicator */}
+        {/* Recording / connecting status */}
+        {isConnecting && (
+          <div className="mt-3 flex items-center gap-2 text-sm text-amber-700 bg-amber-50 p-2.5 rounded-lg border border-amber-100">
+            <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>
+            <span>Connecting microphone...</span>
+          </div>
+        )}
         {isRecording && (
           <div className="mt-3 flex items-center gap-2 text-sm text-red-600 bg-red-50 p-2.5 rounded-lg border border-red-100">
             <div className="w-2 h-2 bg-red-600 rounded-full animate-ping"></div>

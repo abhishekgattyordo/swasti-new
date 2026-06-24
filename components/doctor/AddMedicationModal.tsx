@@ -5,7 +5,8 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { LiveTranscriptionSession, mapMicLocale } from "@/lib/speech";
+import { useLiveTranscription } from "@/hooks/useLiveTranscription";
+import { LiveMicButton, LiveMicStatusLine } from "@/components/speech/LiveMicButton";
 
 export interface NewMedicationData {
   name: string;
@@ -44,24 +45,28 @@ export default function AddMedicationModal({
   const [whatsappStatus, setWhatsappStatus] = useState<WhatsAppStatus | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  const [transcript, setTranscript] = useState("");
-  const [interimTranscript, setInterimTranscript] = useState("");
-  const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [inputMode, setInputMode] = useState<"speak" | "text">("speak");
   const [micLanguage, setMicLanguage] = useState("en-IN");
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animationRef = useRef<number | null>(null);
-  const liveSessionRef = useRef<LiveTranscriptionSession | null>(null);
+
+  const {
+    status: micStatus,
+    isConnecting,
+    isListening,
+    isActive,
+    fullText: transcript,
+    interimText: interimTranscript,
+    setFullText: setTranscript,
+    toggle: handleToggleListening,
+  } = useLiveTranscription({
+    onError: (message) => alert(message),
+  });
 
   useEffect(() => {
-    return () => {
-      liveSessionRef.current?.cancel();
-    };
-  }, []);
-  useEffect(() => {
-    if (isListening && canvasRef.current) {
+    if (isActive && canvasRef.current) {
       const canvas = canvasRef.current;
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
@@ -110,53 +115,10 @@ export default function AddMedicationModal({
     return () => {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
-  }, [isListening]);
+  }, [isActive]);
 
-  const handleToggleListening = async () => {
-    if (isListening) {
-      const session = liveSessionRef.current;
-      if (session) {
-        try {
-          const state = await session.stop();
-          setTranscript(state.fullText);
-          setInterimTranscript("");
-        } catch (err) {
-          console.error("Stop error:", err);
-        }
-      }
-      liveSessionRef.current = null;
-      setIsListening(false);
-      return;
-    }
-
-    liveSessionRef.current?.cancel();
-    setTranscript("");
-    setInterimTranscript("");
-
-    const session = new LiveTranscriptionSession();
-    liveSessionRef.current = session;
-
-    try {
-      await session.start(
-        (state) => {
-          setTranscript(state.fullText);
-          setInterimTranscript(state.interimText);
-        },
-        { language: mapMicLocale(micLanguage) }
-      );
-      setIsListening(true);
-    } catch (err) {
-      liveSessionRef.current = null;
-      const message = err instanceof Error ? err.message : "Failed to start recording";
-      if (
-        err instanceof DOMException &&
-        (err.name === "NotAllowedError" || err.name === "PermissionDeniedError")
-      ) {
-        alert("Microphone access denied. Please allow microphone permissions.");
-      } else {
-        alert(message);
-      }
-    }
+  const handleMicClick = () => {
+    void handleToggleListening({ micLanguage, clearOnStart: true });
   };
 
   const handleProcessTranscript = async () => {
@@ -185,7 +147,6 @@ export default function AddMedicationModal({
         }));
         setMedications((prev) => [...prev, ...newMeds]);
         setTranscript("");
-        setInterimTranscript("");
       } else {
         alert("No medications could be extracted. Please rephrase (e.g., 'Amoxicillin 500mg twice daily for 7 days').");
       }
@@ -334,28 +295,25 @@ export default function AddMedicationModal({
                       className="text-xs font-bold text-slate-700 bg-transparent border-none outline-none cursor-pointer pr-1"
                       value={micLanguage}
                       onChange={(e) => setMicLanguage(e.target.value)}
-                      disabled={isListening}
+                      disabled={isActive}
                     >
                       <option value="en-IN">English</option>
                       <option value="kn-IN">ಕನ್ನಡ (Kannada)</option>
                       <option value="hi-IN">हिंदी (Hindi / Hinglish)</option>
                     </select>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => void handleToggleListening()}
-                    className={`w-12 h-12 rounded-full flex items-center justify-center text-white shadow-lg transition-transform active:scale-95 ${
+                  <LiveMicButton
+                    status={micStatus}
+                    onClick={handleMicClick}
+                    size={24}
+                    className={`w-12 h-12 rounded-full flex items-center justify-center text-white shadow-lg transition-transform active:scale-95 disabled:opacity-80 ${
                       isListening
                         ? "bg-rose-500 hover:bg-rose-600 animate-pulse"
-                        : "bg-[#137fec] hover:bg-blue-600"
+                        : isConnecting
+                          ? "bg-amber-500 hover:bg-amber-600"
+                          : "bg-[#137fec] hover:bg-blue-600"
                     }`}
-                  >
-                    {isListening ? (
-                      <span className="material-symbols-outlined text-2xl">mic_off</span>
-                    ) : (
-                      <span className="material-symbols-outlined text-2xl">mic</span>
-                    )}
-                  </button>
+                  />
                   <div className="flex-1 h-10 bg-white rounded-xl border border-slate-200 overflow-hidden">
                     <canvas ref={canvasRef} width={400} height={40} className="w-full h-full"></canvas>
                   </div>
@@ -369,13 +327,19 @@ export default function AddMedicationModal({
                       onChange={(e) => setTranscript(e.target.value)}
                       rows={3}
                       className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm font-mono bg-white"
-                      placeholder={isListening ? "Listening... speak clearly" : "Click the microphone and say e.g. 'Amoxicillin 500mg twice daily for 7 days'"}
+                      placeholder={
+                        isConnecting
+                          ? "Connecting microphone..."
+                          : isListening
+                            ? "Listening... speak clearly"
+                            : "Click the microphone and say e.g. 'Amoxicillin 500mg twice daily for 7 days'"
+                      }
                     />
-                    {isListening && interimTranscript && (
-                      <div className="absolute bottom-0 left-0 right-0 px-3 py-1 bg-amber-50 border-t border-amber-200 text-amber-700 text-xs italic">
-                        🔄 {interimTranscript}
-                      </div>
-                    )}
+                    <LiveMicStatusLine
+                      status={micStatus}
+                      interimText={interimTranscript}
+                      className="absolute bottom-0 left-0 right-0 px-3 py-1 bg-amber-50 border-t border-amber-200 text-amber-700 text-xs italic"
+                    />
                   </div>
                 </div>
               </div>
