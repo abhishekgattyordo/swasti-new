@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/sheet';
 import { Loader2, Search, Download, Calendar, Building2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useTenant } from "@/contexts/TenantContext";
+import { useTenant } from "@/context/TenantContext";
 import { MODULE_KEYS, BILLING_FEATURES } from "@/lib/feature";
 
 interface DischargeAdmission {

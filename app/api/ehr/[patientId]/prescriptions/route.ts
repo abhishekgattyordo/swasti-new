@@ -315,7 +315,6 @@
 
 
 
-// app/api/ehr/[patientId]/prescriptions/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { authErrorResponse, requireRole } from '@/lib/auth/guards';
@@ -341,7 +340,7 @@ async function getPatientAndDoctorDetails(appointmentId: string) {
       [appointmentId]
     );
     
-    console.log('📱 Query Result:', result.rows[0]);
+    console.log('📱 Patient Data:', result.rows[0]);
     return result.rows[0] || null;
   } catch (error) {
     console.error('Error getting patient/doctor details:', error);
@@ -350,48 +349,117 @@ async function getPatientAndDoctorDetails(appointmentId: string) {
 }
 
 // ============================================
-// Helper: Send WhatsApp to Patient (Using hello_world Template)
+// Helper: Format prescription data for WhatsApp (NO NEWLINES)
 // ============================================
-async function sendWhatsAppToPatient(patientData: any, appointmentId: string) {
-  const token = process.env.WHATSAPP_ACCESS_TOKEN;
-  const fromId = process.env.FROM_PHONE_NUMBER_ID;
-  
-  console.log('📱 sendWhatsAppToPatient - Token:', token ? '✅ Set' : '❌ Missing');
-  console.log('📱 sendWhatsAppToPatient - From ID:', fromId ? '✅ Set' : '❌ Missing');
-  
-  if (!token || !fromId) {
-    return { sent: false, error: 'WhatsApp not configured' };
+function formatPrescriptionForWhatsApp(prescriptions: any[]) {
+  if (!prescriptions || prescriptions.length === 0) {
+    return {
+      medication: 'No prescriptions',
+      details: 'N/A',
+      instructions: 'N/A',
+      summary: 'No prescriptions'
+    };
   }
 
+  // Format all medications as a comma-separated list (NO \n)
+  const medicationList = prescriptions.map((med, index) => 
+    `${index + 1}. ${med.name} ${med.dosage}`
+  ).join(', ');
+
+  // Format all details as comma-separated (NO \n)
+  const detailsList = prescriptions.map((med, index) => 
+    `${index + 1}. Freq: ${med.frequency || 'N/A'}, Dur: ${med.duration || 'N/A'}, Cat: ${med.category || 'N/A'}`
+  ).join(' | ');
+
+  // Format all instructions as comma-separated (NO \n)
+  const instructionsList = prescriptions.map((med, index) => 
+    `${index + 1}. ${med.instructions || 'Take as directed'}`
+  ).join(' | ');
+
+  return {
+    medication: medicationList,
+    details: detailsList,
+    instructions: instructionsList,
+    summary: `${prescriptions[0].name} ${prescriptions[0].dosage} - ${prescriptions[0].frequency || 'N/A'} for ${prescriptions[0].duration || 'N/A'}`
+  };
+}
+
+// ============================================
+// Helper: Send WhatsApp to Patient (MSG91) - FIXED
+// ============================================
+async function sendWhatsAppToPatient(
+  patientData: any, 
+  appointmentId: string, 
+  prescriptions: any[]
+) {
+  const authKey = process.env.MSG91_AUTH_KEY;
+  const integratedNumber = process.env.MSG91_INTEGRATED_NUMBER;
   const patientPhone = patientData.patient_phone?.replace('+', '').trim();
+  
+  console.log('📱 sendWhatsAppToPatient - Auth Key:', authKey ? '✅ Set' : '❌ Missing');
+  console.log('📱 sendWhatsAppToPatient - Integrated Number:', integratedNumber ? '✅ Set' : '❌ Missing');
   console.log('📱 sendWhatsAppToPatient - Phone:', patientPhone);
   
-  if (!patientPhone) {
-    return { sent: false, error: 'Patient phone not available' };
+  if (!authKey || !integratedNumber || !patientPhone) {
+    return { sent: false, error: 'MSG91 not configured or patient phone missing' };
   }
 
-  // ✅ SEND hello_world TEMPLATE
+  const formattedData = formatPrescriptionForWhatsApp(prescriptions);
+  
+  // MSG91 payload with all prescription details (NO \n)
   const payload = {
-    messaging_product: 'whatsapp',
-    to: patientPhone,
-    type: 'template',
-    template: {
-      name: 'hello_world',
-      language: {
-        code: 'en_US',
-      },
-    },
+    integrated_number: integratedNumber,
+    content_type: 'template',
+    payload: {
+      messaging_product: 'whatsapp',
+      type: 'template',
+      template: {
+        name: 'prescription_notification',
+        language: {
+          code: 'en',
+          policy: 'deterministic'
+        },
+        namespace: null,
+        to_and_components: [
+          {
+            to: [patientPhone],
+            components: {
+              body_1: {
+                type: 'text',
+                value: `RX-${Date.now().toString().slice(-6)}`
+              },
+              body_2: {
+                type: 'text',
+                value: patientData.patient_name || 'Patient'
+              },
+              body_3: {
+                type: 'text',
+                value: `Dr. ${patientData.doctor_name || 'Doctor'} - ${formattedData.medication}`
+              },
+              body_4: {
+                type: 'text',
+                value: formattedData.details
+              },
+              body_5: {
+                type: 'text',
+                value: formattedData.instructions
+              }
+            }
+          }
+        ]
+      }
+    }
   };
 
-  console.log('📤 Sending hello_world template to patient:', JSON.stringify(payload, null, 2));
+  console.log('📤 Sending prescription_notification to patient via MSG91');
 
   try {
     const response = await fetch(
-      `https://graph.facebook.com/v25.0/${fromId}/messages`,
+      'https://api.msg91.com/api/v5/whatsapp/whatsapp-outbound-message/bulk/',
       {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'authkey': authKey,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
@@ -401,11 +469,11 @@ async function sendWhatsAppToPatient(patientData: any, appointmentId: string) {
     const responseData = await response.json();
     console.log('📱 Patient WhatsApp Response:', JSON.stringify(responseData, null, 2));
     
-    if (!response.ok) {
-      throw new Error(responseData.error?.message || 'WhatsApp API failed');
+    if (responseData.status === 'fail' || responseData.hasError) {
+      throw new Error(responseData.errors || 'MSG91 API failed');
     }
     
-    return { sent: true, messageId: responseData.messages?.[0]?.id };
+    return { sent: true, requestId: responseData.request_id };
   } catch (error: any) {
     console.error('WhatsApp to patient failed:', error.message);
     return { sent: false, error: error.message };
@@ -413,42 +481,80 @@ async function sendWhatsAppToPatient(patientData: any, appointmentId: string) {
 }
 
 // ============================================
-// Helper: Send WhatsApp to Pharmacy (Using hello_world Template)
+// Helper: Send WhatsApp to Pharmacy (MSG91) - FIXED
 // ============================================
-async function sendWhatsAppToPharmacy(patientData: any, appointmentId: string) {
-  const token = process.env.WHATSAPP_ACCESS_TOKEN;
-  const fromId = process.env.FROM_PHONE_NUMBER_ID;
+async function sendWhatsAppToPharmacy(
+  patientData: any, 
+  appointmentId: string, 
+  prescriptions: any[]
+) {
+  const authKey = process.env.MSG91_AUTH_KEY;
+  const integratedNumber = process.env.MSG91_INTEGRATED_NUMBER;
   const pharmacyPhone = process.env.PHARMACY_WHATSAPP?.replace('+', '').trim();
   
-  console.log('📱 sendWhatsAppToPharmacy - Token:', token ? '✅ Set' : '❌ Missing');
+  console.log('📱 sendWhatsAppToPharmacy - Auth Key:', authKey ? '✅ Set' : '❌ Missing');
   console.log('📱 sendWhatsAppToPharmacy - Pharmacy Phone:', pharmacyPhone);
   
-  if (!token || !fromId || !pharmacyPhone) {
-    return { sent: false, error: 'Pharmacy WhatsApp not configured' };
+  if (!authKey || !integratedNumber || !pharmacyPhone) {
+    return { sent: false, error: 'MSG91 not configured or pharmacy phone missing' };
   }
 
-  // ✅ SEND hello_world TEMPLATE
+  const formattedData = formatPrescriptionForWhatsApp(prescriptions);
+  
+  // MSG91 payload with all prescription details (NO \n)
   const payload = {
-    messaging_product: 'whatsapp',
-    to: pharmacyPhone,
-    type: 'template',
-    template: {
-      name: 'hello_world',
-      language: {
-        code: 'en_US',
-      },
-    },
+    integrated_number: integratedNumber,
+    content_type: 'template',
+    payload: {
+      messaging_product: 'whatsapp',
+      type: 'template',
+      template: {
+        name: 'prescription_notification',
+        language: {
+          code: 'en',
+          policy: 'deterministic'
+        },
+        namespace: null,
+        to_and_components: [
+          {
+            to: [pharmacyPhone],
+            components: {
+              body_1: {
+                type: 'text',
+                value: `RX-${Date.now().toString().slice(-6)}`
+              },
+              body_2: {
+                type: 'text',
+                value: patientData.patient_name || 'Patient'
+              },
+              body_3: {
+                type: 'text',
+                value: `Dr. ${patientData.doctor_name || 'Doctor'} - ${formattedData.medication}`
+              },
+              body_4: {
+                type: 'text',
+                value: formattedData.details
+              },
+              body_5: {
+                type: 'text',
+                value: formattedData.instructions
+              }
+            }
+          }
+        ]
+      }
+    }
   };
 
-  console.log('📤 Sending hello_world template to pharmacy:', JSON.stringify(payload, null, 2));
+  console.log('📤 Sending prescription_notification to pharmacy via MSG91');
 
   try {
     const response = await fetch(
-      `https://graph.facebook.com/v25.0/${fromId}/messages`,
+      'https://api.msg91.com/api/v5/whatsapp/whatsapp-outbound-message/bulk/',
       {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'authkey': authKey,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
@@ -458,11 +564,11 @@ async function sendWhatsAppToPharmacy(patientData: any, appointmentId: string) {
     const responseData = await response.json();
     console.log('📱 Pharmacy WhatsApp Response:', JSON.stringify(responseData, null, 2));
     
-    if (!response.ok) {
-      throw new Error(responseData.error?.message || 'WhatsApp API failed');
+    if (responseData.status === 'fail' || responseData.hasError) {
+      throw new Error(responseData.errors || 'MSG91 API failed');
     }
     
-    return { sent: true, messageId: responseData.messages?.[0]?.id };
+    return { sent: true, requestId: responseData.request_id };
   } catch (error: any) {
     console.error('WhatsApp to pharmacy failed:', error.message);
     return { sent: false, error: error.message };
@@ -470,7 +576,45 @@ async function sendWhatsAppToPharmacy(patientData: any, appointmentId: string) {
 }
 
 // ============================================
-// GET /api/ehr/[patientId]/prescriptions
+// Helper: Get appointment ID from patient ID and date
+// ============================================
+async function getAppointmentIdByDate(patientId: string, date: string): Promise<string | null> {
+  try {
+    const result = await query(
+      `SELECT id FROM appointments 
+       WHERE patient_id = $1 AND appointment_date = $2::date
+       ORDER BY appointment_time DESC
+       LIMIT 1`,
+      [patientId, date]
+    );
+    return result.rows[0]?.id || null;
+  } catch (error) {
+    console.error('Error getting appointment ID by date:', error);
+    return null;
+  }
+}
+
+// ============================================
+// Helper: Get the latest appointment ID for a patient
+// ============================================
+async function getLatestAppointmentId(patientId: string): Promise<string | null> {
+  try {
+    const result = await query(
+      `SELECT id FROM appointments 
+       WHERE patient_id = $1 
+       ORDER BY appointment_date DESC, appointment_time DESC 
+       LIMIT 1`,
+      [patientId]
+    );
+    return result.rows[0]?.id || null;
+  } catch (error) {
+    console.error('Error getting latest appointment ID:', error);
+    return null;
+  }
+}
+
+// ============================================
+// GET /api/ehr/[patientId]/prescriptions?appointmentId=xxx&date=yyyy-mm-dd
 // ============================================
 export async function GET(
   req: NextRequest,
@@ -487,14 +631,7 @@ export async function GET(
     let targetAppointmentId = appointmentId;
     if (!targetAppointmentId) {
       if (date) {
-        const result = await query(
-          `SELECT id FROM appointments 
-           WHERE patient_id = $1 AND appointment_date = $2::date
-           ORDER BY appointment_time DESC
-           LIMIT 1`,
-          [patientId, date]
-        );
-        targetAppointmentId = result.rows[0]?.id || null;
+        targetAppointmentId = await getAppointmentIdByDate(patientId, date);
         if (!targetAppointmentId) {
           return NextResponse.json(
             { success: false, message: 'No appointment found on this date' },
@@ -533,7 +670,9 @@ export async function GET(
   } catch (error) {
     console.error('Error fetching prescriptions:', error);
     const authResponse = authErrorResponse(error);
-    if (authResponse) return authResponse;
+    if (authResponse) {
+      return authResponse;
+    }
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }
@@ -542,7 +681,7 @@ export async function GET(
 }
 
 // ============================================
-// POST /api/ehr/[patientId]/prescriptions - Sends ONLY hello_world
+// POST /api/ehr/[patientId]/prescriptions
 // ============================================
 export async function POST(
   req: NextRequest,
@@ -554,56 +693,106 @@ export async function POST(
     const { patientId } = await params;
     const body = await req.json();
 
-    console.log('📝 Received body:', JSON.stringify(body, null, 2));
-
-    const appointmentId = body.appointmentId;
+    let appointmentId = body.appointmentId;
     const date = body.date;
     const { sendWhatsApp = true } = body;
 
-    // Get appointment ID if not provided
-    let targetAppointmentId = appointmentId;
-    if (!targetAppointmentId && date) {
-      const result = await query(
-        `SELECT id FROM appointments 
-         WHERE patient_id = $1 AND appointment_date = $2::date
-         ORDER BY appointment_time DESC
-         LIMIT 1`,
-        [patientId, date]
-      );
-      targetAppointmentId = result.rows[0]?.id || null;
+    // If no appointmentId or date, fallback to latest appointment
+    if (!appointmentId && !date) {
+      appointmentId = await getLatestAppointmentId(patientId);
+      if (!appointmentId) {
+        return NextResponse.json(
+          { success: false, message: 'No appointments found for this patient' },
+          { status: 404 }
+        );
+      }
+    } else if (!appointmentId && date) {
+      appointmentId = await getAppointmentIdByDate(patientId, date);
+      if (!appointmentId) {
+        return NextResponse.json(
+          { success: false, message: 'No appointment found on this date' },
+          { status: 404 }
+        );
+      }
     }
 
-    if (!targetAppointmentId) {
+    const { medications, recordedBy } = body;
+    if (!Array.isArray(medications) || medications.length === 0) {
       return NextResponse.json(
-        { success: false, message: 'Appointment ID or date is required' },
+        { success: false, message: 'Medications array is required' },
         { status: 400 }
       );
     }
 
-    // ✅ Send WhatsApp notifications only (SKIP DATABASE)
-   let whatsappStatus: { patient: { sent: boolean; messageId?: string; error?: string } | null; pharmacy: { sent: boolean; messageId?: string; error?: string } | null } = {
-  patient: null,
-  pharmacy: null
-};
-    
+    // Save prescriptions to database and collect saved data
+    const savedPrescriptions = [];
+    for (const med of medications) {
+      const { name, category, dosage, frequency, duration, instructions } = med;
+      if (!name || !dosage) {
+        return NextResponse.json(
+          { success: false, message: 'Each medication must have name and dosage' },
+          { status: 400 }
+        );
+      }
+      const result = await query(
+        `INSERT INTO doctor_prescriptions
+          (appointment_id, medication_name, category, dosage, frequency, duration, instructions, recorded_by)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         RETURNING 
+           id,
+           medication_name as name,
+           category,
+           dosage,
+           frequency,
+           duration,
+           instructions,
+           recorded_by as "recordedBy",
+           created_at as "createdAt"`,
+        [appointmentId, name, category || '', dosage, frequency || '', duration || '', instructions || '', recordedBy || 'Doctor']
+      );
+      savedPrescriptions.push(result.rows[0]);
+    }
+
+    // ============================================
+    // Send WhatsApp Notifications via MSG91
+    // ============================================
+    let whatsappStatus: {
+      patient: { sent: boolean; requestId?: string; error?: string } | null;
+      pharmacy: { sent: boolean; requestId?: string; error?: string } | null;
+    } = {
+      patient: null,
+      pharmacy: null
+    };
+
     if (sendWhatsApp === true) {
-      console.log('📱 WhatsApp is ENABLED, attempting to send hello_world...');
-      
+      console.log('📱 WhatsApp is ENABLED, sending prescription_notification...');
+
       try {
         // Get patient and doctor details
-        const patientData = await getPatientAndDoctorDetails(targetAppointmentId);
+        const patientData = await getPatientAndDoctorDetails(appointmentId);
         console.log('📱 Patient Data:', JSON.stringify(patientData, null, 2));
-        
+
         if (patientData) {
+          // Prepare all prescription data for WhatsApp
+          const prescriptionData = savedPrescriptions.map((med: any) => ({
+            name: med.name,
+            category: med.category || '',
+            dosage: med.dosage,
+            frequency: med.frequency || '',
+            duration: med.duration || '',
+            instructions: med.instructions || '',
+            recordedBy: med.recordedBy || 'Doctor'
+          }));
+
           if (patientData.patient_phone) {
-            // Send to patient
-            const patientResult = await sendWhatsAppToPatient(patientData, targetAppointmentId);
+            // Send to patient with all prescriptions
+            const patientResult = await sendWhatsAppToPatient(patientData, appointmentId, prescriptionData);
             console.log('📱 Patient Result:', patientResult);
-            
-            // Send to pharmacy
-            const pharmacyResult = await sendWhatsAppToPharmacy(patientData, targetAppointmentId);
+
+            // Send to pharmacy with all prescriptions
+            const pharmacyResult = await sendWhatsAppToPharmacy(patientData, appointmentId, prescriptionData);
             console.log('📱 Pharmacy Result:', pharmacyResult);
-            
+
             whatsappStatus = {
               patient: patientResult,
               pharmacy: pharmacyResult
@@ -616,7 +805,7 @@ export async function POST(
             };
           }
         } else {
-          console.error('❌ No patient data found for appointment:', targetAppointmentId);
+          console.error('❌ No patient data found for appointment:', appointmentId);
           whatsappStatus = {
             patient: { sent: false, error: 'Patient data not found' },
             pharmacy: { sent: false, error: 'Patient data not found' }
@@ -635,14 +824,17 @@ export async function POST(
 
     return NextResponse.json({
       success: true,
-      message: 'WhatsApp hello_world templates sent successfully (database skipped)',
-      appointmentId: targetAppointmentId,
+      message: 'Prescriptions saved successfully',
+      appointmentId,
+      data: savedPrescriptions,
       whatsapp: whatsappStatus
     });
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error saving prescriptions:', error);
     const authResponse = authErrorResponse(error);
-    if (authResponse) return authResponse;
+    if (authResponse) {
+      return authResponse;
+    }
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }
@@ -651,7 +843,7 @@ export async function POST(
 }
 
 // ============================================
-// PUT /api/ehr/[patientId]/prescriptions
+// PUT /api/ehr/[patientId]/prescriptions?prescriptionId=xxx
 // ============================================
 export async function PUT(
   req: NextRequest,
@@ -673,6 +865,7 @@ export async function PUT(
     const body = await req.json();
     const { name, category, dosage, frequency, duration, instructions, recordedBy } = body;
 
+    // Verify that this prescription belongs to the patient
     const verify = await query(
       `SELECT dp.id FROM doctor_prescriptions dp
        JOIN appointments a ON dp.appointment_id = a.id
@@ -687,6 +880,7 @@ export async function PUT(
       );
     }
 
+    // Update the prescription
     const result = await query(
       `UPDATE doctor_prescriptions
        SET medication_name = $1, category = $2, dosage = $3, frequency = $4, duration = $5, instructions = $6, recorded_by = $7
@@ -712,7 +906,9 @@ export async function PUT(
   } catch (error) {
     console.error('Error updating prescription:', error);
     const authResponse = authErrorResponse(error);
-    if (authResponse) return authResponse;
+    if (authResponse) {
+      return authResponse;
+    }
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }
@@ -721,7 +917,7 @@ export async function PUT(
 }
 
 // ============================================
-// DELETE /api/ehr/[patientId]/prescriptions
+// DELETE /api/ehr/[patientId]/prescriptions?prescriptionId=xxx
 // ============================================
 export async function DELETE(
   req: NextRequest,
@@ -740,6 +936,7 @@ export async function DELETE(
       );
     }
 
+    // Verify the prescription belongs to the patient
     const verify = await query(
       `SELECT dp.id FROM doctor_prescriptions dp
        JOIN appointments a ON dp.appointment_id = a.id
@@ -754,6 +951,7 @@ export async function DELETE(
       );
     }
 
+    // Delete the prescription
     await query('DELETE FROM doctor_prescriptions WHERE id = $1', [prescriptionId]);
 
     return NextResponse.json({
@@ -763,7 +961,9 @@ export async function DELETE(
   } catch (error) {
     console.error('Error deleting prescription:', error);
     const authResponse = authErrorResponse(error);
-    if (authResponse) return authResponse;
+    if (authResponse) {
+      return authResponse;
+    }
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }

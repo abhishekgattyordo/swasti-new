@@ -9,7 +9,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Loader2, Filter, Download } from 'lucide-react';
 import { toast } from 'sonner';
-import { useTenant } from "@/contexts/TenantContext";
+import { useTenant } from "@/context/TenantContext";
 import { MODULE_KEYS, BILLING_FEATURES } from "@/lib/feature";
 
 interface BillItem {

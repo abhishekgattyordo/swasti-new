@@ -6,7 +6,7 @@ import { DollarSign, CreditCard, Receipt, TrendingUp, Loader2 } from 'lucide-rea
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { toast } from 'sonner';
 import { useRouter } from "next/navigation";
-import { useTenant } from "@/contexts/TenantContext";
+import { useTenant } from "@/context/TenantContext";
 import { MODULE_KEYS, BILLING_FEATURES } from "@/lib/feature";
 
 interface Bill {

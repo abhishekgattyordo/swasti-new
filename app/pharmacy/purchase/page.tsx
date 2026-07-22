@@ -26,7 +26,7 @@ import { toast } from 'sonner';
 import Sidebar from '@/components/pharmacy/Sidebar';
 import { purchasesApi } from '@/lib/api/purchasesApi';
 import { medicinesApi } from '@/lib/api/medicinesApi';
-import { useTenant } from "@/contexts/TenantContext";
+import { useTenant } from "@/context/TenantContext";
 import { MODULE_KEYS, PHARMACY_FEATURES } from "@/lib/feature";
 
 // Mock Data - Replace with real API calls later

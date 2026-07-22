@@ -40,7 +40,7 @@ import {
 import { Search, Download, Menu, X, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import Sidebar from '@/components/pharmacy/Sidebar';
-import { useTenant } from "@/contexts/TenantContext";
+import { useTenant } from "@/context/TenantContext";
 import { MODULE_KEYS, PHARMACY_FEATURES } from "@/lib/feature";
 
 interface LedgerEntry {

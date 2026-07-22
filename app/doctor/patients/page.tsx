@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Search, Plus, User, Activity, Calendar } from "lucide-react";
 import { useDoctor } from "../layout";
-import { useTenant } from "@/contexts/TenantContext";
+import { useTenant } from "@/context/TenantContext";
 import { MODULE_KEYS, DOCTOR_FEATURES } from "@/lib/feature";
 
 export default function PatientsPage() {

@@ -1123,7 +1123,7 @@ import { Badge } from "@/components/ui/badge";
 import toast from "react-hot-toast";
 import Sidebar from "@/components/admin/Sidebar";
 import { BedBulkImportExport } from "@/components/admin/BedBulkImportExport";
-import { useTenant } from "@/contexts/TenantContext";
+import { useTenant } from "@/context/TenantContext";
 import { MODULE_KEYS, ADMIN_FEATURES } from "@/lib/feature";
 import { useRouter } from "next/navigation";
 

@@ -272,7 +272,6 @@
 
 
 
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -395,7 +394,7 @@ export default function EmergencySidebar({ isOpen, onClose }: SidebarProps) {
         className={`${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         } lg:translate-x-0 fixed lg:sticky top-0 left-0 z-40 ${
-          isCollapsed ? 'w-24' : 'w-80'
+          isCollapsed ? 'w-20' : 'w-72'   // ✅ Only width changed: w-80 → w-72, w-24 → w-20
         } flex-shrink-0 bg-[#F4F9F7] border-r border-[#E2EFEA] flex flex-col transition-all duration-300 ease-out shadow-xl lg:shadow-none h-screen`}
       >
         {/* Close button for mobile */}
@@ -407,7 +406,7 @@ export default function EmergencySidebar({ isOpen, onClose }: SidebarProps) {
         </button>
 
         {/* Logo Section - Left aligned with Text Below */}
-         <div className="px-4 py-3 border-b border-[#E2EFEA] relative">
+        <div className="px-4 py-3 border-b border-[#E2EFEA] relative">  {/* Original padding restored */}
           <Link
             href="/patient/dashboard"
             className="flex flex-col items-start w-full"
@@ -418,22 +417,21 @@ export default function EmergencySidebar({ isOpen, onClose }: SidebarProps) {
                 <img
                   src="/swasti ai logo.png"
                   alt="Swasti AI"
-                  className="w-20 h-20 object-contain"
+                  className="w-20 h-20 object-contain"  // Original size
                 />
               </div>
             ) : (
               <>
-                <div className="w-full max-w-[250px] flex-shrink-0">
+                <div className="w-full max-w-[250px] flex-shrink-0">  {/* Original width */}
                   <img
                     src="/Swasti.ai bg rm logo.png"
                     alt="Swasti AI Logo"
-                    className="w-auto h-25 object-fill"
+                    className="w-auto h-25 object-fill"  // Original height
                   />
                 </div>
-
                 <div className="mt-2 ml-1">
-                  <h2 className="text-xs font-semibold uppercase tracking-wider text-[#1F8F89]">
-                      Emergency Module
+                  <h2 className="text-xs font-semibold uppercase tracking-wider text-[#1F8F89]">  {/* Original text size */}
+                    Emergency Module
                   </h2>
                 </div>
               </>
@@ -454,17 +452,11 @@ export default function EmergencySidebar({ isOpen, onClose }: SidebarProps) {
           </button>
         </div>
 
-
         {/* Navigation Section */}
         <div className="flex-1 flex flex-col min-h-0">
-          <nav className="flex-1 overflow-y-auto px-3 py-3">
-            <div className="mb-4">
-              {!isCollapsed && (
-                <p className="text-[10px] font-medium text-[#1F8F89] uppercase tracking-wider px-3 mb-2">
-              
-                </p>
-              )}
-              <div className="space-y-1">
+          <nav className="flex-1 overflow-y-auto px-3 py-3">   {/* Original padding */}
+            <div className="mb-4">   {/* Original margin */}
+              <div className="space-y-1">  {/* Original gap */}
                 {navItems.map((item) => {
                   const active = isActive(item.href);
                   return (
@@ -479,13 +471,10 @@ export default function EmergencySidebar({ isOpen, onClose }: SidebarProps) {
                         onClick={handleLinkClick}
                         className={`flex items-center ${
                           isCollapsed ? 'justify-center' : 'justify-between gap-3'
-                        } px-3 py-2 rounded-lg transition-all ${
-                          active
-                            ? 'bg-[#EAF7F4] text-[#1A1A1A] font-semibold'
-                            : 'text-[#333333] hover:bg-[#EAF7F4]/60 hover:text-[#1A1A1A]'
-                        }`}
+                        } px-3 py-2 rounded-lg transition-all`}  // Original padding
+                        style={active ? { backgroundColor: '#EAF7F4', color: '#1A1A1A', fontWeight: 600 } : { color: '#333333' }}
                       >
-                        <div className={`flex items-center ${isCollapsed ? '' : 'gap-3'}`}>
+                        <div className={`flex items-center ${isCollapsed ? '' : 'gap-3'}`}>  {/* Original gap */}
                           <div className={`w-7 h-7 flex items-center justify-center rounded-lg ${
                             active ? 'text-[#2BB2A7]' : 'text-[#2BB2A7]'
                           }`}>
@@ -513,7 +502,7 @@ export default function EmergencySidebar({ isOpen, onClose }: SidebarProps) {
 
           {/* User Profile & Logout Section */}
           <div className="mt-auto border-t border-[#E2EFEA] bg-[#F4F9F7]">
-            <div className="p-3">
+            <div className="p-3">   {/* Original padding */}
               {!isCollapsed ? (
                 <div className="flex items-center justify-between gap-2 p-2 bg-[#EAF7F4] rounded-lg">
                   <div className="flex items-center gap-2">
@@ -553,7 +542,7 @@ export default function EmergencySidebar({ isOpen, onClose }: SidebarProps) {
               )}
               {!isCollapsed && (
                 <div className="mt-2 px-2">
-                  <p className="text-[8px] text-[#1F8F89]/50 text-center">
+                  <p className="text-[8px] text-[#1F8F89]/50 text-center">  {/* Original text size */}
                     Emergency Portal v1.0.0
                   </p>
                 </div>

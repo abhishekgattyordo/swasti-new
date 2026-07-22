@@ -376,7 +376,7 @@ import {
   Receipt,
   LogOut,
 } from 'lucide-react';
-import { useTenant } from '@/contexts/TenantContext';
+import { useTenant } from '@/context/TenantContext';
 import { MODULE_KEYS, HELPDESK_FEATURES } from '@/lib/feature';
 
 interface HelpDeskSidebarProps {

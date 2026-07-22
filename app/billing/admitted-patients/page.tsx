@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Loader2, Filter, Calendar, Building2, Bed, User, Download } from 'lucide-react';
 import { toast } from 'sonner';
-import { useTenant } from "@/contexts/TenantContext";
+import { useTenant } from "@/context/TenantContext";
 import { MODULE_KEYS, BILLING_FEATURES } from "@/lib/feature";
 
 interface Admission {

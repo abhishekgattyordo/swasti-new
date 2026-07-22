@@ -388,7 +388,7 @@ import {
   Chat,
 } from "@mui/icons-material";
 import { CalendarDays } from "lucide-react";
-import { useTenant } from "@/contexts/TenantContext";
+import { useTenant } from "@/context/TenantContext";
 import { MODULE_KEYS, PATIENT_FEATURES } from "@/lib/feature";
 
 interface SidebarProps {

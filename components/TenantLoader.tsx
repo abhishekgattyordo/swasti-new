@@ -1,6 +1,6 @@
 'use client';
 
-import { useTenant } from '@/contexts/TenantContext';
+import { useTenant } from '@/context/TenantContext';
 
 export function TenantLoader({ children }: { children: React.ReactNode }) {
   const { isLoading, error } = useTenant();

@@ -1012,7 +1012,7 @@ import HelpDeskSidebar from "@/components/helpdesk/HelpDeskSidebar";
 import { admissionsApi } from "@/lib/api/admissions";
 import EnhancedVoiceInput from "@/components/ui/EnhancedVoiceInput";
 
-import { useTenant } from "@/contexts/TenantContext";
+import { useTenant } from "@/context/TenantContext";
 import { MODULE_KEYS, HELPDESK_FEATURES } from "@/lib/feature";
 
 // Types

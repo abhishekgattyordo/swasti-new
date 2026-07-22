@@ -1046,3 +1046,11 @@ USING gin (pre_auth_form);
 -- VERIFY TABLE CREATION
 -- ============================================
 
+-- =====================================================
+-- Swasti OT (Operation Theatre) & Surgery Cases Module
+-- =====================================================
+
+ordo_tenant_anahatam_hospital_4=# 
+ordo_tenant_anahatam_hospital_4=# -- =====================================================
+-- Swasti OT (Operation Theatre) & Surgery Cases Module
+-- =====================================================

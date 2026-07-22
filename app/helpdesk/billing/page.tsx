@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { Menu, X, Search, Edit, DollarSign, Clock, CheckCircle2, AlertCircle, Loader2, Calendar } from "lucide-react";
 import HelpDeskSidebar from "@/components/helpdesk/HelpDeskSidebar";
 import { toast } from "sonner";
-import { useTenant } from "@/contexts/TenantContext";
+import { useTenant } from "@/context/TenantContext";
 import { MODULE_KEYS, HELPDESK_FEATURES } from "@/lib/feature";
 
 type Invoice = {

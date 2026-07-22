@@ -8,7 +8,7 @@ import "./globals.css";
 import { Toaster as HotToaster } from "react-hot-toast";
 import { Toaster } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { TenantProvider } from "@/contexts/TenantContext";
+import { TenantProvider } from "@/context/TenantContext";
 import { TenantLoader } from "@/components/TenantLoader";
 
 const geistSans = Geist({

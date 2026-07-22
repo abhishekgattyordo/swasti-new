@@ -25,7 +25,7 @@ import {
 import { toast } from "sonner";
 import Sidebar from "@/components/pharmacy/Sidebar";
 import { admissionsApi } from "@/lib/api/admissions";
-import { useTenant } from "@/contexts/TenantContext";
+import { useTenant } from "@/context/TenantContext";
 import { MODULE_KEYS, PHARMACY_FEATURES } from "@/lib/feature";
 
 // Types

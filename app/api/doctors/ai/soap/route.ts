@@ -1189,6 +1189,8 @@
 
 
 // app/api/soap/route.ts
+
+
 import { GoogleGenAI, Type } from '@google/genai';
 import { NextRequest, NextResponse } from 'next/server';
 import { models } from '@/lib/gemini';
@@ -1563,85 +1565,165 @@ function extractLabOrders(plan: string): string[] {
 
   return labs;
 }
+// ============================================
+// HELPER: Send WhatsApp Notification (MSG91) - DEBUG VERSION
+
 
 // ============================================
-// HELPER: Send WhatsApp Notification (UPDATED)
-// ============================================
+
 async function sendWhatsAppNotification(
-  labOrders: string[], 
-  soapNote: any, 
+  labOrders: string[],
+  soapNote: any,
   patientId?: string,
   patientName?: string
 ): Promise<{ sent: boolean; error: string | null }> {
-  const whatsappToken = process.env.WHATSAPP_ACCESS_TOKEN;
-  const fromPhoneNumberId = process.env.FROM_PHONE_NUMBER_ID;
+
+  const authKey = process.env.MSG91_AUTH_KEY;
+  const integratedNumber = process.env.MSG91_INTEGRATED_NUMBER;
   const labInchargePhone = process.env.LAB_INCHARGE_PHONE?.replace('+', '');
 
-  if (!whatsappToken || !fromPhoneNumberId || !labInchargePhone) {
-    console.warn('[SOAP API] WhatsApp credentials not configured. Skipping.');
-    return { sent: false, error: 'WhatsApp not configured' };
+  console.log('========================================');
+  console.log('📱 MSG91 WHATSAPP DEBUG');
+  console.log('========================================');
+  console.log('AUTH KEY:', authKey ? '✅ Present' : '❌ Missing');
+  console.log('INTEGRATED NUMBER:', integratedNumber);
+  console.log('PHONE NUMBER:', labInchargePhone);
+  console.log('PATIENT NAME:', patientName);
+  console.log('LAB ORDERS:', labOrders);
+  console.log('========================================');
+
+  if (!authKey || !integratedNumber || !labInchargePhone) {
+    return {
+      sent: false,
+      error: 'MSG91 configuration missing'
+    };
+  }
+
+  if (!labOrders || labOrders.length === 0) {
+    return {
+      sent: false,
+      error: 'No lab orders found'
+    };
   }
 
   const orderId = `LAB-${Date.now().toString().slice(-6)}`;
-  const labList = labOrders.map((lab) => `• ${lab}`).join('\n');
-  const date = new Date().toLocaleString();
-  const priority = 'ROUTINE';
-  const clinicalSuspicion = soapNote.assessment?.substring(0, 200) || 'Based on clinical presentation';
 
-  // Try the template with the correct name from Meta
+  const labList =
+  labOrders.length === 1
+    ? labOrders[0]
+    : labOrders.join(', ');
+
+  const date = new Date().toLocaleString('en-US', {
+    timeZone: 'Asia/Kolkata',
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  });
+
+  const clinicalSuspicion =
+    soapNote?.assessment?.substring(0, 200) ||
+    'Based on clinical presentation';
+
   const messagePayload = {
-    messaging_product: 'whatsapp',
-    to: labInchargePhone,
-    type: 'template',
-    template: {
-      name: 'lab_order_notification_utility', // ✅ Your actual template name
-      language: {
-        code: 'en_US', // ✅ Try en_US (most common)
-      },
-      components: [
-        {
-          type: 'body',
-          parameters: [
-            { type: 'text', text: orderId },
-            { type: 'text', text: patientName || 'Unknown Patient' },
-            { type: 'text', text: date },
-            { type: 'text', text: labList },
-            { type: 'text', text: clinicalSuspicion },
-            { type: 'text', text: priority },
-          ],
+    integrated_number: integratedNumber,
+    content_type: 'template',
+    payload: {
+      messaging_product: 'whatsapp',
+      type: 'template',
+      template: {
+        name: 'lab_order_notification',
+        language: {
+          code: 'en',
+          policy: 'deterministic'
         },
-      ],
-    },
+        namespace: '9ac853a6_b138_48fe_9fd0_2c43229213ac',
+        to_and_components: [
+          {
+            to: [labInchargePhone],
+            components: {
+              body_1: {
+                type: 'text',
+                value: orderId
+              },
+              body_2: {
+                type: 'text',
+                value: patientName || 'Unknown Patient'
+              },
+              body_3: {
+                type: 'text',
+                value: date
+              },
+              body_4: {
+                type: 'text',
+                value: labList
+              },
+              body_5: {
+                type: 'text',
+                value: clinicalSuspicion
+              },
+              body_6: {
+                type: 'text',
+                value: 'ROUTINE'
+              }
+            }
+          }
+        ]
+      }
+    }
   };
 
-  console.log("🔍 TEMPLATE DEBUG:");
-  console.log("Template Name:", messagePayload.template.name);
-  console.log("Language Code:", messagePayload.template.language.code);
+  console.log('📤 PAYLOAD:');
+  console.log(JSON.stringify(messagePayload, null, 2));
 
   try {
     const response = await fetch(
-      `https://graph.facebook.com/v25.0/${fromPhoneNumberId}/messages`,
+      'https://api.msg91.com/api/v5/whatsapp/whatsapp-outbound-message/bulk/',
       {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${whatsappToken}`,
-          'Content-Type': 'application/json',
+          authkey: authKey,
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify(messagePayload),
+        body: JSON.stringify(messagePayload)
       }
     );
 
+    console.log('HTTP STATUS:', response.status);
+
     const responseData = await response.json();
 
-    if (!response.ok) {
-      console.error('[SOAP API] WhatsApp API Error Response:', responseData);
-      throw new Error(responseData.error?.message || 'WhatsApp API request failed');
+    console.log('📥 MSG91 RESPONSE:');
+    console.log(JSON.stringify(responseData, null, 2));
+
+    if (
+      responseData.status === 'fail' ||
+      responseData.hasError === true
+    ) {
+      return {
+        sent: false,
+        error: JSON.stringify(responseData.errors)
+      };
     }
 
-    console.log('[SOAP API] ✅ WhatsApp sent. Message ID:', responseData.messages?.[0]?.id);
-    return { sent: true, error: null };
+    console.log(
+      '✅ WhatsApp Sent Successfully. Request ID:',
+      responseData.request_id
+    );
+
+    return {
+      sent: true,
+      error: null
+    };
+
   } catch (error: any) {
-    console.error('[SOAP API] ❌ WhatsApp failed:', error.message);
-    return { sent: false, error: error.message };
+    console.error('❌ MSG91 ERROR:', error);
+
+    return {
+      sent: false,
+      error: error.message
+    };
   }
 }

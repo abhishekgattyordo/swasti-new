@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
-import { useTenant } from "@/contexts/TenantContext";
+import { useTenant } from "@/context/TenantContext";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -65,170 +65,171 @@ export default function LoginPage() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (!validateForm()) return;
+  if (!validateForm()) return;
 
-    setIsLoading(true);
-    setServerError(null);
+  setIsLoading(true);
+  setServerError(null);
 
-    const trimmedEmail = email.trim();
-    const trimmedPassword = password.trim();
+  const trimmedEmail = email.trim();
+  const trimmedPassword = password.trim();
 
-    if (
-      trimmedEmail === "laboratory@gmail.com" &&
-      trimmedPassword === "password123"
-    ) {
-      const dummyUser = {
-        id: 99,
-        email: "laboratory@gmail.com",
-        full_name_en: "Lab Technician",
-        role: "laboratory",
-        patient_id: null,
-        doctor_id: null,
-      };
-      localStorage.setItem("user", JSON.stringify(dummyUser));
-      localStorage.setItem("accessToken", "dummy-token");
-      console.log("✅ Dummy laboratory login successful");
-      router.push("/laboratory");
+  // Dummy login for laboratory
+  if (
+    trimmedEmail === "laboratory@gmail.com" &&
+    trimmedPassword === "password123"
+  ) {
+    const dummyUser = {
+      id: 99,
+      email: "laboratory@gmail.com",
+      full_name_en: "Lab Technician",
+      role: "laboratory",
+      patient_id: null,
+      doctor_id: null,
+    };
+    localStorage.setItem("user", JSON.stringify(dummyUser));
+    localStorage.setItem("accessToken", "dummy-token");
+    console.log("✅ Dummy laboratory login successful");
+    router.push("/laboratory");
+    setIsLoading(false);
+    return;
+  }
+
+  try {
+    console.log("🔍 Attempting login with:", { email: trimmedEmail });
+
+    const res = await fetch("/api/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: trimmedEmail,
+        password: trimmedPassword,
+      }),
+    });
+
+    const data = await res.json();
+    console.log("📥 Login response:", data);
+
+    if (!res.ok) {
+      if (data.errors) {
+        setErrors(data.errors);
+      } else if (data.message) {
+        setServerError(data.message);
+      } else {
+        setServerError("Login failed. Please try again.");
+      }
       setIsLoading(false);
       return;
     }
 
-    try {
-      console.log("🔍 Attempting login with:", { email: trimmedEmail });
+    localStorage.setItem("user", JSON.stringify(data.user));
 
-      const res = await fetch("/api/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: trimmedEmail,
-          password: trimmedPassword,
-        }),
-      });
+    if (data.token) {
+      localStorage.setItem("accessToken", data.token);
+    }
 
-      const data = await res.json();
-      console.log("📥 Login response:", data);
+    localStorage.setItem("userId", data.user?.id?.toString() || "");
+    localStorage.setItem("userName", data.user?.full_name_en || "");
+    localStorage.setItem("userRole", data.user?.role || "");
 
-      if (!res.ok) {
-        if (data.errors) {
-          setErrors(data.errors);
-        } else if (data.message) {
-          setServerError(data.message);
-        } else {
-          setServerError("Login failed. Please try again.");
-        }
-        setIsLoading(false);
-        return;
+    if (data.user?.role === "patient") {
+      const patientId = data.user?.patient_id || data.user?.id;
+      if (patientId) {
+        localStorage.setItem("patientId", patientId.toString());
+        console.log("✅ patientId stored:", patientId);
       }
+    }
 
-      localStorage.setItem("user", JSON.stringify(data.user));
+    // For nurse role, fetch staff details
+    if (data.user?.role === "nurse") {
+      try {
+        const staffRes = await fetch("/api/admin/staff");
+        const staffData = await staffRes.json();
 
-      // Store access token
-      if (data.token) {
-        localStorage.setItem("accessToken", data.token);
-      }
+        if (staffData?.success && staffData?.data) {
+          const staffRecord = staffData.data.find(
+            (s: any) => s.user_id === data.user.id,
+          );
 
-      // Store basic user info
-      localStorage.setItem("userId", data.user?.id?.toString() || "");
-      localStorage.setItem("userName", data.user?.full_name_en || "");
-      localStorage.setItem("userRole", data.user?.role || "");
-
-      if (data.user?.role === "patient") {
-        const patientId = data.user?.patient_id || data.user?.id;
-        if (patientId) {
-          localStorage.setItem("patientId", patientId.toString());
-          console.log("✅ patientId stored:", patientId);
-        }
-      }
-
-      // For nurse role, fetch staff details to check department
-      if (data.user?.role === "nurse") {
-        try {
-          const staffRes = await fetch("/api/admin/staff");
-          const staffData = await staffRes.json();
-
-          if (staffData?.success && staffData?.data) {
-            const staffRecord = staffData.data.find(
-              (s: any) => s.user_id === data.user.id,
+          if (staffRecord) {
+            localStorage.setItem("staffId", staffRecord.id.toString());
+            localStorage.setItem(
+              "staffDepartment",
+              staffRecord.department || "",
             );
+            localStorage.setItem(
+              "staffWardId",
+              staffRecord.ward_id?.toString() || "",
+            );
+            console.log("✅ Staff ID stored:", staffRecord.id);
+            console.log("✅ Staff Department:", staffRecord.department);
 
-            if (staffRecord) {
-              localStorage.setItem("staffId", staffRecord.id.toString());
-              localStorage.setItem(
-                "staffDepartment",
-                staffRecord.department || "",
+            if (staffRecord.department === "Emergency") {
+              console.log(
+                "🚑 Emergency nurse detected, redirecting to emergency dashboard",
               );
-              localStorage.setItem(
-                "staffWardId",
-                staffRecord.ward_id?.toString() || "",
-              );
-              console.log("✅ Staff ID stored:", staffRecord.id);
-              console.log("✅ Staff Department:", staffRecord.department);
-
-              // Check if nurse is from Emergency department
-              if (staffRecord.department === "Emergency") {
-                console.log(
-                  "🚑 Emergency nurse detected, redirecting to emergency dashboard",
-                );
-                router.push("/emergency/dashboard");
-                setIsLoading(false);
-                return;
-              }
+              router.push("/emergency/dashboard");
+              setIsLoading(false);
+              return;
             }
           }
-        } catch (err) {
-          console.error("Failed to fetch staff ID:", err);
         }
+      } catch (err) {
+        console.error("Failed to fetch staff ID:", err);
       }
-
-      console.log(
-        "✅ Login successful for:",
-        data.user.email,
-        "Role:",
-        data.user.role,
-      );
-
-      // Role-based navigation
-      switch (data.user.role) {
-        case "admin":
-          router.push("/admin/healthcaredashboard");
-          break;
-        case "patient":
-          router.push("/patient/dashboard");
-          break;
-        case "doctor":
-          router.push("/doctor/dashboard");
-          break;
-        case "pharmacy":
-          router.push("/pharmacy/dashboard");
-          break;
-        case "helpdesk":
-          router.push("/helpdesk/dashboard");
-          break;
-        case "laboratory":
-          router.push("/laboratory");
-          break;
-        case "billing":
-          router.push("/billing/dashboard");
-          break;
-        case "nurse":
-          router.push("/nurse");
-          break;
-        default:
-          router.push("/");
-      }
-    } catch (error) {
-      console.error("❌ Login error:", error);
-      setServerError(
-        "Network error. Please check your connection and try again.",
-      );
-    } finally {
-      setIsLoading(false);
     }
-  };
+
+    console.log(
+      "✅ Login successful for:",
+      data.user.email,
+      "Role:",
+      data.user.role,
+    );
+
+    // Role-based navigation - UPDATED WITH EMERGENCY
+    switch (data.user.role) {
+      case "admin":
+        router.push("/admin/healthcaredashboard");
+        break;
+      case "patient":
+        router.push("/patient/dashboard");
+        break;
+      case "doctor":
+        router.push("/doctor/dashboard");
+        break;
+      case "pharmacy":
+        router.push("/pharmacy/dashboard");
+        break;
+      case "helpdesk":
+        router.push("/helpdesk/dashboard");
+        break;
+      case "laboratory":
+        router.push("/laboratory");
+        break;
+      case "billing":
+        router.push("/billing/dashboard");
+        break;
+      case "nurse":
+        router.push("/nurse");
+        break;
+      case "emergency":  // 👈 Added emergency role
+        router.push("/emergency/dashboard");
+        break;
+      default:
+        router.push("/");
+    }
+  } catch (error) {
+    console.error("❌ Login error:", error);
+    setServerError(
+      "Network error. Please check your connection and try again.",
+    );
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const handleForgotPassword = () => {
     router.push("/reset-password");

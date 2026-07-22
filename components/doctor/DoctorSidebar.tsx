@@ -358,7 +358,7 @@ import {
   LogOut,
   Plus,
 } from 'lucide-react';
-import { useTenant } from '@/contexts/TenantContext';
+import { useTenant } from '@/context/TenantContext';
 import { MODULE_KEYS, DOCTOR_FEATURES } from '@/lib/feature';
 
 interface DoctorSidebarProps {

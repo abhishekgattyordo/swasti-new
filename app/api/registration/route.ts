@@ -508,7 +508,6 @@ async function handleStep3(data: Step3Input) {
   );
 }
 
-// ==================== GET ENDPOINT ====================
 
 export async function GET(req: NextRequest) {
   try {
@@ -538,10 +537,6 @@ export async function GET(req: NextRequest) {
             'registration_step', p.registration_step,
             'created_at', p.created_at,
             'updated_at', p.updated_at,
-            'insurance_provider', i.insurance_provider,
-            'policy_number', i.policy_number,
-            'valid_until', i.valid_until,
-            'group_id', i.group_id,
             'registration_id', r.registration_id,
             'registration_status', r.status,
             'completed_at', r.completed_at,
@@ -561,20 +556,14 @@ export async function GET(req: NextRequest) {
           ORDER BY r.created_at DESC
         ) as data
         FROM patients p
-        LEFT JOIN insurance_details i ON p.patient_id = i.patient_id
         LEFT JOIN registrations r ON p.patient_id = r.patient_id
       `);
-
-      return NextResponse.json({
-        success: true,
-        data: result.rows[0]?.data || [],
-      });
+      return NextResponse.json({ success: true, data: result.rows[0]?.data || [] });
     }
 
-    // 2. Search by phone number
+    // 2. Search by phone number – flexible matching
     if (phone) {
       const trimmedPhone = phone.trim();
-      // Extract only digits from the input
       const digitsOnly = trimmedPhone.replace(/[^0-9]/g, '');
 
       if (digitsOnly.length === 0) {
@@ -584,59 +573,11 @@ export async function GET(req: NextRequest) {
         );
       }
 
-      console.log("Searching for phone (exact):", trimmedPhone);
-      console.log("Searching for phone (digits):", digitsOnly);
+      let result;
 
-      // First try exact match (fast)
-      let result = await query(`
-        SELECT jsonb_agg(
-          jsonb_build_object(
-            'patient_id', p.patient_id::text,
-            'full_name_en', p.full_name_en,
-            'full_name_hi', p.full_name_hi,
-            'dob', p.dob,
-            'gender', p.gender,
-            'address', p.address,
-            'city', p.city,
-            'state', p.state,
-            'country', p.country,
-            'pincode', p.pincode,
-            'phone', p.phone,
-            'email', p.email,
-            'blood_group', p.blood_group,
-            'registration_step', p.registration_step,
-            'created_at', p.created_at,
-            'updated_at', p.updated_at,
-            'insurance_provider', i.insurance_provider,
-            'policy_number', i.policy_number,
-            'valid_until', i.valid_until,
-            'group_id', i.group_id,
-            'registration_id', r.registration_id,
-            'registration_status', r.status,
-            'completed_at', r.completed_at,
-            'medical_history', COALESCE((
-              SELECT jsonb_agg(
-                jsonb_build_object(
-                  'allergy', mh.allergy,
-                  'chronic_condition', mh.chronic_condition,
-                  'medications', mh.medications,
-                  'recorded_at', mh.created_at
-                )
-              )
-              FROM medical_history mh
-              WHERE mh.patient_id = p.patient_id
-            ), '[]'::jsonb)
-          )
-        ) as data
-        FROM patients p
-        LEFT JOIN insurance_details i ON p.patient_id = i.patient_id
-        LEFT JOIN registrations r ON p.patient_id = r.patient_id
-        WHERE p.phone = $1
-      `, [trimmedPhone]);
-
-      // If no exact match, try matching by digits only
-      if (!result.rows.length || !result.rows[0].data) {
-        result = await query(`
+      // ---- Helper to execute query with a given condition ----
+      const searchQuery = (condition: string, param: string) => {
+        return query(`
           SELECT jsonb_agg(
             jsonb_build_object(
               'patient_id', p.patient_id::text,
@@ -655,10 +596,6 @@ export async function GET(req: NextRequest) {
               'registration_step', p.registration_step,
               'created_at', p.created_at,
               'updated_at', p.updated_at,
-              'insurance_provider', i.insurance_provider,
-              'policy_number', i.policy_number,
-              'valid_until', i.valid_until,
-              'group_id', i.group_id,
               'registration_id', r.registration_id,
               'registration_status', r.status,
               'completed_at', r.completed_at,
@@ -677,13 +614,37 @@ export async function GET(req: NextRequest) {
             )
           ) as data
           FROM patients p
-          LEFT JOIN insurance_details i ON p.patient_id = i.patient_id
           LEFT JOIN registrations r ON p.patient_id = r.patient_id
-          WHERE regexp_replace(p.phone, '[^0-9]', '', 'g') = $1
-        `, [digitsOnly]);
+          WHERE ${condition}
+        `, [param]);
+      };
+
+      // 1) Exact digits match
+      result = await searchQuery(
+        `regexp_replace(p.phone, '[^0-9]', '', 'g') = $1`,
+        digitsOnly
+      );
+
+      // 2) If no match, try last 10 digits (common for India)
+      if (!result.rows.length || !result.rows[0]?.data) {
+        const lastDigits = digitsOnly.slice(-10);
+        if (lastDigits.length >= 4) {
+          result = await searchQuery(
+            `regexp_replace(p.phone, '[^0-9]', '', 'g') LIKE $1`,
+            `%${lastDigits}`
+          );
+        }
       }
 
-      if (result.rows.length === 0 || !result.rows[0].data) {
+      // 3) If still no match, try contains (partial)
+      if (!result.rows.length || !result.rows[0]?.data && digitsOnly.length >= 4) {
+        result = await searchQuery(
+          `regexp_replace(p.phone, '[^0-9]', '', 'g') LIKE $1`,
+          `%${digitsOnly}%`
+        );
+      }
+
+      if (!result.rows.length || !result.rows[0]?.data) {
         return NextResponse.json(
           { success: false, message: `No patients found with phone: ${trimmedPhone}` },
           { status: 404 }
@@ -696,7 +657,7 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // 3. Get by patient ID (existing logic)
+    // 3. Get by patient ID
     if (!patientId) {
       return NextResponse.json(
         { success: false, message: "patientId or phone is required." },
@@ -714,9 +675,9 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const queryStr = `
-      SELECT 
-        jsonb_build_object(
+    try {
+      const result = await query(`
+        SELECT jsonb_build_object(
           'patient_id', p.patient_id::text,
           'full_name_en', p.full_name_en,
           'full_name_hi', p.full_name_hi,
@@ -733,10 +694,6 @@ export async function GET(req: NextRequest) {
           'registration_step', p.registration_step,
           'created_at', p.created_at,
           'updated_at', p.updated_at,
-          'insurance_provider', i.insurance_provider,
-          'policy_number', i.policy_number,
-          'valid_until', i.valid_until,
-          'group_id', i.group_id,
           'registration_id', r.registration_id,
           'registration_status', r.status,
           'completed_at', r.completed_at,
@@ -756,33 +713,35 @@ export async function GET(req: NextRequest) {
             '[]'::jsonb
           )
         ) as data
-      FROM patients p
-      LEFT JOIN insurance_details i ON p.patient_id = i.patient_id
-      LEFT JOIN registrations r ON p.patient_id = r.patient_id
-      WHERE p.patient_id = $1`;
+        FROM patients p
+        LEFT JOIN registrations r ON p.patient_id = r.patient_id
+        WHERE p.patient_id = $1
+      `, [patientId]);
 
-    const registrationResult = await query(queryStr, [patientId]);
+      if (result.rows.length === 0 || !result.rows[0]?.data) {
+        return NextResponse.json(
+          { success: false, message: `No registration found with patient ID: ${patientId}` },
+          { status: 404 }
+        );
+      }
 
-    if (registrationResult.rows.length === 0) {
+      return NextResponse.json({
+        success: true,
+        data: result.rows[0].data,
+      });
+    } catch (err) {
+      console.error('Patient ID query failed:', err);
       return NextResponse.json(
-        { success: false, message: `No registration found with patient ID: ${patientId}` },
-        { status: 404 }
+        { success: false, message: 'Database error while fetching patient by ID.' },
+        { status: 500 }
       );
     }
-
-    const patientData = registrationResult.rows[0].data;
-
-    return NextResponse.json({
-      success: true,
-      data: patientData
-    });
-
   } catch (error) {
     console.error("❌ Error fetching registration:", error);
     return NextResponse.json(
       {
         success: false,
-        message: "An error occurred while fetching registration",
+        message: error instanceof Error ? error.message : "An error occurred while fetching registration",
       },
       { status: 500 }
     );

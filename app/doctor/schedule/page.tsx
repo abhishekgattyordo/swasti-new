@@ -734,7 +734,7 @@ import {
 import { useDoctor } from "../layout";
 import ColumnFilterPopover from "@/components/doctor/ColumnFilterPopover";
 import { format } from "date-fns";
-import { useTenant } from "@/contexts/TenantContext";
+import { useTenant } from "@/context/TenantContext";
 import { MODULE_KEYS, DOCTOR_FEATURES } from "@/lib/feature";
 import { doctorsApi } from "@/lib/api/doctors";
 import NewAppointmentModal from "@/components/doctor/schedule/NewAppointmentModal";

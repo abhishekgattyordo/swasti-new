@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Menu, X, Search, Loader2, Stethoscope, ChevronRight, Filter, Calendar, Clock } from "lucide-react";
 import HelpDeskSidebar from "@/components/helpdesk/HelpDeskSidebar";
-import { useTenant } from "@/contexts/TenantContext";
+import { useTenant } from "@/context/TenantContext";
 import { MODULE_KEYS, HELPDESK_FEATURES } from "@/lib/feature";
 
 interface Doctor {

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Loader2, Calendar, X, Filter, DollarSign, CreditCard, Clock } from "lucide-react";
 import { toast } from "sonner";
-import { useTenant } from "@/contexts/TenantContext";
+import { useTenant } from "@/context/TenantContext";
 import { MODULE_KEYS, DOCTOR_FEATURES } from "@/lib/feature";
 import { useRouter } from "next/navigation";
 

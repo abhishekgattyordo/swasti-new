@@ -9,6 +9,7 @@ export const MODULE_KEYS = {
   DOCTOR: 'doctor',
   LABARATORY: 'labaratory',
   ADMIN: 'admin', 
+    OT: 'ot',
 } as const;
 
 // Pharmacy Microfeature Keys
@@ -79,4 +80,14 @@ export const ADMIN_FEATURES = {
   PATIENTS: 'patients',             // ← Changed from 'admin_patients'
   BED_CONFIGURATION: 'bed-configration',
   STAFF:'staff' // ← Changed from 'admin_bed_configuration'
+} as const;
+
+
+
+export const OT_FEATURES = {
+  DASHBOARD: 'ot_dashboard',
+  CASES: 'ot_cases',        // OTCASES
+  SURGEON: 'ot_surgeon',    // OTSURGEON
+  OT: 'ot_ot',              // OT
+  NURSING: 'ot_nursing',    // OTNURSING
 } as const;

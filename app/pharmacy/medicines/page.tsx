@@ -33,7 +33,7 @@ import Sidebar from "@/components/pharmacy/Sidebar";
 import { medicinesApi } from '@/lib/api/medicinesApi';
 import { toast } from 'sonner';
 import MedicineImport from '@/components/pharmacy/MedicineImport';
-import { useTenant } from "@/contexts/TenantContext";
+import { useTenant } from "@/context/TenantContext";
 import { MODULE_KEYS, PHARMACY_FEATURES } from "@/lib/feature";
 
 // Categories

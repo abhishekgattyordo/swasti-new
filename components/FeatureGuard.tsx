@@ -1,6 +1,6 @@
 'use client';
 
-import { useTenant } from '@/contexts/TenantContext';
+import { useTenant } from '@/context/TenantContext';
 import { ReactNode } from 'react';
 
 interface FeatureGuardProps {

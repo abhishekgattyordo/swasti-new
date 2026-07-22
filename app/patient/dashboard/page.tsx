@@ -8,7 +8,7 @@ import { Menu, X, Filter, Video, Calendar, Clock, User, Stethoscope } from "luci
 import toast from "react-hot-toast";
 import { appointmentsApi } from "@/lib/api/appointments";
 import RescheduleModal from "@/components/patient/RescheduleModal";
-import { useTenant } from "@/contexts/TenantContext";
+import { useTenant } from "@/context/TenantContext";
 import { MODULE_KEYS, PATIENT_FEATURES } from "@/lib/feature";
 
 interface Appointment {

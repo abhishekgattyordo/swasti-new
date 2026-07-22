@@ -134,7 +134,7 @@
 import { GoogleGenAI } from "@google/genai";
 
 export enum models {
-  FLASH = "gemini-3.5-flash",
+  FLASH = "gemini-3.1-flash-lite",
   PRO = "gemini-1.5-pro",
 }
 

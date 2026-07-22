@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useTenant } from "@/contexts/TenantContext";
+import { useTenant } from "@/context/TenantContext";
 import { MODULE_KEYS, LABARATORY_FEATURES } from "@/lib/feature";
 import Card from "@/components/laboratory/Card";
 import {

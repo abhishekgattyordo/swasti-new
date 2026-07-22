@@ -277,7 +277,7 @@ import {
   BookOpen,
   X,
 } from 'lucide-react';
-import { useTenant } from "@/contexts/TenantContext";
+import { useTenant } from "@/context/TenantContext";
 import { MODULE_KEYS, BILLING_FEATURES } from "@/lib/feature";
 
 interface SidebarProps {

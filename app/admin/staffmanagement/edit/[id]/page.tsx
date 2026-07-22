@@ -20,7 +20,7 @@ import {
   Close,
   Edit,
 } from "@mui/icons-material";
-import { useTenant } from "@/contexts/TenantContext";
+import { useTenant } from "@/context/TenantContext";
 import { MODULE_KEYS, ADMIN_FEATURES } from "@/lib/feature";
 import toast from "react-hot-toast";
 import { staffApi } from "@/lib/api/staff";

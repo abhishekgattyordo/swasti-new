@@ -919,7 +919,7 @@ import {
 } from '@mui/icons-material';
 import { patientsApi } from '@/lib/api/registration';
 import { toast } from 'sonner';
-import { useTenant } from "@/contexts/TenantContext";
+import { useTenant } from "@/context/TenantContext";
 import { MODULE_KEYS, ADMIN_FEATURES } from "@/lib/feature";
 import EnhancedVoiceInput from "@/components/ui/EnhancedVoiceInput";
 

@@ -14,7 +14,7 @@ import {
   Clock,
   Shield,
 } from "lucide-react";
-import { useTenant } from "@/contexts/TenantContext";
+import { useTenant } from "@/context/TenantContext";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();

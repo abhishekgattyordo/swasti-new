@@ -39,7 +39,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { purchasesApi } from "@/lib/api/purchasesApi";
 import { salesApi } from "@/lib/api/salesApi";
-import { useTenant } from "@/contexts/TenantContext";
+import { useTenant } from "@/context/TenantContext";
 import { MODULE_KEYS, PHARMACY_FEATURES } from "@/lib/feature";
 import { useRouter } from "next/navigation";
 

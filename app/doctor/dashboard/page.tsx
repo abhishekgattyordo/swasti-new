@@ -11,7 +11,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { useDoctor } from "../layout";
-import { useTenant } from "@/contexts/TenantContext";
+import { useTenant } from "@/context/TenantContext";
 import { MODULE_KEYS, DOCTOR_FEATURES } from "@/lib/feature";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";

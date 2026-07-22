@@ -1,3 +1,547 @@
+// 'use client';
+
+// import { useState, useEffect, useRef } from 'react';
+// import { useParams, useRouter } from 'next/navigation';
+// import { toast } from 'sonner';
+// import { Button } from '@/components/ui/button';
+// import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+// import { Badge } from '@/components/ui/badge';
+// import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+// import { Input } from '@/components/ui/input';
+// import { Label } from '@/components/ui/label';
+// import {
+//   Dialog,
+//   DialogContent,
+//   DialogDescription,
+//   DialogFooter,
+//   DialogHeader,
+//   DialogTitle,
+// } from '@/components/ui/dialog';
+// import {
+//   Select,
+//   SelectContent,
+//   SelectItem,
+//   SelectTrigger,
+//   SelectValue,
+// } from '@/components/ui/select';
+// import { Loader2, Receipt, Calendar, Bed, Building2, User, AlertCircle, IdCard, ArrowRightLeft } from 'lucide-react';
+
+// interface BillItem {
+//   medicine_name: string;
+//   quantity: number;
+//   unit_price: number;
+//   total_price: number;
+//   bill_id: number;
+//   bill_created_at: string;
+// }
+
+// interface Transfer {
+//   id: number;
+//   from_date: string;
+//   to_date: string;
+//   ward_name: string;
+//   days: number;
+//   daily_rate: number;
+//   total: number;
+// }
+
+// interface BillData {
+//   admission: {
+//     id: number;
+//     date: string;
+//     discharge_date: string | null;
+//     status: string;
+//     ward: string;
+//     bed: string;
+//   };
+//   bill_summary: {
+//     totalAmount: number;
+//     paidAmount: number;
+//     remainingAmount: number;
+//     status: string;
+//   };
+//   bills: { id: number; bill_number: string }[];
+//   items: BillItem[];
+//   transfers?: Transfer[];
+//   transfer_summary?: {
+//     total_transfers: number;
+//     total_days: number;
+//     total_room_rent: number;
+//   };
+// }
+
+// export default function AdmissionBillPage() {
+//   const params = useParams();
+//   const router = useRouter();
+//   const admissionId = params.admissionId as string;
+//   const [loading, setLoading] = useState(true);
+//   const [billData, setBillData] = useState<BillData | null>(null);
+//   const [error, setError] = useState<string | null>(null);
+
+//   // Prevent double API calls in React Strict Mode
+//   const hasFetchedBill = useRef(false);
+
+//   // Discharge ID from existing admission (if already discharged)
+//   const [existingDischargeId, setExistingDischargeId] = useState<string | null>(null);
+//   const hasFetchedDischargeId = useRef(false);
+
+//   // Payment dialog
+//   const [paymentOpen, setPaymentOpen] = useState(false);
+//   const [paymentAmount, setPaymentAmount] = useState('');
+//   const [paymentMethod, setPaymentMethod] = useState('Cash');
+//   const [submitting, setSubmitting] = useState(false);
+
+//   // New discharge ID generation (for fully paid admission that was not discharged yet)
+//   const [dischargeId, setDischargeId] = useState<string | null>(null);
+//   const [showDischargeIdDialog, setShowDischargeIdDialog] = useState(false);
+
+//   const hasGeneratedIdRef = useRef(false);
+
+//   // Fetch bill data
+//   const fetchBill = async () => {
+//     setLoading(true);
+//     setError(null);
+//     try {
+//       // Step 1: Generate/update the bill (this recalculates room rent)
+//       console.log('Generating bill for admissionId:', admissionId);
+//       const generateRes = await fetch('/api/billing/generate', {
+//         method: 'POST',
+//         headers: { 'Content-Type': 'application/json' },
+//         body: JSON.stringify({ admissionId: parseInt(admissionId) }),
+//       });
+      
+//       const generateData = await generateRes.json();
+      
+//       if (!generateData.success) {
+//         throw new Error(generateData.message || 'Failed to generate bill');
+//       }
+      
+//       console.log('Bill generated:', generateData.data);
+      
+//       // Step 2: Now fetch the updated bill data to display
+//       const res = await fetch(`/api/billing?admissionId=${admissionId}`, {
+//         cache: 'no-store',
+//         headers: { 'Cache-Control': 'no-cache' }
+//       });
+      
+//       const data = await res.json();
+      
+//       if (data.success) {
+//         setBillData(data.data);
+//       } else {
+//         setError(data.message || 'Failed to load bill');
+//         toast.error(data.message || 'Failed to load bill');
+//       }
+//     } catch (err) {
+//       console.error(err);
+//       setError('An error occurred while fetching the bill');
+//       toast.error('An error occurred');
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   // Fetch existing discharge ID from /api/discharge
+//   const fetchExistingDischargeId = async () => {
+//     if (hasFetchedDischargeId.current) return;
+//     hasFetchedDischargeId.current = true;
+//     try {
+//       const res = await fetch(`/api/discharge?admissionId=${admissionId}`);
+//       const data = await res.json();
+//       if (data.success && data.data?.dischargeId) {
+//         setExistingDischargeId(data.data.dischargeId);
+//       }
+//     } catch (err) {
+//       console.error('Failed to fetch discharge ID', err);
+//     }
+//   };
+
+//   // UseEffect with prevention of double calls
+//   useEffect(() => {
+//     if (!hasFetchedBill.current) {
+//       hasFetchedBill.current = true;
+//       fetchBill();
+//       fetchExistingDischargeId();
+//     }
+//   }, [admissionId]);
+
+//   // After billData updates, check if fully paid and no existing discharge ID, then generate a new one
+//   useEffect(() => {
+//     if (
+//       billData &&
+//       billData.bill_summary.remainingAmount === 0 &&
+//       !hasGeneratedIdRef.current &&
+//       !existingDischargeId
+//     ) {
+//       generateDischargeId();
+//     }
+//   }, [billData, existingDischargeId]);
+
+//   const generateDischargeId = async () => {
+//     if (hasGeneratedIdRef.current) return;
+//     hasGeneratedIdRef.current = true;
+  
+//     try {
+//       const res = await fetch('/api/billing/generate-discharge-id', {
+//         method: 'POST',
+//         headers: { 'Content-Type': 'application/json' },
+//         body: JSON.stringify({ admissionId }),
+//       });
+//       const data = await res.json();
+//       if (data.success) {
+//         setDischargeId(data.data.dischargeId);
+//         setShowDischargeIdDialog(true);
+//         toast.success('Discharge ID generated');
+//       } else {
+//         toast.error(data.message || 'Failed to generate discharge ID');
+//       }
+//     } catch (error) {
+//       console.error(error);
+//       toast.error('Failed to generate discharge ID');
+//     } finally {
+//     }
+//   };
+
+//   const openPaymentDialog = () => {
+//     if (billData?.bill_summary.remainingAmount) {
+//       setPaymentAmount(billData.bill_summary.remainingAmount.toString());
+//     } else {
+//       setPaymentAmount('');
+//     }
+//     setPaymentOpen(true);
+//   };
+
+//   const handlePayment = async () => {
+//     if (!billData) return;
+//     const amount = parseFloat(paymentAmount);
+//     if (isNaN(amount) || amount <= 0) {
+//       toast.error('Please enter a valid amount');
+//       return;
+//     }
+
+//     const billId = billData.bills[0]?.id;
+//     if (!billId) {
+//       toast.error('No bill found for this admission');
+//       return;
+//     }
+
+//     setSubmitting(true);
+//     try {
+//       const res = await fetch('/api/billing/pay', {
+//         method: 'POST',
+//         headers: { 'Content-Type': 'application/json' },
+//         body: JSON.stringify({
+//           billId,
+//           amount,
+//           paymentMethod,
+//         }),
+//       });
+//       const data = await res.json();
+//       if (data.success) {
+//         toast.success('Payment recorded');
+//         setPaymentOpen(false);
+//         fetchBill(); // refresh bill data
+//       } else {
+//         toast.error(data.message || 'Payment failed');
+//       }
+//     } catch (error) {
+//       console.error(error);
+//       toast.error('An error occurred');
+//     } finally {
+//       setSubmitting(false);
+//     }
+//   };
+
+//   const getStatusBadge = (status: string) => {
+//     switch (status) {
+//       case 'PAID':
+//         return <Badge className="bg-green-100 text-green-800">Paid</Badge>;
+//       case 'PARTIAL':
+//         return <Badge className="bg-amber-100 text-amber-800">Partial</Badge>;
+//       default:
+//         return <Badge className="bg-red-100 text-red-800">Unpaid</Badge>;
+//     }
+//   };
+
+//   const formatDate = (dateStr: string) => {
+//     return new Date(dateStr).toLocaleDateString();
+//   };
+
+//   if (loading) {
+//     return (
+//       <div className="flex h-screen items-center justify-center">
+//         <Loader2 className="h-8 w-8 animate-spin text-green-600" />
+//       </div>
+//     );
+//   }
+
+//   if (error) {
+//     return (
+//       <div className="flex flex-col items-center justify-center min-h-screen p-4">
+//         <AlertCircle className="h-12 w-12 text-red-500 mb-4" />
+//         <p className="text-red-600 mb-4 text-center">{error}</p>
+//         <Button onClick={() => router.push('/billing/admitted-patients')}>
+//           Back to Patients
+//         </Button>
+//       </div>
+//     );
+//   }
+
+//   if (!billData) return null;
+
+//   // Calculate total from transfers
+//   const totalTransferDays = billData.transfers?.reduce((sum, t) => sum + t.days, 0) || 0;
+//   const totalTransferAmount = billData.transfers?.reduce((sum, t) => sum + t.total, 0) || 0;
+
+//   return (
+//     <div className="container mx-auto py-8 px-4 max-w-5xl">
+//       <Button
+//         variant="ghost"
+//         onClick={() => router.push('/billing/admitted-patients')}
+//         className="mb-4"
+//       >
+//         ← Back to Patients
+//       </Button>
+
+//       {/* Show existing discharge ID if patient is already discharged */}
+//       {existingDischargeId && (
+//         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 flex items-center gap-3">
+//           <IdCard className="h-5 w-5 text-blue-600" />
+//           <div>
+//             <p className="text-sm font-medium text-blue-800">Discharge ID (Already Discharged)</p>
+//             <p className="text-lg font-mono font-bold text-blue-900">{existingDischargeId}</p>
+//           </div>
+//         </div>
+//       )}
+
+//       {/* Bill Header */}
+//       <Card className="mb-6">
+//         <CardHeader>
+//           <CardTitle className="flex justify-between items-center">
+//             <span>Bill for Admission #{billData.admission.id}</span>
+//             {getStatusBadge(billData.bill_summary.status)}
+//           </CardTitle>
+//         </CardHeader>
+//         <CardContent>
+//           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+//             <div className="flex items-center gap-2">
+//               <Calendar className="h-4 w-4 text-gray-500" />
+//               <div>
+//                 <p className="text-xs text-gray-500">Admission Date</p>
+//                 <p className="font-medium">{formatDate(billData.admission.date)}</p>
+//               </div>
+//             </div>
+//             <div className="flex items-center gap-2">
+//               <Building2 className="h-4 w-4 text-gray-500" />
+//               <div>
+//                 <p className="text-xs text-gray-500">Ward</p>
+//                 <p className="font-medium">{billData.admission.ward}</p>
+//               </div>
+//             </div>
+//             <div className="flex items-center gap-2">
+//               <Bed className="h-4 w-4 text-gray-500" />
+//               <div>
+//                 <p className="text-xs text-gray-500">Bed</p>
+//                 <p className="font-medium">{billData.admission.bed}</p>
+//               </div>
+//             </div>
+//             <div className="flex items-center gap-2">
+//               <User className="h-4 w-4 text-gray-500" />
+//               <div>
+//                 <p className="text-xs text-gray-500">Status</p>
+//                 <p className="font-medium capitalize">{billData.admission.status}</p>
+//               </div>
+//             </div>
+//           </div>
+//         </CardContent>
+//       </Card>
+
+//       {/* Ward Transfer History Card - NEW */}
+//       {billData.transfers && billData.transfers.length > 0 && (
+//         <Card className="mb-6">
+//           <CardHeader>
+//             <CardTitle className="flex items-center gap-2">
+//               <ArrowRightLeft className="h-5 w-5 text-blue-600" />
+//               Ward Transfer History
+//             </CardTitle>
+//           </CardHeader>
+//           <CardContent>
+//             <div className="overflow-x-auto">
+//               <Table>
+//                 <TableHeader>
+//                   <TableRow>
+//                     <TableHead>From Date</TableHead>
+//                     <TableHead>To Date</TableHead>
+//                     <TableHead>Ward</TableHead>
+//                     <TableHead>Days</TableHead>
+//                     <TableHead>Daily Rate</TableHead>
+//                     <TableHead>Total</TableHead>
+//                   </TableRow>
+//                 </TableHeader>
+//                 <TableBody>
+//                   {billData.transfers.map((transfer) => (
+//                     <TableRow key={transfer.id}>
+//                       <TableCell>{formatDate(transfer.from_date)}</TableCell>
+//                       <TableCell>{transfer.to_date ? formatDate(transfer.to_date) : 'Current'}</TableCell>
+//                       <TableCell className="font-medium">{transfer.ward_name}</TableCell>
+//                       <TableCell>{transfer.days}</TableCell>
+//                       <TableCell>₹{transfer.daily_rate.toFixed(2)}</TableCell>
+//                       <TableCell className="font-bold">₹{transfer.total.toFixed(2)}</TableCell>
+//                     </TableRow>
+//                   ))}
+//                 </TableBody>
+//               </Table>
+//             </div>
+//             {billData.transfer_summary && (
+//               <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+//                 <div className="flex justify-between items-center">
+//                   <div>
+//                     <p className="text-sm text-gray-500">Total Ward Transfers</p>
+//                     <p className="text-lg font-bold">{billData.transfer_summary.total_transfers}</p>
+//                   </div>
+//                   <div>
+//                     <p className="text-sm text-gray-500">Total Days</p>
+//                     <p className="text-lg font-bold">{billData.transfer_summary.total_days}</p>
+//                   </div>
+//                   <div>
+//                     <p className="text-sm text-gray-500">Total Room Rent</p>
+//                     <p className="text-lg font-bold text-green-600">₹{billData.transfer_summary.total_room_rent.toFixed(2)}</p>
+//                   </div>
+//                 </div>
+//               </div>
+//             )}
+//           </CardContent>
+//         </Card>
+//       )}
+
+//       {/* Items Table */}
+//       <Card className="mb-6">
+//         <CardHeader>
+//           <CardTitle>Bill Items</CardTitle>
+//         </CardHeader>
+//         <CardContent>
+//           <Table>
+//             <TableHeader>
+//               <TableRow>
+//                 <TableHead>Item</TableHead>
+//                 <TableHead>Quantity</TableHead>
+//                 <TableHead>Unit Price</TableHead>
+//                 <TableHead>Total</TableHead>
+//               </TableRow>
+//             </TableHeader>
+//             <TableBody>
+//               {billData.items.map((item, idx) => (
+//                 <TableRow key={idx}>
+//                   <TableCell className="font-medium">{item.medicine_name}</TableCell>
+//                   <TableCell>{item.quantity}</TableCell>
+//                   <TableCell>₹{item.unit_price.toFixed(2)}</TableCell>
+//                   <TableCell>₹{item.total_price.toFixed(2)}</TableCell>
+//                 </TableRow>
+//               ))}
+//             </TableBody>
+//           </Table>
+//         </CardContent>
+//       </Card>
+
+//       {/* Payment Summary */}
+//       <Card>
+//         <CardHeader>
+//           <CardTitle>Payment Summary</CardTitle>
+//         </CardHeader>
+//         <CardContent>
+//           <div className="space-y-2">
+//             <div className="flex justify-between">
+//               <span>Total Amount</span>
+//               <span className="font-bold">₹{billData.bill_summary.totalAmount.toFixed(2)}</span>
+//             </div>
+//             <div className="flex justify-between">
+//               <span>Paid Amount</span>
+//               <span className="font-bold">₹{billData.bill_summary.paidAmount.toFixed(2)}</span>
+//             </div>
+//             <div className="flex justify-between text-lg font-bold border-t pt-2 mt-2">
+//               <span>Remaining</span>
+//               <span className="text-green-600">₹{billData.bill_summary.remainingAmount.toFixed(2)}</span>
+//             </div>
+//           </div>
+//           {billData.bill_summary.remainingAmount > 0 && (
+//             <Button className="mt-4 w-full" onClick={openPaymentDialog}>
+//               <Receipt className="h-4 w-4 mr-2" />
+//               Record Payment
+//             </Button>
+//           )}
+//         </CardContent>
+//       </Card>
+
+//       {/* Payment Dialog */}
+//       <Dialog open={paymentOpen} onOpenChange={setPaymentOpen}>
+//         <DialogContent>
+//           <DialogHeader>
+//             <DialogTitle>Record Payment</DialogTitle>
+//             <DialogDescription>
+//               Enter the amount and payment method.
+//             </DialogDescription>
+//           </DialogHeader>
+//           <div className="space-y-4">
+//             <div>
+//               <Label>Amount</Label>
+//               <Input
+//                 type="number"
+//                 step="0.01"
+//                 value={paymentAmount}
+//                 onChange={(e) => setPaymentAmount(e.target.value)}
+//                 placeholder="Enter amount"
+//               />
+//             </div>
+//             <div>
+//               <Label>Payment Method</Label>
+//               <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+//                 <SelectTrigger>
+//                   <SelectValue />
+//                 </SelectTrigger>
+//                 <SelectContent>
+//                   <SelectItem value="Cash">Cash</SelectItem>
+//                   <SelectItem value="Card">Card</SelectItem>
+//                   <SelectItem value="UPI">UPI</SelectItem>
+//                   <SelectItem value="Insurance">Insurance</SelectItem>
+//                 </SelectContent>
+//               </Select>
+//             </div>
+//           </div>
+//           <DialogFooter>
+//             <Button variant="outline" onClick={() => setPaymentOpen(false)}>Cancel</Button>
+//             <Button onClick={handlePayment} disabled={submitting}>
+//               {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+//               Confirm Payment
+//             </Button>
+//           </DialogFooter>
+//         </DialogContent>
+//       </Dialog>
+
+//       {/* Newly generated Discharge ID Dialog */}
+//       <Dialog open={showDischargeIdDialog} onOpenChange={setShowDischargeIdDialog}>
+//         <DialogContent>
+//           <DialogHeader>
+//             <DialogTitle>Discharge ID Generated</DialogTitle>
+//             <DialogDescription>
+//               The bill is fully paid. A discharge ID has been generated for this admission.
+//               Please keep this ID for the discharge process.
+//             </DialogDescription>
+//           </DialogHeader>
+//           <div className="p-4 bg-gray-100 rounded text-center">
+//             <p className="text-lg font-mono font-bold">{dischargeId}</p>
+//           </div>
+//           <DialogFooter>
+//             <Button onClick={() => setShowDischargeIdDialog(false)}>Close</Button>
+//           </DialogFooter>
+//         </DialogContent>
+//       </Dialog>
+//     </div>
+//   );
+// }
+
+
+
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -24,7 +568,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Loader2, Receipt, Calendar, Bed, Building2, User, AlertCircle, IdCard, ArrowRightLeft } from 'lucide-react';
+import { Loader2, Receipt, Calendar, Bed, Building2, User, AlertCircle, IdCard, ArrowRightLeft, Stethoscope } from 'lucide-react';
 
 interface BillItem {
   medicine_name: string;
@@ -33,6 +577,37 @@ interface BillItem {
   total_price: number;
   bill_id: number;
   bill_created_at: string;
+}
+
+interface OTBillItem {
+  id: number;
+  description: string;
+  quantity: number;
+  unit_price: number;
+  total_price: number;
+  bill_id: number;
+  case_id: string;
+}
+
+interface OTBillData {
+  otBillId: number;
+  caseId: string;
+  totalOTCharges: number;
+  status: string;
+  createdAt: string;
+  items: OTBillItem[];
+  breakdown: {
+    surgeonFee: number;
+    assistantFee: number;
+    otUsageFee: number;
+    anesthesiaFee: number;
+    nursingFee: number;
+    consumablesFee: number;
+    implantsFee: number;
+    recoveryRoomFee: number;
+    medicinesFee: number;
+    equipmentFee: number;
+  };
 }
 
 interface Transfer {
@@ -68,6 +643,8 @@ interface BillData {
     total_days: number;
     total_room_rent: number;
   };
+  // NEW: OT Bill data
+  ot_bill?: OTBillData | null;
 }
 
 export default function AdmissionBillPage() {
@@ -293,6 +870,9 @@ export default function AdmissionBillPage() {
   const totalTransferDays = billData.transfers?.reduce((sum, t) => sum + t.days, 0) || 0;
   const totalTransferAmount = billData.transfers?.reduce((sum, t) => sum + t.total, 0) || 0;
 
+  // Check if OT bill exists
+  const hasOTBill = billData.ot_bill && billData.ot_bill.totalOTCharges > 0;
+
   return (
     <div className="container mx-auto py-8 px-4 max-w-5xl">
       <Button
@@ -356,7 +936,7 @@ export default function AdmissionBillPage() {
         </CardContent>
       </Card>
 
-      {/* Ward Transfer History Card - NEW */}
+      {/* Ward Transfer History Card */}
       {billData.transfers && billData.transfers.length > 0 && (
         <Card className="mb-6">
           <CardHeader>
@@ -410,6 +990,99 @@ export default function AdmissionBillPage() {
                 </div>
               </div>
             )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* NEW: OT Bill Section */}
+      {hasOTBill && (
+        <Card className="mb-6 border-blue-200 bg-blue-50/30">
+          <CardHeader className="bg-blue-50/50 border-b border-blue-200">
+            <CardTitle className="flex items-center gap-2 text-blue-800">
+              <Stethoscope className="h-5 w-5 text-blue-600" />
+              Operation Theatre Charges
+              <Badge className="ml-2 bg-blue-100 text-blue-800">
+                {billData.ot_bill?.status || 'UNPAID'}
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6">
+            {/* OT Bill Summary */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+              <div className="bg-white p-3 rounded-lg border border-gray-200">
+                <p className="text-xs text-gray-500">Case ID</p>
+                <p className="font-medium text-sm">{billData.ot_bill?.caseId || 'N/A'}</p>
+              </div>
+              <div className="bg-white p-3 rounded-lg border border-gray-200">
+                <p className="text-xs text-gray-500">Total OT Charges</p>
+                <p className="font-bold text-blue-600">₹{billData.ot_bill?.totalOTCharges.toFixed(2) || 0}</p>
+              </div>
+              <div className="bg-white p-3 rounded-lg border border-gray-200">
+                <p className="text-xs text-gray-500">Status</p>
+                <Badge variant="outline" className="mt-1">
+                  {billData.ot_bill?.status || 'N/A'}
+                </Badge>
+              </div>
+              <div className="bg-white p-3 rounded-lg border border-gray-200">
+                <p className="text-xs text-gray-500">Created</p>
+                <p className="font-medium text-sm">
+                  {billData.ot_bill?.createdAt ? formatDate(billData.ot_bill.createdAt) : 'N/A'}
+                </p>
+              </div>
+            </div>
+
+            {/* OT Bill Items Breakdown */}
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-blue-100/50">
+                    <TableHead className="text-blue-800">Item</TableHead>
+                    <TableHead className="text-blue-800 text-right">Quantity</TableHead>
+                    <TableHead className="text-blue-800 text-right">Unit Price</TableHead>
+                    <TableHead className="text-blue-800 text-right">Total</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {billData.ot_bill?.items && billData.ot_bill.items.length > 0 ? (
+                    billData.ot_bill.items.map((item, idx) => (
+                      <TableRow key={idx} className="hover:bg-blue-50/50">
+                        <TableCell className="font-medium">{item.description}</TableCell>
+                        <TableCell className="text-right">{item.quantity}</TableCell>
+                        <TableCell className="text-right">₹{item.unit_price.toFixed(2)}</TableCell>
+                        <TableCell className="text-right font-medium">₹{item.total_price.toFixed(2)}</TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    // Fallback: Show breakdown from the object
+                    billData.ot_bill?.breakdown && (
+                      <>
+                        {Object.entries(billData.ot_bill.breakdown).map(([key, value]) => {
+                          if (value > 0) {
+                            const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+                            return (
+                              <TableRow key={key} className="hover:bg-blue-50/50">
+                                <TableCell className="font-medium">{label}</TableCell>
+                                <TableCell className="text-right">1</TableCell>
+                                <TableCell className="text-right">₹{value.toFixed(2)}</TableCell>
+                                <TableCell className="text-right font-medium">₹{value.toFixed(2)}</TableCell>
+                              </TableRow>
+                            );
+                          }
+                          return null;
+                        })}
+                      </>
+                    )
+                  )}
+                  {/* Total Row */}
+                  <TableRow className="bg-blue-100/50 font-bold">
+                    <TableCell colSpan={3} className="text-right text-blue-800">Total OT Charges</TableCell>
+                    <TableCell className="text-right text-blue-800">
+                      ₹{billData.ot_bill?.totalOTCharges.toFixed(2) || 0}
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
       )}

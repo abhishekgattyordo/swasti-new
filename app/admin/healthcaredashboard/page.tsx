@@ -821,7 +821,7 @@ import { Menu, X } from 'lucide-react';
 import { doctorsApi } from "@/lib/api/doctors";
 import { patientsApi } from "@/lib/api/registration";
 import { getBedSummary } from "@/lib/api/bed-config";
-import { useTenant } from "@/contexts/TenantContext";
+import { useTenant } from "@/context/TenantContext";
 import { MODULE_KEYS, ADMIN_FEATURES } from "@/lib/feature";
 import { useRouter } from "next/navigation";
 

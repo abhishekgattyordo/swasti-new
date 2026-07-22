@@ -24,7 +24,7 @@ import { AlertCircle, Menu, X, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import Sidebar from '@/components/pharmacy/Sidebar';
 import { purchasesApi } from '@/lib/api/purchasesApi';
-import { useTenant } from "@/contexts/TenantContext";
+import { useTenant } from "@/context/TenantContext";
 import { MODULE_KEYS, PHARMACY_FEATURES } from "@/lib/feature";
 
 // Types
