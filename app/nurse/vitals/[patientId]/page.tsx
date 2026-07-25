@@ -286,7 +286,6 @@
 // }
 
 
-
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -294,22 +293,26 @@ import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { 
   Activity, TrendingUp, Heart, Wind, Droplet, Thermometer, Check, 
   Loader2, RefreshCw, Calendar, Clock, ChevronLeft, Mic, MicOff, 
-  Sparkles, Trash2, Volume2 
+  Sparkles, Trash2, Volume2, Globe, StopCircle
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ComposedChart, Bar } from 'recharts';
 import { nurseApi } from '@/lib/api/nurse';
-import { useLiveTranscription } from '@/hooks/useLiveTranscription';
-import { LiveMicButton, LiveMicStatusLine } from '@/components/speech/LiveMicButton';
 import toast from 'react-hot-toast';
 
 const REFERENCE_RANGES = {
-  systolic: { min: 90, max: 140, normal: '90-140' },
-  diastolic: { min: 60, max: 90, normal: '60-90' },
-  heartRate: { min: 60, max: 100, normal: '60-100' },
-  temperature: { min: 36.1, max: 37.2, normal: '36.1-37.2°C' },
-  respiratoryRate: { min: 12, max: 20, normal: '12-20' },
+  systolic: { min: 90, max: 140, normal: '90-140 mmHg' },
+  diastolic: { min: 60, max: 90, normal: '60-90 mmHg' },
+  heartRate: { min: 60, max: 100, normal: '60-100 bpm' },
+  temperature: { min: 36.1, max: 37.2, normal: '36.1-37.2 °C' },
+  respiratoryRate: { min: 12, max: 20, normal: '12-20 /min' },
   spO2: { min: 95, max: 100, normal: '95-100%' },
 };
+
+const PRESET_DICTATIONS = [
+  { label: 'Post‑Op Stable', text: 'Blood pressure 118 over 75, pulse 68, respiration 14, temperature 36.8 Celsius, oxygen 99%. Patient comfortable.' },
+  { label: 'High Fever & Tachycardia', text: 'BP 142/95, heart rate 112, respiratory rate 24, oxygen 91%, temperature 101.4 Fahrenheit. Request urgent consult.' },
+  { label: 'Normal Breathing', text: 'BP 115/72, heart rate 65, respiration 12, temperature 36.5 Celsius, oxygen 99%. Patient breathing normally.' },
+];
 
 export default function VitalsEntryPage() {
   const router = useRouter();
@@ -331,53 +334,99 @@ export default function VitalsEntryPage() {
     respiratoryRate: '', spO2: '', notes: '', status: 'stable',
   });
 
-  // --- AI Voice Dictation States ---
+  // --- Voice / AI States ---
+  const [isRecording, setIsRecording] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
   const [isParsing, setIsParsing] = useState(false);
   const [micLanguage, setMicLanguage] = useState('en-IN');
+  const [spokenText, setSpokenText] = useState('');
+  const [audioBase64, setAudioBase64] = useState<string>('');
+  const [audioMimeType, setAudioMimeType] = useState<string>('audio/webm');
   const [highlightedFields, setHighlightedFields] = useState<Record<string, boolean>>({});
 
-  const {
-    status: micStatus,
-    isConnecting,
-    isListening,
-    isActive,
-    fullText: spokenText,
-    interimText,
-    setFullText: setSpokenText,
-    toggle: handleMicToggle,
-  } = useLiveTranscription({
-    onError: (message) => toast.error(message),
-    onStart: () => toast.success('Listening... Speak vitals clearly.'),
-    onStop: () => toast.success('Stopped listening. Click "Parse with AI" to extract values.'),
-  });
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<BlobPart[]>([]);
 
-  const handleMicClick = () => {
-    void handleMicToggle({ micLanguage, clearOnStart: true });
-  };
-
-  const extractVitalsWithAI = async (transcript: string) => {
-    const response = await fetch('/api/nurse/vitals/ai-vitals', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ transcript }),
-    });
-    if (!response.ok) {
-      const err = await response.json();
-      throw new Error(err.message || 'Failed to extract vitals');
+  // --- Recording Handlers ---
+  const startRecording = async () => {
+    if (mediaRecorderRef.current) {
+      try { await mediaRecorderRef.current.stop(); } catch (e) {}
+      mediaRecorderRef.current = null;
     }
-    const result = await response.json();
-    if (!result.success) throw new Error(result.message);
-    return result.data;
+    setAudioBase64('');
+    setAudioMimeType('audio/webm');
+    setIsConnecting(true);
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+      mediaRecorderRef.current = recorder;
+      chunksRef.current = [];
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
+
+      recorder.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64 = (reader.result as string).split(',')[1];
+          setAudioBase64(base64);
+          setAudioMimeType('audio/webm');
+          toast.success('✅ Audio captured. Click "Parse with AI" to extract vitals.');
+        };
+        reader.readAsDataURL(blob);
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      recorder.start();
+      setIsConnecting(false);
+      setIsRecording(true);
+      toast.success(`🎙️ Recording in ${micLanguage}. Speak vitals clearly.`);
+    } catch (err) {
+      setIsConnecting(false);
+      const message = err instanceof Error ? err.message : 'Failed to start recording';
+      toast.error(message);
+    }
   };
 
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
+
+  // --- AI Extraction ---
   const handleExtractWithAI = async () => {
-    if (!spokenText.trim()) {
-      toast.error('Please speak or type some text first.');
+    if (!spokenText.trim() && !audioBase64) {
+      toast.error('Please speak into the mic or type spoken text first.');
       return;
     }
+
     setIsParsing(true);
+    const loadingToast = toast.loading('🧠 AI is extracting vitals from dictation...');
+
     try {
-      const data = await extractVitalsWithAI(spokenText);
+      const response = await fetch('/api/nurse/vitals/ai-vitals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          transcript: spokenText.trim() || undefined,
+          audioBase64: audioBase64 || undefined,
+          mimeType: audioMimeType,
+        }),
+      });
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.message || errData.error || 'Failed to extract vitals.');
+      }
+
+      const resObj = await response.json();
+      const data = resObj.data || resObj;
+
       const updated: Partial<typeof formData> = {};
       const tracks: Record<string, boolean> = {};
 
@@ -392,28 +441,32 @@ export default function VitalsEntryPage() {
 
       setFormData(prev => ({ ...prev, ...updated }));
       setHighlightedFields(tracks);
-      toast.success('AI extracted values! Review and save.');
-      setTimeout(() => setHighlightedFields({}), 4000);
+      toast.success('✅ AI extracted vitals! Review highlighted fields below.');
+      setTimeout(() => setHighlightedFields({}), 4500);
     } catch (err: any) {
       toast.error(err.message || 'AI extraction failed.');
     } finally {
+      toast.dismiss(loadingToast);
       setIsParsing(false);
+    }
+  };
+
+  const clearVoiceInput = () => {
+    setSpokenText('');
+    setAudioBase64('');
+    setAudioMimeType('audio/webm');
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
     }
   };
 
   // Helper for glowing fields
   const getHighlightClass = (field: string) => {
-    return highlightedFields[field] ? 'ring-2 ring-emerald-500 border-emerald-500' : '';
+    return highlightedFields[field] ? 'ring-2 ring-emerald-500 border-emerald-500 bg-emerald-50/50' : '';
   };
 
-  // Preset dictations for quick testing
-  const PRESET_DICTATIONS = [
-    { label: 'Post‑Op Stable', text: 'Blood pressure 118 over 75, pulse 68, respiration 14, temperature 36.8 Celsius, oxygen 99%. Patient comfortable.' },
-    { label: 'High Fever', text: 'BP 142/95, heart rate 112, respiratory rate 24, oxygen 91%, temperature 101.4 Fahrenheit. Request urgent consult.' },
-    { label: 'Normal Breathing', text: 'BP 115/72, heart rate 65, respiration 12, temperature 36.5 Celsius, oxygen 99%. Asthma stable.' },
-  ];
-
-  // --- Existing fetch and submit handlers (unchanged) ---
+  // --- Existing fetch and submit handlers ---
   const fetchVitals = useCallback(async () => {
     if (!patientId) return;
     try {
@@ -537,68 +590,92 @@ export default function VitalsEntryPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column: Voice + Manual Form */}
           <div className="lg:col-span-1 space-y-6">
-            {/* AI Voice Card */}
+            {/* AI Voice Card - updated with audio recording */}
             <div className="bg-white dark:bg-slate-900 rounded-lg border p-6 shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <Sparkles size={18} className="text-blue-600" />
-                  <h2 className="text-sm font-semibold">AI Voice Entry</h2>
+                  <h2 className="text-sm font-semibold">Voice to AI</h2>
                 </div>
                 <div className="flex items-center gap-2">
-                  <select
-                    value={micLanguage}
-                    onChange={(e) => setMicLanguage(e.target.value)}
-                    disabled={isActive}
-                    className="text-xs border rounded-lg px-2 py-1 bg-white"
-                  >
-                    <option value="en-IN">English</option>
-                    <option value="kn-IN">Kannada</option>
-                    <option value="hi-IN">Hindi</option>
-                  </select>
-                  <LiveMicButton
-                    status={micStatus}
-                    onClick={handleMicClick}
-                    className={`p-2 rounded-full transition ${
-                      isListening
-                        ? 'bg-red-500 text-white animate-pulse'
+                  <div className="flex items-center gap-1 bg-white border border-slate-200 px-2 py-1 rounded-lg">
+                    <Globe className="h-3.5 w-3.5 text-blue-500" />
+                    <select
+                      className="text-xs font-bold text-slate-700 bg-transparent border-none outline-none"
+                      value={micLanguage}
+                      onChange={(e) => setMicLanguage(e.target.value)}
+                      disabled={isRecording || isConnecting}
+                    >
+                      <option value="en-IN">English</option>
+                      <option value="kn-IN">ಕನ್ನಡ</option>
+                      <option value="hi-IN">हिंदी</option>
+                    </select>
+                  </div>
+                  <button
+                    onClick={isRecording ? stopRecording : startRecording}
+                    disabled={isConnecting || isParsing}
+                    className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-xs font-bold transition ${
+                      isRecording
+                        ? 'bg-red-600 hover:bg-red-700 text-white animate-pulse'
                         : isConnecting
                           ? 'bg-amber-500 text-white'
-                          : 'bg-blue-100 text-blue-600'
+                          : 'bg-blue-600 hover:bg-blue-700 text-white'
                     }`}
-                  />
+                  >
+                    {isConnecting ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : isRecording ? (
+                      <StopCircle className="h-3.5 w-3.5" />
+                    ) : (
+                      <Mic className="h-3.5 w-3.5" />
+                    )}
+                    {isConnecting ? 'Connecting...' : isRecording ? 'Stop' : 'Record'}
+                  </button>
                 </div>
               </div>
+
               <textarea
                 value={spokenText}
                 onChange={(e) => setSpokenText(e.target.value)}
-                placeholder="Speak or type vitals: 'BP 120 over 80, heart rate 72, temperature 36.8...'"
+                placeholder="Speak or type vitals dictation: e.g. 'Blood pressure 120 over 80, heart rate 72 bpm...'"
                 className="w-full p-3 border rounded-lg text-sm h-24 resize-none"
               />
-              <LiveMicStatusLine status={micStatus} interimText={interimText} className="text-xs mt-1" />
+
               <div className="flex justify-between mt-3 gap-2">
                 <button
-                  onClick={() => setSpokenText('')}
+                  onClick={clearVoiceInput}
                   className="px-3 py-1.5 text-xs border rounded-lg hover:bg-gray-50"
                 >
                   <Trash2 size={12} className="inline mr-1" /> Clear
                 </button>
                 <button
                   onClick={handleExtractWithAI}
-                  disabled={isParsing || !spokenText.trim()}
+                  disabled={isParsing || (!audioBase64 && !spokenText.trim())}
                   className="px-4 py-1.5 bg-blue-600 text-white rounded-lg text-xs disabled:opacity-50 flex items-center gap-1"
                 >
                   {isParsing ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
-                  {isParsing ? 'Parsing...' : 'Parse with AI'}
+                  {isParsing ? 'Parsing...' : 'Extract with AI'}
                 </button>
               </div>
-              {/* Presets */}
+
+              {audioBase64 && (
+                <p className="text-xs text-green-600 mt-1">
+                  ✅ Audio recorded ({Math.round((audioBase64.length * 0.75) / 1024)} KB)
+                </p>
+              )}
+
               <div className="mt-4 pt-3 border-t">
-                <p className="text-xs text-gray-500 mb-2 flex items-center gap-1"><Volume2 size={12} /> Quick Presets</p>
+                <p className="text-xs text-gray-500 mb-2 flex items-center gap-1">
+                  <Volume2 size={12} /> Quick Presets
+                </p>
                 <div className="flex flex-wrap gap-2">
                   {PRESET_DICTATIONS.map((preset, idx) => (
                     <button
                       key={idx}
-                      onClick={() => setSpokenText(preset.text)}
+                      onClick={() => {
+                        setSpokenText(preset.text);
+                        setAudioBase64('');
+                      }}
                       className="px-2 py-1 text-xs bg-gray-100 rounded-md hover:bg-gray-200"
                     >
                       {preset.label}

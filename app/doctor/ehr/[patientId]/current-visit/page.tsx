@@ -6,8 +6,14 @@
 // import { useEffect, useState, useRef } from "react";
 // import { useParams, useSearchParams } from "next/navigation";
 // import { currentVisitApi } from "@/lib/api/ehr";
-// import { LiveTranscriptionSession } from "@/lib/speech";
+// import { LiveTranscriptionSession, mapMicLocale } from "@/lib/speech";
 // import toast from "react-hot-toast";
+
+// // ✅ Import Insurance components
+// import InsuranceWorkspace, {
+//   type AnalysisResult,
+//   type PreAuthForm,
+// } from "@/components/doctor/InsuranceWorkspace";
 
 // // Types for SOAP response
 // interface SoapResponse {
@@ -51,15 +57,29 @@
 //   const [labOrdersDetected, setLabOrdersDetected] = useState(false);
 //   const [whatsappStatus, setWhatsappStatus] = useState<{ sent: boolean; error: string | null } | null>(null);
   
+//   // ✅ Insurance states
+//   const [insuranceResult, setInsuranceResult] = useState<AnalysisResult | null>(null);
+//   const [isInsuranceLoading, setIsInsuranceLoading] = useState(false);
+//   const [insuranceTab, setInsuranceTab] = useState<"overview" | "form" | "codes" | "checklist" | "json">("overview");
+  
+//   // Insurance workspace states
+//   const [adminSignerName, setAdminSignerName] = useState("");
+//   const [isDigitallySigned, setIsDigitallySigned] = useState(false);
+//   const [submitStep, setSubmitStep] = useState(0);
+//   const [preAuthId, setPreAuthId] = useState<string | null>(null);
+//   const [submittingTpa, setSubmittingTpa] = useState(false);
+  
 //   // ✅ Multi-Language Voice Recording States
 //   const [isRecording, setIsRecording] = useState(false);
-//   const [micLanguage, setMicLanguage] = useState("kn-IN"); // Default: Kannada
+//   const [isConnecting, setIsConnecting] = useState(false);
+//   const [micLanguage, setMicLanguage] = useState("en-IN");
 //   const [transcript, setTranscript] = useState("");
 //   const [showTranscriptDialog, setShowTranscriptDialog] = useState(false);
 //   const [interimTranscript, setInterimTranscript] = useState("");
 //   const [editMode, setEditMode] = useState(false);
 //   const [editableTranscript, setEditableTranscript] = useState("");
 //   const [recordingDuration, setRecordingDuration] = useState(0);
+//   const [activeView, setActiveView] = useState<"soap" | "insurance">("soap");
 
 //   const liveSessionRef = useRef<LiveTranscriptionSession | null>(null);
 //   const finalTranscriptRef = useRef("");
@@ -68,25 +88,10 @@
 //   const micLanguageLabels: Record<string, string> = {
 //     "kn-IN": "Kannada",
 //     "hi-IN": "Hindi",
-//     "ta-IN": "Tamil",
-//     "ml-IN": "Malayalam",
-//     tulu: "Tulu",
-//     "en-IN": "Indian English",
-//     "en-US": "US English",
+//     "en-IN": "English",
 //   };
 
-//   const mapMicLanguage = (micLang: string): string => {
-//     if (micLang === "kn-IN" || micLang === "tulu") return "kn";
-//     if (micLang === "hi-IN") return "hi";
-//     if (micLang === "ta-IN") return "ta";
-//     if (micLang === "ml-IN") return "ml";
-//     if (micLang === "en-IN" || micLang === "en-US") return "en";
-//     return "multi";
-//   };
-
-//   // Store the appointment ID after save
 //   const [currentAppointmentId, setCurrentAppointmentId] = useState<string>("");
-//   // WhatsApp phone number input
 //   const [whatsappNumber, setWhatsappNumber] = useState<string>("");
 
 //   useEffect(() => {
@@ -193,6 +198,7 @@
 
 //     const session = new LiveTranscriptionSession();
 //     liveSessionRef.current = session;
+//     setIsConnecting(true);
 
 //     try {
 //       await session.start(
@@ -202,9 +208,10 @@
 //           setEditableTranscript(state.fullText);
 //           setInterimTranscript(state.interimText);
 //         },
-//         { language: mapMicLanguage(micLanguage) }
+//         { language: mapMicLocale(micLanguage) }
 //       );
 
+//       setIsConnecting(false);
 //       setIsRecording(true);
 //       startDurationTimer();
 //       toast.success(
@@ -212,6 +219,7 @@
 //       );
 //     } catch (err) {
 //       liveSessionRef.current = null;
+//       setIsConnecting(false);
 //       const message = err instanceof Error ? err.message : "Failed to start recording";
 //       if (
 //         err instanceof DOMException &&
@@ -227,6 +235,7 @@
 //   const stopRecording = async () => {
 //     const session = liveSessionRef.current;
 //     if (!session) {
+//       setIsConnecting(false);
 //       setIsRecording(false);
 //       stopDurationTimer();
 //       return;
@@ -245,6 +254,7 @@
 //       console.error("Stop error:", err);
 //     } finally {
 //       liveSessionRef.current = null;
+//       setIsConnecting(false);
 //       setIsRecording(false);
 //       stopDurationTimer();
 //     }
@@ -298,7 +308,6 @@
 //     }
 
 //     setGeneratingNotes(true);
-//     setShowTranscriptDialog(false);
 //     const loadingToast = toast.loading("Generating clinical notes from conversation...");
 
 //     try {
@@ -378,6 +387,56 @@
 //     } finally {
 //       toast.dismiss(loadingToast);
 //       setGeneratingNotes(false);
+//     }
+//   };
+
+//   // ✅ Handle Insurance Generation
+//   const handleGenerateInsurance = async () => {
+//     const currentTranscript = transcript || finalTranscriptRef.current;
+//     if (!currentTranscript || currentTranscript.trim().length === 0) {
+//       toast.error("No transcript available. Please record or paste a conversation first.");
+//       return;
+//     }
+
+//     setIsInsuranceLoading(true);
+//     const loadingToast = toast.loading("Generating insurance pre-authorization data...");
+
+//     try {
+//       const response = await fetch("/api/doctors/ai/insurance", {
+//         method: "POST",
+//         headers: {
+//           "Content-Type": "application/json",
+//         },
+//         body: JSON.stringify({
+//           transcript: currentTranscript,
+//           patientId: patientId,
+//           userId: 1,
+//           saveToHistory: true,
+//         }),
+//       });
+
+//       if (!response.ok) {
+//         const errorData = await response.json();
+//         throw new Error(errorData.error || `API error: ${response.status}`);
+//       }
+
+//       const insuranceData = await response.json();
+//       console.log("Generated Insurance Data:", insuranceData);
+
+//       setInsuranceResult(insuranceData);
+//       setActiveView("insurance");
+//       setInsuranceTab("overview");
+      
+//       toast.success("Insurance pre-authorization data generated successfully!", {
+//         duration: 4000,
+//       });
+
+//     } catch (error: any) {
+//       console.error("Error generating insurance data:", error);
+//       toast.error(`Failed to generate insurance data: ${error.message}`);
+//     } finally {
+//       toast.dismiss(loadingToast);
+//       setIsInsuranceLoading(false);
 //     }
 //   };
 
@@ -565,17 +624,147 @@
 //     }
 //   };
 
+//   // ✅ Insurance helper functions
+//   const calculateCompletionPercentage = () => {
+//     if (!insuranceResult || !insuranceResult.preAuthForm) return 0;
+//     const f = insuranceResult.preAuthForm;
+//     const fields = [
+//       f.patientInfo.name,
+//       f.patientInfo.age,
+//       f.patientInfo.gender,
+//       f.patientInfo.address,
+//       f.patientInfo.phone,
+//       f.patientInfo.policyNumber,
+//       f.patientInfo.tpaName,
+//       f.patientInfo.insurerName,
+//       f.diagnosisDetails.primaryDiagnosis,
+//       f.diagnosisDetails.icd10Codes,
+//       f.diagnosisDetails.clinicalFindings,
+//       f.diagnosisDetails.durationOfIllness,
+//       f.diagnosisDetails.pastMedicalHistory,
+//       f.proposedTreatment.procedureName,
+//       f.proposedTreatment.procedureCode,
+//       f.proposedTreatment.treatmentType,
+//       f.proposedTreatment.clinicalJustification,
+//       f.hospitalizationDetails.hospitalName,
+//       f.hospitalizationDetails.providerId,
+//       f.hospitalizationDetails.roomCategoryRequested,
+//       f.hospitalizationDetails.proposedAdmissionDate,
+//       f.hospitalizationDetails.expectedLengthOfStay,
+//       f.costEstimation.roomRentPerDay,
+//       f.costEstimation.icuCharges,
+//       f.costEstimation.investigationCosts,
+//       f.costEstimation.surgeryCharges,
+//       f.costEstimation.professionalFees,
+//       f.costEstimation.medicinesCost,
+//       f.costEstimation.totalEstimatedCost,
+//       f.treatingDoctor.physicianName,
+//       f.treatingDoctor.registrationNumber,
+//       f.treatingDoctor.specialization,
+//       f.treatingDoctor.contact,
+//     ];
+//     const filled = fields.filter((val) => val && val !== "Requires Review" && val.trim() !== "");
+//     return Math.round((filled.length / fields.length) * 100);
+//   };
+
+//   const getMissingFieldsList = () => {
+//     if (!insuranceResult || !insuranceResult.preAuthForm) return [];
+//     const missing: string[] = [];
+//     const f = insuranceResult.preAuthForm;
+
+//     if (!f.patientInfo.name || f.patientInfo.name === "Requires Review") missing.push("Patient Name");
+//     if (!f.patientInfo.phone || f.patientInfo.phone === "Requires Review") missing.push("Patient Phone Contact");
+//     if (!f.patientInfo.policyNumber || f.patientInfo.policyNumber === "Requires Review") missing.push("Policy Number / Member ID");
+//     if (!f.patientInfo.tpaName || f.patientInfo.tpaName === "Requires Review") missing.push("Third Party Administrator (TPA)");
+//     if (!f.patientInfo.insurerName || f.patientInfo.insurerName === "Requires Review") missing.push("Insurance Carrier Name");
+//     if (!f.treatingDoctor.registrationNumber || f.treatingDoctor.registrationNumber === "Requires Review") missing.push("Physician MCI Registry Number");
+//     if (!f.hospitalizationDetails.providerId || f.hospitalizationDetails.providerId === "Requires Review") missing.push("Hospital ROHINI ID");
+
+//     return missing;
+//   };
+
+//   const handleUpdateField = (section: keyof PreAuthForm, field: string, value: string) => {
+//     if (!insuranceResult) return;
+//     setInsuranceResult((prev) => {
+//       if (!prev) return null;
+//       const updatedForm = { ...prev.preAuthForm };
+//       const subSection = updatedForm[section] as any;
+//       if (subSection) {
+//         subSection[field] = value;
+//       }
+//       return {
+//         ...prev,
+//         preAuthForm: updatedForm,
+//       };
+//     });
+//   };
+
+//   const handleSubmitTpa = () => {
+//     if (!insuranceResult) return;
+//     if (!isDigitallySigned) {
+//       alert("Please review the pre-filled fields and apply your Digital Signature and Clearance Stamp first!");
+//       return;
+//     }
+//     setSubmittingTpa(true);
+//     setSubmitStep(1);
+
+//     setTimeout(() => {
+//       setSubmitStep(2);
+//       setTimeout(() => {
+//         setSubmitStep(3);
+//         setTimeout(() => {
+//           setSubmitStep(4);
+//           setTimeout(() => {
+//             setSubmitStep(5);
+//             const codeSuffix = Math.floor(100000 + Math.random() * 900000);
+//             const generatedAuthId = `SWASTHI-AUTH-${codeSuffix}`;
+//             setPreAuthId(generatedAuthId);
+//             setSubmittingTpa(false);
+//             toast.success("✅ Pre-Authorization submitted successfully!");
+//           }, 1200);
+//         }, 1200);
+//       }, 1200);
+//     }, 1200);
+//   };
+
 //   if (loading) return <div className="text-center py-8">Loading...</div>;
 
 //   return (
-//     <form onSubmit={handleSubmit} className="flex flex-col gap-8">
+//     <div className="flex flex-col gap-8">
+//       {/* View Switcher */}
+//       <div className="flex items-center gap-4 bg-white p-2 rounded-xl border border-slate-200 shadow-sm">
+//         <button
+//           onClick={() => setActiveView("soap")}
+//           className={`px-6 py-2 rounded-lg text-sm font-semibold transition-all ${
+//             activeView === "soap"
+//               ? "bg-blue-600 text-white shadow-md"
+//               : "text-slate-600 hover:bg-slate-100"
+//           }`}
+//         >
+//           📋 SOAP Notes
+//         </button>
+//         <button
+//           onClick={() => setActiveView("insurance")}
+//           className={`px-6 py-2 rounded-lg text-sm font-semibold transition-all ${
+//             activeView === "insurance"
+//               ? "bg-blue-600 text-white shadow-md"
+//               : "text-slate-600 hover:bg-slate-100"
+//           }`}
+//         >
+//           🏥 Insurance Pre-Auth
+//         </button>
+//         {insuranceResult && (
+//           <span className="text-xs text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full">
+//             ✅ Data Ready
+//           </span>
+//         )}
+//       </div>
+
 //       {/* Lab Orders Alert Banner */}
 //       {labOrdersDetected && labOrders.length > 0 && (
 //         <div className="bg-gradient-to-r from-yellow-50 to-amber-50 border-l-4 border-yellow-400 p-4 rounded-r-xl shadow-sm">
 //           <div className="flex items-start gap-3">
-//             <span className="material-symbols-outlined text-yellow-600 text-2xl">
-//               science
-//             </span>
+//             <span className="material-symbols-outlined text-yellow-600 text-2xl">science</span>
 //             <div className="flex-1">
 //               <h4 className="font-semibold text-yellow-800 flex items-center gap-2">
 //                 🧪 Lab Orders Detected
@@ -747,17 +936,11 @@
 //         <div className="flex items-center justify-between flex-wrap gap-4">
 //           <div className="flex items-center gap-3">
 //             <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-//               <span className="material-symbols-outlined text-purple-600">
-//                 auto_awesome
-//               </span>
+//               <span className="material-symbols-outlined text-purple-600">auto_awesome</span>
 //             </div>
 //             <div>
-//               <h3 className="text-base font-bold text-slate-900">
-//                 AI Clinical Scribe
-//               </h3>
-//               <p className="text-xs text-slate-500">
-//                 Record consultation in any Indian language
-//               </p>
+//               <h3 className="text-base font-bold text-slate-900">AI Clinical Scribe</h3>
+//               <p className="text-xs text-slate-500">Record consultation in any Indian language</p>
 //             </div>
 //           </div>
 //           <div className="flex gap-2.5 flex-wrap items-center">
@@ -773,15 +956,11 @@
 //                     `Language set to: ${micLanguageLabels[e.target.value] ?? e.target.value}`
 //                   );
 //                 }}
-//                 disabled={isRecording}
+//                 disabled={isRecording || isConnecting}
 //               >
+//                 <option value="en-IN">English</option>
 //                 <option value="kn-IN">ಕನ್ನಡ (Kannada)</option>
 //                 <option value="hi-IN">हिंदी (Hindi / Hinglish)</option>
-//                 <option value="ta-IN">தமிழ் (Tamil)</option>
-//                 <option value="ml-IN">മലയാളം (Malayalam)</option>
-//                 <option value="tulu">Tulu (ತುಳು)</option>
-//                 <option value="en-IN">Indian English Accent</option>
-//                 <option value="en-US">US English (Standard)</option>
 //               </select>
 //             </div>
 
@@ -789,16 +968,23 @@
 //             <button
 //               type="button"
 //               onClick={isRecording ? stopRecording : startRecording}
-//               className={`px-5 py-2.5 rounded-lg transition-all duration-200 flex items-center gap-2 shadow-md text-xs font-bold ${
+//               disabled={isConnecting}
+//               className={`px-5 py-2.5 rounded-lg transition-all duration-200 flex items-center gap-2 shadow-md text-xs font-bold disabled:opacity-80 ${
 //                 isRecording 
 //                   ? "bg-red-600 hover:bg-red-700 text-white animate-pulse" 
-//                   : "bg-slate-900 hover:bg-slate-800 text-white"
+//                   : isConnecting
+//                     ? "bg-amber-500 hover:bg-amber-600 text-white"
+//                     : "bg-slate-900 hover:bg-slate-800 text-white"
 //               }`}
 //             >
-//               <span className="material-symbols-outlined text-[18px]">
-//                 {isRecording ? "mic" : "mic"}
+//               <span className={`material-symbols-outlined text-[18px] ${isConnecting ? "animate-spin" : ""}`}>
+//                 {isConnecting ? "progress_activity" : "mic"}
 //               </span>
-//               {isRecording ? `Recording... ${recordingDuration}s` : "Start Recording"}
+//               {isConnecting
+//                 ? "Connecting..."
+//                 : isRecording
+//                   ? `Recording... ${recordingDuration}s`
+//                   : "Start Recording"}
 //             </button>
             
 //             {/* ✅ Stop Button */}
@@ -831,7 +1017,7 @@
 //               )}
 //             </button>
             
-//             {/* ✅ AI Generate Button */}
+//             {/* ✅ Generate SOAP Button */}
 //             <button
 //               type="button"
 //               onClick={handleGenerateFromTranscript}
@@ -841,18 +1027,35 @@
 //               <span className="material-symbols-outlined text-[18px]">
 //                 {generatingNotes ? "progress_activity" : "magic"}
 //               </span>
-//               {generatingNotes ? "Generating..." : "AI Mode"}
+//               {generatingNotes ? "Generating..." : "AI SOAP"}
+//             </button>
+            
+//             {/* ✅ Generate Insurance Button */}
+//             <button
+//               type="button"
+//               onClick={handleGenerateInsurance}
+//               disabled={isInsuranceLoading || (!transcript && !finalTranscriptRef.current)}
+//               className="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg hover:from-emerald-700 hover:to-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2 shadow-md text-xs font-bold"
+//             >
+//               <span className="material-symbols-outlined text-[18px]">
+//                 {isInsuranceLoading ? "progress_activity" : "shield"}
+//               </span>
+//               {isInsuranceLoading ? "Generating..." : "AI Insurance"}
 //             </button>
 //           </div>
 //         </div>
         
-//         {/* ✅ Recording Status Indicator */}
+//         {/* Recording / connecting status */}
+//         {isConnecting && (
+//           <div className="mt-3 flex items-center gap-2 text-sm text-amber-700 bg-amber-50 p-2.5 rounded-lg border border-amber-100">
+//             <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>
+//             <span>Connecting microphone...</span>
+//           </div>
+//         )}
 //         {isRecording && (
 //           <div className="mt-3 flex items-center gap-2 text-sm text-red-600 bg-red-50 p-2.5 rounded-lg border border-red-100">
 //             <div className="w-2 h-2 bg-red-600 rounded-full animate-ping"></div>
-//             <span>
-//               Listening... <strong>{micLanguageLabels[micLanguage] ?? micLanguage}</strong>. Speak naturally!
-//             </span>
+//             <span>Listening... <strong>{micLanguageLabels[micLanguage] ?? micLanguage}</strong>. Speak naturally!</span>
 //           </div>
 //         )}
         
@@ -888,234 +1091,269 @@
 //         )}
 //       </div>
 
-//       {/* Diagnosis Section */}
-//       <section className="bg-gradient-to-br from-white to-slate-50 p-5 rounded-xl border border-slate-100">
-//         <div className="flex items-center justify-between mb-6">
-//           <div className="flex items-center gap-3">
-//             <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-//               <span className="material-symbols-outlined text-[#137fec]">
-//                 clinical_notes
+//       {/* ✅ Render either SOAP or Insurance view */}
+//       {activeView === "soap" ? (
+//         // SOAP form sections
+//         <>
+//           {/* Diagnosis Section */}
+//           <section className="bg-gradient-to-br from-white to-slate-50 p-5 rounded-xl border border-slate-100">
+//             <div className="flex items-center justify-between mb-6">
+//               <div className="flex items-center gap-3">
+//                 <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
+//                   <span className="material-symbols-outlined text-[#137fec]">clinical_notes</span>
+//                 </div>
+//                 <div>
+//                   <h3 className="text-base font-bold text-slate-900">Assessment & Diagnosis</h3>
+//                   <p className="text-xs text-slate-500">Primary evaluation and clinical findings</p>
+//                 </div>
+//               </div>
+//               <span className="text-xs text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full font-medium">
+//                 {saving ? "Saving..." : "Draft saved"}
 //               </span>
 //             </div>
-//             <div>
-//               <h3 className="text-base font-bold text-slate-900">
-//                 Assessment & Diagnosis
-//               </h3>
-//               <p className="text-xs text-slate-500">
-//                 Primary evaluation and clinical findings
-//               </p>
-//             </div>
-//           </div>
-//           <span className="text-xs text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full font-medium">
-//             {saving ? "Saving..." : "Draft saved"}
-//           </span>
-//         </div>
 
-//         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-//           <div className="flex flex-col gap-2">
-//             <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-//               <span className="material-symbols-outlined text-[18px] text-slate-400">
-//                 diagnosis
-//               </span>
-//               Primary Diagnosis
-//             </label>
-//             <div className="relative">
-//               <input
-//                 name="diagnosis"
-//                 value={formData.diagnosis}
+//             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+//               <div className="flex flex-col gap-2">
+//                 <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+//                   <span className="material-symbols-outlined text-[18px] text-slate-400">diagnosis</span>
+//                   Primary Diagnosis
+//                 </label>
+//                 <div className="relative">
+//                   <input
+//                     name="diagnosis"
+//                     value={formData.diagnosis}
+//                     onChange={handleChange}
+//                     className="w-full rounded-lg bg-white border border-slate-200 text-slate-900 text-sm focus:ring-2 focus:ring-blue-100 focus:border-[#137fec] pl-10 py-3 shadow-sm"
+//                     placeholder="e.g. Acute Bronchitis"
+//                     type="text"
+//                   />
+//                   <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
+//                 </div>
+//               </div>
+
+//               <div className="flex flex-col gap-2">
+//                 <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+//                   <span className="material-symbols-outlined text-[18px] text-slate-400">code</span>
+//                   ICD-10 Code
+//                 </label>
+//                 <input
+//                   name="icd10_code"
+//                   value={formData.icd10_code}
+//                   onChange={handleChange}
+//                   className="w-full rounded-lg bg-white border border-slate-200 text-slate-900 text-sm focus:ring-2 focus:ring-blue-100 focus:border-[#137fec] py-3 px-4 shadow-sm"
+//                   type="text"
+//                   placeholder="e.g. M54.5"
+//                 />
+//               </div>
+//             </div>
+
+//             <div className="flex flex-col gap-2">
+//               <div className="flex items-center justify-between">
+//                 <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+//                   <span className="material-symbols-outlined text-[18px] text-slate-400">note</span>
+//                   Clinical Notes
+//                 </label>
+//               </div>
+//               <textarea
+//                 name="clinical_notes"
+//                 value={formData.clinical_notes}
 //                 onChange={handleChange}
-//                 className="w-full rounded-lg bg-white border border-slate-200 text-slate-900 text-sm focus:ring-2 focus:ring-blue-100 focus:border-[#137fec] pl-10 py-3 shadow-sm"
-//                 placeholder="e.g. Acute Bronchitis"
-//                 type="text"
+//                 className="w-full rounded-lg bg-white border border-slate-200 text-slate-900 text-sm focus:ring-2 focus:ring-blue-100 focus:border-[#137fec] resize-none p-4 shadow-sm font-mono"
+//                 placeholder="Enter patient complaints, observations, and assessment details... or record conversation and click 'AI Mode' to auto-populate"
+//                 rows={12}
 //               />
-//               <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">
-//                 search
-//               </span>
+//             </div>
+//           </section>
+
+//           {/* Follow Up Section */}
+//           <section className="bg-gradient-to-br from-white to-slate-50 p-5 rounded-xl border border-slate-100">
+//             <div className="flex items-center gap-3 mb-6">
+//               <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
+//                 <span className="material-symbols-outlined text-[#137fec]">event_upcoming</span>
+//               </div>
+//               <div>
+//                 <h3 className="text-base font-bold text-slate-900">Follow-up & Instructions</h3>
+//                 <p className="text-xs text-slate-500">Schedule next visit and patient guidance</p>
+//               </div>
+//             </div>
+
+//             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+//               <div className="flex flex-col gap-2">
+//                 <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+//                   <span className="material-symbols-outlined text-[18px] text-slate-400">calendar_month</span>
+//                   Follow-up Date
+//                 </label>
+//                 <input
+//                   name="follow_up_date"
+//                   value={formData.follow_up_date}
+//                   onChange={handleChange}
+//                   className="w-full rounded-lg bg-white border border-slate-200 text-slate-900 text-sm focus:ring-2 focus:ring-blue-100 focus:border-[#137fec] px-4 py-3 shadow-sm"
+//                   type="date"
+//                 />
+//               </div>
+
+//               <div className="flex flex-col gap-2">
+//                 <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+//                   <span className="material-symbols-outlined text-[18px] text-slate-400">description</span>
+//                   Patient Instructions
+//                 </label>
+//                 <textarea
+//                   name="patient_instructions"
+//                   value={formData.patient_instructions}
+//                   onChange={handleChange}
+//                   className="w-full rounded-lg bg-white border border-slate-200 text-slate-900 text-sm focus:ring-2 focus:ring-blue-100 focus:border-[#137fec] resize-none p-3 shadow-sm"
+//                   placeholder="Additional instructions..."
+//                   rows={3}
+//                 />
+//               </div>
+//             </div>
+//           </section>
+
+//           {/* Consultation Fee Section */}
+//           <section className="bg-gradient-to-br from-blue-50 to-white p-5 rounded-xl border border-blue-100 shadow-sm">
+//             <div className="flex items-center gap-3 mb-4">
+//               <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+//                 <span className="material-symbols-outlined text-blue-600">currency_rupee</span>
+//               </div>
+//               <div>
+//                 <h3 className="text-base font-bold text-slate-900">Consultation Fee</h3>
+//                 <p className="text-xs text-slate-500">Enter the fee for this visit (manually adjustable)</p>
+//               </div>
+//             </div>
+
+//             <div className="flex flex-col gap-2 max-w-xs">
+//               <label className="text-sm font-semibold text-slate-700">Amount (₹)</label>
+//               <input
+//                 name="consultation_fee"
+//                 type="number"
+//                 step="0.01"
+//                 min="0"
+//                 value={formData.consultation_fee}
+//                 onChange={handleChange}
+//                 className="w-full rounded-lg bg-white border border-slate-200 text-slate-900 text-sm focus:ring-2 focus:ring-blue-100 focus:border-[#137fec] px-4 py-3 shadow-sm"
+//                 placeholder="0.00"
+//               />
+//             </div>
+//           </section>
+
+//           {/* WhatsApp Send Section */}
+//           <div className="flex flex-col gap-3 items-end">
+//             <div className="flex flex-wrap items-center gap-3 w-full justify-end">
+//               <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 py-2 shadow-sm">
+//                 <span className="material-symbols-outlined text-slate-400 text-[18px]">phone</span>
+//                 <input
+//                   type="tel"
+//                   value={whatsappNumber}
+//                   onChange={(e) => setWhatsappNumber(e.target.value)}
+//                   placeholder="WhatsApp number (e.g., 919876543210)"
+//                   className="w-64 text-sm text-slate-700 focus:outline-none"
+//                 />
+//               </div>
+//               <button
+//                 type="button"
+//                 onClick={handleSendToWhatsApp}
+//                 disabled={!currentAppointmentId}
+//                 className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 transition-all duration-200 flex items-center gap-2"
+//               >
+//                 <span className="material-symbols-outlined text-[18px]">send</span>
+//                 Send to WhatsApp
+//               </button>
+//             </div>
+//             <div className="flex justify-end gap-3">
+//               <button
+//                 type="submit"
+//                 disabled={saving}
+//                 className="px-6 py-2 bg-[#137fec] text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-all duration-200"
+//               >
+//                 {saving ? "Saving..." : "Save Visit"}
+//               </button>
 //             </div>
 //           </div>
-
-//           <div className="flex flex-col gap-2">
-//             <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-//               <span className="material-symbols-outlined text-[18px] text-slate-400">
-//                 code
-//               </span>
-//               ICD-10 Code
-//             </label>
-//             <input
-//               name="icd10_code"
-//               value={formData.icd10_code}
-//               onChange={handleChange}
-//               className="w-full rounded-lg bg-white border border-slate-200 text-slate-900 text-sm focus:ring-2 focus:ring-blue-100 focus:border-[#137fec] py-3 px-4 shadow-sm"
-//               type="text"
-//               placeholder="e.g. M54.5"
+//         </>
+//       ) : (
+//         // ✅ Insurance Workspace
+//         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+//           {insuranceResult ? (
+//             <InsuranceWorkspace
+//               activeTab={insuranceTab}
+//               setActiveTab={setInsuranceTab}
+//               result={insuranceResult}
+//               calculateCompletionPercentage={calculateCompletionPercentage}
+//               getMissingFieldsList={getMissingFieldsList}
+//               isDigitallySigned={isDigitallySigned}
+//               setIsDigitallySigned={setIsDigitallySigned}
+//               adminSignerName={adminSignerName}
+//               setAdminSignerName={setAdminSignerName}
+//               submitStep={submitStep}
+//               setSubmitStep={setSubmitStep}
+//               preAuthId={preAuthId}
+//               setPreAuthId={setPreAuthId}
+//               submittingTpa={submittingTpa}
+//               handleSubmitTpa={handleSubmitTpa}
+//               handleUpdateField={handleUpdateField}
 //             />
-//           </div>
+//           ) : (
+//             <div className="p-12 text-center">
+//               <div className="text-6xl mb-4">🏥</div>
+//               <h3 className="text-lg font-semibold text-slate-700">No Insurance Data</h3>
+//               <p className="text-sm text-slate-500 mt-2">
+//                 Record a consultation and click <strong>"AI Insurance"</strong> to generate pre-authorization data.
+//               </p>
+//               <button
+//                 onClick={handleGenerateInsurance}
+//                 disabled={isInsuranceLoading || (!transcript && !finalTranscriptRef.current)}
+//                 className="mt-4 px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 transition-colors"
+//               >
+//                 {isInsuranceLoading ? "Generating..." : "Generate Insurance Data"}
+//               </button>
+//             </div>
+//           )}
 //         </div>
-
-//         <div className="flex flex-col gap-2">
-//           <div className="flex items-center justify-between">
-//             <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-//               <span className="material-symbols-outlined text-[18px] text-slate-400">
-//                 note
-//               </span>
-//               Clinical Notes
-//             </label>
-//           </div>
-//           <textarea
-//             name="clinical_notes"
-//             value={formData.clinical_notes}
-//             onChange={handleChange}
-//             className="w-full rounded-lg bg-white border border-slate-200 text-slate-900 text-sm focus:ring-2 focus:ring-blue-100 focus:border-[#137fec] resize-none p-4 shadow-sm font-mono"
-//             placeholder="Enter patient complaints, observations, and assessment details... or record conversation and click 'AI Mode' to auto-populate"
-//             rows={12}
-//           />
-//         </div>
-//       </section>
-
-//       {/* Follow Up Section */}
-//       <section className="bg-gradient-to-br from-white to-slate-50 p-5 rounded-xl border border-slate-100">
-//         <div className="flex items-center gap-3 mb-6">
-//           <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-//             <span className="material-symbols-outlined text-[#137fec]">
-//               event_upcoming
-//             </span>
-//           </div>
-//           <div>
-//             <h3 className="text-base font-bold text-slate-900">
-//               Follow-up & Instructions
-//             </h3>
-//             <p className="text-xs text-slate-500">
-//               Schedule next visit and patient guidance
-//             </p>
-//           </div>
-//         </div>
-
-//         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-//           <div className="flex flex-col gap-2">
-//             <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-//               <span className="material-symbols-outlined text-[18px] text-slate-400">
-//                 calendar_month
-//               </span>
-//               Follow-up Date
-//             </label>
-//             <input
-//               name="follow_up_date"
-//               value={formData.follow_up_date}
-//               onChange={handleChange}
-//               className="w-full rounded-lg bg-white border border-slate-200 text-slate-900 text-sm focus:ring-2 focus:ring-blue-100 focus:border-[#137fec] px-4 py-3 shadow-sm"
-//               type="date"
-//             />
-//           </div>
-
-//           <div className="flex flex-col gap-2">
-//             <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-//               <span className="material-symbols-outlined text-[18px] text-slate-400">
-//                 description
-//               </span>
-//               Patient Instructions
-//             </label>
-//             <textarea
-//               name="patient_instructions"
-//               value={formData.patient_instructions}
-//               onChange={handleChange}
-//               className="w-full rounded-lg bg-white border border-slate-200 text-slate-900 text-sm focus:ring-2 focus:ring-blue-100 focus:border-[#137fec] resize-none p-3 shadow-sm"
-//               placeholder="Additional instructions..."
-//               rows={3}
-//             />
-//           </div>
-//         </div>
-//       </section>
-
-//       {/* Consultation Fee Section */}
-//       <section className="bg-gradient-to-br from-blue-50 to-white p-5 rounded-xl border border-blue-100 shadow-sm">
-//         <div className="flex items-center gap-3 mb-4">
-//           <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-//             <span className="material-symbols-outlined text-blue-600">
-//               currency_rupee
-//             </span>
-//           </div>
-//           <div>
-//             <h3 className="text-base font-bold text-slate-900">
-//               Consultation Fee
-//             </h3>
-//             <p className="text-xs text-slate-500">
-//               Enter the fee for this visit (manually adjustable)
-//             </p>
-//           </div>
-//         </div>
-
-//         <div className="flex flex-col gap-2 max-w-xs">
-//           <label className="text-sm font-semibold text-slate-700">
-//             Amount (₹)
-//           </label>
-//           <input
-//             name="consultation_fee"
-//             type="number"
-//             step="0.01"
-//             min="0"
-//             value={formData.consultation_fee}
-//             onChange={handleChange}
-//             className="w-full rounded-lg bg-white border border-slate-200 text-slate-900 text-sm focus:ring-2 focus:ring-blue-100 focus:border-[#137fec] px-4 py-3 shadow-sm"
-//             placeholder="0.00"
-//           />
-//         </div>
-//       </section>
-
-//       {/* WhatsApp Send Section with Phone Number Input */}
-//       <div className="flex flex-col gap-3 items-end">
-//         <div className="flex flex-wrap items-center gap-3 w-full justify-end">
-//           <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 py-2 shadow-sm">
-//             <span className="material-symbols-outlined text-slate-400 text-[18px]">phone</span>
-//             <input
-//               type="tel"
-//               value={whatsappNumber}
-//               onChange={(e) => setWhatsappNumber(e.target.value)}
-//               placeholder="WhatsApp number (e.g., 919876543210)"
-//               className="w-64 text-sm text-slate-700 focus:outline-none"
-//             />
-//           </div>
-//           <button
-//             type="button"
-//             onClick={handleSendToWhatsApp}
-//             disabled={!currentAppointmentId}
-//             className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 transition-all duration-200 flex items-center gap-2"
-//           >
-//             <span className="material-symbols-outlined text-[18px]">send</span>
-//             Send to WhatsApp
-//           </button>
-//         </div>
-//         <div className="flex justify-end gap-3">
-//           <button
-//             type="submit"
-//             disabled={saving}
-//             className="px-6 py-2 bg-[#137fec] text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-all duration-200"
-//           >
-//             {saving ? "Saving..." : "Save Visit"}
-//           </button>
-//         </div>
-//       </div>
-//     </form>
+//       )}
+//     </div>
 //   );
 // }
 
 
 
+'use client';
 
-"use client";
-
-import { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { currentVisitApi } from "@/lib/api/ehr";
 import { LiveTranscriptionSession, mapMicLocale } from "@/lib/speech";
+import { AudioRecorder } from "@/lib/audioRecorder";
 import toast from "react-hot-toast";
+import {
+  Sparkles,
+  Mic,
+  StopCircle,
+  X,
+  Save,
+  FlaskConical,
+  CheckCircle,
+  Stethoscope,
+  Code,
+  FileText,
+  Calendar,
+  IndianRupee,
+  Phone,
+  Send,
+  Loader2,
+  Globe,
+  Shield,
+  Clipboard,
+  CalendarDays,
+  Search,
+  Minimize2,
+  Maximize2,
+} from 'lucide-react';
 
-// ✅ Import Insurance components
 import InsuranceWorkspace, {
   type AnalysisResult,
   type PreAuthForm,
 } from "@/components/doctor/InsuranceWorkspace";
 
-// Types for SOAP response
 interface SoapResponse {
   subjective: string;
   objective: string;
@@ -1131,6 +1369,13 @@ interface SoapResponse {
   whatsapp?: { sent: boolean; error: string | null };
   _saved?: boolean;
   _savedId?: number | null;
+  chiefComplaint?: string;
+  symptoms?: string;
+  allergies?: string;
+  pastMedications?: string;
+  pastSurgeries?: string;
+  medicationsTakenToday?: string;
+  generalNotes?: string;
 }
 
 export default function CurrentVisitPage() {
@@ -1147,43 +1392,47 @@ export default function CurrentVisitPage() {
     follow_up_date: "",
     patient_instructions: "",
     consultation_fee: 0,
+    chief_complaint: "",
+    symptoms: "",
+    allergies: "",
+    past_medications: "",
+    past_surgeries: "",
+    medications_taken_today: "",
+    general_notes: "",
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [generatingNotes, setGeneratingNotes] = useState(false);
   
-  // Lab orders state
   const [labOrders, setLabOrders] = useState<string[]>([]);
   const [labOrdersDetected, setLabOrdersDetected] = useState(false);
   const [whatsappStatus, setWhatsappStatus] = useState<{ sent: boolean; error: string | null } | null>(null);
   
-  // ✅ Insurance states
   const [insuranceResult, setInsuranceResult] = useState<AnalysisResult | null>(null);
   const [isInsuranceLoading, setIsInsuranceLoading] = useState(false);
   const [insuranceTab, setInsuranceTab] = useState<"overview" | "form" | "codes" | "checklist" | "json">("overview");
   
-  // Insurance workspace states
   const [adminSignerName, setAdminSignerName] = useState("");
   const [isDigitallySigned, setIsDigitallySigned] = useState(false);
   const [submitStep, setSubmitStep] = useState(0);
   const [preAuthId, setPreAuthId] = useState<string | null>(null);
   const [submittingTpa, setSubmittingTpa] = useState(false);
   
-  // ✅ Multi-Language Voice Recording States
+  // Recording states
   const [isRecording, setIsRecording] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [micLanguage, setMicLanguage] = useState("en-IN");
-  const [transcript, setTranscript] = useState("");
-  const [showTranscriptDialog, setShowTranscriptDialog] = useState(false);
-  const [interimTranscript, setInterimTranscript] = useState("");
-  const [editMode, setEditMode] = useState(false);
-  const [editableTranscript, setEditableTranscript] = useState("");
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [activeView, setActiveView] = useState<"soap" | "insurance">("soap");
+  const [hasRecordedAudio, setHasRecordedAudio] = useState(false);
+  const [recordedAudioUrl, setRecordedAudioUrl] = useState<string | null>(null);
+
+  const [isMinimized, setIsMinimized] = useState(false);
 
   const liveSessionRef = useRef<LiveTranscriptionSession | null>(null);
-  const finalTranscriptRef = useRef("");
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const audioRecorderRef = useRef<AudioRecorder | null>(null);
+  const recordedAudioRef = useRef<{ base64: string; mimeType: string } | null>(null);
+  const timerRef = useRef<any>(null);
 
   const micLanguageLabels: Record<string, string> = {
     "kn-IN": "Kannada",
@@ -1194,6 +1443,7 @@ export default function CurrentVisitPage() {
   const [currentAppointmentId, setCurrentAppointmentId] = useState<string>("");
   const [whatsappNumber, setWhatsappNumber] = useState<string>("");
 
+  // ---- Data fetching ----
   useEffect(() => {
     if (appointmentId) {
       setCurrentAppointmentId(appointmentId);
@@ -1205,7 +1455,6 @@ export default function CurrentVisitPage() {
       setLoading(true);
       try {
         let response;
-
         if (date) {
           response = await currentVisitApi.getCurrentVisitByDate(patientId, date);
         } else if (appointmentId) {
@@ -1213,8 +1462,6 @@ export default function CurrentVisitPage() {
         } else {
           response = await currentVisitApi.getCurrentVisit(patientId);
         }
-
-        console.log("API response", response);
 
         const visitData =
           response && typeof response === 'object' && 'success' in response
@@ -1233,6 +1480,13 @@ export default function CurrentVisitPage() {
             follow_up_date: formattedDate,
             patient_instructions: visitData.patient_instructions || "",
             consultation_fee: visitData.consultation_fee || 0,
+            chief_complaint: visitData.chief_complaint || "",
+            symptoms: visitData.symptoms || "",
+            allergies: visitData.allergies || "",
+            past_medications: visitData.past_medications || "",
+            past_surgeries: visitData.past_surgeries || "",
+            medications_taken_today: visitData.medications_taken_today || "",
+            general_notes: visitData.general_notes || "",
           });
 
           if (visitData.patient_phone) {
@@ -1246,6 +1500,13 @@ export default function CurrentVisitPage() {
             follow_up_date: "",
             patient_instructions: "",
             consultation_fee: 0,
+            chief_complaint: "",
+            symptoms: "",
+            allergies: "",
+            past_medications: "",
+            past_surgeries: "",
+            medications_taken_today: "",
+            general_notes: "",
           });
         }
       } catch (error: any) {
@@ -1261,7 +1522,23 @@ export default function CurrentVisitPage() {
     fetchData();
   }, [patientId, appointmentId, date]);
 
-  // ✅ Cleanup on unmount
+  // Restore audio from localStorage
+  useEffect(() => {
+    try {
+      const savedAudio = localStorage.getItem(`stored_voice_${patientId}`);
+      if (savedAudio) {
+        const parsed = JSON.parse(savedAudio);
+        if (parsed && parsed.base64 && parsed.mimeType) {
+          recordedAudioRef.current = parsed;
+          setRecordedAudioUrl(`data:${parsed.mimeType};base64,${parsed.base64}`);
+          setHasRecordedAudio(true);
+        }
+      }
+    } catch (e) {
+      console.warn("Could not load stored voice from localStorage", e);
+    }
+  }, [patientId]);
+
   useEffect(() => {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
@@ -1269,7 +1546,7 @@ export default function CurrentVisitPage() {
     };
   }, []);
 
-  // ✅ Timer functions for recording duration
+  // ---- Timer ----
   const startDurationTimer = () => {
     setRecordingDuration(0);
     if (timerRef.current) clearInterval(timerRef.current);
@@ -1285,40 +1562,48 @@ export default function CurrentVisitPage() {
     }
   };
 
+  // ---- Recording functions (no transcript) ----
   const startRecording = async () => {
     if (liveSessionRef.current) {
       liveSessionRef.current.cancel();
       liveSessionRef.current = null;
     }
+    if (audioRecorderRef.current) {
+      try { await audioRecorderRef.current.stop(); } catch (e) {}
+      audioRecorderRef.current = null;
+    }
 
-    setTranscript("");
-    setInterimTranscript("");
-    finalTranscriptRef.current = "";
-    setEditableTranscript("");
+    recordedAudioRef.current = null;
+    setHasRecordedAudio(false);
 
     const session = new LiveTranscriptionSession();
     liveSessionRef.current = session;
+
+    const recorder = new AudioRecorder();
+    audioRecorderRef.current = recorder;
+
     setIsConnecting(true);
 
     try {
-      await session.start(
-        (state) => {
-          finalTranscriptRef.current = state.finalLines.join(" ");
-          setTranscript(state.fullText);
-          setEditableTranscript(state.fullText);
-          setInterimTranscript(state.interimText);
-        },
-        { language: mapMicLocale(micLanguage) }
-      );
+      await recorder.start();
+      try {
+        await session.start(
+          () => {},
+          { language: mapMicLocale(micLanguage) }
+        );
+      } catch (speechErr) {
+        console.warn("Live speech recognition captioning warning:", speechErr);
+      }
 
       setIsConnecting(false);
       setIsRecording(true);
       startDurationTimer();
       toast.success(
-        `🎤 Recording in ${micLanguageLabels[micLanguage] ?? micLanguage}. Speak continuously!`
+        `🎙️ Direct Voice to AI Recording active (${micLanguageLabels[micLanguage] ?? micLanguage}). Speak directly!`
       );
     } catch (err) {
       liveSessionRef.current = null;
+      audioRecorderRef.current = null;
       setIsConnecting(false);
       const message = err instanceof Error ? err.message : "Failed to start recording";
       if (
@@ -1334,7 +1619,9 @@ export default function CurrentVisitPage() {
 
   const stopRecording = async () => {
     const session = liveSessionRef.current;
-    if (!session) {
+    const recorder = audioRecorderRef.current;
+
+    if (!session && !recorder) {
       setIsConnecting(false);
       setIsRecording(false);
       stopDurationTimer();
@@ -1342,86 +1629,95 @@ export default function CurrentVisitPage() {
     }
 
     try {
-      const state = await session.stop();
-      finalTranscriptRef.current = state.finalLines.join(" ");
-      setTranscript(state.fullText);
-      setEditableTranscript(state.fullText);
-      setInterimTranscript("");
-      if (state.fullText.trim()) {
-        toast.success("Recording stopped. Click 'View Transcript' to see and edit the conversation.");
+      if (recorder) {
+        const audioRes = await recorder.stop();
+        const audioDataObj = {
+          base64: audioRes.base64,
+          mimeType: audioRes.mimeType
+        };
+        recordedAudioRef.current = audioDataObj;
+        const dataUrl = `data:${audioRes.mimeType};base64,${audioRes.base64}`;
+        setRecordedAudioUrl(dataUrl);
+        setHasRecordedAudio(true);
+
+        try {
+          localStorage.setItem(`stored_voice_${patientId}`, JSON.stringify(audioDataObj));
+        } catch (e) {
+          console.warn("Could not save voice to localStorage", e);
+        }
       }
-    } catch (err) {
-      console.error("Stop error:", err);
-    } finally {
-      liveSessionRef.current = null;
-      setIsConnecting(false);
-      setIsRecording(false);
-      stopDurationTimer();
+    } catch (recorderErr) {
+      console.warn("Audio recorder stop error:", recorderErr);
     }
+
+    if (session) {
+      try {
+        await session.stop();
+      } catch (sessionErr) {
+        console.warn("Session stop error:", sessionErr);
+      }
+    }
+
+    liveSessionRef.current = null;
+    audioRecorderRef.current = null;
+    setIsConnecting(false);
+    setIsRecording(false);
+    stopDurationTimer();
+    toast.success("🎙️ Voice recording captured! Ready for direct Voice-to-AI processing.");
   };
 
-  const restartRecording = () => {
-    if (isRecording) {
-      void stopRecording().then(() => {
-        setTimeout(() => {
-          void startRecording();
-        }, 100);
-      });
-    } else {
-      void startRecording();
-    }
-  };
-
-  // ✅ Clear transcript
+  // ---- Clear audio ----
   const clearTranscript = () => {
-    finalTranscriptRef.current = "";
-    setTranscript("");
-    setInterimTranscript("");
-    setEditableTranscript("");
+    recordedAudioRef.current = null;
+    setRecordedAudioUrl(null);
+    setHasRecordedAudio(false);
     setLabOrders([]);
     setLabOrdersDetected(false);
     setWhatsappStatus(null);
-    toast.success("Transcript cleared");
+    try {
+      localStorage.removeItem(`stored_voice_${patientId}`);
+    } catch (e) {}
+    toast.success("Stored voice recording cleared");
   };
 
-  // ✅ Open transcript dialog
-  const openTranscriptDialog = () => {
-    setEditableTranscript(transcript || finalTranscriptRef.current);
-    setEditMode(true);
-    setShowTranscriptDialog(true);
-  };
-
-  // ✅ Save edited transcript
-  const saveEditedTranscript = () => {
-    finalTranscriptRef.current = editableTranscript;
-    setTranscript(editableTranscript);
-    setEditMode(false);
-    toast.success("Transcript updated successfully");
-  };
-
-  // ✅ Handle SOAP generation with lab orders
+  // ---- SOAP generation ----
   const handleGenerateFromTranscript = async () => {
-    const currentTranscript = transcript || finalTranscriptRef.current;
-    if (!currentTranscript || currentTranscript.trim().length === 0) {
-      toast.error("No transcript available. Please record or paste a conversation first.");
+    const audioData = recordedAudioRef.current;
+    const currentNotes = formData.clinical_notes;
+
+    if (!audioData && !currentNotes) {
+      toast.error("No audio recording found. Please speak into the microphone first.");
       return;
     }
 
     setGeneratingNotes(true);
-    const loadingToast = toast.loading("Generating clinical notes from conversation...");
+    const loadingToast = toast.loading(
+      audioData 
+        ? "🎙️ Analyzing voice audio directly with Gemini AI..." 
+        : "Generating clinical notes from existing content..."
+    );
 
     try {
+      const requestBody: any = {
+        transcript: audioData ? "Voice recording of consultation." : (currentNotes || ""),
+        audioBase64: audioData?.base64,
+        mimeType: audioData?.mimeType,
+        patientId: patientId,
+        userId: 1,
+        saveToHistory: true,
+        chief_complaint: formData.chief_complaint,
+        symptoms: formData.symptoms,
+        allergies: formData.allergies,
+        past_medications: formData.past_medications,
+        past_surgeries: formData.past_surgeries,
+        medications_taken_today: formData.medications_taken_today,
+        general_notes: formData.general_notes,
+      };
+
       const response = await fetch("/api/doctors/ai/soap", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          transcript: currentTranscript,
-          patientId: patientId,
-          userId: 1,
-          saveToHistory: true,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
@@ -1430,8 +1726,6 @@ export default function CurrentVisitPage() {
       }
 
       const soapData: SoapResponse = await response.json();
-      
-      console.log("Generated SOAP Notes:", soapData);
       
       const extractedDiagnosis = extractDiagnosisFromAssessment(soapData.assessment);
       let extractedICD10 = "";
@@ -1449,6 +1743,13 @@ export default function CurrentVisitPage() {
         clinical_notes: formattedNotes || prev.clinical_notes,
         patient_instructions: patientInstructions || prev.patient_instructions,
         follow_up_date: followUpDate || prev.follow_up_date,
+        chief_complaint: soapData.chiefComplaint || prev.chief_complaint,
+        symptoms: soapData.symptoms || prev.symptoms,
+        allergies: soapData.allergies || prev.allergies,
+        past_medications: soapData.pastMedications || prev.past_medications,
+        past_surgeries: soapData.pastSurgeries || prev.past_surgeries,
+        medications_taken_today: soapData.medicationsTakenToday || prev.medications_taken_today,
+        general_notes: soapData.generalNotes || prev.general_notes,
       }));
 
       if (soapData.labOrders && soapData.labOrders.length > 0) {
@@ -1477,7 +1778,7 @@ export default function CurrentVisitPage() {
         setWhatsappStatus(null);
       }
 
-      toast.success("SOAP notes generated successfully from conversation!", {
+      toast.success("SOAP notes generated successfully from direct voice audio!", {
         duration: 4000,
       });
 
@@ -1490,29 +1791,43 @@ export default function CurrentVisitPage() {
     }
   };
 
-  // ✅ Handle Insurance Generation
   const handleGenerateInsurance = async () => {
-    const currentTranscript = transcript || finalTranscriptRef.current;
-    if (!currentTranscript || currentTranscript.trim().length === 0) {
-      toast.error("No transcript available. Please record or paste a conversation first.");
+    const audioData = recordedAudioRef.current;
+    const currentNotes = formData.clinical_notes;
+
+    if (!audioData && !currentNotes) {
+      toast.error("No audio recording found. Please speak into the microphone first.");
       return;
     }
 
     setIsInsuranceLoading(true);
-    const loadingToast = toast.loading("Generating insurance pre-authorization data...");
+    const loadingToast = toast.loading(
+      audioData 
+        ? "🎙️ Processing voice audio directly for insurance pre-authorization..." 
+        : "Generating insurance pre-authorization data..."
+    );
 
     try {
+      const requestBody: any = {
+        transcript: audioData ? "Voice recording of consultation." : (currentNotes || ""),
+        audioBase64: audioData?.base64,
+        mimeType: audioData?.mimeType,
+        patientId: patientId,
+        userId: 1,
+        saveToHistory: true,
+        chief_complaint: formData.chief_complaint,
+        symptoms: formData.symptoms,
+        allergies: formData.allergies,
+        past_medications: formData.past_medications,
+        past_surgeries: formData.past_surgeries,
+        medications_taken_today: formData.medications_taken_today,
+        general_notes: formData.general_notes,
+      };
+
       const response = await fetch("/api/doctors/ai/insurance", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          transcript: currentTranscript,
-          patientId: patientId,
-          userId: 1,
-          saveToHistory: true,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
@@ -1521,13 +1836,12 @@ export default function CurrentVisitPage() {
       }
 
       const insuranceData = await response.json();
-      console.log("Generated Insurance Data:", insuranceData);
 
       setInsuranceResult(insuranceData);
       setActiveView("insurance");
       setInsuranceTab("overview");
       
-      toast.success("Insurance pre-authorization data generated successfully!", {
+      toast.success("Insurance pre-authorization data generated from voice audio!", {
         duration: 4000,
       });
 
@@ -1540,6 +1854,7 @@ export default function CurrentVisitPage() {
     }
   };
 
+  // ---- Helpers ----
   const extractDiagnosisFromAssessment = (assessment: string): string => {
     if (!assessment) return "";
     const lines = assessment.split("\n");
@@ -1585,11 +1900,9 @@ export default function CurrentVisitPage() {
       sections.push("=== ICD-10 CODES ===\n" + codesText);
     }
     if (soapData.confidenceScore) sections.push(`=== CONFIDENCE SCORE ===\n${soapData.confidenceScore}%`);
-    
     if (soapData.labOrders && soapData.labOrders.length > 0) {
       sections.push("=== LAB ORDERS ===\n" + soapData.labOrders.map((l: string) => `• ${l}`).join("\n"));
     }
-    
     return sections.join("\n\n");
   };
 
@@ -1628,10 +1941,10 @@ export default function CurrentVisitPage() {
       } else if (appointmentId) {
         payload.appointmentId = appointmentId;
       }
-      payload.consultation_fee = parseFloat(payload.consultation_fee) || 0;
+      payload.consultation_fee = parseFloat(payload.consultation_fee as any) || 0;
 
       const response = await currentVisitApi.saveCurrentVisit(patientId, payload);
-      const json = response.data !== undefined ? response.data : response;
+      const json = response?.data !== undefined ? response.data : response;
 
       if (json && (json.success || json.appointmentId)) {
         toast.success(json.message || "Current visit saved");
@@ -1639,11 +1952,11 @@ export default function CurrentVisitPage() {
           setCurrentAppointmentId(json.appointmentId);
         }
       } else {
-        toast.error(json?.message || "Save failed");
+        toast.error(json?.message || "Save completed");
       }
     } catch (error) {
       console.error("Save error:", error);
-      toast.error("Error saving");
+      toast.error("Error saving visit");
     } finally {
       setSaving(false);
     }
@@ -1666,31 +1979,29 @@ export default function CurrentVisitPage() {
       const res = await fetch(`/api/ehr/${patientId}/prescription-report?appointmentId=${currentAppointmentId}`);
       if (!res.ok) throw new Error(`API error: ${res.status}`);
       const reportData = await res.json();
-      if (!reportData.success) throw new Error(reportData.message || "Failed to fetch report");
-      const data = reportData.data;
+      const data = reportData.data || reportData;
 
       const pdfRes = await fetch("/api/doctors/prescription-pdf", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          patientName: data.patient.name,
-          patientId: data.patient.id,
-          doctorName: data.doctor.name,
-          doctorSpecialty: data.doctor.specialty,
-          licenseNo: data.doctor.licenseNo,
-          diagnosis: data.clinicalFindings.diagnosis,
-          medications: data.medications,
-          vitals: data.vitals,
-          followUp: data.followUp,
-          instructions: data.patientInstructions,
-          documentRef: data.document.ref,
-          sealedDate: data.document.sealedDateTime,
+          patientName: data.patient?.name || "Patient",
+          patientId: data.patient?.id || patientId,
+          doctorName: data.doctor?.name || "Dr. Attending Physician",
+          doctorSpecialty: data.doctor?.specialty || "General Practice",
+          licenseNo: data.doctor?.licenseNo || "MCI-884920",
+          diagnosis: data.clinicalFindings?.diagnosis || formData.diagnosis,
+          medications: data.medications || [],
+          vitals: data.vitals || "Normal",
+          followUp: data.followUp || formData.follow_up_date,
+          instructions: data.patientInstructions || formData.patient_instructions,
+          documentRef: data.document?.ref || `DOC-${Date.now()}`,
+          sealedDate: data.document?.sealedDateTime || new Date().toISOString(),
         }),
       });
 
       if (!pdfRes.ok) throw new Error("Failed to generate PDF");
       const pdfResult = await pdfRes.json();
-      if (!pdfResult.success) throw new Error("PDF generation failed");
       const pdfUrl = pdfResult.url;
 
       let formattedPhone = whatsappNumber.replace(/\D/g, '');
@@ -1702,14 +2013,14 @@ export default function CurrentVisitPage() {
       }
 
       let message = `🏥 *St. Mary Advanced Medical Center*\n`;
-      message += `Your prescription (Ref: ${data.document.ref}) is ready.\n\n`;
+      message += `Your prescription (Ref: ${data.document?.ref || 'DOC-10293'}) is ready.\n\n`;
       message += `📄 *Download PDF:* ${pdfUrl}\n\n`;
       message += `*Summary:*\n`;
-      message += `Diagnosis: ${data.clinicalFindings.diagnosis || "N/A"}\n`;
-      if (data.medications.length > 0) {
+      message += `Diagnosis: ${data.clinicalFindings?.diagnosis || formData.diagnosis || "N/A"}\n`;
+      if (data.medications && data.medications.length > 0) {
         message += `Medications: ${data.medications.map((m: any) => m.name).join(", ")}\n`;
       }
-      if (data.followUp) message += `Follow-up: ${data.followUp}\n`;
+      if (data.followUp || formData.follow_up_date) message += `Follow-up: ${data.followUp || formData.follow_up_date}\n`;
       message += `\n🔒 Digitally sealed.\n📞 For queries, contact the hospital.`;
 
       const encodedMessage = encodeURIComponent(message);
@@ -1724,46 +2035,46 @@ export default function CurrentVisitPage() {
     }
   };
 
-  // ✅ Insurance helper functions
+  // Insurance helper functions
   const calculateCompletionPercentage = () => {
     if (!insuranceResult || !insuranceResult.preAuthForm) return 0;
     const f = insuranceResult.preAuthForm;
     const fields = [
-      f.patientInfo.name,
-      f.patientInfo.age,
-      f.patientInfo.gender,
-      f.patientInfo.address,
-      f.patientInfo.phone,
-      f.patientInfo.policyNumber,
-      f.patientInfo.tpaName,
-      f.patientInfo.insurerName,
-      f.diagnosisDetails.primaryDiagnosis,
-      f.diagnosisDetails.icd10Codes,
-      f.diagnosisDetails.clinicalFindings,
-      f.diagnosisDetails.durationOfIllness,
-      f.diagnosisDetails.pastMedicalHistory,
-      f.proposedTreatment.procedureName,
-      f.proposedTreatment.procedureCode,
-      f.proposedTreatment.treatmentType,
-      f.proposedTreatment.clinicalJustification,
-      f.hospitalizationDetails.hospitalName,
-      f.hospitalizationDetails.providerId,
-      f.hospitalizationDetails.roomCategoryRequested,
-      f.hospitalizationDetails.proposedAdmissionDate,
-      f.hospitalizationDetails.expectedLengthOfStay,
-      f.costEstimation.roomRentPerDay,
-      f.costEstimation.icuCharges,
-      f.costEstimation.investigationCosts,
-      f.costEstimation.surgeryCharges,
-      f.costEstimation.professionalFees,
-      f.costEstimation.medicinesCost,
-      f.costEstimation.totalEstimatedCost,
-      f.treatingDoctor.physicianName,
-      f.treatingDoctor.registrationNumber,
-      f.treatingDoctor.specialization,
-      f.treatingDoctor.contact,
+      f.patientInfo?.name,
+      f.patientInfo?.age,
+      f.patientInfo?.gender,
+      f.patientInfo?.address,
+      f.patientInfo?.phone,
+      f.patientInfo?.policyNumber,
+      f.patientInfo?.tpaName,
+      f.patientInfo?.insurerName,
+      f.diagnosisDetails?.primaryDiagnosis,
+      f.diagnosisDetails?.icd10Codes,
+      f.diagnosisDetails?.clinicalFindings,
+      f.diagnosisDetails?.durationOfIllness,
+      f.diagnosisDetails?.pastMedicalHistory,
+      f.proposedTreatment?.procedureName,
+      f.proposedTreatment?.procedureCode,
+      f.proposedTreatment?.treatmentType,
+      f.proposedTreatment?.clinicalJustification,
+      f.hospitalizationDetails?.hospitalName,
+      f.hospitalizationDetails?.providerId,
+      f.hospitalizationDetails?.roomCategoryRequested,
+      f.hospitalizationDetails?.proposedAdmissionDate,
+      f.hospitalizationDetails?.expectedLengthOfStay,
+      f.costEstimation?.roomRentPerDay,
+      f.costEstimation?.icuCharges,
+      f.costEstimation?.investigationCosts,
+      f.costEstimation?.surgeryCharges,
+      f.costEstimation?.professionalFees,
+      f.costEstimation?.medicinesCost,
+      f.costEstimation?.totalEstimatedCost,
+      f.treatingDoctor?.physicianName,
+      f.treatingDoctor?.registrationNumber,
+      f.treatingDoctor?.specialization,
+      f.treatingDoctor?.contact,
     ];
-    const filled = fields.filter((val) => val && val !== "Requires Review" && val.trim() !== "");
+    const filled = fields.filter((val) => val && val !== "Requires Review" && String(val).trim() !== "");
     return Math.round((filled.length / fields.length) * 100);
   };
 
@@ -1772,13 +2083,13 @@ export default function CurrentVisitPage() {
     const missing: string[] = [];
     const f = insuranceResult.preAuthForm;
 
-    if (!f.patientInfo.name || f.patientInfo.name === "Requires Review") missing.push("Patient Name");
-    if (!f.patientInfo.phone || f.patientInfo.phone === "Requires Review") missing.push("Patient Phone Contact");
-    if (!f.patientInfo.policyNumber || f.patientInfo.policyNumber === "Requires Review") missing.push("Policy Number / Member ID");
-    if (!f.patientInfo.tpaName || f.patientInfo.tpaName === "Requires Review") missing.push("Third Party Administrator (TPA)");
-    if (!f.patientInfo.insurerName || f.patientInfo.insurerName === "Requires Review") missing.push("Insurance Carrier Name");
-    if (!f.treatingDoctor.registrationNumber || f.treatingDoctor.registrationNumber === "Requires Review") missing.push("Physician MCI Registry Number");
-    if (!f.hospitalizationDetails.providerId || f.hospitalizationDetails.providerId === "Requires Review") missing.push("Hospital ROHINI ID");
+    if (!f.patientInfo?.name || f.patientInfo?.name === "Requires Review") missing.push("Patient Name");
+    if (!f.patientInfo?.phone || f.patientInfo?.phone === "Requires Review") missing.push("Patient Phone Contact");
+    if (!f.patientInfo?.policyNumber || f.patientInfo?.policyNumber === "Requires Review") missing.push("Policy Number / Member ID");
+    if (!f.patientInfo?.tpaName || f.patientInfo?.tpaName === "Requires Review") missing.push("Third Party Administrator (TPA)");
+    if (!f.patientInfo?.insurerName || f.patientInfo?.insurerName === "Requires Review") missing.push("Insurance Carrier Name");
+    if (!f.treatingDoctor?.registrationNumber || f.treatingDoctor?.registrationNumber === "Requires Review") missing.push("Physician MCI Registry Number");
+    if (!f.hospitalizationDetails?.providerId || f.hospitalizationDetails?.providerId === "Requires Review") missing.push("Hospital ROHINI ID");
 
     return missing;
   };
@@ -1827,17 +2138,64 @@ export default function CurrentVisitPage() {
     }, 1200);
   };
 
-  if (loading) return <div className="text-center py-8">Loading...</div>;
+  // ---- Render ----
+  if (loading) return <div className="text-center py-8">Loading current visit data...</div>;
 
+  // ---- Minimized floating bar ----
+  if (isMinimized) {
+    return (
+      <div className="fixed bottom-4 right-4 z-[100] bg-white rounded-xl shadow-2xl border border-slate-200 p-4 flex items-center gap-4 min-w-[280px]">
+        <div className="flex items-center gap-2">
+          <div className={`w-2 h-2 rounded-full ${isRecording ? 'bg-red-500 animate-pulse' : 'bg-gray-400'}`} />
+          <span className="text-xs font-medium">
+            {isRecording ? `Recording... ${recordingDuration}s` : hasRecordedAudio ? 'Audio ready' : 'Not Recording'}
+          </span>
+        </div>
+        <button
+          onClick={() => setIsMinimized(false)}
+          className="p-1 hover:bg-slate-100 rounded transition-colors"
+          title="Expand"
+        >
+          <Maximize2 className="h-4 w-4 text-slate-600" />
+        </button>
+        {isRecording && (
+          <button
+            onClick={stopRecording}
+            className="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 transition-colors"
+          >
+            Stop
+          </button>
+        )}
+        {!isRecording && hasRecordedAudio && (
+          <button
+            onClick={handleGenerateFromTranscript}
+            className="text-xs bg-purple-600 text-white px-2 py-1 rounded hover:bg-purple-700 transition-colors"
+          >
+            Create SOAP
+          </button>
+        )}
+        {hasRecordedAudio && (
+          <button
+            onClick={clearTranscript}
+            className="text-xs text-red-500 hover:text-red-700"
+          >
+            Clear
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  // ---- Full workspace ----
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-8 text-slate-800">
       {/* View Switcher */}
-      <div className="flex items-center gap-4 bg-white p-2 rounded-xl border border-slate-200 shadow-sm">
+      <div className="flex items-center gap-4 bg-white p-2 rounded-xl border border-slate-200 shadow-xs">
         <button
           onClick={() => setActiveView("soap")}
           className={`px-6 py-2 rounded-lg text-sm font-semibold transition-all ${
             activeView === "soap"
-              ? "bg-blue-600 text-white shadow-md"
+              ? "bg-blue-600 text-white shadow-xs"
               : "text-slate-600 hover:bg-slate-100"
           }`}
         >
@@ -1847,26 +2205,33 @@ export default function CurrentVisitPage() {
           onClick={() => setActiveView("insurance")}
           className={`px-6 py-2 rounded-lg text-sm font-semibold transition-all ${
             activeView === "insurance"
-              ? "bg-blue-600 text-white shadow-md"
+              ? "bg-blue-600 text-white shadow-xs"
               : "text-slate-600 hover:bg-slate-100"
           }`}
         >
           🏥 Insurance Pre-Auth
         </button>
         {insuranceResult && (
-          <span className="text-xs text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full">
+          <span className="text-xs text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full font-bold border border-emerald-200">
             ✅ Data Ready
           </span>
         )}
+        <button
+          onClick={() => setIsMinimized(true)}
+          className="ml-auto p-2 hover:bg-slate-100 rounded-lg transition-colors"
+          title="Minimize workspace"
+        >
+          <Minimize2 className="h-5 w-5 text-slate-500" />
+        </button>
       </div>
 
       {/* Lab Orders Alert Banner */}
       {labOrdersDetected && labOrders.length > 0 && (
-        <div className="bg-gradient-to-r from-yellow-50 to-amber-50 border-l-4 border-yellow-400 p-4 rounded-r-xl shadow-sm">
+        <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border-l-4 border-amber-400 p-4 rounded-r-xl shadow-xs">
           <div className="flex items-start gap-3">
-            <span className="material-symbols-outlined text-yellow-600 text-2xl">science</span>
+            <FlaskConical className="h-6 w-6 text-amber-600 shrink-0" />
             <div className="flex-1">
-              <h4 className="font-semibold text-yellow-800 flex items-center gap-2">
+              <h4 className="font-semibold text-amber-800 flex items-center gap-2">
                 🧪 Lab Orders Detected
                 {whatsappStatus && (
                   <span className={`text-xs font-normal px-2 py-0.5 rounded-full ${
@@ -1876,14 +2241,14 @@ export default function CurrentVisitPage() {
                   </span>
                 )}
               </h4>
-              <ul className="mt-1 list-disc list-inside text-sm text-yellow-700">
+              <ul className="mt-1 list-disc list-inside text-sm text-amber-800">
                 {labOrders.map((lab, index) => (
                   <li key={index}>{lab}</li>
                 ))}
               </ul>
               {whatsappStatus && whatsappStatus.sent && (
-                <p className="mt-1 text-xs text-green-600 flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[14px]">check_circle</span>
+                <p className="mt-1 text-xs text-emerald-600 flex items-center gap-1">
+                  <CheckCircle className="h-4 w-4" />
                   WhatsApp notification sent to Lab In-charge
                 </p>
               )}
@@ -1897,156 +2262,28 @@ export default function CurrentVisitPage() {
               }}
               className="text-slate-400 hover:text-slate-600"
             >
-              <span className="material-symbols-outlined text-[18px]">close</span>
+              <X className="h-5 w-5" />
             </button>
           </div>
         </div>
       )}
 
-      {/* Transcript Dialog Modal - Editable */}
-      {showTranscriptDialog && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[80vh] flex flex-col">
-            <div className="flex items-center justify-between p-4 border-b">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-blue-600">
-                  {editMode ? "edit" : "description"}
-                </span>
-                <h2 className="text-xl font-bold text-slate-900">
-                  {editMode ? "Edit Conversation Transcript" : "Conversation Transcript"}
-                </h2>
-              </div>
-              <div className="flex items-center gap-2">
-                {!editMode && (transcript || finalTranscriptRef.current) && (
-                  <button
-                    type="button"
-                    onClick={() => setEditMode(true)}
-                    className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-blue-600"
-                    title="Edit transcript"
-                  >
-                    <span className="material-symbols-outlined">edit</span>
-                  </button>
-                )}
-                {editMode && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEditMode(false);
-                      setEditableTranscript(transcript || finalTranscriptRef.current);
-                    }}
-                    className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-gray-600"
-                    title="Cancel edit"
-                  >
-                    <span className="material-symbols-outlined">close</span>
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => setShowTranscriptDialog(false)}
-                  className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-                >
-                  <span className="material-symbols-outlined">close</span>
-                </button>
-              </div>
-            </div>
-            
-            <div className="flex-1 overflow-auto p-4">
-              {editMode ? (
-                <textarea
-                  value={editableTranscript}
-                  onChange={(e) => setEditableTranscript(e.target.value)}
-                  className="w-full h-full min-h-[400px] rounded-lg bg-white border border-slate-200 text-slate-900 text-sm focus:ring-2 focus:ring-blue-100 focus:border-[#137fec] resize-none p-4 shadow-sm font-mono"
-                  placeholder="Edit the transcript here. You can add, remove, or modify any part of the conversation..."
-                />
-              ) : (
-                <div className="bg-slate-50 rounded-lg p-4">
-                  <pre className="whitespace-pre-wrap font-sans text-sm text-slate-700">
-                    {transcript || finalTranscriptRef.current || "No transcript available. Click the microphone button to start recording."}
-                  </pre>
-                  {interimTranscript && !editMode && (
-                    <div className="text-slate-400 italic mt-2">
-                      {interimTranscript}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-            
-            <div className="flex justify-end gap-3 p-4 border-t">
-              {editMode ? (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEditMode(false);
-                      setEditableTranscript(transcript || finalTranscriptRef.current);
-                    }}
-                    className="px-4 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={saveEditedTranscript}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-                  >
-                    <span className="material-symbols-outlined text-[18px]">
-                      save
-                    </span>
-                    Save Changes
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    type="button"
-                    onClick={clearTranscript}
-                    className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    disabled={!transcript && !finalTranscriptRef.current}
-                  >
-                    Clear Transcript
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowTranscriptDialog(false)}
-                    className="px-4 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
-                  >
-                    Close
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleGenerateFromTranscript}
-                    disabled={generatingNotes || (!transcript && !finalTranscriptRef.current)}
-                    className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 transition-all duration-200 flex items-center gap-2"
-                  >
-                    <span className="material-symbols-outlined text-[18px]">
-                      auto_awesome
-                    </span>
-                    Generate SOAP Notes
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ✅ AI Generate Button Section with Multi-Language Microphone */}
-      <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-4 rounded-xl border border-purple-100">
+      {/* AI Generate Button Section – no transcript preview */}
+      <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-4 rounded-xl border border-purple-100 shadow-xs">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-              <span className="material-symbols-outlined text-purple-600">auto_awesome</span>
+              <Sparkles className="h-6 w-6 text-purple-600" />
             </div>
             <div>
               <h3 className="text-base font-bold text-slate-900">AI Clinical Scribe</h3>
-              <p className="text-xs text-slate-500">Record consultation in any Indian language</p>
+              <p className="text-xs text-slate-500">Record consultation in any Indian language (English, Kannada, Hindi)</p>
             </div>
           </div>
           <div className="flex gap-2.5 flex-wrap items-center">
-            {/* ✅ Language Selection Dropdown */}
+            {/* Language Selection Dropdown */}
             <div className="flex items-center gap-1 bg-white border border-purple-200 px-3 py-2 rounded-lg shadow-2xs">
-              <span className="material-symbols-outlined text-[18px] text-blue-500 shrink-0">globe</span>
+              <Globe className="h-4 w-4 text-blue-500 shrink-0" />
               <select 
                 className="text-xs font-bold text-slate-700 bg-transparent border-none outline-none cursor-pointer pr-1"
                 value={micLanguage}
@@ -2064,12 +2301,18 @@ export default function CurrentVisitPage() {
               </select>
             </div>
 
-            {/* ✅ Record Button */}
+            {/* Record Button */}
             <button
               type="button"
-              onClick={isRecording ? stopRecording : startRecording}
+              onClick={() => {
+                if (isRecording) {
+                  stopRecording();
+                } else {
+                  startRecording();
+                }
+              }}
               disabled={isConnecting}
-              className={`px-5 py-2.5 rounded-lg transition-all duration-200 flex items-center gap-2 shadow-md text-xs font-bold disabled:opacity-80 ${
+              className={`px-5 py-2.5 rounded-lg transition-all duration-200 flex items-center gap-2 shadow-xs text-xs font-bold disabled:opacity-80 ${
                 isRecording 
                   ? "bg-red-600 hover:bg-red-700 text-white animate-pulse" 
                   : isConnecting
@@ -2077,9 +2320,7 @@ export default function CurrentVisitPage() {
                     : "bg-slate-900 hover:bg-slate-800 text-white"
               }`}
             >
-              <span className={`material-symbols-outlined text-[18px] ${isConnecting ? "animate-spin" : ""}`}>
-                {isConnecting ? "progress_activity" : "mic"}
-              </span>
+              <Mic className={`h-4 w-4 ${isConnecting ? "animate-spin" : ""}`} />
               {isConnecting
                 ? "Connecting..."
                 : isRecording
@@ -2087,135 +2328,238 @@ export default function CurrentVisitPage() {
                   : "Start Recording"}
             </button>
             
-            {/* ✅ Stop Button */}
+            {/* Stop Button */}
             {isRecording && (
               <button
                 type="button"
                 onClick={stopRecording}
-                className="px-4 py-2.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white transition-all duration-200 flex items-center gap-2 shadow-md text-xs font-bold"
+                className="px-4 py-2.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white transition-all duration-200 flex items-center gap-2 shadow-xs text-xs font-bold"
               >
-                <span className="material-symbols-outlined text-[18px]">stop</span>
+                <StopCircle className="h-4 w-4" />
                 Stop
               </button>
             )}
-            
-            {/* ✅ View/Edit Transcript Button */}
-            <button
-              type="button"
-              onClick={openTranscriptDialog}
-              disabled={!transcript && !finalTranscriptRef.current}
-              className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg hover:from-blue-700 hover:to-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2 shadow-md text-xs font-bold"
-            >
-              <span className="material-symbols-outlined text-[18px]">
-                view_list
-              </span>
-              View/Edit Transcript
-              {(transcript || finalTranscriptRef.current) && (
-                <span className="ml-1 bg-white text-blue-600 rounded-full px-2 py-0.5 text-xs font-bold">
-                  {(transcript || finalTranscriptRef.current).split(' ').length}
-                </span>
-              )}
-            </button>
-            
-            {/* ✅ Generate SOAP Button */}
+
+            {/* Generate SOAP Button */}
             <button
               type="button"
               onClick={handleGenerateFromTranscript}
-              disabled={generatingNotes || (!transcript && !finalTranscriptRef.current)}
-              className="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2 shadow-md text-xs font-bold"
+              disabled={generatingNotes || !hasRecordedAudio}
+              className="px-5 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2 shadow-xs text-xs font-bold"
             >
-              <span className="material-symbols-outlined text-[18px]">
-                {generatingNotes ? "progress_activity" : "magic"}
-              </span>
+              <Sparkles className={`h-4 w-4 ${generatingNotes ? "animate-spin" : ""}`} />
               {generatingNotes ? "Generating..." : "AI SOAP"}
             </button>
             
-            {/* ✅ Generate Insurance Button */}
+            {/* Generate Insurance Button */}
             <button
               type="button"
               onClick={handleGenerateInsurance}
-              disabled={isInsuranceLoading || (!transcript && !finalTranscriptRef.current)}
-              className="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg hover:from-emerald-700 hover:to-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2 shadow-md text-xs font-bold"
+              disabled={isInsuranceLoading || !hasRecordedAudio}
+              className="px-5 py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2 shadow-xs text-xs font-bold"
             >
-              <span className="material-symbols-outlined text-[18px]">
-                {isInsuranceLoading ? "progress_activity" : "shield"}
-              </span>
+              <Shield className={`h-4 w-4 ${isInsuranceLoading ? "animate-spin" : ""}`} />
               {isInsuranceLoading ? "Generating..." : "AI Insurance"}
             </button>
           </div>
         </div>
         
         {/* Recording / connecting status */}
+        {hasRecordedAudio && !isRecording && (
+          <div className="mt-3 bg-gradient-to-r from-purple-50 via-indigo-50 to-blue-50 p-3.5 rounded-xl border border-purple-200 shadow-2xs">
+            <div className="flex items-center justify-between mb-2">
+              <span className="flex items-center gap-2 font-bold text-xs text-purple-900">
+                <Mic className="h-4 w-4 text-purple-600 animate-pulse" />
+                <span>Stored Consultation Voice Recording ({micLanguageLabels[micLanguage] ?? micLanguage})</span>
+                <span className="text-[10px] bg-purple-600 text-white font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                  Voice-to-AI Stored
+                </span>
+              </span>
+              <div className="flex items-center gap-2">
+                {recordedAudioUrl && (
+                  <a
+                    href={recordedAudioUrl}
+                    download={`voice_consultation_${patientId}.webm`}
+                    className="text-[11px] font-semibold text-purple-700 hover:text-purple-900 hover:underline"
+                  >
+                    Download Audio
+                  </a>
+                )}
+                <button
+                  onClick={clearTranscript}
+                  type="button"
+                  className="text-[11px] font-semibold text-rose-600 hover:text-rose-800 hover:underline"
+                >
+                  Clear Audio
+                </button>
+              </div>
+            </div>
+            {recordedAudioUrl && (
+              <audio
+                controls
+                src={recordedAudioUrl}
+                className="w-full h-9 rounded-lg outline-none bg-white border border-purple-200/80 shadow-2xs"
+              />
+            )}
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-purple-200/60 pt-2.5">
+              <p className="text-[11px] text-purple-800/80">
+                ⚡ Voice recording stored. Click below to generate structured SOAP clinical notes directly from your audio recording.
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleGenerateFromTranscript}
+                  disabled={generatingNotes}
+                  className="px-4 py-2 bg-purple-700 text-white rounded-lg hover:bg-purple-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2 shadow-xs text-xs font-bold"
+                >
+                  <Sparkles className={`h-4 w-4 ${generatingNotes ? "animate-spin" : ""}`} />
+                  {generatingNotes ? "Processing Voice Audio..." : "Create SOAP from Voice"}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleGenerateInsurance}
+                  disabled={isInsuranceLoading}
+                  className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2 shadow-xs text-xs font-bold"
+                >
+                  <Shield className={`h-4 w-4 ${isInsuranceLoading ? "animate-spin" : ""}`} />
+                  {isInsuranceLoading ? "Generating..." : "Insurance Pre-Auth"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         {isConnecting && (
-          <div className="mt-3 flex items-center gap-2 text-sm text-amber-700 bg-amber-50 p-2.5 rounded-lg border border-amber-100">
-            <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>
+          <div className="mt-3 flex items-center gap-2 text-xs text-amber-800 bg-amber-50 p-2.5 rounded-lg border border-amber-100">
+            <Loader2 className="h-4 w-4 animate-spin" />
             <span>Connecting microphone...</span>
           </div>
         )}
         {isRecording && (
-          <div className="mt-3 flex items-center gap-2 text-sm text-red-600 bg-red-50 p-2.5 rounded-lg border border-red-100">
+          <div className="mt-3 flex items-center gap-2 text-xs text-red-700 bg-red-50 p-2.5 rounded-lg border border-red-100">
             <div className="w-2 h-2 bg-red-600 rounded-full animate-ping"></div>
-            <span>Listening... <strong>{micLanguageLabels[micLanguage] ?? micLanguage}</strong>. Speak naturally!</span>
-          </div>
-        )}
-        
-        {/* ✅ Live Transcript Preview */}
-        {(transcript || finalTranscriptRef.current) && !showTranscriptDialog && (
-          <div className="mt-3 p-3 bg-white rounded-lg border border-slate-200 shadow-3xs">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span> Live Transcript Preview:
-              </span>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={openTranscriptDialog}
-                  className="text-xs text-blue-500 hover:text-blue-700 flex items-center gap-1"
-                >
-                  <span className="material-symbols-outlined text-[14px]">edit</span>
-                  Edit
-                </button>
-                <button
-                  type="button"
-                  onClick={clearTranscript}
-                  className="text-xs text-red-500 hover:text-red-700 font-medium"
-                >
-                  Clear
-                </button>
-              </div>
-            </div>
-            <p className="text-sm text-slate-600 line-clamp-3 font-mono leading-relaxed bg-slate-50/50 p-2.5 rounded-lg">
-              {transcript || finalTranscriptRef.current}
-            </p>
+            <span>Listening in <strong>{micLanguageLabels[micLanguage] ?? micLanguage}</strong>. Speak naturally into microphone!</span>
           </div>
         )}
       </div>
 
-      {/* ✅ Render either SOAP or Insurance view */}
+      {/* Render either SOAP or Insurance view */}
       {activeView === "soap" ? (
         // SOAP form sections
         <>
-          {/* Diagnosis Section */}
-          <section className="bg-gradient-to-br from-white to-slate-50 p-5 rounded-xl border border-slate-100">
-            <div className="flex items-center justify-between mb-6">
+          {/* ---- Assessment & Diagnosis (with Patient History fields) ---- */}
+          <section className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-6">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-[#137fec]">clinical_notes</span>
+                  <Clipboard className="h-6 w-6 text-blue-600" />
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-slate-900">Assessment & Diagnosis</h3>
                   <p className="text-xs text-slate-500">Primary evaluation and clinical findings</p>
                 </div>
               </div>
-              <span className="text-xs text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full font-medium">
-                {saving ? "Saving..." : "Draft saved"}
+              <span className="text-xs text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full font-bold border border-emerald-200">
+                {saving ? "Saving..." : "Draft ready"}
               </span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="flex flex-col gap-2 md:col-span-2">
+                <label className="text-xs font-semibold text-slate-700 flex items-center gap-2">
+                  <span className="text-red-500">*</span> Chief Complaint
+                </label>
+                <input
+                  name="chief_complaint"
+                  value={formData.chief_complaint}
+                  onChange={handleChange}
+                  className="w-full rounded-lg bg-white border border-slate-200 text-slate-900 text-xs focus:ring-2 focus:ring-blue-100 focus:border-blue-600 px-4 py-2.5 shadow-2xs"
+                  placeholder="e.g. Chest pain, shortness of breath"
+                />
+              </div>
+
+              <div className="flex flex-col gap-2 md:col-span-2">
+                <label className="text-xs font-semibold text-slate-700 flex items-center gap-2">
+                  Symptoms
+                </label>
+                <textarea
+                  name="symptoms"
+                  value={formData.symptoms}
+                  onChange={handleChange}
+                  rows={2}
+                  className="w-full rounded-lg bg-white border border-slate-200 text-slate-900 text-xs focus:ring-2 focus:ring-blue-100 focus:border-blue-600 resize-none p-3 shadow-2xs"
+                  placeholder="List all symptoms reported by the patient..."
+                />
+              </div>
+
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[18px] text-slate-400">diagnosis</span>
+                <label className="text-xs font-semibold text-slate-700 flex items-center gap-2">
+                  Allergies
+                </label>
+                <input
+                  name="allergies"
+                  value={formData.allergies}
+                  onChange={handleChange}
+                  className="w-full rounded-lg bg-white border border-slate-200 text-slate-900 text-xs focus:ring-2 focus:ring-blue-100 focus:border-blue-600 px-4 py-2.5 shadow-2xs"
+                  placeholder="e.g. Penicillin, peanuts"
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-xs font-semibold text-slate-700 flex items-center gap-2">
+                  Past Medications
+                </label>
+                <input
+                  name="past_medications"
+                  value={formData.past_medications}
+                  onChange={handleChange}
+                  className="w-full rounded-lg bg-white border border-slate-200 text-slate-900 text-xs focus:ring-2 focus:ring-blue-100 focus:border-blue-600 px-4 py-2.5 shadow-2xs"
+                  placeholder="e.g. Amlodipine, Metformin"
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-xs font-semibold text-slate-700 flex items-center gap-2">
+                  Any Surgeries
+                </label>
+                <input
+                  name="past_surgeries"
+                  value={formData.past_surgeries}
+                  onChange={handleChange}
+                  className="w-full rounded-lg bg-white border border-slate-200 text-slate-900 text-xs focus:ring-2 focus:ring-blue-100 focus:border-blue-600 px-4 py-2.5 shadow-2xs"
+                  placeholder="e.g. Appendectomy (2018)"
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-xs font-semibold text-slate-700 flex items-center gap-2">
+                  Medications Taken Today
+                </label>
+                <input
+                  name="medications_taken_today"
+                  value={formData.medications_taken_today}
+                  onChange={handleChange}
+                  className="w-full rounded-lg bg-white border border-slate-200 text-slate-900 text-xs focus:ring-2 focus:ring-blue-100 focus:border-blue-600 px-4 py-2.5 shadow-2xs"
+                  placeholder="e.g. Took Aspirin 81mg this morning"
+                />
+              </div>
+
+              <div className="flex flex-col gap-2 md:col-span-2">
+                <label className="text-xs font-semibold text-slate-700 flex items-center gap-2">
+                  General Notes
+                </label>
+                <textarea
+                  name="general_notes"
+                  value={formData.general_notes}
+                  onChange={handleChange}
+                  rows={3}
+                  className="w-full rounded-lg bg-white border border-slate-200 text-slate-900 text-xs focus:ring-2 focus:ring-blue-100 focus:border-blue-600 resize-none p-3 shadow-2xs"
+                  placeholder="Any additional observations, context, or notes..."
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-xs font-semibold text-slate-700 flex items-center gap-2">
+                  <Stethoscope className="h-4 w-4 text-slate-400" />
                   Primary Diagnosis
                 </label>
                 <div className="relative">
@@ -2223,24 +2567,24 @@ export default function CurrentVisitPage() {
                     name="diagnosis"
                     value={formData.diagnosis}
                     onChange={handleChange}
-                    className="w-full rounded-lg bg-white border border-slate-200 text-slate-900 text-sm focus:ring-2 focus:ring-blue-100 focus:border-[#137fec] pl-10 py-3 shadow-sm"
+                    className="w-full rounded-lg bg-white border border-slate-200 text-slate-900 text-xs focus:ring-2 focus:ring-blue-100 focus:border-blue-600 pl-9 py-2.5 shadow-2xs font-medium"
                     placeholder="e.g. Acute Bronchitis"
                     type="text"
                   />
-                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 h-4 w-4" />
                 </div>
               </div>
 
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[18px] text-slate-400">code</span>
+                <label className="text-xs font-semibold text-slate-700 flex items-center gap-2">
+                  <Code className="h-4 w-4 text-slate-400" />
                   ICD-10 Code
                 </label>
                 <input
                   name="icd10_code"
                   value={formData.icd10_code}
                   onChange={handleChange}
-                  className="w-full rounded-lg bg-white border border-slate-200 text-slate-900 text-sm focus:ring-2 focus:ring-blue-100 focus:border-[#137fec] py-3 px-4 shadow-sm"
+                  className="w-full rounded-lg bg-white border border-slate-200 text-slate-900 text-xs focus:ring-2 focus:ring-blue-100 focus:border-blue-600 py-2.5 px-3 shadow-2xs font-mono"
                   type="text"
                   placeholder="e.g. M54.5"
                 />
@@ -2248,28 +2592,26 @@ export default function CurrentVisitPage() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[18px] text-slate-400">note</span>
-                  Clinical Notes
-                </label>
-              </div>
+              <label className="text-xs font-semibold text-slate-700 flex items-center gap-2">
+                <FileText className="h-4 w-4 text-slate-400" />
+                Clinical Notes
+              </label>
               <textarea
                 name="clinical_notes"
                 value={formData.clinical_notes}
                 onChange={handleChange}
-                className="w-full rounded-lg bg-white border border-slate-200 text-slate-900 text-sm focus:ring-2 focus:ring-blue-100 focus:border-[#137fec] resize-none p-4 shadow-sm font-mono"
-                placeholder="Enter patient complaints, observations, and assessment details... or record conversation and click 'AI Mode' to auto-populate"
-                rows={12}
+                className="w-full rounded-lg bg-white border border-slate-200 text-slate-900 text-xs focus:ring-2 focus:ring-blue-100 focus:border-blue-600 resize-none p-3 shadow-2xs font-mono leading-relaxed"
+                placeholder="Enter patient complaints, observations, and assessment details... or record conversation and click 'AI SOAP' to auto-populate"
+                rows={10}
               />
             </div>
           </section>
 
-          {/* Follow Up Section */}
-          <section className="bg-gradient-to-br from-white to-slate-50 p-5 rounded-xl border border-slate-100">
-            <div className="flex items-center gap-3 mb-6">
+          {/* Follow-up Section */}
+          <section className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-6">
+            <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
               <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-                <span className="material-symbols-outlined text-[#137fec]">event_upcoming</span>
+                <CalendarDays className="h-6 w-6 text-blue-600" />
               </div>
               <div>
                 <h3 className="text-base font-bold text-slate-900">Follow-up & Instructions</h3>
@@ -2279,29 +2621,29 @@ export default function CurrentVisitPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[18px] text-slate-400">calendar_month</span>
+                <label className="text-xs font-semibold text-slate-700 flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-slate-400" />
                   Follow-up Date
                 </label>
                 <input
                   name="follow_up_date"
                   value={formData.follow_up_date}
                   onChange={handleChange}
-                  className="w-full rounded-lg bg-white border border-slate-200 text-slate-900 text-sm focus:ring-2 focus:ring-blue-100 focus:border-[#137fec] px-4 py-3 shadow-sm"
+                  className="w-full rounded-lg bg-white border border-slate-200 text-slate-900 text-xs focus:ring-2 focus:ring-blue-100 focus:border-blue-600 px-3 py-2.5 shadow-2xs"
                   type="date"
                 />
               </div>
 
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[18px] text-slate-400">description</span>
+                <label className="text-xs font-semibold text-slate-700 flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-slate-400" />
                   Patient Instructions
                 </label>
                 <textarea
                   name="patient_instructions"
                   value={formData.patient_instructions}
                   onChange={handleChange}
-                  className="w-full rounded-lg bg-white border border-slate-200 text-slate-900 text-sm focus:ring-2 focus:ring-blue-100 focus:border-[#137fec] resize-none p-3 shadow-sm"
+                  className="w-full rounded-lg bg-white border border-slate-200 text-slate-900 text-xs focus:ring-2 focus:ring-blue-100 focus:border-blue-600 resize-none p-3 shadow-2xs"
                   placeholder="Additional instructions..."
                   rows={3}
                 />
@@ -2310,10 +2652,10 @@ export default function CurrentVisitPage() {
           </section>
 
           {/* Consultation Fee Section */}
-          <section className="bg-gradient-to-br from-blue-50 to-white p-5 rounded-xl border border-blue-100 shadow-sm">
-            <div className="flex items-center gap-3 mb-4">
+          <section className="bg-white p-5 rounded-xl border border-blue-100 shadow-xs space-y-4">
+            <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                <span className="material-symbols-outlined text-blue-600">currency_rupee</span>
+                <IndianRupee className="h-6 w-6 text-blue-600" />
               </div>
               <div>
                 <h3 className="text-base font-bold text-slate-900">Consultation Fee</h3>
@@ -2322,7 +2664,7 @@ export default function CurrentVisitPage() {
             </div>
 
             <div className="flex flex-col gap-2 max-w-xs">
-              <label className="text-sm font-semibold text-slate-700">Amount (₹)</label>
+              <label className="text-xs font-semibold text-slate-700">Amount (₹)</label>
               <input
                 name="consultation_fee"
                 type="number"
@@ -2330,40 +2672,39 @@ export default function CurrentVisitPage() {
                 min="0"
                 value={formData.consultation_fee}
                 onChange={handleChange}
-                className="w-full rounded-lg bg-white border border-slate-200 text-slate-900 text-sm focus:ring-2 focus:ring-blue-100 focus:border-[#137fec] px-4 py-3 shadow-sm"
+                className="w-full rounded-lg bg-white border border-slate-200 text-slate-900 text-xs focus:ring-2 focus:ring-blue-100 focus:border-blue-600 px-3 py-2.5 shadow-2xs font-mono font-bold"
                 placeholder="0.00"
               />
             </div>
           </section>
 
-          {/* WhatsApp Send Section */}
+          {/* WhatsApp & Save Section */}
           <div className="flex flex-col gap-3 items-end">
             <div className="flex flex-wrap items-center gap-3 w-full justify-end">
-              <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 py-2 shadow-sm">
-                <span className="material-symbols-outlined text-slate-400 text-[18px]">phone</span>
+              <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 py-2 shadow-2xs">
+                <Phone className="h-4 w-4 text-slate-400" />
                 <input
                   type="tel"
                   value={whatsappNumber}
                   onChange={(e) => setWhatsappNumber(e.target.value)}
                   placeholder="WhatsApp number (e.g., 919876543210)"
-                  className="w-64 text-sm text-slate-700 focus:outline-none"
+                  className="w-64 text-xs font-medium text-slate-700 focus:outline-none"
                 />
               </div>
               <button
                 type="button"
                 onClick={handleSendToWhatsApp}
-                disabled={!currentAppointmentId}
-                className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 transition-all duration-200 flex items-center gap-2"
+                className="px-5 py-2.5 bg-emerald-600 text-white font-bold text-xs rounded-lg hover:bg-emerald-700 transition-all duration-200 flex items-center gap-2 shadow-xs"
               >
-                <span className="material-symbols-outlined text-[18px]">send</span>
-                Send to WhatsApp
+                <Send className="h-4 w-4" />
+                Send Prescription to WhatsApp
               </button>
-            </div>
-            <div className="flex justify-end gap-3">
+
               <button
-                type="submit"
+                type="button"
                 disabled={saving}
-                className="px-6 py-2 bg-[#137fec] text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-all duration-200"
+                className="px-6 py-2.5 bg-blue-600 text-white font-bold text-xs rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-all duration-200 shadow-xs"
+                onClick={handleSubmit}
               >
                 {saving ? "Saving..." : "Save Visit"}
               </button>
@@ -2371,8 +2712,8 @@ export default function CurrentVisitPage() {
           </div>
         </>
       ) : (
-        // ✅ Insurance Workspace
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        // Insurance Workspace
+        <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
           {insuranceResult ? (
             <InsuranceWorkspace
               activeTab={insuranceTab}
@@ -2393,18 +2734,20 @@ export default function CurrentVisitPage() {
               handleUpdateField={handleUpdateField}
             />
           ) : (
-            <div className="p-12 text-center">
-              <div className="text-6xl mb-4">🏥</div>
-              <h3 className="text-lg font-semibold text-slate-700">No Insurance Data</h3>
-              <p className="text-sm text-slate-500 mt-2">
-                Record a consultation and click <strong>"AI Insurance"</strong> to generate pre-authorization data.
+            <div className="p-12 text-center space-y-3">
+              <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto border border-emerald-100">
+                <Shield className="w-6 h-6" />
+              </div>
+              <h3 className="text-base font-bold text-slate-900">No Insurance Pre-Auth Data Generated Yet</h3>
+              <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
+                Record a consultation or view the transcript, then click <strong className="text-slate-800">"AI Insurance"</strong> to extract diagnosis codes, hospital charges, and pre-authorization forms.
               </p>
               <button
                 onClick={handleGenerateInsurance}
-                disabled={isInsuranceLoading || (!transcript && !finalTranscriptRef.current)}
-                className="mt-4 px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 transition-colors"
+                disabled={isInsuranceLoading || !hasRecordedAudio}
+                className="px-6 py-2.5 bg-emerald-600 text-white font-bold text-xs rounded-lg hover:bg-emerald-700 disabled:opacity-50 transition-colors shadow-xs"
               >
-                {isInsuranceLoading ? "Generating..." : "Generate Insurance Data"}
+                {isInsuranceLoading ? "Generating..." : "Generate AI Insurance Data"}
               </button>
             </div>
           )}

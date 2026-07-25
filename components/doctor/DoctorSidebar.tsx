@@ -339,6 +339,7 @@
 // }
 
 
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -475,7 +476,7 @@ export default function DoctorSidebar({ isOpen, onClose }: DoctorSidebarProps) {
         className={`${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         } lg:translate-x-0 fixed lg:sticky top-0 z-40 ${
-          isCollapsed ? 'w-20' : 'w-80'
+          isCollapsed ? 'w-20' : 'w-72'
         } flex-shrink-0 bg-[#F4F9F7] border-r border-[#E2EFEA] flex flex-col transition-all duration-300 ease-out shadow-xl lg:shadow-none h-screen`}
       >
         <div className={`p-6 flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} border-b border-[#E2EFEA] relative`}>
@@ -508,7 +509,7 @@ export default function DoctorSidebar({ isOpen, onClose }: DoctorSidebarProps) {
         className={`${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         } lg:translate-x-0 fixed lg:sticky top-0 z-40 ${
-          isCollapsed ? 'w-24' : 'w-80'
+          isCollapsed ? 'w-20' : 'w-72'
         } flex-shrink-0 bg-[#F4F9F7] border-r border-[#E2EFEA] flex flex-col transition-all duration-300 ease-out shadow-xl lg:shadow-none h-screen`}
       >
         <button
@@ -519,7 +520,7 @@ export default function DoctorSidebar({ isOpen, onClose }: DoctorSidebarProps) {
         </button>
 
         {/* Logo Section - Left aligned with Text Below */}
-         <div className="px-4 py-3 border-b border-[#E2EFEA] relative">
+        <div className="px-4 py-3 border-b border-[#E2EFEA] relative">
           <Link
             href="/patient/dashboard"
             className="flex flex-col items-start w-full"
@@ -530,22 +531,22 @@ export default function DoctorSidebar({ isOpen, onClose }: DoctorSidebarProps) {
                 <img
                   src="/swasti ai logo.png"
                   alt="Swasti AI"
-                  className="w-20 h-20 object-contain"
+                  className="w-16 h-16 object-contain"
                 />
               </div>
             ) : (
               <>
-                <div className="w-full max-w-[250px] flex-shrink-0">
+                <div className="w-full max-w-[220px] flex-shrink-0">
                   <img
                     src="/Swasti.ai bg rm logo.png"
                     alt="Swasti AI Logo"
-                    className="w-auto h-25 object-fill"
+                    className="w-auto h-20 object-fill"
                   />
                 </div>
 
                 <div className="mt-2 ml-1">
                   <h2 className="text-xs font-semibold uppercase tracking-wider text-[#1F8F89]">
-                     Doctor Module
+                    Doctor Module
                   </h2>
                 </div>
               </>
@@ -566,16 +567,10 @@ export default function DoctorSidebar({ isOpen, onClose }: DoctorSidebarProps) {
           </button>
         </div>
 
-
         <div className="flex-1 flex flex-col min-h-0">
           <nav className="flex-1 overflow-y-auto px-3 py-3">
             {visibleNavItems.length > 0 && (
               <div className="mb-4">
-                {!isCollapsed && (
-                  <p className="text-[10px] font-medium text-[#1F8F89] uppercase tracking-wider px-3 mb-2">
-            
-                  </p>
-                )}
                 <div className="space-y-1">
                   {visibleNavItems.map((item) => {
                     const active = isActive(item.href);
@@ -722,7 +717,7 @@ export default function DoctorSidebar({ isOpen, onClose }: DoctorSidebarProps) {
         </div>
       </aside>
 
-      {/* Global Tooltip - Rendered at root level */}
+      {/* Global Tooltip */}
       {isCollapsed && tooltipText && (
         <div 
           className="fixed px-3 py-2 bg-gray-900 text-white text-xs font-medium rounded-lg shadow-lg z-[9999] pointer-events-none whitespace-nowrap"
@@ -733,7 +728,6 @@ export default function DoctorSidebar({ isOpen, onClose }: DoctorSidebarProps) {
           }}
         >
           {tooltipText}
-          {/* Tooltip arrow */}
           <div className="absolute left-0 top-1/2 -translate-x-1 -translate-y-1/2 border-4 border-transparent border-r-gray-900"></div>
         </div>
       )}

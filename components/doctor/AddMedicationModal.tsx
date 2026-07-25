@@ -1,12 +1,19 @@
+'use client';
 
-
-
-
-"use client";
-
-import React, { useState, useEffect, useRef } from "react";
-import { useLiveTranscription } from "@/hooks/useLiveTranscription";
-import { LiveMicButton, LiveMicStatusLine } from "@/components/speech/LiveMicButton";
+import React, { useState, useRef } from "react";
+import { AudioRecorder } from "@/lib/audioRecorder";
+import toast from "react-hot-toast";
+import {
+  Mic,
+  StopCircle,
+  Loader2,
+  Globe,
+  X,
+  Plus,
+  Pill,
+  Send,
+  Sparkles,
+} from 'lucide-react';
 
 export interface NewMedicationData {
   name: string;
@@ -20,14 +27,8 @@ export interface NewMedicationData {
 interface AddMedicationModalProps {
   onClose: () => void;
   onAdd: (medications: NewMedicationData[]) => void;
-  initialValues?: Partial<NewMedicationData>;
   patientId?: string;
   appointmentId?: string;
-}
-
-interface WhatsAppStatus {
-  patient: { sent: boolean; error?: string; messageId?: string };
-  pharmacy: { sent: boolean; error?: string; messageId?: string };
 }
 
 export default function AddMedicationModal({
@@ -40,101 +41,114 @@ export default function AddMedicationModal({
     { name: "", category: "", dosage: "", frequency: "", duration: "", instructions: "" },
   ]);
 
-  // WhatsApp states
-  const [sendWhatsApp, setSendWhatsApp] = useState(true);
-  const [whatsappStatus, setWhatsappStatus] = useState<WhatsAppStatus | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
-
+  // Voice recording states
+  const [isRecording, setIsRecording] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [inputMode, setInputMode] = useState<"speak" | "text">("speak");
   const [micLanguage, setMicLanguage] = useState("en-IN");
+  const [hasRecordedAudio, setHasRecordedAudio] = useState(false);
+  const [recordedAudioUrl, setRecordedAudioUrl] = useState<string | null>(null);
 
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const animationRef = useRef<number | null>(null);
+  // Refs
+  const audioRecorderRef = useRef<AudioRecorder | null>(null);
+  const recordedAudioRef = useRef<{ base64: string; mimeType: string } | null>(null);
 
-  const {
-    status: micStatus,
-    isConnecting,
-    isListening,
-    isActive,
-    fullText: transcript,
-    interimText: interimTranscript,
-    setFullText: setTranscript,
-    toggle: handleToggleListening,
-  } = useLiveTranscription({
-    onError: (message) => alert(message),
-  });
-
-  useEffect(() => {
-    if (isActive && canvasRef.current) {
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
-      let step = 0;
-
-      const drawWave = () => {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.strokeStyle = "#137fec";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        const points = 40;
-        const width = canvas.width;
-        const height = canvas.height;
-        const midY = height / 2;
-        for (let i = 0; i <= points; i++) {
-          const x = (i / points) * width;
-          const amplitude = Math.sin((i / 4) - step / 8) * (5 + Math.random() * 8);
-          const y = midY + amplitude;
-          if (i === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        }
-        ctx.stroke();
-        step += 1.2;
-        animationRef.current = requestAnimationFrame(drawWave);
-      };
-      drawWave();
-    } else {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-        animationRef.current = null;
-      }
-      if (canvasRef.current) {
-        const canvas = canvasRef.current;
-        const ctx = canvas.getContext("2d");
-        if (ctx) {
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          ctx.strokeStyle = "#cbd5e1";
-          ctx.lineWidth = 1.5;
-          ctx.beginPath();
-          ctx.moveTo(0, canvas.height / 2);
-          ctx.lineTo(canvas.width, canvas.height / 2);
-          ctx.stroke();
-        }
-      }
-    }
-    return () => {
-      if (animationRef.current) cancelAnimationFrame(animationRef.current);
-    };
-  }, [isActive]);
-
-  const handleMicClick = () => {
-    void handleToggleListening({ micLanguage, clearOnStart: true });
+  const micLanguageLabels: Record<string, string> = {
+    "kn-IN": "Kannada",
+    "hi-IN": "Hindi",
+    "en-IN": "English",
   };
 
-  const handleProcessTranscript = async () => {
-    const currentTranscript = transcript.trim();
-    if (!currentTranscript) {
-      alert("Please speak or type a prescription order.");
+  // ---- Recording functions ----
+  const startRecording = async () => {
+    if (audioRecorderRef.current) {
+      try { await audioRecorderRef.current.stop(); } catch (e) {}
+      audioRecorderRef.current = null;
+    }
+
+    recordedAudioRef.current = null;
+    setHasRecordedAudio(false);
+    setRecordedAudioUrl(null);
+
+    const recorder = new AudioRecorder();
+    audioRecorderRef.current = recorder;
+    setIsConnecting(true);
+
+    try {
+      await recorder.start();
+      setIsConnecting(false);
+      setIsRecording(true);
+      toast.success(`🎙️ Recording in ${micLanguageLabels[micLanguage] ?? micLanguage}. Speak clearly.`);
+    } catch (err) {
+      audioRecorderRef.current = null;
+      setIsConnecting(false);
+      const message = err instanceof Error ? err.message : "Failed to start recording";
+      if (
+        err instanceof DOMException &&
+        (err.name === "NotAllowedError" || err.name === "PermissionDeniedError")
+      ) {
+        toast.error("Microphone permission denied. Please allow access and try again.");
+      } else {
+        toast.error(message);
+      }
+    }
+  };
+
+  const stopRecording = async () => {
+    const recorder = audioRecorderRef.current;
+    if (!recorder) {
+      setIsRecording(false);
+      setIsConnecting(false);
       return;
     }
+
+    try {
+      const audioRes = await recorder.stop();
+      const audioDataObj = {
+        base64: audioRes.base64,
+        mimeType: audioRes.mimeType,
+      };
+      recordedAudioRef.current = audioDataObj;
+      const dataUrl = `data:${audioRes.mimeType};base64,${audioRes.base64}`;
+      setRecordedAudioUrl(dataUrl);
+      setHasRecordedAudio(true);
+      toast.success("🎙️ Recording captured. Click 'Extract with AI' to process.");
+    } catch (recorderErr) {
+      console.warn("Audio recorder stop error:", recorderErr);
+      toast.error("Failed to capture recording.");
+    } finally {
+      audioRecorderRef.current = null;
+      setIsRecording(false);
+      setIsConnecting(false);
+    }
+  };
+
+  // ---- Process voice directly ----
+  const handleProcessVoice = async () => {
+    const audioData = recordedAudioRef.current;
+    if (!audioData) {
+      toast.error("No audio recording found. Please speak into the microphone.");
+      return;
+    }
+
     setIsProcessing(true);
+    const loadingToast = toast.loading("🧠 AI is extracting medications from your voice...");
+
     try {
       const response = await fetch("/api/doctors/parse-prescription", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ transcript: currentTranscript }),
+        body: JSON.stringify({
+          audioBase64: audioData.base64,
+          mimeType: audioData.mimeType,
+        }),
       });
-      if (!response.ok) throw new Error("Failed to parse prescription.");
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to parse prescription.");
+      }
+
       const parsedMeds = await response.json();
       if (parsedMeds && parsedMeds.length > 0) {
         const newMeds: NewMedicationData[] = parsedMeds.map((med: any) => ({
@@ -146,19 +160,24 @@ export default function AddMedicationModal({
           instructions: med.instructions || "",
         }));
         setMedications((prev) => [...prev, ...newMeds]);
-        setTranscript("");
+        toast.success(`✅ ${newMeds.length} medication(s) extracted from voice!`);
+        // Clear audio after successful parse
+        recordedAudioRef.current = null;
+        setHasRecordedAudio(false);
+        setRecordedAudioUrl(null);
       } else {
-        alert("No medications could be extracted. Please rephrase (e.g., 'Amoxicillin 500mg twice daily for 7 days').");
+        toast.error("No medications could be extracted. Please try again or enter manually.");
       }
-    } catch (err: any) {
-      console.error(err);
-      alert("Error processing voice: " + err.message);
+    } catch (error: any) {
+      console.error(error);
+      toast.error("Error processing voice: " + error.message);
     } finally {
+      toast.dismiss(loadingToast);
       setIsProcessing(false);
     }
   };
 
-  // Manual row management (unchanged)
+  // ---- Manual row management ----
   const handleAddRow = () => {
     setMedications([
       ...medications,
@@ -170,7 +189,7 @@ export default function AddMedicationModal({
     if (medications.length > 1) {
       setMedications(medications.filter((_, i) => i !== index));
     } else {
-      alert("At least one medication is required.");
+      toast.error("At least one medication is required.");
     }
   };
 
@@ -180,67 +199,30 @@ export default function AddMedicationModal({
     setMedications(updated);
   };
 
-  // Submit handler (unchanged)
+  // ---- Submit handler ----
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     const validMedications = medications.filter(
       (med) => med.name.trim() && med.dosage.trim()
     );
     if (validMedications.length === 0) {
-      alert("Please add at least one medication with name and dosage.");
+      toast.error("Please add at least one medication with name and dosage.");
       return;
     }
 
-    if (patientId && appointmentId) {
-      setIsSaving(true);
-      setWhatsappStatus(null);
-
-      try {
-        const response = await fetch(`/api/ehr/${patientId}/prescriptions`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            appointmentId,
-            medications: validMedications,
-            recordedBy: "Doctor",
-            sendWhatsApp,
-          }),
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.message || "Failed to save prescription");
-        }
-
-        if (data.whatsapp) {
-          setWhatsappStatus(data.whatsapp);
-        }
-
-        alert(`✅ Prescription saved successfully!\n\n📱 WhatsApp Status:\nPatient: ${data.whatsapp?.patient?.sent ? '✅ Sent' : '❌ Failed'}\nPharmacy: ${data.whatsapp?.pharmacy?.sent ? '✅ Sent' : '❌ Failed'}`);
-
-        onAdd(validMedications);
-        onClose();
-
-      } catch (error: any) {
-        alert(`❌ Error: ${error.message}`);
-      } finally {
-        setIsSaving(false);
-      }
-    } else {
-      onAdd(validMedications);
-      onClose();
-    }
+    // For now, we just pass the medications back to the parent
+    // (the parent handles saving to the database)
+    onAdd(validMedications);
+    onClose();
   };
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-200">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-200">
         <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center shadow-sm">
-              <span className="material-symbols-outlined text-white">pill</span>
+              <Pill className="h-5 w-5 text-white" />
             </div>
             <div>
               <h2 className="text-lg font-semibold text-slate-900">Add Medications</h2>
@@ -248,146 +230,114 @@ export default function AddMedicationModal({
             </div>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
-            <span className="material-symbols-outlined text-slate-500">close</span>
+            <X className="h-5 w-5 text-slate-500" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Voice dictation section – updated with language selection and interim feedback */}
+          {/* Voice dictation section */}
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-4">
             <div className="flex justify-between items-center">
               <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
                 AI Prescription Dictation
               </span>
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 bg-white border border-slate-200 px-2 py-1 rounded-lg shadow-sm">
+                  <Globe className="h-4 w-4 text-blue-500 shrink-0" />
+                  <select
+                    className="text-xs font-bold text-slate-700 bg-transparent border-none outline-none cursor-pointer pr-1"
+                    value={micLanguage}
+                    onChange={(e) => setMicLanguage(e.target.value)}
+                    disabled={isRecording || isConnecting}
+                  >
+                    <option value="en-IN">English</option>
+                    <option value="kn-IN">ಕನ್ನಡ (Kannada)</option>
+                    <option value="hi-IN">हिंदी (Hindi / Hinglish)</option>
+                  </select>
+                </div>
                 <button
                   type="button"
-                  onClick={() => setInputMode("speak")}
-                  className={`px-3 py-1 text-xs font-bold rounded-lg transition ${
-                    inputMode === "speak"
-                      ? "bg-[#137fec] text-white"
-                      : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
+                  onClick={isRecording ? stopRecording : startRecording}
+                  disabled={isConnecting || isProcessing}
+                  className={`px-4 py-2 rounded-lg flex items-center gap-2 text-xs font-bold transition ${
+                    isRecording
+                      ? "bg-red-600 hover:bg-red-700 text-white animate-pulse"
+                      : isConnecting
+                        ? "bg-amber-500 text-white"
+                        : isProcessing
+                          ? "bg-slate-300 text-slate-500 cursor-not-allowed"
+                          : "bg-blue-600 hover:bg-blue-700 text-white"
                   }`}
                 >
-                  🎤 Speak
+                  {isConnecting ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : isRecording ? (
+                    <StopCircle className="h-4 w-4" />
+                  ) : (
+                    <Mic className="h-4 w-4" />
+                  )}
+                  {isConnecting
+                    ? "Connecting..."
+                    : isRecording
+                      ? "Stop"
+                      : isProcessing
+                        ? "Processing..."
+                        : "Record"}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setInputMode("text")}
-                  className={`px-3 py-1 text-xs font-bold rounded-lg transition ${
-                    inputMode === "text"
-                      ? "bg-[#137fec] text-white"
-                      : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
-                  }`}
-                >
-                  ⌨️ Type
-                </button>
+                {isProcessing && (
+                  <span className="text-xs text-slate-500 flex items-center gap-1">
+                    <Loader2 className="h-3 w-3 animate-spin" /> Extracting...
+                  </span>
+                )}
               </div>
             </div>
 
-            {inputMode === "speak" ? (
-              <div className="space-y-3">
-                {/* Language Selector & Microphone controls */}
-                <div className="flex items-center gap-3 flex-wrap">
-                  <div className="flex items-center gap-1 bg-white border border-slate-200 px-3 py-1.5 rounded-lg shadow-sm">
-                    <span className="material-symbols-outlined text-[18px] text-blue-500 shrink-0">globe</span>
-                    <select
-                      className="text-xs font-bold text-slate-700 bg-transparent border-none outline-none cursor-pointer pr-1"
-                      value={micLanguage}
-                      onChange={(e) => setMicLanguage(e.target.value)}
-                      disabled={isActive}
-                    >
-                      <option value="en-IN">English</option>
-                      <option value="kn-IN">ಕನ್ನಡ (Kannada)</option>
-                      <option value="hi-IN">हिंदी (Hindi / Hinglish)</option>
-                    </select>
-                  </div>
-                  <LiveMicButton
-                    status={micStatus}
-                    onClick={handleMicClick}
-                    size={24}
-                    className={`w-12 h-12 rounded-full flex items-center justify-center text-white shadow-lg transition-transform active:scale-95 disabled:opacity-80 ${
-                      isListening
-                        ? "bg-rose-500 hover:bg-rose-600 animate-pulse"
-                        : isConnecting
-                          ? "bg-amber-500 hover:bg-amber-600"
-                          : "bg-[#137fec] hover:bg-blue-600"
-                    }`}
-                  />
-                  <div className="flex-1 h-10 bg-white rounded-xl border border-slate-200 overflow-hidden">
-                    <canvas ref={canvasRef} width={400} height={40} className="w-full h-full"></canvas>
-                  </div>
+            {hasRecordedAudio && recordedAudioUrl && (
+              <div className="mt-2 p-2 bg-white rounded-lg border border-slate-200">
+                <audio controls src={recordedAudioUrl} className="w-full h-8" />
+                <div className="flex justify-end mt-1 gap-2">
+                  <button
+                    type="button"
+                    onClick={handleProcessVoice}
+                    disabled={isProcessing}
+                    className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded flex items-center gap-1"
+                  >
+                    <Sparkles className="h-3 w-3" />
+                    {isProcessing ? 'Processing...' : 'Extract with AI'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      recordedAudioRef.current = null;
+                      setHasRecordedAudio(false);
+                      setRecordedAudioUrl(null);
+                    }}
+                    className="text-xs text-red-500 hover:text-red-700"
+                  >
+                    Clear audio
+                  </button>
                 </div>
-                {/* Transcript area with interim feedback */}
-                <div>
-                  <label className="block text-xs font-medium text-slate-500 mb-1">Transcript</label>
-                  <div className="relative">
-                    <textarea
-                      value={transcript}
-                      onChange={(e) => setTranscript(e.target.value)}
-                      rows={3}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm font-mono bg-white"
-                      placeholder={
-                        isConnecting
-                          ? "Connecting microphone..."
-                          : isListening
-                            ? "Listening... speak clearly"
-                            : "Click the microphone and say e.g. 'Amoxicillin 500mg twice daily for 7 days'"
-                      }
-                    />
-                    <LiveMicStatusLine
-                      status={micStatus}
-                      interimText={interimTranscript}
-                      className="absolute bottom-0 left-0 right-0 px-3 py-1 bg-amber-50 border-t border-amber-200 text-amber-700 text-xs italic"
-                    />
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div>
-                <label className="block text-xs font-medium text-slate-500 mb-1">Raw Text Order</label>
-                <textarea
-                  value={transcript}
-                  onChange={(e) => setTranscript(e.target.value)}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
-                  placeholder="Type prescription directions, e.g.: 'Azithromycin 250mg once daily for 5 days, and Ibuprofen 400mg every 8 hours as needed'"
-                />
               </div>
             )}
 
-            <div className="flex justify-end">
-              <button
-                type="button"
-                onClick={handleProcessTranscript}
-                disabled={isProcessing || !transcript.trim()}
-                className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition"
-              >
-                {isProcessing ? (
-                  <>
-                    <span className="material-symbols-outlined text-base animate-spin">progress_activity</span>
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    <span className="material-symbols-outlined text-base">auto_awesome</span>
-                    Extract Medications with AI
-                  </>
-                )}
-              </button>
-            </div>
+            {isRecording && (
+              <div className="flex items-center gap-2 text-xs text-red-600 bg-red-50 p-2 rounded-lg border border-red-100">
+                <div className="w-2 h-2 bg-red-600 rounded-full animate-ping"></div>
+                <span>Recording in <strong>{micLanguageLabels[micLanguage] ?? micLanguage}</strong>. Speak clearly.</span>
+              </div>
+            )}
           </div>
 
-          {/* Manual medications list (unchanged) */}
+          {/* Manual medications list */}
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <h3 className="text-sm font-semibold text-slate-700">Medications to Add ({medications.length})</h3>
               <button
                 type="button"
                 onClick={handleAddRow}
-                className="text-xs text-[#137fec] font-medium hover:underline flex items-center gap-1"
+                className="text-xs text-blue-600 font-medium hover:underline flex items-center gap-1"
               >
-                <span className="material-symbols-outlined text-sm">add</span> Add Row
+                <Plus className="h-3 w-3" /> Add Row
               </button>
             </div>
 
@@ -424,12 +374,11 @@ export default function AddMedicationModal({
                       onChange={(e) => handleChange(index, "category", e.target.value)}
                       className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
                     >
-                      <option value="">Select</option>
+                      <option value="Other">Other</option>
                       <option value="Antibiotic">Antibiotic</option>
                       <option value="Analgesic">Analgesic</option>
                       <option value="Antihypertensive">Antihypertensive</option>
                       <option value="Antidiabetic">Antidiabetic</option>
-                      <option value="Other">Other</option>
                     </select>
                   </div>
                   <div>
@@ -479,62 +428,11 @@ export default function AddMedicationModal({
             <button
               type="button"
               onClick={handleAddRow}
-              className="w-full py-3 border-2 border-dashed border-slate-300 rounded-lg text-slate-600 hover:text-[#137fec] hover:border-[#137fec] transition flex items-center justify-center gap-2"
+              className="w-full py-3 border-2 border-dashed border-slate-300 rounded-lg text-slate-600 hover:text-blue-600 hover:border-blue-400 transition flex items-center justify-center gap-2"
             >
-              <span className="material-symbols-outlined">add</span>
+              <Plus className="h-4 w-4" />
               Add Another Medication
             </button>
-          </div>
-
-          {/* WhatsApp Toggle & Status (unchanged) */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <input
-                type="checkbox"
-                id="sendWhatsApp"
-                checked={sendWhatsApp}
-                onChange={(e) => setSendWhatsApp(e.target.checked)}
-                className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
-                disabled={!patientId || !appointmentId}
-              />
-              <label htmlFor="sendWhatsApp" className="text-sm font-medium text-gray-700">
-                Send WhatsApp notifications to patient and pharmacy
-                {(!patientId || !appointmentId) && (
-                  <span className="text-xs text-gray-400 ml-2">(Patient ID & Appointment ID required)</span>
-                )}
-              </label>
-            </div>
-
-            {whatsappStatus && (
-              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 space-y-2">
-                <h4 className="font-semibold text-sm text-gray-700">📱 WhatsApp Status</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className={`p-3 rounded-lg ${whatsappStatus.patient.sent ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'} border`}>
-                    <span className="font-medium text-sm">Patient:</span>
-                    {whatsappStatus.patient.sent ? (
-                      <span className="text-green-600 ml-2">✅ Sent</span>
-                    ) : (
-                      <span className="text-red-600 ml-2">❌ {whatsappStatus.patient.error || 'Failed'}</span>
-                    )}
-                  </div>
-                  <div className={`p-3 rounded-lg ${whatsappStatus.pharmacy.sent ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'} border`}>
-                    <span className="font-medium text-sm">Pharmacy:</span>
-                    {whatsappStatus.pharmacy.sent ? (
-                      <span className="text-green-600 ml-2">✅ Sent</span>
-                    ) : (
-                      <span className="text-red-600 ml-2">❌ {whatsappStatus.pharmacy.error || 'Failed'}</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {isSaving && (
-              <div className="flex items-center justify-center gap-2 text-blue-600">
-                <span className="material-symbols-outlined animate-spin">progress_activity</span>
-                Saving prescription and sending notifications...
-              </div>
-            )}
           </div>
 
           {/* Action Buttons */}
@@ -543,19 +441,15 @@ export default function AddMedicationModal({
               type="button"
               onClick={onClose}
               className="px-4 py-2 text-sm font-medium text-slate-600 border border-slate-300 rounded-lg hover:bg-slate-100"
-              disabled={isSaving}
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={isSaving}
-              className="px-4 py-2 bg-[#137fec] text-white text-sm font-medium rounded-lg hover:bg-blue-600 disabled:opacity-50 flex items-center gap-2"
+              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 flex items-center gap-2"
             >
-              <span className="material-symbols-outlined text-[18px]">
-                {isSaving ? 'progress_activity' : 'check'}
-              </span>
-              {isSaving ? 'Saving...' : 'Save All Medications'}
+              <Send className="h-4 w-4" />
+              Add to Prescription
             </button>
           </div>
         </form>
